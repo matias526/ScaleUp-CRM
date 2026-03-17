@@ -1,4 +1,5 @@
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
+//import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/lib/supabase/client"
 import { cookies } from "next/headers"
 import TasksTable from "@/components/tasks/tasks-table"
 import { Button } from "@/components/ui/button"
@@ -8,7 +9,7 @@ import { Plus } from "lucide-react"
 export const dynamic = "force-dynamic"
 
 export default async function TasksPage() {
-  const supabase = createServerComponentClient({ cookies })
+  //const supabase = createServerComponentClient({ cookies })
 
   // Obtener el usuario actual
   const {
