@@ -1,10 +1,11 @@
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
+//import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/lib/supabase/client"
 import { cookies } from "next/headers"
 import { UserProfileForm } from "@/components/users/user-profile-form"
 import { redirect } from "next/navigation"
 
 export default async function ProfilePage() {
-  const supabase = createServerComponentClient({ cookies })
+  //const supabase = createServerComponentClient({ cookies })
 
   // Verificar si el usuario está autenticado
   const {
