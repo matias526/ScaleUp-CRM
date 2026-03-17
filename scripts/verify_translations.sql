@@ -1,3 +1,4 @@
+--Forzar Deploy
 -- Verificar que la tabla de traducciones existe
 DO $$
 BEGIN
