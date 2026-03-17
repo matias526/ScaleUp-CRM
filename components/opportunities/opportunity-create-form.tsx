@@ -30,7 +30,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "@/components/ui/use-toast"
 import { useAuth } from "@/components/auth/auth-provider"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/lib/supabase/client"
 import {
   Building2,
   Users,
@@ -61,7 +62,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils"
 import { getIndustries } from "@/lib/services/industry-service-client"
 
-const supabase = createClientComponentClient()
+//const supabase = createClientComponentClient()
 
 // Tipos de archivos permitidos por defecto (extensiones)
 const DEFAULT_ALLOWED_FILE_TYPES = [

@@ -11,7 +11,8 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { Check, Loader2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
@@ -40,7 +41,7 @@ export function AddPartnerToTechCompanyDialog({
   const [selectedPartners, setSelectedPartners] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const supabase = createClientComponentClient()
+  //const supabase = createClientComponentClient()
   const { toast } = useToast()
 
   // Cargar partners disponibles (que no estén ya asociados)

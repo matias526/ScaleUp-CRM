@@ -17,7 +17,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/spanish-calendar"
 import { useTranslations } from "@/hooks/use-translations"
 import { useTaskService } from "@/lib/services/task-service-client"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/lib/supabase/client"
 import { toast } from "@/components/ui/use-toast"
 import type { Task } from "@/types/task"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
@@ -44,7 +45,7 @@ const formSchema = z.object({
 export function SubtaskDialog({ isOpen, onClose, onSubtaskCreated, parentTask }: SubtaskDialogProps) {
   const { t } = useTranslations()
   const taskService = useTaskService()
-  const supabase = createClientComponentClient()
+  //const supabase = createClientComponentClient()
 
   // Estados para datos relacionados
   const [users, setUsers] = useState<any[]>([])

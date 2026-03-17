@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/lib/supabase/client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -14,7 +15,7 @@ export function StorageDebug() {
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null)
   const [testLoading, setTestLoading] = useState(false)
 
-  const supabase = createClientComponentClient()
+  //const supabase = createClientComponentClient()
 
   useEffect(() => {
     async function loadBuckets() {

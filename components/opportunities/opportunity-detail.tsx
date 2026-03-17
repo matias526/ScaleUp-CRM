@@ -49,7 +49,8 @@ import { OpportunityNotesFixed } from "./opportunity-notes-fixed"
 import { createNote } from "@/lib/services/notes-service"
 import { OpportunityTechFields } from "./opportunity-tech-fields"
 import { OrganizationAvatar } from "./organization-avatar"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/lib/supabase/client"
 import {
   Dialog,
   DialogContent,

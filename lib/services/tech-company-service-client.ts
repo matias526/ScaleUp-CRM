@@ -1,11 +1,12 @@
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/lib/supabase/client"
 
 // Función para obtener todas las empresas tecnológicas (versión cliente)
 export async function getTechCompaniesClient(): Promise<any[]> {
   try {
     console.log("CLIENT: Iniciando getTechCompaniesClient")
 
-    const supabase = createClientComponentClient()
+    //const supabase = createClientComponentClient()
 
     // Mostrar la consulta que se va a ejecutar
     const query = "supabase.from('tech_companies').select('id, name').order('name')"
@@ -32,7 +33,7 @@ export async function getTechCompaniesClient(): Promise<any[]> {
 // Función para obtener una empresa tecnológica por su ID (versión cliente)
 export async function getTechCompanyByIdClient(id: string): Promise<any | null> {
   try {
-    const supabase = createClientComponentClient()
+    //const supabase = createClientComponentClient()
 
     const { data, error } = await supabase.from("tech_companies").select("*").eq("id", id).single()
 

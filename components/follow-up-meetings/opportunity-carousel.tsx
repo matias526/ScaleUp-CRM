@@ -33,7 +33,8 @@ import { useToast } from "@/components/ui/use-toast"
 import { addNoteToOpportunity, addTaskToOpportunity } from "@/lib/services/follow-up-meeting-service"
 import { useAuth } from "@/components/auth/auth-provider"
 import { getCountryName, getDaysSince } from "@/lib/utils/country-utils"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/lib/supabase/client"
 
 type OpportunityCarouselProps = {
   opportunities: any[]
@@ -74,7 +75,7 @@ export function OpportunityCarousel({
   const [partnerResponsible, setPartnerResponsible] = useState<any>(null)
   const [isLoadingPartnerResponsible, setIsLoadingPartnerResponsible] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
-  const supabase = createClientComponentClient()
+  //const supabase = createClientComponentClient()
 
   // Cargar el responsable del partner cuando cambia la oportunidad actual
   useEffect(() => {

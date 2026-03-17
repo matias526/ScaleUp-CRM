@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/lib/supabase/client"
 import { MeetingEmailTemplate } from "@/components/follow-up-meetings/meeting-email-template"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -22,7 +23,7 @@ export default function EmailPreviewPage() {
   const [loading, setLoading] = useState(true)
   const [language, setLanguage] = useState("es")
   const [isSending, setIsSending] = useState(false)
-  const supabase = createClientComponentClient()
+  //const supabase = createClientComponentClient()
   const { toast } = useToast()
   const { t } = useTranslation()
 

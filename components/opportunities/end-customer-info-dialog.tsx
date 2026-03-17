@@ -22,7 +22,8 @@ import {
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { useState, useEffect } from "react"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/lib/supabase/client"
 import { formatCurrency } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -144,7 +145,7 @@ export function EndCustomerInfoDialog({ open, onClose, opportunity, endCustomerI
   const [duplicates, setDuplicates] = useState<any[]>([])
   const [loadingDuplicates, setLoadingDuplicates] = useState(false)
   const [relatedOpportunities, setRelatedOpportunities] = useState<any[]>([])
-  const supabase = createClientComponentClient()
+  //const supabase = createClientComponentClient()
 
   // Cargar datos completos del cliente final
   useEffect(() => {

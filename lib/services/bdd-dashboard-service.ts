@@ -1,4 +1,5 @@
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/lib/supabase/client"
 import type { Database } from "@/types/supabase"
 
 export type BddKpiData = {
@@ -57,7 +58,7 @@ const INACTIVE_VALIDATION_STATUSES = ["Won", "Lost", "Freeze"]
 const EXCLUDED_STAGES = ["Won", "Lost", "Freeze"]
 
 export async function fetchBddKpis(): Promise<{ data: BddKpiData | null; error: any }> {
-  const supabase = createClientComponentClient<Database>()
+  //const supabase = createClientComponentClient<Database>()
 
   try {
     // Obtener el usuario actual
@@ -144,7 +145,7 @@ export async function fetchBddKpis(): Promise<{ data: BddKpiData | null; error: 
 }
 
 export async function fetchBddPipelineData(): Promise<{ data: PipelineData | null; error: any }> {
-  const supabase = createClientComponentClient<Database>()
+  //const supabase = createClientComponentClient<Database>()
 
   try {
     // Obtener el usuario actual
@@ -214,7 +215,7 @@ export async function fetchBddPipelineData(): Promise<{ data: PipelineData | nul
 }
 
 export async function fetchBddUpcomingActivities(): Promise<{ data: ActivityItem[] | null; error: any }> {
-  const supabase = createClientComponentClient<Database>()
+  //const supabase = createClientComponentClient<Database>()
 
   try {
     // Obtener el usuario actual
@@ -310,7 +311,7 @@ export async function fetchBddUpcomingActivities(): Promise<{ data: ActivityItem
 }
 
 export async function fetchBddPartnersData(): Promise<{ data: BddPartnerData[] | null; error: any }> {
-  const supabase = createClientComponentClient<Database>()
+  //const supabase = createClientComponentClient<Database>()
 
   try {
     // Obtener el usuario actual

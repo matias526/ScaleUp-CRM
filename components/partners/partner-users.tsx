@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { UserPlus } from "lucide-react"
 import { useTranslations } from "@/hooks/use-translations"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/lib/supabase/client"
 
 interface PartnerUsersProps {
   partnerId: string
@@ -20,7 +21,7 @@ export function PartnerUsers({ partnerId, partnerName }: PartnerUsersProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { t } = useTranslations()
-  const supabase = createClientComponentClient()
+  //const supabase = createClientComponentClient()
 
   const loadUsers = async () => {
     if (!partnerId) return

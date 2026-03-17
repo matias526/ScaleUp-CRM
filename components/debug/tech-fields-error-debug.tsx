@@ -3,13 +3,14 @@
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/lib/supabase/client"
 
 export default function TechFieldsErrorDebug() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [data, setData] = useState<any>(null)
-  const supabase = createClientComponentClient()
+  //const supabase = createClientComponentClient()
 
   const testTechFields = async () => {
     setLoading(true)

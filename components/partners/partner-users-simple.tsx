@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button"
 import { UserPlus, Trash2, Loader2, AlertTriangle, Phone, Mail } from "lucide-react"
 import { AddPartnerUserDialog } from "./add-partner-user-dialog"
 import { EditPartnerUserDialog } from "./edit-partner-user-dialog"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/lib/supabase/client"
 import { Skeleton } from "@/components/ui/skeleton"
 import { UserService } from "@/lib/services/user-service"
 import {
@@ -43,7 +44,7 @@ export function PartnerUsersSimple({ partnerId, partnerName = "este partner" }: 
   const [users, setUsers] = useState<User[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const supabase = createClientComponentClient()
+  //const supabase = createClientComponentClient()
 
   // Estado para el diálogo de confirmación de eliminación
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)

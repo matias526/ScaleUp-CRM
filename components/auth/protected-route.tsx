@@ -4,7 +4,8 @@ import type React from "react"
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/lib/supabase/client"
 import type { Database } from "@/types/supabase"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -24,7 +25,7 @@ export function ProtectedRoute({
   const [loading, setLoading] = useState(true)
   const [hasAccess, setHasAccess] = useState(false)
   const router = useRouter()
-  const supabase = createClientComponentClient<Database>()
+  //const supabase = createClientComponentClient<Database>()
 
   useEffect(() => {
     const checkAuth = async () => {

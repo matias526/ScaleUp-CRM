@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2, Eye, EyeOff } from "lucide-react"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/lib/supabase/client"
 import { ProfileImageUploader } from "./profile-image-uploader"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
@@ -41,7 +42,7 @@ export function UserProfileForm({ initialData }: UserProfileFormProps) {
 
   const router = useRouter()
   const { toast } = useToast()
-  const supabase = createClientComponentClient()
+  //const supabase = createClientComponentClient()
 
   const validatePersonalInfo = () => {
     const newErrors: Record<string, string> = {}

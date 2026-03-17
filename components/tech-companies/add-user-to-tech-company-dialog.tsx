@@ -16,7 +16,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2 } from "lucide-react"
 import type { UserFormData } from "@/lib/services/user-service"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/lib/supabase/client"
 
 interface AddUserToTechCompanyDialogProps {
   open: boolean
@@ -42,7 +43,7 @@ export function AddUserToTechCompanyDialog({
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [roleId, setRoleId] = useState<string | null>(null)
   const { toast } = useToast()
-  const supabase = createClientComponentClient()
+  //const supabase = createClientComponentClient()
 
   // Obtener el ID del rol "TechUser"
   useEffect(() => {

@@ -15,7 +15,8 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { taskStatusOptions, type TaskType } from "@/types/task"
 import { useTaskService } from "@/lib/services/task-service-client"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/lib/supabase/client"
 import { PendingSubtasks, type PendingSubtask } from "./pending-subtasks"
 import { Separator } from "@/components/ui/separator"
 import { Calendar } from "lucide-react"
@@ -57,7 +58,7 @@ export default function TaskForm({ taskTypes, techCompanyId, partnerId }: TaskFo
 
   const [isLoadingUsers, setIsLoadingUsers] = useState(false)
 
-  const supabase = createClientComponentClient()
+  //const supabase = createClientComponentClient()
 
   // Cargar datos necesarios al montar el componente
   useEffect(() => {

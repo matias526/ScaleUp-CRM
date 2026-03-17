@@ -6,7 +6,8 @@ import { useState, useRef, useEffect } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Loader2, Upload, X, Camera } from "lucide-react"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { v4 as uuidv4 } from "uuid"
 
@@ -22,7 +23,7 @@ export function ProfileImageUploader({ initialImage, userId, onImageUpdate, size
   const [isUploading, setIsUploading] = useState(false)
   const [isHovering, setIsHovering] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const supabase = createClientComponentClient()
+  //const supabase = createClientComponentClient()
   const { toast } = useToast()
 
   // Inicializar la imagen cuando cambia initialImage

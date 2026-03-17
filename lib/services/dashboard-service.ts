@@ -1,4 +1,5 @@
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/lib/supabase/client"
 import type { Database } from "@/types/supabase"
 
 export type KpiData = {
@@ -65,7 +66,7 @@ export type ActionItem = {
 }
 
 export async function fetchDashboardKpis(): Promise<{ data: KpiData | null; error: any }> {
-  const supabase = createClientComponentClient<Database>()
+  //const supabase = createClientComponentClient<Database>()
 
   try {
     // Obtener el valor total del pipeline (suma de los valores de todas las oportunidades)
@@ -188,7 +189,7 @@ export async function fetchDashboardKpis(): Promise<{ data: KpiData | null; erro
 }
 
 export async function fetchPipelineData(): Promise<{ data: PipelineData | null; error: any }> {
-  const supabase = createClientComponentClient<Database>()
+  //const supabase = createClientComponentClient<Database>()
 
   try {
     // Obtener etapas del pipeline
@@ -247,7 +248,7 @@ export async function fetchPipelineData(): Promise<{ data: PipelineData | null; 
 }
 
 export async function fetchBddPerformanceData(): Promise<{ data: BddData[] | null; error: any }> {
-  const supabase = createClientComponentClient<Database>()
+  //const supabase = createClientComponentClient<Database>()
 
   try {
     // Obtener usuarios con rol de BDD
@@ -322,7 +323,7 @@ export async function fetchBddPerformanceData(): Promise<{ data: BddData[] | nul
 }
 
 export async function fetchPartnersData(): Promise<{ data: PartnerData[] | null; error: any }> {
-  const supabase = createClientComponentClient<Database>()
+  //const supabase = createClientComponentClient<Database>()
 
   try {
     // Obtener partners
@@ -392,7 +393,7 @@ export async function fetchPartnersData(): Promise<{ data: PartnerData[] | null;
 }
 
 export async function fetchTechCompaniesData(): Promise<{ data: TechCompanyData[] | null; error: any }> {
-  const supabase = createClientComponentClient<Database>()
+  //const supabase = createClientComponentClient<Database>()
 
   try {
     // Obtener tech companies
@@ -454,7 +455,7 @@ export async function fetchTechCompaniesData(): Promise<{ data: TechCompanyData[
 }
 
 export async function fetchActionItems(): Promise<{ data: ActionItem[] | null; error: any }> {
-  const supabase = createClientComponentClient<Database>()
+  //const supabase = createClientComponentClient<Database>()
 
   try {
     // Obtener oportunidades que requieren validación (ejemplo: oportunidades nuevas)

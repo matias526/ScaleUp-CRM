@@ -13,7 +13,8 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { useTranslations } from "@/hooks/use-translations"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/lib/supabase/client"
 import { TermsService } from "@/lib/services/terms-service"
 import { useToast } from "@/components/ui/use-toast"
 
@@ -29,7 +30,7 @@ export function TermsAndConditionsModal({ isOpen, onOpenChange, onAccept }: Term
   const [hasAccepted, setHasAccepted] = useState(false)
   const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
-  const supabase = createClientComponentClient()
+  //const supabase = createClientComponentClient()
   const { toast } = useToast()
 
   // Detectar cuando el usuario ha hecho scroll hasta el final

@@ -10,7 +10,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import Link from "next/link"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/lib/supabase/client"
 import { getUserById } from "@/lib/services/user-service"
 
 const formSchema = z.object({
@@ -41,7 +42,7 @@ export function LoginForm() {
     try {
       setIsLoading(true)
 
-      const supabase = createClientComponentClient()
+      //const supabase = createClientComponentClient()
 
       // Iniciar sesión con Supabase
       const { data, error } = await supabase.auth.signInWithPassword({

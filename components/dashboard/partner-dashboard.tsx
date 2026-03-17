@@ -4,7 +4,8 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useTranslations } from "@/hooks/use-translations"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/lib/supabase/client"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -94,7 +95,7 @@ export function PartnerDashboard() {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const supabase = createClientComponentClient<Database>()
+      //const supabase = createClientComponentClient<Database>()
 
       try {
         // Get current user
@@ -130,7 +131,7 @@ export function PartnerDashboard() {
     }
 
     const fetchPartnerData = async (partnerId: string, user: any) => {
-      const supabase = createClientComponentClient<Database>()
+      //const supabase = createClientComponentClient<Database>()
 
       try {
         // Get partner name

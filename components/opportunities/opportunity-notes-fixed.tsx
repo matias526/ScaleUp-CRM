@@ -12,7 +12,8 @@ import { NoteContent } from "./note-content"
 import { OrganizationAvatar } from "./organization-avatar"
 import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/lib/supabase/client"
 import { format } from "date-fns"
 
 interface OpportunityNotesProps {
@@ -29,7 +30,7 @@ export function OpportunityNotesFixed({ opportunityId }: OpportunityNotesProps) 
   const [refreshKey, setRefreshKey] = useState(0)
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [isUserScaleUp, setIsUserScaleUp] = useState<boolean>(false)
-  const supabase = createClientComponentClient()
+  //const supabase = createClientComponentClient()
 
   // Obtener el usuario actual y verificar si es ScaleUp
   useEffect(() => {

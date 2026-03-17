@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { UserPlus } from "lucide-react"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/lib/supabase/client"
 
 interface PartnerUsersWithDataProps {
   partnerId: string
@@ -18,7 +19,7 @@ export function PartnerUsersWithData({ partnerId, partnerName }: PartnerUsersWit
   const [users, setUsers] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const supabase = createClientComponentClient()
+  //const supabase = createClientComponentClient()
 
   useEffect(() => {
     const fetchUsers = async () => {

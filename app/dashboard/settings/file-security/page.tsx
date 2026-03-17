@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/lib/supabase/client"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,7 +20,7 @@ export default function FileSecurityPage() {
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null)
   const [bucketInfo, setBucketInfo] = useState<any>(null)
 
-  const supabase = createClientComponentClient()
+  //const supabase = createClientComponentClient()
 
   // Cargar la configuración actual del bucket
   useEffect(() => {

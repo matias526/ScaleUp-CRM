@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge"
 import { FileText, Calendar, ToggleLeft, ListFilter, Tag, Download, Eye, Edit, Save, X } from "lucide-react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/lib/supabase/client"
 import { getOpportunityTechFieldsClient } from "@/lib/services/opportunity-tech-field-service-client"
 import { toast } from "@/components/ui/use-toast"
 import { Input } from "@/components/ui/input"
@@ -44,7 +45,7 @@ export function OpportunityTechFields({
   const [error, setError] = useState<string | null>(null)
   const [hasTechFields, setHasTechFields] = useState(false)
 
-  const supabase = createClientComponentClient()
+  //const supabase = createClientComponentClient()
 
   // Añadir el estado para controlar qué campo está en modo de edición
   const [editMode, setEditMode] = useState<Record<string, boolean>>({})
