@@ -1,3 +1,4 @@
+//Forzar Deploy
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { MikaChat } from "@/components/ai-knowledge-base/mika-chat"
