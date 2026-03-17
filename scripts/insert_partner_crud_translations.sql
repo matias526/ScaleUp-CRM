@@ -1,0 +1,98 @@
+-- Traducciones para el CRUD de Partners
+
+-- Español
+INSERT INTO translations (key, es, en, pt) VALUES
+-- Listado de Partners
+('partners', 'Partners', 'Partners', 'Parceiros'),
+('new_partner', 'Nuevo Partner', 'New Partner', 'Novo Parceiro'),
+('partners_list', 'Listado de Partners', 'Partners List', 'Lista de Parceiros'),
+('manage_partners_description', 'Gestiona los partners registrados en el sistema', 'Manage partners registered in the system', 'Gerencie os parceiros registrados no sistema'),
+('search_partners', 'Buscar partners...', 'Search partners...', 'Buscar parceiros...'),
+('refresh', 'Actualizar', 'Refresh', 'Atualizar'),
+('showing_items', 'Mostrando {showing} de {total} {items}', 'Showing {showing} of {total} {items}', 'Mostrando {showing} de {total} {items}'),
+('no_partners_registered', 'No hay partners registrados', 'No partners registered', 'Não há parceiros registrados'),
+
+-- Tabla de Partners
+('logo', 'Logo', 'Logo', 'Logo'),
+('name', 'Nombre', 'Name', 'Nome'),
+('code', 'Código', 'Code', 'Código'),
+('website', 'Sitio Web', 'Website', 'Site'),
+('status', 'Estado', 'Status', 'Estado'),
+('actions', 'Acciones', 'Actions', 'Ações'),
+('active', 'Activo', 'Active', 'Ativo'),
+('inactive', 'Inactivo', 'Inactive', 'Inativo'),
+('logo_of', 'Logo de {name}', 'Logo of {name}', 'Logo de {name}'),
+
+-- Confirmación de eliminación
+('are_you_sure', '¿Estás seguro?', 'Are you sure?', 'Tem certeza?'),
+('delete_partner_confirmation', 'Esta acción eliminará permanentemente el partner "{name}".', 'This action will permanently delete the partner "{name}".', 'Esta ação excluirá permanentemente o parceiro "{name}".'),
+('cancel', 'Cancelar', 'Cancel', 'Cancelar'),
+('delete', 'Eliminar', 'Delete', 'Excluir'),
+('deleting', 'Eliminando...', 'Deleting...', 'Excluindo...'),
+
+-- Formulario de Partner
+('create_partner', 'Crear Partner', 'Create Partner', 'Criar Parceiro'),
+('edit_partner', 'Editar Partner', 'Edit Partner', 'Editar Parceiro'),
+('update_partner_info', 'Actualiza la información del partner', 'Update partner information', 'Atualize as informações do parceiro'),
+('enter_partner_data', 'Ingresa los datos para crear un nuevo partner', 'Enter data to create a new partner', 'Insira os dados para criar um novo parceiro'),
+('partner_name_placeholder', 'Nombre del partner', 'Partner name', 'Nome do parceiro'),
+('partner_full_name', 'Nombre completo del partner', 'Full name of the partner', 'Nome completo do parceiro'),
+('partner_code_description', 'Código único del partner (generado automáticamente)', 'Unique partner code (automatically generated)', 'Código único do parceiro (gerado automaticamente)'),
+('code_auto_generated', 'Se generará automáticamente', 'Will be generated automatically', 'Será gerado automaticamente'),
+('code_generated_from_name', 'El código se generará a partir del nombre', 'The code will be generated from the name', 'O código será gerado a partir do nome'),
+('partner_logo_optional', 'Logo del partner (opcional)', 'Partner logo (optional)', 'Logo do parceiro (opcional)'),
+('partner_website_optional', 'URL del sitio web del partner (opcional)', 'Partner website URL (optional)', 'URL do site do parceiro (opcional)'),
+('address', 'Dirección', 'Address', 'Endereço'),
+('partner_address', 'Dirección del partner', 'Partner address', 'Endereço do parceiro'),
+('partner_address_optional', 'Dirección física del partner (opcional)', 'Physical address of the partner (optional)', 'Endereço físico do parceiro (opcional)'),
+('main_country', 'País Principal', 'Main Country', 'País Principal'),
+('select_country', 'Selecciona un país', 'Select a country', 'Selecione um país'),
+('partner_main_country', 'País principal del partner', 'Main country of the partner', 'País principal do parceiro'),
+('city', 'Ciudad', 'City', 'Cidade'),
+('postal_code', 'Código Postal', 'Postal Code', 'Código Postal'),
+('operating_countries', 'Países donde opera', 'Operating Countries', 'Países onde opera'),
+('no_countries_selected', 'No hay países seleccionados', 'No countries selected', 'Nenhum país selecionado'),
+('select_countries', 'Seleccionar países', 'Select countries', 'Selecionar países'),
+('select_all_operating_countries', 'Selecciona todos los países donde opera este partner', 'Select all countries where this partner operates', 'Selecione todos os países onde este parceiro opera'),
+('partner_active_description', 'Indica si el partner está activo en el sistema', 'Indicates if the partner is active in the system', 'Indica se o parceiro está ativo no sistema'),
+('update', 'Actualizar', 'Update', 'Atualizar'),
+('create', 'Crear', 'Create', 'Criar'),
+('updating', 'Actualizando...', 'Updating...', 'Atualizando...'),
+('creating', 'Creando...', 'Creating...', 'Criando...'),
+
+-- Página de detalles
+('error', 'Error', 'Error', 'Erro'),
+('partner_not_found', 'Partner no encontrado', 'Partner not found', 'Parceiro não encontrado'),
+('back_to_list', 'Volver al listado', 'Back to list', 'Voltar à lista'),
+('edit', 'Editar', 'Edit', 'Editar'),
+('partner_details', 'Detalles del Partner', 'Partner Details', 'Detalhes do Parceiro'),
+('complete_info_about', 'Información completa sobre {name}', 'Complete information about {name}', 'Informações completas sobre {name}'),
+('not_available', 'No disponible', 'Not available', 'Não disponível'),
+('no_countries_registered', 'No hay países registrados', 'No countries registered', 'Não há países registrados'),
+('creation_date', 'Fecha de Creación', 'Creation Date', 'Data de Criação'),
+('last_update', 'Última Actualización', 'Last Update', 'Última Atualização'),
+('go_back', 'Volver', 'Go Back', 'Voltar'),
+('error_loading_partner', 'Error al cargar el partner', 'Error loading partner', 'Erro ao carregar o parceiro'),
+
+-- Empresas tecnológicas asociadas
+('associated_tech_companies', 'Empresas Tecnológicas Asociadas', 'Associated Tech Companies', 'Empresas Tecnológicas Associadas'),
+('manage_associated_tech_companies', 'Gestiona las empresas tecnológicas asociadas a este partner', 'Manage tech companies associated with this partner', 'Gerencie as empresas tecnológicas associadas a este parceiro'),
+('associate_company', 'Asociar Empresa', 'Associate Company', 'Associar Empresa'),
+('associate_tech_company', 'Asociar Empresa Tecnológica', 'Associate Tech Company', 'Associar Empresa Tecnológica'),
+('associate_tech_company_description', 'Selecciona una empresa tecnológica para asociarla a este partner y opcionalmente asigna un gestor de ScaleUp.', 'Select a tech company to associate with this partner and optionally assign a ScaleUp manager.', 'Selecione uma empresa tecnológica para associá-la a este parceiro e, opcionalmente, atribua um gerente ScaleUp.'),
+('tech_company', 'Empresa Tecnológica', 'Tech Company', 'Empresa Tecnológica'),
+('select_company', 'Selecciona una empresa', 'Select a company', 'Selecione uma empresa'),
+('tech_company_to_associate', 'Empresa tecnológica que se asociará con este partner', 'Tech company that will be associated with this partner', 'Empresa tecnológica que será associada a este parceiro'),
+('scaleup_manager', 'Gestor de ScaleUp', 'ScaleUp Manager', 'Gerente de ScaleUp'),
+('select_manager_optional', 'Selecciona un gestor (opcional)', 'Select a manager (optional)', 'Selecione um gerente (opcional)'),
+('no_manager_assigned', 'Sin gestor asignado', 'No manager assigned', 'Sem gerente atribuído'),
+('scaleup_manager_description', 'Usuario de ScaleUp que gestionará esta relación (opcional)', 'ScaleUp user who will manage this relationship (optional)', 'Usuário ScaleUp que gerenciará este relacionamento (opcional)'),
+('saving', 'Guardando...', 'Saving...', 'Salvando...'),
+('save', 'Guardar', 'Save', 'Salvar'),
+('no_tech_companies_associated', 'No hay empresas tecnológicas asociadas a este partner', 'No tech companies associated with this partner', 'Não há empresas tecnológicas associadas a este parceiro'),
+('association_date', 'Fecha de Asociación', 'Association Date', 'Data de Associação'),
+('delete_association_confirmation', 'Esta acción eliminará la asociación con la empresa tecnológica "{name}". Esta acción no se puede deshacer.', 'This action will delete the association with the tech company "{name}". This action cannot be undone.', 'Esta ação excluirá a associação com a empresa tecnológica "{name}". Esta ação não pode ser desfeita.')
+ON CONFLICT (key) DO UPDATE SET
+es = EXCLUDED.es,
+en = EXCLUDED.en,
+pt = EXCLUDED.pt;

@@ -1,0 +1,63 @@
+-- Insertar traducciones para partners en español
+INSERT INTO translations (key, language, value) VALUES
+('partners.title', 'es', 'Partners'),
+('partners.new_partner', 'es', 'Nuevo Partner'),
+('partners.list_title', 'es', 'Listado de Partners'),
+('partners.list_description', 'es', 'Gestiona los partners registrados en el sistema'),
+('partners.search_placeholder', 'es', 'Buscar partners...'),
+('partners.details', 'es', 'Detalles'),
+('partners.edit', 'es', 'Editar'),
+('partners.delete', 'es', 'Eliminar'),
+('partners.confirm_delete', 'es', '¿Estás seguro de que deseas eliminar este partner?'),
+('partners.delete_warning', 'es', 'Esta acción no se puede deshacer.'),
+('partners.cancel', 'es', 'Cancelar'),
+('partners.save', 'es', 'Guardar'),
+('partners.back', 'es', 'Volver'),
+('partners.active', 'es', 'Activo'),
+('partners.inactive', 'es', 'Inactivo'),
+('partners.logo', 'es', 'Logo'),
+('partners.name', 'es', 'Nombre'),
+('partners.code', 'es', 'Código'),
+('partners.website', 'es', 'Sitio Web'),
+('partners.address', 'es', 'Dirección'),
+('partners.city', 'es', 'Ciudad'),
+('partners.postal_code', 'es', 'Código Postal'),
+('partners.country', 'es', 'País'),
+('partners.status', 'es', 'Estado'),
+('partners.created_at', 'es', 'Fecha de Creación'),
+('partners.updated_at', 'es', 'Última Actualización')
+ON CONFLICT (key, language) DO UPDATE SET 
+value = EXCLUDED.value,
+updated_at = CURRENT_TIMESTAMP;
+
+-- Insertar traducciones para partners en inglés
+INSERT INTO translations (key, language, value) VALUES
+('partners.title', 'en', 'Partners'),
+('partners.new_partner', 'en', 'New Partner'),
+('partners.list_title', 'en', 'Partners List'),
+('partners.list_description', 'en', 'Manage partners registered in the system'),
+('partners.search_placeholder', 'en', 'Search partners...'),
+('partners.details', 'en', 'Details'),
+('partners.edit', 'en', 'Edit'),
+('partners.delete', 'en', 'Delete'),
+('partners.confirm_delete', 'en', 'Are you sure you want to delete this partner?'),
+('partners.delete_warning', 'en', 'This action cannot be undone.'),
+('partners.cancel', 'en', 'Cancel'),
+('partners.save', 'en', 'Save'),
+('partners.back', 'en', 'Back'),
+('partners.active', 'en', 'Active'),
+('partners.inactive', 'en', 'Inactive'),
+('partners.logo', 'en', 'Logo'),
+('partners.name', 'en', 'Name'),
+('partners.code', 'en', 'Code'),
+('partners.website', 'en', 'Website'),
+('partners.address', 'en', 'Address'),
+('partners.city', 'en', 'City'),
+('partners.postal_code', 'en', 'Postal Code'),
+('partners.country', 'en', 'Country'),
+('partners.status', 'en', 'Status'),
+('partners.created_at', 'en', 'Creation Date'),
+('partners.updated_at', 'en', 'Last Update')
+ON CONFLICT (key, language) DO UPDATE SET 
+value = EXCLUDED.value,
+updated_at = CURRENT_TIMESTAMP;

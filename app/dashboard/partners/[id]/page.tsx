@@ -1,0 +1,257 @@
+"use client"
+
+import type React from "react"
+
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { supabase } from "@/lib/supabase/client"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+import { Button } from "@/components/ui/button"
+import { ImageWithFallback } from "@/components/ui/image-with-fallback"
+import { Loader2 } from "lucide-react"
+import dynamic from "next/dynamic"
+
+// Importar los componentes de forma dinámica para evitar problemas de SSR
+const PartnerTechCompanies = dynamic(() => import("@/components/partners/partner-tech-companies-fixed"), {
+  ssr: false,
+  loading: () => (
+    <Card>
+      <CardContent className="py-8">
+        <div className="flex justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+        <p className="text-center mt-4">Cargando empresas tecnológicas...</p>
+      </CardContent>
+    </Card>
+  ),
+})
+
+const PartnerUsers = dynamic(() => import("@/components/partners/partner-users-with-data"), {
+  ssr: false,
+  loading: () => (
+    <Card>
+      <CardContent className="py-8">
+        <div className="flex justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+        <p className="text-center mt-4">Cargando usuarios...</p>
+      </CardContent>
+    </Card>
+  ),
+})
+
+const PartnerTasks = dynamic(() => import("@/components/partners/partner-tasks"), {
+  ssr: false,
+  loading: () => (
+    <Card>
+      <CardContent className="py-8">
+        <div className="flex justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+        <p className="text-center mt-4">Cargando tareas...</p>
+      </CardContent>
+    </Card>
+  ),
+})
+
+export default function PartnerDetailPage({ params }: { params: { id: string } }) {
+  const router = useRouter()
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [partner, setPartner] = useState<any | null>(null)
+
+  // Función para obtener el partner
+  const fetchPartner = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      // Consulta directa a Supabase
+      const { data, error } = await supabase
+        .from("partners")
+        .select(`
+          id, name, code, logo_url, website, address, 
+          main_country_id, city, postal_code, is_active, 
+          created_at, updated_at,
+          countries:main_country_id (name)
+        `)
+        .eq("id", params.id)
+        .single()
+
+      if (error) {
+        console.error("Error al obtener partner:", error)
+        setError(`Error al obtener partner: ${error.message}`)
+        return
+      }
+
+      if (!data) {
+        setError("No se encontró ningún partner con ese ID")
+        return
+      }
+
+      // Formatear los datos para incluir el nombre del país
+      const partnerData = {
+        ...data,
+        main_country_name: data.countries?.name || null,
+      }
+
+      // Eliminar el objeto countries anidado
+      delete (partnerData as any).countries
+
+      setPartner(partnerData)
+    } catch (err) {
+      console.error("Error inesperado:", err)
+      setError(`Error inesperado: ${(err as Error).message}`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Cargar el partner al montar el componente
+  useEffect(() => {
+    fetchPartner()
+  }, [params.id])
+
+  // Mostrar estado de carga
+  if (loading) {
+    return (
+      <div className="container mx-auto py-6">
+        <Card>
+          <CardContent className="py-8">
+            <div className="flex justify-center">
+              <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            </div>
+            <p className="text-center mt-4">Cargando detalles del partner...</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // Mostrar error si lo hay
+  if (error) {
+    return (
+      <div className="container mx-auto py-6">
+        <Card className="border-red-500">
+          <CardHeader className="bg-red-50">
+            <CardTitle className="text-red-700">Error</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-red-600">{error}</p>
+            <Button className="mt-4" onClick={() => router.back()}>
+              Volver
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // Mostrar detalles del partner
+  return (
+    <div className="container mx-auto py-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">{partner?.name}</h1>
+        <Button variant="outline" onClick={() => router.back()}>
+          Volver
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="md:col-span-1">
+          <CardHeader>
+            <CardTitle>Detalles del Partner</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col items-center mb-4">
+              <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100 mb-4">
+                <ImageWithFallback
+                  src={partner?.logo_url || ""}
+                  fallbackSrc="/diverse-business-team.png"
+                  alt={partner?.name}
+                  width={128}
+                  height={128}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <h2 className="text-xl font-semibold">{partner?.name}</h2>
+              <p className="text-gray-500">{partner?.website || "Sin sitio web"}</p>
+            </div>
+
+            <Separator className="my-4" />
+
+            <div className="space-y-2">
+              <div>
+                <span className="font-medium">País:</span>{" "}
+                <span>{partner?.main_country_name || "No especificado"}</span>
+              </div>
+              <div>
+                <span className="font-medium">Dirección:</span> <span>{partner?.address || "No especificada"}</span>
+              </div>
+              <div>
+                <span className="font-medium">Ciudad:</span> <span>{partner?.city || "No especificada"}</span>
+              </div>
+              <div>
+                <span className="font-medium">Código Postal:</span>{" "}
+                <span>{partner?.postal_code || "No especificado"}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="md:col-span-2 space-y-6">
+          {/* Componentes restaurados */}
+          <ErrorBoundary fallback={<ComponentErrorFallback title="Empresas Tecnológicas" />}>
+            <PartnerTechCompanies partnerId={partner?.id} />
+          </ErrorBoundary>
+
+          <ErrorBoundary fallback={<ComponentErrorFallback title="Usuarios" />}>
+            <PartnerUsers partnerId={partner?.id} partnerName={partner?.name} />
+          </ErrorBoundary>
+
+          <ErrorBoundary fallback={<ComponentErrorFallback title="Tareas" />}>
+            <PartnerTasks partnerId={partner?.id} partnerName={partner?.name} />
+          </ErrorBoundary>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Componente para manejar errores en los componentes
+function ErrorBoundary({ children, fallback }: { children: React.ReactNode; fallback: React.ReactNode }) {
+  const [hasError, setHasError] = useState(false)
+
+  useEffect(() => {
+    const errorHandler = (error: ErrorEvent) => {
+      console.error("Error capturado por ErrorBoundary:", error)
+      setHasError(true)
+    }
+
+    window.addEventListener("error", errorHandler)
+    return () => window.removeEventListener("error", errorHandler)
+  }, [])
+
+  if (hasError) {
+    return <>{fallback}</>
+  }
+
+  return <>{children}</>
+}
+
+// Componente para mostrar cuando un componente falla
+function ComponentErrorFallback({ title }: { title: string }) {
+  return (
+    <Card className="border-amber-300">
+      <CardHeader className="bg-amber-50">
+        <CardTitle className="text-amber-700">{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-amber-600">
+          No se pudieron cargar los datos para esta sección. Por favor, intenta recargar la página.
+        </p>
+      </CardContent>
+    </Card>
+  )
+}

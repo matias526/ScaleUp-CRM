@@ -1,0 +1,77 @@
+-- Traducciones en español
+INSERT INTO translations (language, key, value)
+VALUES
+  ('es', 'meeting.generate_report', 'Generar Reporte'),
+  ('es', 'meeting_report.send_email', 'Enviar Reporte'),
+  ('es', 'meeting_report.send_email_title', 'Enviar Reporte de Seguimiento'),
+  ('es', 'meeting_report.select_language', 'Seleccionar idioma'),
+  ('es', 'meeting_report.sending', 'Enviando...'),
+  ('es', 'meeting_report.send', 'Enviar'),
+  ('es', 'common.cancel', 'Cancelar'),
+  ('es', 'language.select', 'Seleccionar idioma'),
+  ('es', 'language.spanish', 'Español'),
+  ('es', 'language.english', 'Inglés'),
+  ('es', 'language.portuguese', 'Portugués'),
+  ('es', 'pdf.download', 'Descargar PDF'),
+  ('es', 'email.send', 'Enviar Email'),
+  ('es', 'common.back', 'Volver'),
+  ('es', 'error.title', 'Error'),
+  ('es', 'error.load_data', 'No se pudieron cargar los datos de la reunión'),
+  ('es', 'error.send_email', 'No se pudo enviar el email'),
+  ('es', 'error.download_pdf', 'No se pudo descargar el PDF'),
+  ('es', 'email.sent_title', 'Email enviado'),
+  ('es', 'email.sent_description', 'El reporte ha sido enviado correctamente'),
+  ('es', 'pdf.download_title', 'PDF generado'),
+  ('es', 'pdf.download_description', 'El reporte se ha descargado correctamente');
+
+-- Traducciones en inglés
+INSERT INTO translations (language, key, value)
+VALUES
+  ('en', 'meeting.generate_report', 'Generate Report'),
+  ('en', 'meeting_report.send_email', 'Send Report'),
+  ('en', 'meeting_report.send_email_title', 'Send Follow-up Report'),
+  ('en', 'meeting_report.select_language', 'Select language'),
+  ('en', 'meeting_report.sending', 'Sending...'),
+  ('en', 'meeting_report.send', 'Send'),
+  ('en', 'common.cancel', 'Cancel'),
+  ('en', 'language.select', 'Select language'),
+  ('en', 'language.spanish', 'Spanish'),
+  ('en', 'language.english', 'English'),
+  ('en', 'language.portuguese', 'Portuguese'),
+  ('en', 'pdf.download', 'Download PDF'),
+  ('en', 'email.send', 'Send Email'),
+  ('en', 'common.back', 'Back'),
+  ('en', 'error.title', 'Error'),
+  ('en', 'error.load_data', 'Could not load meeting data'),
+  ('en', 'error.send_email', 'Could not send email'),
+  ('en', 'error.download_pdf', 'Could not download PDF'),
+  ('en', 'email.sent_title', 'Email sent'),
+  ('en', 'email.sent_description', 'The report has been sent successfully'),
+  ('en', 'pdf.download_title', 'PDF generated'),
+  ('en', 'pdf.download_description', 'The report has been downloaded successfully');
+
+-- Traducciones en portugués
+INSERT INTO translations (language, key, value)
+VALUES
+  ('pt', 'meeting.generate_report', 'Gerar Relatório'),
+  ('pt', 'meeting_report.send_email', 'Enviar Relatório'),
+  ('pt', 'meeting_report.send_email_title', 'Enviar Relatório de Acompanhamento'),
+  ('pt', 'meeting_report.select_language', 'Selecionar idioma'),
+  ('pt', 'meeting_report.sending', 'Enviando...'),
+  ('pt', 'meeting_report.send', 'Enviar'),
+  ('pt', 'common.cancel', 'Cancelar'),
+  ('pt', 'language.select', 'Selecionar idioma'),
+  ('pt', 'language.spanish', 'Espanhol'),
+  ('pt', 'language.english', 'Inglês'),
+  ('pt', 'language.portuguese', 'Português'),
+  ('pt', 'pdf.download', 'Baixar PDF'),
+  ('pt', 'email.send', 'Enviar Email'),
+  ('pt', 'common.back', 'Voltar'),
+  ('pt', 'error.title', 'Erro'),
+  ('pt', 'error.load_data', 'Não foi possível carregar os dados da reunião'),
+  ('pt', 'error.send_email', 'Não foi possível enviar o email'),
+  ('pt', 'error.download_pdf', 'Não foi possível baixar o PDF'),
+  ('pt', 'email.sent_title', 'Email enviado'),
+  ('pt', 'email.sent_description', 'O relatório foi enviado com sucesso'),
+  ('pt', 'pdf.download_title', 'PDF gerado'),
+  ('pt', 'pdf.download_description', 'O relatório foi baixado com sucesso');
