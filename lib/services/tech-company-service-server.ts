@@ -1,4 +1,5 @@
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
+//import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/lib/supabase/client"
 import { cookies } from "next/headers"
 
 export async function getTechCompaniesServer() {
@@ -6,7 +7,7 @@ export async function getTechCompaniesServer() {
     console.log("SERVER: Iniciando getTechCompaniesServer")
 
     // Create a server-side Supabase client
-    const supabase = createServerComponentClient({ cookies })
+    //const supabase = createServerComponentClient({ cookies })
 
     // Execute the query
     console.log("SERVER QUERY:", "supabase.from('tech_companies').select('id, name').order('name')")
