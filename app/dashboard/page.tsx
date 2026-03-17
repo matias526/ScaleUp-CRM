@@ -3,12 +3,13 @@ import { NewAdminDashboard } from "@/components/dashboard/new-admin-dashboard"
 import { BddDashboard } from "@/components/dashboard/bdd-dashboard"
 import { PartnerDashboard } from "@/components/dashboard/partner-dashboard"
 import { DashboardSkeleton } from "@/components/dashboard/dashboard-skeleton"
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
+//import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/lib/supabase/client"
 import { cookies } from "next/headers"
 import type { Database } from "@/types/supabase"
 
 export default async function DashboardPage() {
-  const supabase = createServerComponentClient<Database>({ cookies })
+  //const supabase = createServerComponentClient<Database>({ cookies })
 
   // Obtener el usuario actual
   const {
