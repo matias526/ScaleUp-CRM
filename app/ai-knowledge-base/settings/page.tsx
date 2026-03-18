@@ -1,4 +1,5 @@
-import { createClient } from "@/lib/supabase/server"
+//import { createClient } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { CompanyContextEditor } from "@/components/ai-knowledge-base/company-context-editor"
 

@@ -1,4 +1,5 @@
-import { createClient } from "@/lib/supabase/server"
+//import { createClient } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase/server"
 import { createServiceRoleClient } from "@/lib/supabase/service-role"
 import { NextResponse } from "next/server"
 import { generateEmbedding, generateJinaEmbedding } from "@/lib/embeddings"
@@ -72,7 +73,7 @@ async function findRelevantChunks(supabase: any, techCompanyId: string, query: s
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient()
+    const supabase = createServerClient()
     const supabaseAdmin = createServiceRoleClient()
     const {
       data: { user },

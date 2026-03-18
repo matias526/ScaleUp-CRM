@@ -1,9 +1,10 @@
-import { createClient } from "@/lib/supabase/server"
+//import { createClient } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 
 export async function GET() {
   try {
-    const supabase = createClient()
+    const supabase = createServerClient()
 
     const { data, error } = await supabase.from("knowledge_base_labels").select("*").order("name")
 
@@ -20,7 +21,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const supabase = createClient()
+    const supabase = createServerClient()
 
     // Verificar autenticación y que sea admin
     const {

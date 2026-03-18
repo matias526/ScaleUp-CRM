@@ -1,12 +1,13 @@
 //Forzar Deploy
-import { createClient } from "@/lib/supabase/server"
+//import { createClient } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { MikaChat } from "@/components/ai-knowledge-base/mika-chat"
 
 export const dynamic = "force-dynamic"
 
 export default async function AIKnowledgeBaseChatPage() {
-  const supabase = await createClient()
+  const supabase = createServerClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()

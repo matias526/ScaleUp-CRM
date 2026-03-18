@@ -1,9 +1,10 @@
-import { createClient } from "@/lib/supabase/server"
+//import { createClient } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase/server"
 import type { TaskInsert, TaskUpdate } from "@/types/task"
 
 // Esta función solo debe usarse en Server Components
 export async function getTasks(userId?: string, isAdmin?: boolean) {
-  const supabase = createClient()
+  const supabase = createServerClient()
 
   console.log(`getTasks called with userId: ${userId}, isAdmin: ${isAdmin}`)
 
@@ -44,7 +45,7 @@ export async function getTasks(userId?: string, isAdmin?: boolean) {
 
 // Esta función solo debe usarse en Server Components
 export async function getTaskById(id: string) {
-  const supabase = createClient()
+  const supabase = createServerClient()
 
   const { data, error } = await supabase
     .from("tasks")
@@ -70,7 +71,7 @@ export async function getTaskById(id: string) {
 
 // Esta función solo debe usarse en Server Components
 export async function createTask(task: TaskInsert) {
-  const supabase = createClient()
+  const supabase = createServerClient()
 
   const { data, error } = await supabase.from("tasks").insert(task).select().single()
 
@@ -84,7 +85,7 @@ export async function createTask(task: TaskInsert) {
 
 // Esta función solo debe usarse en Server Components
 export async function updateTask(id: string, task: TaskUpdate) {
-  const supabase = createClient()
+  const supabase = createServerClient()
 
   const { data, error } = await supabase.from("tasks").update(task).eq("id", id).select().single()
 
@@ -98,7 +99,7 @@ export async function updateTask(id: string, task: TaskUpdate) {
 
 // Esta función solo debe usarse en Server Components
 export async function deleteTask(id: string) {
-  const supabase = createClient()
+  const supabase = createServerClient()
 
   const { error } = await supabase.from("tasks").delete().eq("id", id)
 

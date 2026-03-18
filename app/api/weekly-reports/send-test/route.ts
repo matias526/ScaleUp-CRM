@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+//import { createClient } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase/server"
 import { WeeklyReportService } from "@/lib/services/weekly-report-service"
 
 export async function POST(request: Request) {
   try {
     console.log("[API] === INICIO ENVÍO REPORTE DE PRUEBA ===")
 
-    const supabase = createClient()
+    const supabase = createServerClient()
 
     // Verificar autenticación
     const {

@@ -1,6 +1,7 @@
 import { put } from "@vercel/blob"
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+//import { createClient } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
@@ -10,7 +11,7 @@ export const bodyParser = {
 
 export async function POST(request: Request): Promise<NextResponse> {
   try {
-    const supabase = await createClient()
+    const supabase = createServerClient()
     const {
       data: { user },
     } = await supabase.auth.getUser()

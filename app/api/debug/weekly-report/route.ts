@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+//import { createClient } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase/server"
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,7 +10,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "tech_company_id is required" })
     }
 
-    const supabase = createClient()
+    const supabase = createServerClient()
 
     // 1. Verificar tech company
     const { data: techCompany, error: techError } = await supabase

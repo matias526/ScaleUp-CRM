@@ -1,9 +1,10 @@
-import { createClient } from "@/lib/supabase/server"
+//import { createClient } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase/server"
 import type { TaskTypeInsert, TaskTypeUpdate } from "@/types/task"
 
 // Esta función solo debe usarse en Server Components
 export async function getTaskTypes() {
-  const supabase = createClient()
+  const supabase = createServerClient()
 
   const { data, error } = await supabase.from("task_types").select("*").order("name", { ascending: true })
 
@@ -17,7 +18,7 @@ export async function getTaskTypes() {
 
 // Esta función solo debe usarse en Server Components
 export async function getTaskTypeById(id: string) {
-  const supabase = createClient()
+  const supabase = createServerClient()
 
   const { data, error } = await supabase.from("task_types").select("*").eq("id", id).single()
 
@@ -31,7 +32,7 @@ export async function getTaskTypeById(id: string) {
 
 // Esta función solo debe usarse en Server Components
 export async function createTaskType(taskType: TaskTypeInsert) {
-  const supabase = createClient()
+  const supabase = createServerClient()
 
   const { data, error } = await supabase.from("task_types").insert(taskType).select().single()
 
@@ -45,7 +46,7 @@ export async function createTaskType(taskType: TaskTypeInsert) {
 
 // Esta función solo debe usarse en Server Components
 export async function updateTaskType(id: string, taskType: TaskTypeUpdate) {
-  const supabase = createClient()
+  const supabase = createServerClient()
 
   const { data, error } = await supabase.from("task_types").update(taskType).eq("id", id).select().single()
 
@@ -59,7 +60,7 @@ export async function updateTaskType(id: string, taskType: TaskTypeUpdate) {
 
 // Esta función solo debe usarse en Server Components
 export async function deleteTaskType(id: string) {
-  const supabase = createClient()
+  const supabase = createServerClient()
 
   const { error } = await supabase.from("task_types").delete().eq("id", id)
 

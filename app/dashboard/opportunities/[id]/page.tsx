@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+//import { createClient } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase/server"
 import { OpportunityDetail } from "@/components/opportunities/opportunity-detail"
 
 interface OpportunityPageProps {
@@ -17,7 +18,7 @@ export default async function OpportunityPage({ params }: OpportunityPageProps) 
   try {
     console.log("Intentando obtener oportunidad con ID:", params.id)
 
-    const supabase = createClient()
+    const supabase = createServerClient()
 
     // Primero, verificar si la oportunidad existe con una consulta simple
     const { data: opportunityExists, error: existsError } = await supabase

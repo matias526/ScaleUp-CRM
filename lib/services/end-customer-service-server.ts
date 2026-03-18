@@ -1,4 +1,5 @@
-import { createClient } from "@/lib/supabase/server"
+//import { createClient } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase/server"
 import type { Tables } from "@/types/supabase"
 
 export type EndCustomer = Tables<"end_customers"> & {
@@ -17,7 +18,7 @@ export type EndCustomerInsert = Omit<Tables<"end_customers">, "id" | "created_at
 // Obtener todos los clientes finales (server-side)
 export async function getEndCustomers(): Promise<EndCustomer[]> {
   try {
-    const supabase = createClient()
+    const supabase = createServerClient()
 
     const { data, error } = await supabase
       .from("end_customers")
@@ -49,7 +50,7 @@ export async function getEndCustomers(): Promise<EndCustomer[]> {
 // Obtener un cliente final por ID (server-side)
 export async function getEndCustomerById(id: string): Promise<EndCustomer | null> {
   try {
-    const supabase = createClient()
+    const supabase = createServerClient()
 
     const { data, error } = await supabase
       .from("end_customers")
@@ -82,7 +83,7 @@ export async function getEndCustomerById(id: string): Promise<EndCustomer | null
 // Crear un nuevo cliente final (server-side)
 export async function createEndCustomer(customerData: EndCustomerInsert): Promise<EndCustomer | null> {
   try {
-    const supabase = createClient()
+    const supabase = createServerClient()
 
     const { data, error } = await supabase.from("end_customers").insert([customerData]).select("*").single()
 
@@ -101,7 +102,7 @@ export async function createEndCustomer(customerData: EndCustomerInsert): Promis
 // Actualizar un cliente final (server-side)
 export async function updateEndCustomer(id: string, updates: Partial<EndCustomerInsert>): Promise<EndCustomer | null> {
   try {
-    const supabase = createClient()
+    const supabase = createServerClient()
 
     const { data, error } = await supabase.from("end_customers").update(updates).eq("id", id).select("*").single()
 

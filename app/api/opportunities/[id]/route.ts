@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+//import { createClient } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase/server"
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
@@ -7,7 +8,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
       return NextResponse.json({ error: "ID de oportunidad no proporcionado" }, { status: 400 })
     }
 
-    const supabase = createClient()
+    const supabase = createServerClient()
 
     // Verificar si la oportunidad existe
     const { data: opportunityExists, error: existsError } = await supabase

@@ -1,4 +1,5 @@
-import { createClient } from "@/lib/supabase/server"
+//import { createClient } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase/server"
 import { format, subDays } from "date-fns"
 import { Resend } from "resend"
 
@@ -9,7 +10,7 @@ export class WeeklyReportServiceV7 {
     console.log(`[WeeklyReportServiceV7] === INICIO sendWeeklyReport para ${techCompanyId} ===`)
 
     try {
-      const supabase = createClient()
+      const supabase = createServerClient()
 
       // 1. Obtener tech company
       console.log(`[WeeklyReportServiceV7] 1. Obteniendo tech company...`)

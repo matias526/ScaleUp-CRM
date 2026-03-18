@@ -1,11 +1,12 @@
-import { createClient } from "@/lib/supabase/server"
+//import { createClient } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { FeedbackDashboard } from "@/components/ai-knowledge-base/feedback-dashboard"
 
 export const dynamic = "force-dynamic"
 
 export default async function AIKnowledgeBaseFeedbackPage() {
-  const supabase = await createClient()
+  const supabase = createServerClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()

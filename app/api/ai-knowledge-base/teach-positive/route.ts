@@ -1,4 +1,5 @@
-import { createClient } from "@/lib/supabase/server"
+//import { createClient } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { generateEmbedding } from "@/lib/embeddings"
 
@@ -6,7 +7,7 @@ export const maxDuration = 30
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient()
+    const supabase = createServerClient()
     const {
       data: { user },
     } = await supabase.auth.getUser()

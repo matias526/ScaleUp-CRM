@@ -1,4 +1,5 @@
-import { createClient } from "@/lib/supabase/server"
+//import { createClient } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase/server"
 import { format, addDays, startOfDay, endOfDay } from "date-fns"
 import { es, enUS, pt } from "date-fns/locale"
 import { Resend } from "resend"
@@ -29,7 +30,7 @@ export class DailyEmailService {
    * Obtiene todos los usuarios de ScaleUp con roles Admin y BDD
    */
   static async getScaleUpUsers() {
-    const supabase = createClient()
+    const supabase = createServerClient()
 
     try {
       // Query corregido - usar el SQL directo o la sintaxis correcta de Supabase

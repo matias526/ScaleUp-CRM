@@ -1,4 +1,5 @@
-import { createClient } from "@/lib/supabase/server"
+//import { createClient } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase/server"
 import { format, startOfWeek, endOfWeek, subWeeks } from "date-fns"
 import { Resend } from "resend"
 import { WeeklyReportService } from "@/lib/services/weekly-report-service" // Import the base service
@@ -72,7 +73,7 @@ export class WeeklyReportServiceWithCharts {
     techCompanyId: string,
     reportData: WeeklyReportData,
   ): Promise<WeeklyReportDataWithCharts["charts"]> {
-    const supabase = createClient()
+    const supabase = createServerClient()
 
     try {
       // 1. Oportunidades por etapa

@@ -1,4 +1,5 @@
-import { createClient } from "@/lib/supabase/server"
+//import { createClient } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase/server"
 
 export interface PartnerOpportunity {
   partner: {
@@ -26,7 +27,7 @@ export interface PartnerOpportunity {
 
 export async function getEndCustomerPartners(endCustomerId: string): Promise<PartnerOpportunity[]> {
   try {
-    const supabase = createClient()
+    const supabase = createServerClient()
 
     const { data: opportunities, error } = await supabase
       .from("opportunities")

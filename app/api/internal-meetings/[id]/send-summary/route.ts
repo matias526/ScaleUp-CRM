@@ -1,12 +1,13 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+//import { createClient } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase/server"
 import { sendInternalMeetingSummary } from "@/lib/services/internal-meeting-summary-service"
 
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     console.log("[v0] send-summary API called for meeting:", params.id)
 
-    const supabase = createClient()
+    const supabase = createServerClient()
     const meetingId = params.id
 
     const {

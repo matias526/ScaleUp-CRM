@@ -1,4 +1,5 @@
-import { createClient } from "@/lib/supabase/server"
+//import { createClient } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { DocumentUpload } from "@/components/ai-knowledge-base/document-upload"
 
@@ -6,7 +7,7 @@ export const dynamic = "force-dynamic"
 
 export default async function AIKnowledgeBaseDocumentsPage() {
   try {
-    const supabase = await createClient()
+    const supabase = createServerClient()
 
     // Check authentication
     const {

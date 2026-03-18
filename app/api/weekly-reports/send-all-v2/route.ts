@@ -1,12 +1,13 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { WeeklyReportServiceV2 } from "@/lib/services/weekly-report-service-v2"
-import { createClient } from "@/lib/supabase/server"
+//import { createClient } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase/server"
 
 export async function POST(request: NextRequest) {
   try {
     console.log("[API] === INICIO send-all-v2 ===")
 
-    const supabase = createClient()
+    const supabase = createServerClient()
 
     // Obtener todas las tech companies que tienen destinatarios configurados
     const { data: techCompanies, error } = await supabase
