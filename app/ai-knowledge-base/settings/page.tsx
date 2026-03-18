@@ -4,7 +4,7 @@ import { redirect } from "next/navigation"
 import { CompanyContextEditor } from "@/components/ai-knowledge-base/company-context-editor"
 
 export default async function AIKnowledgeBaseSettingsPage() {
-  const supabase = await createClient()
+  const supabase = createServerClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
