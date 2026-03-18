@@ -1,12 +1,13 @@
 //import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
-import { supabase } from "@/lib/supabase/client"
-import { cookies } from "next/headers"
+import { createServerClient } from "@/lib/supabase/server"
+//import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { OpportunityNotes } from "@/components/opportunities/opportunity-notes"
 import { OpportunityNotesAlt } from "@/components/opportunities/opportunity-notes-alt"
 
 export default async function OpportunityNotesComparePage({ params }: { params: { id: string } }) {
   //const supabase = createServerComponentClient({ cookies })
+  const supabase = createServerClient()
   const {
     data: { session },
   } = await supabase.auth.getSession()

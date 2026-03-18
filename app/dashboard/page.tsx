@@ -4,13 +4,13 @@ import { BddDashboard } from "@/components/dashboard/bdd-dashboard"
 import { PartnerDashboard } from "@/components/dashboard/partner-dashboard"
 import { DashboardSkeleton } from "@/components/dashboard/dashboard-skeleton"
 //import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
-import { supabase } from "@/lib/supabase/client"
+import { createServerClient } from "@/lib/supabase/server"
 import { cookies } from "next/headers"
 import type { Database } from "@/types/supabase"
 
 export default async function DashboardPage() {
   //const supabase = createServerComponentClient<Database>({ cookies })
-
+  const supabase = createServerClient()
   // Obtener el usuario actual
   const {
     data: { user },
