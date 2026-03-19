@@ -144,18 +144,6 @@ export function EditOpportunityDialog({
             />
           </div>
 
-          {isScaleUpUser && (
-            <div className="flex items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <Label className="text-base">Oportunidad para nuevo partner</Label>
-                <p className="text-sm text-muted-foreground">
-                  Marca esta opción si la oportunidad es para incorporar un nuevo partner
-                </p>
-              </div>
-              <Switch checked={isNewPartner} onCheckedChange={setIsNewPartner} />
-            </div>
-          )}
-
           <div className="space-y-2">
             <Label htmlFor="estimated_close_date">Fecha de cierre estimada</Label>
             <Input
