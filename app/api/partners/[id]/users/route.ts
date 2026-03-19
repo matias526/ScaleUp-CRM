@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server"
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
+//import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
+import { createServerClient } from "@/lib/supabase/server"
 import { cookies } from "next/headers"
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    //const supabase = createRouteHandlerClient({ cookies })
+    const supabase = createServerClient()
 
     // Verificar si el usuario está autenticado
     const {

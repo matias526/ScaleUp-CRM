@@ -46,7 +46,6 @@
     "@sendgrid/mail": "latest",
     "@simplewebauthn/browser": "latest",
     "@simplewebauthn/server": "latest",
-    "@supabase/auth-helpers-nextjs": "latest",
     "@supabase/ssr": "latest",
     "@supabase/supabase-js": "latest",
     "@tanstack/react-query": "latest",

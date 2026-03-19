@@ -1,7 +1,8 @@
 import { createClient } from "@supabase/supabase-js"
 import { type NextRequest, NextResponse } from "next/server"
 import { cookies } from "next/headers"
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
+//import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
+import { createServerClient } from "@/lib/supabase/server"
 
 // Obtener las variables de entorno
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -17,7 +18,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
     // Crear un cliente normal para verificar la autenticación del usuario actual
-    const supabase = createRouteHandlerClient({ cookies })
+    //const supabase = createRouteHandlerClient({ cookies })
+    const supabase = createServerClient()
 
     // Obtener los datos del cuerpo de la solicitud
     const data = await request.json()

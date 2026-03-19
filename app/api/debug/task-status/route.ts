@@ -1,4 +1,5 @@
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
+//import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
+import { createServerClient } from "@/lib/supabase/server"
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 
@@ -12,7 +13,8 @@ export async function POST(request: Request) {
 
     console.log(`[API] Actualizando tarea ${taskId} a estado: ${status}`)
 
-    const supabase = createRouteHandlerClient({ cookies })
+    //const supabase = createRouteHandlerClient({ cookies })
+    const supabase = createServerClient()
 
     // Primero verificamos que la tarea existe
     const { data: existingTask, error: fetchError } = await supabase

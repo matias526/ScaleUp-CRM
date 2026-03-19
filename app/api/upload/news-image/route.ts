@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { uploadNewsImage } from "@/lib/supabase/storage"
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
+//import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
+import { createServerClient } from "@/lib/supabase/server"
 import { cookies } from "next/headers"
 import type { Database } from "@/types/supabase"
 
@@ -8,7 +9,8 @@ export async function POST(request: NextRequest) {
   try {
     console.log("[v0] Starting image upload process")
 
-    const supabase = createRouteHandlerClient<Database>({ cookies })
+    //const supabase = createRouteHandlerClient<Database>({ cookies })
+    const supabase = createServerClient()
 
     const formData = await request.formData()
     const file = formData.get("file") as File
