@@ -14,7 +14,6 @@ import { useTaskService } from "@/lib/services/task-service-client"
 import { useTranslations } from "@/hooks/use-translations"
 import { DatePicker } from "@/components/ui/date-picker"
 import { Loader2 } from "lucide-react"
-//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { supabase } from "@/lib/supabase/client"
 import type { Task } from "@/types/task"
 
@@ -61,8 +60,7 @@ export function TaskCreateDialog({
   const [techCompanyId, setTechCompanyId] = useState<string | undefined>(propTechCompanyId)
   const taskService = useTaskService()
   const { t } = useTranslations()
-  //const supabase = createClientComponentClient()
-
+  
   // Códigos de roles con case sensitive correcto
   const ROLE_CODES = {
     ADMIN: "Admin",

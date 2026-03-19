@@ -12,7 +12,6 @@ import { Card, CardContent } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2 } from "lucide-react"
 import { UserService, type UserFormData } from "@/lib/services/user-service"
-//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { supabase } from "@/lib/supabase/client"
 import { ImageUpload } from "@/components/ui/image-upload"
 
@@ -42,8 +41,7 @@ export function UserForm({ userId, initialData }: UserFormProps) {
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
   const { toast } = useToast()
-  //const supabase = createClientComponentClient()
-
+  
   // Cargar roles disponibles
   useEffect(() => {
     async function fetchRoles() {

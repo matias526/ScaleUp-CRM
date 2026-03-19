@@ -1,12 +1,10 @@
 "use client"
 
-//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { supabase } from "@/lib/supabase/client"
 import { useState } from "react"
 import type { Task, TaskInsert, TaskUpdate } from "@/types/task"
 
 export function useTaskService() {
-  //const supabase = createClientComponentClient()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
 

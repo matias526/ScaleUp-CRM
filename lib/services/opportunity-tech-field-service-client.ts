@@ -1,4 +1,3 @@
-//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { supabase } from "@/lib/supabase/client"
 
 export interface OpportunityTechField {
@@ -33,7 +32,6 @@ export async function getOpportunityTechFieldsClient(techCompanyId?: string): Pr
   try {
     console.log("CLIENT: Iniciando getOpportunityTechFieldsClient")
 
-    //const supabase = createClientComponentClient()
 
     // Mostrar la consulta que se va a ejecutar
     const queryStr = `
@@ -101,7 +99,6 @@ export async function getOpportunityTechFieldsClient(techCompanyId?: string): Pr
 // Función para obtener un campo personalizado por su ID (versión cliente)
 export async function getOpportunityTechFieldByIdClient(id: string): Promise<OpportunityTechField | null> {
   try {
-    //const supabase = createClientComponentClient()
 
     const { data, error } = await supabase
       .from("opportunity_tech_fields")
@@ -170,7 +167,6 @@ export async function createOpportunityTechFieldClient(
   try {
     console.log("CLIENT: Iniciando createOpportunityTechFieldClient con datos:", data)
 
-    //const supabase = createClientComponentClient()
 
     // Verificar que el usuario esté autenticado
     const {
@@ -244,7 +240,6 @@ export async function updateOpportunityTechFieldClient(
   try {
     console.log(`CLIENT: Iniciando updateOpportunityTechFieldClient con ID ${id} y datos:`, data)
 
-    //const supabase = createClientComponentClient()
 
     // Verificar que el usuario esté autenticado
     const {
@@ -301,7 +296,6 @@ export async function deleteOpportunityTechFieldClient(id: string): Promise<bool
   try {
     console.log(`CLIENT: Iniciando deleteOpportunityTechFieldClient con ID ${id}`)
 
-    //const supabase = createClientComponentClient()
 
     // Verificar que el usuario esté autenticado
     const {

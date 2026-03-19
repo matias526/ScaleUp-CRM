@@ -49,7 +49,6 @@ import { OpportunityNotesFixed } from "./opportunity-notes-fixed"
 import { createNote } from "@/lib/services/notes-service"
 import { OpportunityTechFields } from "./opportunity-tech-fields"
 import { OrganizationAvatar } from "./organization-avatar"
-//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { supabase } from "@/lib/supabase/client"
 import {
   Dialog,
@@ -367,7 +366,6 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
   const [partnerUsers, setPartnerUsers] = useState<any[]>([])
   const [selectedScaleupUser, setSelectedScaleupUser] = useState<string>("")
   const [selectedPartnerUser, setSelectedPartnerUser] = useState<string>("")
-  const supabase = createClientComponentClient()
   const [partnerCountries, setPartnerCountries] = useState<{ id: string; name: string; code: string }[]>([])
   const [loadingCountries, setLoadingCountries] = useState(false)
   const [showEndCustomerInfo, setShowEndCustomerInfo] = useState(false)

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { supabase } from "@/lib/supabase/client"
 
 export default function TasksFilterDebug() {
@@ -10,7 +9,6 @@ export default function TasksFilterDebug() {
   const [userRole, setUserRole] = useState<any>(null)
   const [tasks, setTasks] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  //const supabase = createClientComponentClient()
 
   useEffect(() => {
     async function loadData() {

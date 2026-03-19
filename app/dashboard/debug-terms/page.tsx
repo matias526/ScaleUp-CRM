@@ -13,8 +13,7 @@ export default function DebugTermsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  //const supabase = createClientComponentClient()
-
+  
   useEffect(() => {
     async function checkUser() {
       try {

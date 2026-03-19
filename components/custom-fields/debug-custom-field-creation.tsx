@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { supabase } from "@/lib/supabase/client"
 
 export function DebugCustomFieldCreation() {
@@ -24,7 +23,6 @@ export function DebugCustomFieldCreation() {
     try {
       addLog("🔍 Iniciando test de conexión a base de datos...")
 
-      //const supabase = createClientComponentClient()
 
       // 1. Verificar autenticación
       addLog("1️⃣ Verificando autenticación...")

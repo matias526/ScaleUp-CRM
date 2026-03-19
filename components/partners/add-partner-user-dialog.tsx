@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { UserPlus, Loader2 } from "lucide-react"
-//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { supabase } from "@/lib/supabase/client"
 
 interface AddPartnerUserDialogProps {
@@ -31,8 +30,7 @@ export function AddPartnerUserDialog({ partnerId, partnerName, onUserAdded }: Ad
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [roleId, setRoleId] = useState<string | null>(null)
-  //const supabase = createClientComponentClient()
-
+  
   // Valores del formulario
   const [email, setEmail] = useState("")
   const [firstName, setFirstName] = useState("")

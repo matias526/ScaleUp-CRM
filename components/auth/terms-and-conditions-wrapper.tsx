@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { supabase } from "@/lib/supabase/client"
 import { TermsAndConditionsModal } from "./terms-and-conditions-modal"
 import { TermsService } from "@/lib/services/terms-service"
@@ -9,7 +8,6 @@ import { TermsService } from "@/lib/services/terms-service"
 export function TermsAndConditionsWrapper() {
   const [showTerms, setShowTerms] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  //const supabase = createClientComponentClient()
 
   useEffect(() => {
     const checkTermsAcceptance = async () => {

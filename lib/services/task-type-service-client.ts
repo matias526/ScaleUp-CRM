@@ -1,11 +1,9 @@
-//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { supabase } from "@/lib/supabase/client"
 import type { TaskTypeInsert, TaskTypeUpdate } from "@/types/task"
 
 // Esta versión del servicio es para Client Components
 export function useTaskTypeService() {
-  //const supabase = createClientComponentClient()
-
+  
   const getTaskTypes = async () => {
     const { data, error } = await supabase.from("task_types").select("*").order("name", { ascending: true })
 

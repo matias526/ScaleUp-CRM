@@ -6,7 +6,6 @@ import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Upload, X, FileText, AlertCircle } from "lucide-react"
-//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { supabase } from "@/lib/supabase/client"
 import { v4 as uuidv4 } from "uuid"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -140,8 +139,7 @@ export function FileUpload({
   const [isDragging, setIsDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  //const supabase = createClientComponentClient()
-
+  
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     e.stopPropagation()

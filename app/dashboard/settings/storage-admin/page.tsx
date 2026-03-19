@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { supabase } from "@/lib/supabase/client"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -14,7 +13,6 @@ export default function StorageAdminPage() {
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null)
   const [bucketStatus, setBucketStatus] = useState<"unknown" | "exists" | "not_exists">("unknown")
 
-  //const supabase = createClientComponentClient()
 
   // Verificar si el bucket existe
   const checkBucket = async () => {

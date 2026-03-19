@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { OpportunitiesTable } from "@/components/opportunities/opportunities-table"
 import { OpportunitiesKanban } from "@/components/opportunities/opportunities-kanban"
-//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { supabase } from "@/lib/supabase/client"
 
 export function OpportunitiesPageWithDebug() {
@@ -23,8 +22,7 @@ export function OpportunitiesPageWithDebug() {
     hookResults: {},
   })
 
-  //const supabase = createClientComponentClient()
-
+  
   // Cargar datos
   useEffect(() => {
     async function loadData() {

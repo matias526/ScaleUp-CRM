@@ -36,7 +36,6 @@ import { AddNoteDialog } from "@/components/follow-up-meetings/add-note-dialog"
 import { AddTaskDialog } from "@/components/follow-up-meetings/add-task-dialog"
 import { EditOpportunityDialog } from "@/components/follow-up-meetings/edit-opportunity-dialog"
 import type { OpportunityWithRelations } from "@/lib/services/opportunity-service"
-//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { supabase } from "@/lib/supabase/client"
 
 interface PartnerOpportunityDetailProps {
@@ -57,8 +56,7 @@ export function PartnerOpportunityDetail({ opportunity, onClose, onDataChange }:
   const [techFields, setTechFields] = useState<any[]>([])
   const [partnerResponsible, setPartnerResponsible] = useState<any>(null)
   const [isLoadingPartnerResponsible, setIsLoadingPartnerResponsible] = useState(false)
-  //const supabase = createClientComponentClient()
-
+  
   // Cargar usuarios relevantes y campos técnicos
   useEffect(() => {
     const loadData = async () => {

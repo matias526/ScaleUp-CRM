@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Building, ExternalLink, Plus, RefreshCw } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
-//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { supabase } from "@/lib/supabase/client"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
@@ -32,8 +31,7 @@ export function TechCompanyPartners({ techCompanyId, techCompanyName = "esta emp
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  //const supabase = createClientComponentClient()
-
+  
   const loadPartners = async () => {
     if (!techCompanyId) return
 

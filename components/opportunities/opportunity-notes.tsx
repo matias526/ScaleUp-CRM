@@ -12,7 +12,6 @@ import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
 import NotesQueryDebug from "@/components/debug/notes-query-debug"
 import ReactMarkdown from "react-markdown"
-//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { supabase } from "@/lib/supabase/client"
 
 interface OpportunityNotesProps {
@@ -30,8 +29,7 @@ export function OpportunityNotes({ opportunityId, currentUserId, isScaleUpMember
   const [debugMode, setDebugMode] = useState(false)
   const [markdownErrors, setMarkdownErrors] = useState<Record<string, boolean>>({})
   const [actualIsScaleUpMember, setActualIsScaleUpMember] = useState<boolean | null>(null)
-  //const supabase = createClientComponentClient()
-
+  
   // Verificar el valor real de isScaleUpMember
   useEffect(() => {
     const checkScaleUpStatus = async () => {

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { useAuth } from "@/components/auth/auth-provider"
-//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { supabase } from "@/lib/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -20,7 +19,6 @@ export default function TasksDebug() {
   useEffect(() => {
     if (userInfo?.id && isLoading) {
       const fetchDebugInfo = async () => {
-        //const supabase = createClientComponentClient()
 
         try {
           // Obtener información del usuario actual
@@ -86,7 +84,6 @@ export default function TasksDebug() {
   }, [userInfo, isLoading])
 
   const testBDDQuery = async () => {
-    //const supabase = createClientComponentClient()
     try {
       // Probar la consulta manualmente
       const { data, error } = await supabase
@@ -113,7 +110,6 @@ export default function TasksDebug() {
 
   // Función para obtener la consulta SQL real
   const getActualQuery = async () => {
-    //const supabase = createClientComponentClient()
     try {
       // Crear una consulta similar a la que se usa en task-service-client.ts
       const queryBuilder = supabase

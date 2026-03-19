@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getNotesByOpportunityId, type Note, isScaleUpMember } from "@/lib/services/notes-service"
-//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { supabase } from "@/lib/supabase/client"
 
 interface OpportunityNotesDebugProps {
@@ -16,7 +15,6 @@ export function OpportunityNotesDebug({ opportunityId }: OpportunityNotesDebugPr
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [isUserScaleUp, setIsUserScaleUp] = useState<boolean | null>(null)
   const [error, setError] = useState<string | null>(null)
-  //const supabase = createClientComponentClient()
 
   useEffect(() => {
     const loadData = async () => {

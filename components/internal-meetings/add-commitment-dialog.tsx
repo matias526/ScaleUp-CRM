@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Loader2 } from "lucide-react"
-//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { supabase } from "@/lib/supabase/client"
 import { useTaskService } from "@/lib/services/task-service-client"
 
@@ -46,7 +45,6 @@ export function AddCommitmentDialog({
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingUsers, setIsLoadingUsers] = useState(true)
   const [isLoadingTechCompanies, setIsLoadingTechCompanies] = useState(true)
-  //const supabase = createClientComponentClient()
   const { createTask } = useTaskService()
 
   useEffect(() => {

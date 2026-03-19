@@ -20,7 +20,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "@/components/ui/use-toast"
 import { useAuth } from "@/components/auth/auth-provider"
-//import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { supabase } from "@/lib/supabase/client"
 import {
   Building2,
@@ -42,7 +41,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { getOpportunityTechFieldsClient } from "@/lib/services/opportunity-tech-field-service-client"
 import { getIndustries } from "@/lib/services/industry-service-client"
 
-//const supabase = createClientComponentClient()
 
 // Constante para el valor "Sin Partner"
 const NO_PARTNER_VALUE = "no_partner"
