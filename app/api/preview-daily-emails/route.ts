@@ -144,13 +144,13 @@ export async function GET() {
       .from("tasks")
       .select(`
         id, title, description, due_date, priority, status, is_commitment,
-        assigned_to, assigned_by, company_id
+        assigned_to, assigned_by, tech_company_id
       `)
       .eq("assigned_to", user.id)
       .in("status", ["pending", "in_progress"])
 
     debugLogs.push({
-      query: `SELECT id, title, description, due_date, priority, status, is_commitment, assigned_to, assigned_by, company_id FROM tasks WHERE assigned_to = '${user.id}' AND status IN ('pending', 'in_progress')`,
+      query: `SELECT id, title, description, due_date, priority, status, is_commitment, assigned_to, assigned_by, tech_company_id FROM tasks WHERE assigned_to = '${user.id}' AND status IN ('pending', 'in_progress')`,
       params: { assigned_to: user.id, status: ["pending", "in_progress"] },
       result: {
         success: !myTasksError,
@@ -165,14 +165,14 @@ export async function GET() {
       .from("tasks")
       .select(`
         id, title, description, due_date, priority, status, is_commitment,
-        assigned_to, assigned_by, company_id
+        assigned_to, assigned_by, tech_company_id
       `)
       .eq("assigned_by", user.id)
       .neq("assigned_to", user.id)
       .in("status", ["pending", "in_progress"])
 
     debugLogs.push({
-      query: `SELECT id, title, description, due_date, priority, status, is_commitment, assigned_to, assigned_by, company_id FROM tasks WHERE assigned_by = '${user.id}' AND assigned_to != '${user.id}' AND status IN ('pending', 'in_progress')`,
+      query: `SELECT id, title, description, due_date, priority, status, is_commitment, assigned_to, assigned_by, tech_company_id FROM tasks WHERE assigned_by = '${user.id}' AND assigned_to != '${user.id}' AND status IN ('pending', 'in_progress')`,
       params: { assigned_by: user.id, assigned_to_neq: user.id, status: ["pending", "in_progress"] },
       result: {
         success: !assignedError,
@@ -182,25 +182,25 @@ export async function GET() {
       }
     })
 
-    // Get company names for all tasks
-    const allCompanyIds = [...new Set([...(myTasks || []), ...(assignedTasks || [])].map(t => t.company_id).filter(Boolean))]
-    let companiesMap: Record<string, string> = {}
+    // Get tech company names for all tasks
+    const allTechCompanyIds = [...new Set([...(myTasks || []), ...(assignedTasks || [])].map(t => t.tech_company_id).filter(Boolean))]
+    let techCompaniesMap: Record<string, string> = {}
     
-    if (allCompanyIds.length > 0) {
-      const { data: companies } = await supabase
-        .from("companies")
+    if (allTechCompanyIds.length > 0) {
+      const { data: techCompanies } = await supabase
+        .from("tech_companies")
         .select("id, name")
-        .in("id", allCompanyIds)
+        .in("id", allTechCompanyIds)
       
-      companiesMap = (companies || []).reduce((acc, c) => ({ ...acc, [c.id]: c.name }), {})
+      techCompaniesMap = (techCompanies || []).reduce((acc, c) => ({ ...acc, [c.id]: c.name }), {})
       
       debugLogs.push({
-        query: `SELECT id, name FROM companies WHERE id IN (${allCompanyIds.map(id => `'${id}'`).join(", ")})`,
-        params: { company_ids: allCompanyIds },
+        query: `SELECT id, name FROM tech_companies WHERE id IN (${allTechCompanyIds.map(id => `'${id}'`).join(", ")})`,
+        params: { tech_company_ids: allTechCompanyIds },
         result: {
           success: true,
-          count: companies?.length || 0,
-          data: companies
+        count: techCompanies?.length || 0,
+        data: techCompanies
         }
       })
     }
@@ -228,7 +228,7 @@ export async function GET() {
       })
     }
 
-    const formatTasks = (tasks: any[], companiesMap: Record<string, string>, usersMap: Record<string, string>): TaskData[] => {
+    const formatTasks = (tasks: any[], techCompaniesMap: Record<string, string>, usersMap: Record<string, string>): TaskData[] => {
       return tasks.map(t => ({
         id: t.id,
         title: t.title,
@@ -239,14 +239,14 @@ export async function GET() {
         is_commitment: t.is_commitment || false,
         assigned_to: t.assigned_to,
         assigned_by: t.assigned_by,
-        company_name: t.company_id ? companiesMap[t.company_id] || null : null,
+        company_name: t.tech_company_id ? techCompaniesMap[t.tech_company_id] || null : null,
         assigned_to_name: t.assigned_to ? usersMap[t.assigned_to] || null : null,
         assigned_by_name: t.assigned_by ? usersMap[t.assigned_by] || null : null
       }))
     }
 
-    const myTasksFormatted = formatTasks(myTasks || [], companiesMap, usersMap)
-    const assignedTasksFormatted = formatTasks(assignedTasks || [], companiesMap, usersMap)
+    const myTasksFormatted = formatTasks(myTasks || [], techCompaniesMap, usersMap)
+    const assignedTasksFormatted = formatTasks(assignedTasks || [], techCompaniesMap, usersMap)
 
     // Skip if no tasks
     if (myTasksFormatted.length === 0 && assignedTasksFormatted.length === 0) {
