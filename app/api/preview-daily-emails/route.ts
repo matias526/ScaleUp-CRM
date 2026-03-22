@@ -25,10 +25,32 @@ interface UserData {
   role_code: string
 }
 
+interface DebugLog {
+  query: string
+  params: Record<string, any>
+  result: {
+    success: boolean
+    count: number
+    error?: string
+    data?: any
+  }
+}
+
 export async function GET() {
   const supabase = createServerClient()
+  const debugLogs: DebugLog[] = []
   
-  // Get users with receive_daily_email = true
+  // Query 1: Get users with receive_daily_email = true
+  const usersQuery = {
+    table: "users",
+    select: "id, email, first_name, last_name, preferred_language, roles!inner (code)",
+    filters: {
+      is_active: true,
+      receive_daily_email: true
+    },
+    limit: 10
+  }
+
   const { data: users, error: usersError } = await supabase
     .from("users")
     .select(`
@@ -39,8 +61,68 @@ export async function GET() {
     .eq("receive_daily_email", true)
     .limit(10)
 
+  debugLogs.push({
+    query: `SELECT ${usersQuery.select} FROM ${usersQuery.table} WHERE is_active = true AND receive_daily_email = true LIMIT 10`,
+    params: usersQuery.filters,
+    result: {
+      success: !usersError,
+      count: users?.length || 0,
+      error: usersError?.message,
+      data: users
+    }
+  })
+
   if (usersError) {
-    return NextResponse.json({ error: usersError.message }, { status: 500 })
+    return NextResponse.json({ 
+      error: usersError.message,
+      debugLogs 
+    }, { status: 500 })
+  }
+
+  // Si no hay usuarios, también verificar cuántos usuarios hay en total y cuántos tienen el flag
+  if (!users || users.length === 0) {
+    // Query adicional para debug: contar usuarios totales
+    const { data: totalUsers, error: totalError } = await supabase
+      .from("users")
+      .select("id, email, first_name, is_active, receive_daily_email")
+      .limit(20)
+
+    debugLogs.push({
+      query: "SELECT id, email, first_name, is_active, receive_daily_email FROM users LIMIT 20",
+      params: {},
+      result: {
+        success: !totalError,
+        count: totalUsers?.length || 0,
+        error: totalError?.message,
+        data: totalUsers
+      }
+    })
+
+    // Query para ver usuarios activos
+    const { data: activeUsers, error: activeError } = await supabase
+      .from("users")
+      .select("id, email, first_name, receive_daily_email")
+      .eq("is_active", true)
+      .limit(20)
+
+    debugLogs.push({
+      query: "SELECT id, email, first_name, receive_daily_email FROM users WHERE is_active = true LIMIT 20",
+      params: { is_active: true },
+      result: {
+        success: !activeError,
+        count: activeUsers?.length || 0,
+        error: activeError?.message,
+        data: activeUsers
+      }
+    })
+
+    return NextResponse.json({
+      totalUsers: 0,
+      usersWithTasks: 0,
+      previews: [],
+      debugLogs,
+      message: "No se encontraron usuarios con receive_daily_email = true"
+    })
   }
 
   const emailPreviews = []
@@ -58,7 +140,7 @@ export async function GET() {
     const isScaleUpUser = ["Admin", "BDD"].includes(userData.role_code)
 
     // Get tasks assigned TO this user (my tasks)
-    const { data: myTasks } = await supabase
+    const { data: myTasks, error: myTasksError } = await supabase
       .from("tasks")
       .select(`
         id, title, description, due_date, priority, status, is_commitment,
@@ -70,8 +152,19 @@ export async function GET() {
       .eq("assigned_to", user.id)
       .in("status", ["pending", "in_progress"])
 
+    debugLogs.push({
+      query: `SELECT tasks.* FROM tasks WHERE assigned_to = '${user.id}' AND status IN ('pending', 'in_progress')`,
+      params: { assigned_to: user.id, status: ["pending", "in_progress"] },
+      result: {
+        success: !myTasksError,
+        count: myTasks?.length || 0,
+        error: myTasksError?.message,
+        data: myTasks
+      }
+    })
+
     // Get tasks assigned BY this user to others
-    const { data: assignedTasks } = await supabase
+    const { data: assignedTasks, error: assignedError } = await supabase
       .from("tasks")
       .select(`
         id, title, description, due_date, priority, status, is_commitment,
@@ -83,6 +176,17 @@ export async function GET() {
       .eq("assigned_by", user.id)
       .neq("assigned_to", user.id)
       .in("status", ["pending", "in_progress"])
+
+    debugLogs.push({
+      query: `SELECT tasks.* FROM tasks WHERE assigned_by = '${user.id}' AND assigned_to != '${user.id}' AND status IN ('pending', 'in_progress')`,
+      params: { assigned_by: user.id, assigned_to_neq: user.id, status: ["pending", "in_progress"] },
+      result: {
+        success: !assignedError,
+        count: assignedTasks?.length || 0,
+        error: assignedError?.message,
+        data: assignedTasks
+      }
+    })
 
     const formatTasks = (tasks: any[]): TaskData[] => {
       return tasks.map(t => ({
@@ -106,6 +210,15 @@ export async function GET() {
 
     // Skip if no tasks
     if (myTasksFormatted.length === 0 && assignedTasksFormatted.length === 0) {
+      debugLogs.push({
+        query: `SKIP: Usuario ${user.email} no tiene tareas pendientes`,
+        params: { user_id: user.id },
+        result: {
+          success: true,
+          count: 0,
+          data: { myTasks: 0, assignedTasks: 0 }
+        }
+      })
       continue
     }
 
@@ -133,7 +246,8 @@ export async function GET() {
   return NextResponse.json({
     totalUsers: users?.length || 0,
     usersWithTasks: emailPreviews.length,
-    previews: emailPreviews
+    previews: emailPreviews,
+    debugLogs
   })
 }
 
@@ -200,10 +314,6 @@ function generateEmailHtml(
 
     const assigneeInfo = showAssignee && task.assigned_to_name
       ? `<div style="color: #6b7280; font-size: 12px; margin-top: 2px;">Asignado a: ${task.assigned_to_name}</div>`
-      : ""
-
-    const companyInfo = task.company_name
-      ? `<span style="color: #6b7280; font-size: 12px;"> · ${task.company_name}</span>`
       : ""
 
     const dueDateFormatted = task.due_date
