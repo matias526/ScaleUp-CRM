@@ -24,7 +24,6 @@ import {
   CalendarClock,
   Play,
   FileText,
-  Bug,
   Send,
   Calendar,
   CheckCircle,
@@ -56,7 +55,6 @@ export default function FollowUpMeetingsPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [meetingStarted, setMeetingStarted] = useState(false)
   const [reviewedOpportunities, setReviewedOpportunities] = useState<string[]>([])
-  const [debugMode, setDebugMode] = useState(false)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [meetingStartTime, setMeetingStartTime] = useState<Date | null>(null)
   const [emailRecipients, setEmailRecipients] = useState<string[]>([])
@@ -297,12 +295,7 @@ export default function FollowUpMeetingsPage() {
       setReviewedOpportunities([...reviewedOpportunities, opportunityId])
     }
   }
-
-  // Toggle debug mode
-  const toggleDebugMode = () => {
-    setDebugMode(!debugMode)
-  }
-
+  
   // Función para refrescar los datos
   const refreshData = () => {
     setRefreshTrigger((prev) => prev + 1)
@@ -650,12 +643,9 @@ export default function FollowUpMeetingsPage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-bold">{t("follow_up_meeting.title", "Reunión de Seguimiento")}</h1>
-          <Button variant="ghost" size="icon" onClick={toggleDebugMode} className="h-6 w-6">
-            <Bug className="h-4 w-4" />
-          </Button>
-        </div>
+  <div className="flex items-center gap-2">
+  <h1 className="text-2xl font-bold">{t("follow_up_meeting.title", "Reunión de Seguimiento")}</h1>
+  </div>
 
         {/* Logos de Partner y Tech Company */}
         <div className="flex items-center space-x-4">
@@ -683,41 +673,6 @@ export default function FollowUpMeetingsPage() {
           )}
         </div>
       </div>
-
-      {/* Debug info */}
-      {debugMode && (
-        <Card className="bg-gray-50 border-dashed">
-          <CardHeader className="py-2">
-            <CardTitle className="text-sm">Debug Information</CardTitle>
-          </CardHeader>
-          <CardContent className="py-2 text-xs font-mono">
-            <div>
-              <p>User: {JSON.stringify(userInfo)}</p>
-              <p>isAdmin: {String(isAdmin)}</p>
-              <p>isBDD: {String(isBDD)}</p>
-              <p>isPartner: {String(isPartner)}</p>
-              <p>roleCode: {userInfo?.roleCode || "N/A"}</p>
-              <p>Tech Companies: {techCompanies.length}</p>
-              <p>Partner Tech Companies: {partnerTechCompanies.length}</p>
-              <p>Partners: {partners.length}</p>
-              <p>Available Partners: {availablePartners.length}</p>
-              <p>Opportunities: {opportunities.length}</p>
-              <p>Selected Tech Company: {selectedTechCompany}</p>
-              <p>Selected Partner: {selectedPartner}</p>
-              <p>Loading: {String(isLoading)}</p>
-              <p>Meeting Started: {String(meetingStarted)}</p>
-              <p>Meeting Start Time: {meetingStartTime?.toString() || "N/A"}</p>
-              <p>Reviewed Opportunities: {reviewedOpportunities.length}</p>
-              <p>Refresh Trigger: {refreshTrigger}</p>
-              <p>Email Recipients: {emailRecipients.join(", ")}</p>
-              <details>
-                <summary>First Opportunity (if any)</summary>
-                <pre>{opportunities.length > 0 ? JSON.stringify(opportunities[0], null, 2) : "No opportunities"}</pre>
-              </details>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
