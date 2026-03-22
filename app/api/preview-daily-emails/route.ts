@@ -139,21 +139,18 @@ export async function GET() {
 
     const isScaleUpUser = ["Admin", "BDD"].includes(userData.role_code)
 
-    // Get tasks assigned TO this user (my tasks)
+    // Get tasks assigned TO this user (my tasks) - query simple sin joins
     const { data: myTasks, error: myTasksError } = await supabase
       .from("tasks")
       .select(`
         id, title, description, due_date, priority, status, is_commitment,
-        assigned_to, assigned_by,
-        companies!tasks_company_id_fkey (name),
-        assignedToUser:users!tasks_assigned_to_fkey (first_name, last_name),
-        assignedByUser:users!tasks_assigned_by_fkey (first_name, last_name)
+        assigned_to, assigned_by, company_id
       `)
       .eq("assigned_to", user.id)
       .in("status", ["pending", "in_progress"])
 
     debugLogs.push({
-      query: `SELECT tasks.* FROM tasks WHERE assigned_to = '${user.id}' AND status IN ('pending', 'in_progress')`,
+      query: `SELECT id, title, description, due_date, priority, status, is_commitment, assigned_to, assigned_by, company_id FROM tasks WHERE assigned_to = '${user.id}' AND status IN ('pending', 'in_progress')`,
       params: { assigned_to: user.id, status: ["pending", "in_progress"] },
       result: {
         success: !myTasksError,
@@ -163,22 +160,19 @@ export async function GET() {
       }
     })
 
-    // Get tasks assigned BY this user to others
+    // Get tasks assigned BY this user to others - query simple sin joins
     const { data: assignedTasks, error: assignedError } = await supabase
       .from("tasks")
       .select(`
         id, title, description, due_date, priority, status, is_commitment,
-        assigned_to, assigned_by,
-        companies!tasks_company_id_fkey (name),
-        assignedToUser:users!tasks_assigned_to_fkey (first_name, last_name),
-        assignedByUser:users!tasks_assigned_by_fkey (first_name, last_name)
+        assigned_to, assigned_by, company_id
       `)
       .eq("assigned_by", user.id)
       .neq("assigned_to", user.id)
       .in("status", ["pending", "in_progress"])
 
     debugLogs.push({
-      query: `SELECT tasks.* FROM tasks WHERE assigned_by = '${user.id}' AND assigned_to != '${user.id}' AND status IN ('pending', 'in_progress')`,
+      query: `SELECT id, title, description, due_date, priority, status, is_commitment, assigned_to, assigned_by, company_id FROM tasks WHERE assigned_by = '${user.id}' AND assigned_to != '${user.id}' AND status IN ('pending', 'in_progress')`,
       params: { assigned_by: user.id, assigned_to_neq: user.id, status: ["pending", "in_progress"] },
       result: {
         success: !assignedError,
@@ -188,7 +182,53 @@ export async function GET() {
       }
     })
 
-    const formatTasks = (tasks: any[]): TaskData[] => {
+    // Get company names for all tasks
+    const allCompanyIds = [...new Set([...(myTasks || []), ...(assignedTasks || [])].map(t => t.company_id).filter(Boolean))]
+    let companiesMap: Record<string, string> = {}
+    
+    if (allCompanyIds.length > 0) {
+      const { data: companies } = await supabase
+        .from("companies")
+        .select("id, name")
+        .in("id", allCompanyIds)
+      
+      companiesMap = (companies || []).reduce((acc, c) => ({ ...acc, [c.id]: c.name }), {})
+      
+      debugLogs.push({
+        query: `SELECT id, name FROM companies WHERE id IN (${allCompanyIds.map(id => `'${id}'`).join(", ")})`,
+        params: { company_ids: allCompanyIds },
+        result: {
+          success: true,
+          count: companies?.length || 0,
+          data: companies
+        }
+      })
+    }
+
+    // Get user names for assigned_to and assigned_by
+    const allUserIds = [...new Set([...(myTasks || []), ...(assignedTasks || [])].flatMap(t => [t.assigned_to, t.assigned_by]).filter(Boolean))]
+    let usersMap: Record<string, string> = {}
+    
+    if (allUserIds.length > 0) {
+      const { data: usersData } = await supabase
+        .from("users")
+        .select("id, first_name, last_name")
+        .in("id", allUserIds)
+      
+      usersMap = (usersData || []).reduce((acc, u) => ({ ...acc, [u.id]: `${u.first_name} ${u.last_name}` }), {})
+      
+      debugLogs.push({
+        query: `SELECT id, first_name, last_name FROM users WHERE id IN (${allUserIds.length} users)`,
+        params: { user_ids: allUserIds },
+        result: {
+          success: true,
+          count: usersData?.length || 0,
+          data: usersData
+        }
+      })
+    }
+
+    const formatTasks = (tasks: any[], companiesMap: Record<string, string>, usersMap: Record<string, string>): TaskData[] => {
       return tasks.map(t => ({
         id: t.id,
         title: t.title,
@@ -199,14 +239,14 @@ export async function GET() {
         is_commitment: t.is_commitment || false,
         assigned_to: t.assigned_to,
         assigned_by: t.assigned_by,
-        company_name: t.companies?.name || null,
-        assigned_to_name: t.assignedToUser ? `${t.assignedToUser.first_name} ${t.assignedToUser.last_name}` : null,
-        assigned_by_name: t.assignedByUser ? `${t.assignedByUser.first_name} ${t.assignedByUser.last_name}` : null
+        company_name: t.company_id ? companiesMap[t.company_id] || null : null,
+        assigned_to_name: t.assigned_to ? usersMap[t.assigned_to] || null : null,
+        assigned_by_name: t.assigned_by ? usersMap[t.assigned_by] || null : null
       }))
     }
 
-    const myTasksFormatted = formatTasks(myTasks || [])
-    const assignedTasksFormatted = formatTasks(assignedTasks || [])
+    const myTasksFormatted = formatTasks(myTasks || [], companiesMap, usersMap)
+    const assignedTasksFormatted = formatTasks(assignedTasks || [], companiesMap, usersMap)
 
     // Skip if no tasks
     if (myTasksFormatted.length === 0 && assignedTasksFormatted.length === 0) {
