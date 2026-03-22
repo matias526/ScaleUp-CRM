@@ -12,11 +12,14 @@ interface EmailPreview {
     name: string
     email: string
     role: string
+    language: string
     isScaleUp: boolean
   }
+  subject: string
   stats: {
     myTasks: number
     assignedTasks: number
+    overdueCount: number
     myCommitments: number
     assignedCommitments: number
   }
@@ -304,8 +307,21 @@ export default function PreviewDailyEmailsPage() {
                     <CardTitle className="text-base">Vista Previa del Email</CardTitle>
                   </div>
                   {selectedPreview && (
-                    <div className="text-sm text-muted-foreground">
-                      Para: {selectedPreview.user.email}
+                    <div className="space-y-1">
+                      <div className="text-sm">
+                        <span className="text-muted-foreground">Para:</span> {selectedPreview.user.email}
+                      </div>
+                      <div className="text-sm">
+                        <span className="text-muted-foreground">Asunto:</span> <strong>{selectedPreview.subject}</strong>
+                      </div>
+                      <div className="text-xs text-muted-foreground flex items-center gap-3">
+                        <span>Idioma: {selectedPreview.user.language}</span>
+                        {selectedPreview.stats.overdueCount > 0 && (
+                          <Badge variant="destructive" className="text-xs">
+                            {selectedPreview.stats.overdueCount} vencidas
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   )}
                 </CardHeader>
