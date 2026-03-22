@@ -145,7 +145,7 @@ export async function GET() {
       .select(`
         id, title, description, due_date, priority, status, is_commitment,
         assigned_to, assigned_by,
-        companies (name),
+        companies!tasks_company_id_fkey (name),
         assignedToUser:users!tasks_assigned_to_fkey (first_name, last_name),
         assignedByUser:users!tasks_assigned_by_fkey (first_name, last_name)
       `)
@@ -169,7 +169,7 @@ export async function GET() {
       .select(`
         id, title, description, due_date, priority, status, is_commitment,
         assigned_to, assigned_by,
-        companies (name),
+        companies!tasks_company_id_fkey (name),
         assignedToUser:users!tasks_assigned_to_fkey (first_name, last_name),
         assignedByUser:users!tasks_assigned_by_fkey (first_name, last_name)
       `)
