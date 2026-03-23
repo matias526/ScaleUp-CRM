@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { useTranslations } from "@/hooks/use-translations"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -69,6 +69,12 @@ export default function FollowUpMeetingsPage() {
   const isAdmin = userInfo?.isAdmin || false
   const isBDD = userInfo?.roleCode?.toLowerCase() === "bdd" || false
   const isPartner = userInfo?.roleCode?.toLowerCase().includes("partner") || false
+
+  // Memoizar la función onRecipientsChange para evitar loops infinitos en EmailRecipientsSelector
+  const handleRecipientsChange = useCallback((recipients: string[]) => {
+    console.log("Recipients changed:", recipients)
+    setEmailRecipients(recipients)
+  }, [])
 
   // Cargar datos iniciales
   useEffect(() => {
@@ -1056,10 +1062,7 @@ export default function FollowUpMeetingsPage() {
                 <EmailRecipientsSelector
                   partnerUsers={partnerUsers}
                   bddUsers={bddUsers}
-                  onRecipientsChange={(recipients) => {
-                    console.log("Recipients changed:", recipients)
-                    setEmailRecipients(recipients)
-                  }}
+                  onRecipientsChange={handleRecipientsChange}
                 />
 
                 <div className="flex justify-end mt-4">
