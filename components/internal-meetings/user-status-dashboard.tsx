@@ -182,8 +182,17 @@ export default function UserStatusDashboard({ meetingId }: UserStatusDashboardPr
     try {
       console.log(`[v0] Updating commitment ${taskId} to status: ${status}`)
 
+      // Map commitment status to task status
+      let taskStatus = "pending"
+      if (status === "completed" || status === "partial") {
+        taskStatus = "completed"
+      } else if (status === "not_completed") {
+        taskStatus = "pending"
+      }
+
       const updateData: any = {
         commitment_status: status,
+        status: taskStatus, // Sync task status with commitment status
         comments: comments || null,
       }
 
