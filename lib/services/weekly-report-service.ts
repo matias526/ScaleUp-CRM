@@ -1,5 +1,4 @@
-//import { createClient } from "@/lib/supabase/server"
-import { createServerClient } from "@/lib/supabase/server"
+import { createServiceRoleClient } from "@/lib/supabase/service-role"
 import { format, startOfWeek, endOfWeek, subWeeks } from "date-fns"
 import { es, enUS, pt } from "date-fns/locale"
 import { Resend } from "resend"
@@ -58,7 +57,7 @@ export class WeeklyReportService {
   private static resend = new Resend(process.env.RESEND_API_KEY)
 
   static async getTechCompaniesWithRecipients(): Promise<string[]> {
-    const supabase = createServerClient()
+    const supabase = createServiceRoleClient()
 
     try {
       const { data, error } = await supabase
@@ -81,7 +80,7 @@ export class WeeklyReportService {
 
   static async getRecipients(techCompanyId: string) {
     console.log(`[WeeklyReportService] Obteniendo destinatarios para tech company: ${techCompanyId}`)
-    const supabase = createServerClient()
+    const supabase = createServiceRoleClient()
 
     try {
       // Primero obtener los IDs de usuarios
@@ -136,7 +135,7 @@ export class WeeklyReportService {
   }
 
   static async generateWeeklyReportData(techCompanyId: string, weekDate?: Date): Promise<WeeklyReportData | null> {
-    const supabase = createServerClient()
+    const supabase = createServiceRoleClient()
 
     try {
       console.log(`[WeeklyReportService] Generando datos para tech company: ${techCompanyId}`)
@@ -516,7 +515,7 @@ export class WeeklyReportService {
 
   static async debugWeeklyReportData(techCompanyId: string) {
     console.log(`[DEBUG] === INICIO DEBUG para ${techCompanyId} ===`)
-    const supabase = createServerClient()
+    const supabase = createServiceRoleClient()
 
     try {
       // 1. Verificar tech company

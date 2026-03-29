@@ -1,5 +1,4 @@
-//import { createClient } from "@/lib/supabase/server"
-import { createServerClient } from "@/lib/supabase/server"
+import { createServiceRoleClient } from "@/lib/supabase/service-role"
 import { format, subDays, isBefore, addDays } from "date-fns"
 import { es, enUS, pt } from "date-fns/locale"
 import { Resend } from "resend"
@@ -120,7 +119,7 @@ export class WeeklyReportServiceV8 {
     console.log(`[WeeklyReportServiceV8] === INICIO sendWeeklyReport para ${techCompanyId} ===`)
 
     try {
-      const supabase = createServerClient()
+      const supabase = createServiceRoleClient()
 
       // 1. Obtener tech company
       console.log(`[WeeklyReportServiceV8] 1. Obteniendo tech company...`)
@@ -780,9 +779,8 @@ export class WeeklyReportServiceV8 {
             <h2 style="margin: 0; font-size: 20px; font-weight: 600;">${translatedPartnerName}</h2>
           </div>
           <div style="padding: 25px; background-color: #fafbfc;">
-            ${
-              partnerData.new && partnerData.new.length > 0
-                ? `
+            ${partnerData.new && partnerData.new.length > 0
+          ? `
               <div style="margin-bottom: 25px;">
                 <h3 style="color: ${scaleupBlue}; margin-bottom: 15px; font-size: 16px; font-weight: 600; display: flex; align-items: center;">
                   <span style="font-size: 20px; margin-right: 8px;">🆕</span>
@@ -791,12 +789,11 @@ export class WeeklyReportServiceV8 {
                 ${generateOpportunityTable(partnerData.new)}
               </div>
             `
-                : ""
-            }
+          : ""
+        }
             
-            ${
-              partnerData.existing && partnerData.existing.length > 0
-                ? `
+            ${partnerData.existing && partnerData.existing.length > 0
+          ? `
               <div style="margin-bottom: 25px;">
                 <h3 style="color: ${scaleupBlue}; margin-bottom: 15px; font-size: 16px; font-weight: 600; display: flex; align-items: center;">
                   <span style="font-size: 20px; margin-right: 8px;">📋</span>
@@ -805,12 +802,11 @@ export class WeeklyReportServiceV8 {
                 ${generateOpportunityTable(partnerData.existing)}
               </div>
             `
-                : ""
-            }
+          : ""
+        }
             
-            ${
-              partnerData.won && partnerData.won.length > 0
-                ? `
+            ${partnerData.won && partnerData.won.length > 0
+          ? `
               <div style="margin-bottom: 25px;">
                 <h3 style="color: #28a745; margin-bottom: 15px; font-size: 16px; font-weight: 600; display: flex; align-items: center;">
                   <span style="font-size: 20px; margin-right: 8px;">🏆</span>
@@ -819,12 +815,11 @@ export class WeeklyReportServiceV8 {
                 ${generateOpportunityTable(partnerData.won)}
               </div>
             `
-                : ""
-            }
+          : ""
+        }
             
-            ${
-              partnerData.inactive && partnerData.inactive.length > 0
-                ? `
+            ${partnerData.inactive && partnerData.inactive.length > 0
+          ? `
               <div style="margin-bottom: 25px;">
                 <h3 style="color: #dc3545; margin-bottom: 15px; font-size: 16px; font-weight: 600; display: flex; align-items: center;">
                   <span style="font-size: 20px; margin-right: 8px;">❄️</span>
@@ -833,8 +828,8 @@ export class WeeklyReportServiceV8 {
                 ${generateOpportunityTable(partnerData.inactive)}
               </div>
             `
-                : ""
-            }
+          : ""
+        }
           </div>
         </div>
       `
@@ -887,11 +882,10 @@ export class WeeklyReportServiceV8 {
             
             <!-- Logo Tech Company (derecha) -->
             <div style="flex: 0 0 auto; margin-left: 30px;">
-              ${
-                techCompany.logo_url
-                  ? `<img src="${techCompany.logo_url}" alt="${techCompany.name}" style="height: 45px; width: auto; max-width: 120px; object-fit: contain; background-color: white; padding: 8px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">`
-                  : `<div style="width: 45px; height: 45px; background-color: rgba(255,255,255,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px;">🏢</div>`
-              }
+              ${techCompany.logo_url
+        ? `<img src="${techCompany.logo_url}" alt="${techCompany.name}" style="height: 45px; width: auto; max-width: 120px; object-fit: contain; background-color: white; padding: 8px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">`
+        : `<div style="width: 45px; height: 45px; background-color: rgba(255,255,255,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px;">🏢</div>`
+      }
             </div>
           </div>
           
@@ -911,11 +905,10 @@ export class WeeklyReportServiceV8 {
             
             <!-- Logo Tech Company centrado abajo -->
             <div>
-              ${
-                techCompany.logo_url
-                  ? `<img src="${techCompany.logo_url}" alt="${techCompany.name}" style="height: 40px; width: auto; max-width: 200px; object-fit: contain; background-color: white; padding: 8px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">`
-                  : `<div style="width: 40px; height: 40px; background-color: rgba(255,255,255,0.2); border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 20px;">🏢</div>`
-              }
+              ${techCompany.logo_url
+        ? `<img src="${techCompany.logo_url}" alt="${techCompany.name}" style="height: 40px; width: auto; max-width: 200px; object-fit: contain; background-color: white; padding: 8px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">`
+        : `<div style="width: 40px; height: 40px; background-color: rgba(255,255,255,0.2); border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 20px;">🏢</div>`
+      }
             </div>
           </div>
           
@@ -1012,7 +1005,7 @@ export class WeeklyReportServiceV8 {
     console.log(`[WeeklyReportServiceV8] === INICIO sendAllWeeklyReports ===`)
 
     try {
-      const supabase = createServerClient()
+      const supabase = createServiceRoleClient()
 
       // Obtener todas las tech companies que tienen configuración de reportes
       const { data: techCompanies, error } = await supabase
@@ -1026,10 +1019,10 @@ export class WeeklyReportServiceV8 {
         `)
         .eq("is_active", true)
 
-      console.log(`[WeeklyReportServiceV8] Query result:`, { 
-        data: techCompanies, 
+      console.log(`[WeeklyReportServiceV8] Query result:`, {
+        data: techCompanies,
         error,
-        dataLength: techCompanies?.length 
+        dataLength: techCompanies?.length
       })
 
       if (error) {
@@ -1040,7 +1033,7 @@ export class WeeklyReportServiceV8 {
       if (!techCompanies || techCompanies.length === 0) {
         console.log(`[WeeklyReportServiceV8] No tech companies with active recipients found`)
         console.log(`[WeeklyReportServiceV8] Attempting to check raw table count...`)
-        
+
         // Debug: intentar contar directamente sin joins
         const { count, error: countError } = await supabase
           .from("weekly_report_recipients")
