@@ -1012,8 +1012,9 @@ export class WeeklyReportServiceV8 {
     console.log(`[WeeklyReportServiceV8] === INICIO sendAllWeeklyReports ===`)
 
     try {
-      //const supabase = supabaseClient || createClient()
-      const supabase = createServerClient()
+      // Usar el cliente pasado como parámetro, o crear uno nuevo si no se proporciona
+      const supabase = supabaseClient || createServerClient()
+      console.log(`[WeeklyReportServiceV8] Usando cliente de Supabase: ${supabaseClient ? 'parametrizado' : 'nuevo'}`)
 
       // Obtener todas las tech companies que tienen configuración de reportes
       const { data: techCompanies, error } = await supabase
@@ -1032,8 +1033,18 @@ export class WeeklyReportServiceV8 {
         return { success: false, error: error.message }
       }
 
+      console.log(`[WeeklyReportServiceV8] Query result: ${techCompanies?.length || 0} recipients activos encontrados`)
+
       if (!techCompanies || techCompanies.length === 0) {
         console.log(`[WeeklyReportServiceV8] No tech companies with active recipients found`)
+        
+        // Debug: obtener count de todos los recipients sin filtro
+        const { count: totalCount } = await supabase
+          .from("weekly_report_recipients")
+          .select("*", { count: "exact", head: true })
+        
+        console.log(`[WeeklyReportServiceV8] DEBUG: Total recipients en BD: ${totalCount}`)
+        
         return { success: true, results: [], message: "No tech companies configured" }
       }
 
