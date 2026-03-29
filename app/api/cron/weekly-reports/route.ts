@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { WeeklyReportServiceV8 } from "@/lib/services/weekly-report-service-v8"
-import { createClient } from "@supabase/supabase-js"
+import { createServerClient } from "@/lib/supabase/server"
 
 export async function GET(request: NextRequest) {
   console.log("[WeeklyReportsCron] === INICIO CRON JOB ===")
@@ -28,21 +28,7 @@ export async function GET(request: NextRequest) {
 
     console.log("[WeeklyReportsCron] Autorización válida, iniciando envío de reportes semanales...")
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-    if (!supabaseUrl || !supabaseServiceKey) {
-      console.error("[WeeklyReportsCron] Faltan variables de entorno necesarias")
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Missing environment variables: NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY",
-        },
-        { status: 500 },
-      )
-    }
-
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
+    const supabaseAdmin = createServerClient()
     console.log("[WeeklyReportsCron] Cliente de Supabase con service role creado")
 
     const result = await WeeklyReportServiceV8.sendAllWeeklyReports(supabaseAdmin)
