@@ -1,4 +1,4 @@
-import { createCronClient } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase/server"
 import { format, addDays, startOfDay } from "date-fns"
 import { es, enUS, pt } from "date-fns/locale"
 import { Resend } from "resend"
@@ -79,7 +79,7 @@ export class DailyEmailService {
    * Criterio: is_active = true AND receive_daily_email = true
    */
   static async getUsersForDailyEmail() {
-    const supabase = createCronClient()
+    const supabase = createServerClient()
 
     try {
       const { data, error } = await supabase
@@ -201,7 +201,7 @@ export class DailyEmailService {
    * Obtiene los datos para el email diario de un usuario específico
    */
   static async getDailyEmailData(userId: string, roleCode: string | null): Promise<DailyEmailData | null> {
-    const supabase = createCronClient()
+    const supabase = createServerClient()
 
     try {
       // Obtener información del usuario

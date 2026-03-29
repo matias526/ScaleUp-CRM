@@ -1,5 +1,5 @@
 //import { createClient } from "@/lib/supabase/server"
-import { createCronClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { format, subDays, isBefore, addDays } from "date-fns"
 import { es, enUS, pt } from "date-fns/locale"
 import { Resend } from "resend"
@@ -120,7 +120,7 @@ export class WeeklyReportServiceV8 {
     console.log(`[WeeklyReportServiceV8] === INICIO sendWeeklyReport para ${techCompanyId} ===`)
 
     try {
-      const supabase = createCronClient()
+      const supabase = createAdminClient()
 
       // 1. Obtener tech company
       console.log(`[WeeklyReportServiceV8] 1. Obteniendo tech company...`)
@@ -1012,7 +1012,7 @@ export class WeeklyReportServiceV8 {
     console.log(`[WeeklyReportServiceV8] === INICIO sendAllWeeklyReports ===`)
 
     try {
-      const supabase = createCronClient()
+      const supabase = createServerClient()
 
       // Obtener todas las tech companies que tienen configuración de reportes
       const { data: techCompanies, error } = await supabase
