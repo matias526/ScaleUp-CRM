@@ -1008,11 +1008,10 @@ export class WeeklyReportServiceV8 {
     `
   }
 
-  static async sendAllWeeklyReports(supabaseClient?: any) {
+  static async sendAllWeeklyReports() {
     console.log(`[WeeklyReportServiceV8] === INICIO sendAllWeeklyReports ===`)
 
     try {
-      //const supabase = supabaseClient || createClient()
       const supabase = createServerClient()
 
       // Obtener todas las tech companies que tienen configuración de reportes

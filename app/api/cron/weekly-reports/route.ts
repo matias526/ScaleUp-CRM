@@ -1,78 +1,127 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { WeeklyReportServiceV8 } from "@/lib/services/weekly-report-service-v8"
-import { createServerClient } from "@/lib/supabase/server"
 
+// Esta función se ejecutará automáticamente todos los lunes a las 06:00 AM UTC (3:00 AM Argentina)
 export async function GET(request: NextRequest) {
-  console.log("[WeeklyReportsCron] === INICIO CRON JOB ===")
-
   try {
-    // Verificar token de autorización para cron jobs
-    const authHeader = request.headers.get("authorization")
-    const cronSecret = process.env.CRON_SECRET || "weekly-reports-cron-2024"
+    // Obtener todos los headers para debugging
+    const headers = Object.fromEntries(request.headers.entries())
+    console.log("[WeeklyCron] Headers recibidos:", JSON.stringify(headers, null, 2))
 
-    // Verificar autorización (Vercel Cron o token manual)
-    const isVercelCron = request.headers.get("user-agent")?.includes("vercel-cron")
-    const hasValidToken = authHeader === `Bearer ${cronSecret}`
+    const isVercelExecution = headers["x-vercel-id"] || headers["x-vercel-deployment-url"] || headers["x-vercel-cron"]
+    const manualToken = request.nextUrl.searchParams.get("token")
 
-    if (!isVercelCron && !hasValidToken) {
-      console.log("[WeeklyReportsCron] Acceso no autorizado")
+    // IMPORTANTE: Para ejecuciones manuales desde Vercel, permitimos cualquier solicitud que venga de Vercel
+    // o que tenga el token manual
+    if (!isVercelExecution && manualToken !== "manual-execution-2024") {
+      console.log("[WeeklyCron] Solicitud no autorizada - no proviene de Vercel ni tiene token válido")
       return NextResponse.json(
         {
-          success: false,
-          error: "Unauthorized",
-          message: "Este endpoint solo puede ser ejecutado por Vercel Cron o con token válido",
+          error: "Unauthorized - Not from Vercel or missing valid token",
+          hint: "Para ejecución manual externa, agrega ?token=manual-execution-2024 a la URL",
         },
         { status: 401 },
       )
     }
 
-    console.log("[WeeklyReportsCron] Autorización válida, iniciando envío de reportes semanales...")
+    // Log del tipo de ejecución
+    if (isVercelExecution) {
+      console.log("[WeeklyCron] ✅ Ejecución desde Vercel")
+    } else {
+      console.log("[WeeklyCron] 🧪 Ejecución manual con token")
+    }
 
-    const supabaseAdmin = createServerClient()
-    console.log("[WeeklyReportsCron] Cliente de Supabase con service role creado")
+    console.log("[WeeklyCron] ✅ Iniciando envío de reportes semanales programado")
+    console.log(`[WeeklyCron] Fecha y hora de ejecución: ${new Date().toISOString()}`)
+    console.log(`[WeeklyCron] Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}`)
 
-    const result = await WeeklyReportServiceV8.sendAllWeeklyReports(supabaseAdmin)
+    // Ejecutar el envío de reportes semanales
+    const result = await WeeklyReportServiceV8.sendAllWeeklyReports()
 
-    console.log("[WeeklyReportsCron] Resultado del envío:", {
-      success: result.success,
-      totalTechCompanies: result.summary?.totalTechCompanies || 0,
-      successful: result.summary?.successful || 0,
-      failed: result.summary?.failed || 0,
+    // Registrar resultados detallados
+    const successCount = result.results?.filter((r) => r.success).length || 0
+    const totalCount = result.results?.length || 0
+
+    console.log(
+      `[WeeklyCron] ✅ Proceso completado: ${successCount}/${totalCount} reportes enviados exitosamente`,
+    )
+
+    // Log de resultados individuales
+    result.results?.forEach((r) => {
+      if (r.success) {
+        console.log(`[WeeklyCron] ✅ Reporte enviado para tech company ${r.techCompanyId}`)
+      } else {
+        console.log(`[WeeklyCron] ❌ Error enviando para tech company ${r.techCompanyId}: ${r.error}`)
+      }
     })
 
-    if (result.success) {
-      return NextResponse.json({
-        success: true,
-        message: "Weekly reports sent successfully",
-        summary: result.summary,
-        results: result.results,
-        timestamp: new Date().toISOString(),
-      })
-    } else {
-      console.error("[WeeklyReportsCron] Error en el envío:", result.error)
-      return NextResponse.json(
-        {
-          success: false,
-          error: result.error || "Unknown error",
-          timestamp: new Date().toISOString(),
-        },
-        { status: 500 },
-      )
-    }
+    return NextResponse.json({
+      success: true,
+      timestamp: new Date().toISOString(),
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      summary: result.summary,
+      results: result.results,
+    })
   } catch (error) {
-    console.error("[WeeklyReportsCron] Error inesperado:", error)
+    console.error("[WeeklyCron] ❌ Error crítico en el cron job de reportes semanales:", error)
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
+        error: error instanceof Error ? error.message : "Error desconocido",
         timestamp: new Date().toISOString(),
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       },
       { status: 500 },
     )
   }
 }
 
-// Permitir también POST para testing manual
+// También permitir POST para pruebas manuales
 export async function POST(request: NextRequest) {
-  return GET(request)
+  try {
+    // Obtener todos los headers para debugging
+    const headers = Object.fromEntries(request.headers.entries())
+    console.log("[WeeklyCron] Headers recibidos en POST:", JSON.stringify(headers, null, 2))
+
+    const isVercelExecution = headers["x-vercel-id"] || headers["x-vercel-deployment-url"] || headers["x-vercel-cron"]
+
+    // Para POST, permitimos cualquier solicitud que venga de Vercel
+    if (!isVercelExecution) {
+      console.log("[WeeklyCron] Solicitud POST no autorizada - no proviene de Vercel")
+      return NextResponse.json(
+        {
+          error: "Unauthorized - Not from Vercel",
+          hint: "Este endpoint solo acepta solicitudes POST desde Vercel",
+        },
+        { status: 401 },
+      )
+    }
+
+    console.log("[WeeklyCron] 🧪 Ejecución manual del cron job (POST)")
+
+    const result = await WeeklyReportServiceV8.sendAllWeeklyReports()
+    const successCount = result.results?.filter((r) => r.success).length || 0
+    const totalCount = result.results?.length || 0
+
+    console.log(`[WeeklyCron] 🧪 Prueba manual completada: ${successCount}/${totalCount} reportes enviados`)
+
+    return NextResponse.json({
+      success: true,
+      timestamp: new Date().toISOString(),
+      manual: true,
+      summary: result.summary,
+      results: result.results,
+    })
+  } catch (error) {
+    console.error("[WeeklyCron] ❌ Error en ejecución manual:", error)
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Error desconocido",
+        timestamp: new Date().toISOString(),
+        manual: true,
+      },
+      { status: 500 },
+    )
+  }
 }
