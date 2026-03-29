@@ -1026,6 +1026,12 @@ export class WeeklyReportServiceV8 {
         `)
         .eq("is_active", true)
 
+      console.log(`[WeeklyReportServiceV8] Query result:`, { 
+        data: techCompanies, 
+        error,
+        dataLength: techCompanies?.length 
+      })
+
       if (error) {
         console.error(`[WeeklyReportServiceV8] Error getting tech companies:`, error)
         return { success: false, error: error.message }
@@ -1033,6 +1039,16 @@ export class WeeklyReportServiceV8 {
 
       if (!techCompanies || techCompanies.length === 0) {
         console.log(`[WeeklyReportServiceV8] No tech companies with active recipients found`)
+        console.log(`[WeeklyReportServiceV8] Attempting to check raw table count...`)
+        
+        // Debug: intentar contar directamente sin joins
+        const { count, error: countError } = await supabase
+          .from("weekly_report_recipients")
+          .select("*", { count: "exact", head: true })
+          .eq("is_active", true)
+
+        console.log(`[WeeklyReportServiceV8] Raw count:`, { count, countError })
+
         return { success: true, results: [], message: "No tech companies configured" }
       }
 
