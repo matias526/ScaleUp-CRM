@@ -13,6 +13,8 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2 } from "lucide-react"
 import { type TechCompany, TechCompanyService } from "@/lib/services/tech-company-service"
+import { StorageService } from "@/lib/services/storage-service"
+import { useToast } from "@/hooks/use-toast"
 
 interface TechCompanyEditFormProps {
   companyId: string
@@ -20,6 +22,7 @@ interface TechCompanyEditFormProps {
 
 export function TechCompanyEditForm({ companyId }: TechCompanyEditFormProps) {
   const router = useRouter()
+  const { toast } = useToast()
   const [company, setCompany] = useState<TechCompany | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -73,8 +76,9 @@ export function TechCompanyEditForm({ companyId }: TechCompanyEditFormProps) {
     try {
       // Determinar qué hacer con el logo
       let logoToSend: File | null = null
+      
       if (logo instanceof File) {
-        // Si es un File nuevo, enviarlo
+        // Si es un File nuevo, dejarlo para que el servicio lo suba
         logoToSend = logo
       }
       // Si es una string (URL existente) o null, no enviamos nada (el servicio mantendrá lo que está)
@@ -141,7 +145,7 @@ export function TechCompanyEditForm({ companyId }: TechCompanyEditFormProps) {
           </div>
 
           <div className="space-y-2">
-            <ImageUpload value={logo} onChange={setLogo} label="Logo" />
+            <ImageUpload value={logo} onChange={setLogo} label="Logo" autoUpload={false} />
           </div>
 
           <div className="space-y-2">

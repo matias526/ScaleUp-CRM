@@ -10,12 +10,13 @@ import Image from "next/image"
 import { useToast } from "@/hooks/use-toast"
 
 interface ImageUploadProps {
-  onChange: (url: string | null) => void
+  onChange: (file: File | string | null) => void
   value?: File | string | null
   className?: string
   label?: string
   accept?: string
   maxSizeMB?: number
+  autoUpload?: boolean
 }
 
 export function ImageUpload({
@@ -25,6 +26,7 @@ export function ImageUpload({
   label = "Imagen",
   accept = "image/jpeg, image/png, image/gif, image/webp",
   maxSizeMB = 5,
+  autoUpload = true,
 }: ImageUploadProps) {
   const { toast } = useToast()
   const [preview, setPreview] = useState<string | null>(null)
@@ -93,6 +95,17 @@ export function ImageUpload({
       setPreview(objectUrl)
       setError(null)
 
+      // Si autoUpload está deshabilitado, solo pasar el File
+      if (!autoUpload) {
+        onChange(file)
+        toast({
+          title: "Imagen seleccionada",
+          description: "La imagen se subirá al guardar.",
+        })
+        return
+      }
+
+      // Si autoUpload está habilitado, subir directamente
       const publicUrl = await uploadToSupabase(file)
 
       if (publicUrl) {
