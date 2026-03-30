@@ -71,10 +71,18 @@ export function TechCompanyEditForm({ companyId }: TechCompanyEditFormProps) {
     setError(null)
 
     try {
+      // Determinar qué hacer con el logo
+      let logoToSend: File | null = null
+      if (logo instanceof File) {
+        // Si es un File nuevo, enviarlo
+        logoToSend = logo
+      }
+      // Si es una string (URL existente) o null, no enviamos nada (el servicio mantendrá lo que está)
+
       const result = await TechCompanyService.updateTechCompany(companyId, {
         name,
         code,
-        logo: logo instanceof File ? logo : null,
+        logo: logoToSend,
         website: website || null,
         description: description || null,
         is_active: isActive,
