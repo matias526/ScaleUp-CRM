@@ -50,7 +50,7 @@ export default function ContactsTable({ contacts, onDelete, onView }: ContactsTa
   const [contactToDelete, setContactToDelete] = useState<Contact | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const isMobile = useMobile()
-  const { t } = useTranslations()
+  const { t } = useTranslations(DICT_LANG_CONTACTS)
 
   const handleDelete = async () => {
     if (!contactToDelete) return

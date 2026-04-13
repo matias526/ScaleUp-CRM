@@ -18,6 +18,7 @@ import { type Contact, type ContactFormData, ContactService } from "@/lib/servic
 import { UserService } from "@/lib/services/user-service"
 import { TechCompanyService } from "@/lib/services/tech-company-service"
 import { PartnerService } from "@/lib/services/partner-service"
+import { DICT_LANG_CONTACTS } from "@/lib/constants/dict-lang-contacts"
 
 // Validation schema
 const contactSchema = z.object({
@@ -61,7 +62,7 @@ const LANGUAGES = [
 
 export function ContactForm({ initialData, onSuccess, showCancel = true }: ContactFormProps) {
   const router = useRouter()
-  const { t } = useTranslations()
+  const { t } = useTranslations(DICT_LANG_CONTACTS)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [users, setUsers] = useState<{ id: string; label: string }[]>([])

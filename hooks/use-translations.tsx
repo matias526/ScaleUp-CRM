@@ -5,7 +5,7 @@ import { TranslationService } from "@/lib/services/translation-service-fixed"
 import { useAuth } from "@/components/auth/auth-provider"
 import { supabase } from "@/lib/supabase/client"
 
-export function useTranslations() {
+export function useTranslations(localDictionary?: Record<string, Record<string, string>>) {
   const [language, setLanguage] = useState<string>("es") // Default to Spanish
   const [isLoaded, setIsLoaded] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
@@ -139,7 +139,15 @@ export function useTranslations() {
 
   const t = useCallback(
     (key: string, defaultValue = ""): string => {
-      // Verificación estricta
+      // 1. Buscar primero en el diccionario local
+      if (localDictionary && localDictionary[key]) {
+        const translation = localDictionary[key][language]
+        if (translation) {
+          return translation
+        }
+      }
+
+      // 2. Si no está en el diccionario local, buscar en la base de datos
       if (!isLoaded || !TranslationService.isInitialized) {
         console.log(`⚠️ [useTranslations] Traducciones no disponibles para: ${key}`)
         return defaultValue || key
@@ -155,7 +163,7 @@ export function useTranslations() {
 
       return translation
     },
-    [language, isLoaded],
+    [language, isLoaded, localDictionary],
   )
 
   const changeLanguage = useCallback((newLanguage: string) => {

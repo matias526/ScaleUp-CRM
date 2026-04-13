@@ -13,6 +13,7 @@ import ContactsTable from "@/components/contacts/contacts-table"
 import { ContactService } from "@/lib/services/contact-service"
 import type { Contact, ContactFilters } from "@/lib/services/contact-service"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { DICT_LANG_CONTACTS } from "@/lib/constants/dict-lang-contacts"
 
 export default function ContactsPage() {
   const router = useRouter()
@@ -24,7 +25,7 @@ export default function ContactsPage() {
   const [departmentFilter, setDepartmentFilter] = useState<string>("")
   const [languageFilter, setLanguageFilter] = useState<string>("")
   const pageSize = 10
-  const { t } = useTranslations()
+  const { t } = useTranslations(DICT_LANG_CONTACTS)
 
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
 

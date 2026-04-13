@@ -341,6 +341,11 @@ export const DICT_LANG_CONTACTS = {
     en: "Create New Contact",
     pt: "Criar Novo Contato",
   },
+  "contacts.modal.description": {
+    es: "Añade un nuevo contacto rápidamente",
+    en: "Add a new contact quickly",
+    pt: "Adicione um novo contato rapidamente",
+  },
   "contacts.modal.cancel": {
     es: "Cancelar",
     en: "Cancel",

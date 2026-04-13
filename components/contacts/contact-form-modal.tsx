@@ -61,7 +61,7 @@ const LANGUAGES = [
 ]
 
 export function ContactFormModal({ open, onOpenChange, onSuccess, initialData }: ContactFormModalProps) {
-  const { t } = useTranslations()
+  const { t } = useTranslations(DICT_LANG_CONTACTS)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -121,7 +121,7 @@ export function ContactFormModal({ open, onOpenChange, onSuccess, initialData }:
         <DialogHeader>
           <DialogTitle>{t("contacts.modal.title")}</DialogTitle>
           <DialogDescription>
-            {t("Añade un nuevo contacto rápidamente")}
+            {t("contacts.modal.description")}
           </DialogDescription>
         </DialogHeader>
 
