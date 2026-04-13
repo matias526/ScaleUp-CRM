@@ -1434,6 +1434,31 @@ export function OpportunityCreateForm() {
           )}
         />
 
+        {isScaleUpUser && (
+          <FormField
+            control={form.control}
+            name="is_new_partner"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <FormLabel className="text-base">Oportunidad para nuevo partner</FormLabel>
+                  <FormDescription>
+                    Marca esta opción si la oportunidad es para incorporar un nuevo partner
+                  </FormDescription>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value || false}
+                    onCheckedChange={(checked) => {
+                      field.onChange(checked)
+                      persistentData.current.is_new_partner = checked
+                    }}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        )}
 
       </div>
     )
