@@ -545,9 +545,9 @@ export function OpportunityCreateForm() {
                       </FormControl>
                       <SelectContent>
                         {filteredPartners.length === 0 ? (
-                          <SelectItem value="" disabled>
+                          <div className="p-2 text-sm text-gray-500 text-center">
                             {loadingPartners ? "Cargando..." : "No hay partners disponibles"}
-                          </SelectItem>
+                          </div>
                         ) : (
                           filteredPartners.map((partner) => (
                             <SelectItem key={partner.id} value={partner.id}>
