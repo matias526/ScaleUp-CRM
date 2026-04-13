@@ -1,15 +1,1301 @@
-return (
-  <div className="flex h-screen items-center justify-center bg-slate-100">
-    <div className="p-10 bg-white shadow-xl rounded-lg">
-      <h1 className="text-2xl font-bold text-blue-600">
-        Hello World - Test de Renderizado
-      </h1>
-      <p className="text-gray-600">
-        Si ves esto, el error #185 es por el contenido del formulario.
-      </p>
-      <pre className="mt-4 p-2 bg-gray-50 text-xs">
-        ID Tech Company: {watchTechCompany || 'No seleccionada'}
-      </pre>
+"use client"
+
+import { useState, useEffect, useRef } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import { useTranslations } from "@/hooks/use-translations"
+import {
+  createOpportunity,
+  getOpportunityStages,
+  getPartnerCountries,
+  getScaleUpManager,
+} from "@/lib/services/opportunity-service"
+import { getTechCompanies } from "@/lib/services/tech-company-service"
+import { getPartners } from "@/lib/services/partner-service"
+import {
+  getEndCustomers,
+  createEndCustomer,
+  getEndCustomersForPartner,
+  searchEndCustomers,
+} from "@/lib/services/end-customer-service-client"
+import type { Tables } from "@/types/supabase"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { toast } from "@/components/ui/use-toast"
+import { useAuth } from "@/components/auth/auth-provider"
+import { supabase } from "@/lib/supabase/client"
+import {
+  Building2,
+  Users,
+  FileText,
+  DollarSign,
+  Calendar,
+  Tag,
+  ArrowRight,
+  ArrowLeft,
+  Save,
+  X,
+  Plus,
+  Check,
+  Info,
+  AlertCircle,
+  UserCheck,
+  Search,
+} from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Progress } from "@/components/ui/progress"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { getOpportunityTechFieldsClient } from "@/lib/services/opportunity-tech-field-service-client"
+import { FileUpload } from "@/components/file-upload"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
+import { getIndustries } from "@/lib/services/industry-service-client"
+
+
+// Tipos de archivos permitidos por defecto (extensiones)
+const DEFAULT_ALLOWED_FILE_TYPES = [
+  // Imágenes
+  "jpg",
+  "jpeg",
+  "png",
+  "gif",
+  "svg",
+  // Documentos
+  "pdf",
+  "doc",
+  "docx",
+  "xls",
+  "xlsx",
+  "ppt",
+  "pptx",
+  "txt",
+  "csv",
+  // Comprimidos
+  "zip",
+  "rar",
+]
+
+// Constante para el valor "Sin Partner"
+const NO_PARTNER_VALUE = "no_partner"
+
+// Modificar la función getPartnersByTechCompanyId para ordenar los partners alfabéticamente
+async function getPartnersByTechCompanyId(techCompanyId: string): Promise<Tables<"partners">[]> {
+  try {
+    console.log(`🔧 getPartnersByTechCompanyId - Obteniendo partners para tech company ID: ${techCompanyId}`)
+
+    if (!techCompanyId) {
+      console.log(`🔧 getPartnersByTechCompanyId - No se proporcionó tech company ID`)
+      return []
+    }
+
+    // Primero verificamos si hay relaciones en la tabla partner_tech_companies
+    const { data, error } = await supabase
+      .from("partner_tech_companies")
+      .select(`partner_id`)
+      .eq("tech_company_id", techCompanyId)
+
+    if (error) {
+      console.error("🔧 getPartnersByTechCompanyId - Error al obtener relaciones partner-tech company:", error)
+      return []
+    }
+
+    console.log(
+      `🔧 getPartnersByTechCompanyId - Se encontraron ${data?.length || 0} relaciones para tech company ${techCompanyId}`,
+    )
+
+    if (!data || data.length === 0) {
+      console.log(`🔧 getPartnersByTechCompanyId - No hay relaciones para esta tech company`)
+      return []
+    }
+
+    // Extraer los IDs de partners únicos
+    const partnerIds = [...new Set(data.map((item) => item.partner_id))]
+    console.log("🔧 getPartnersByTechCompanyId - IDs de partners únicos encontrados:", partnerIds)
+
+    // Obtener los detalles de los partners
+    const { data: partnersData, error: partnersError } = await supabase
+      .from("partners")
+      .select("id, name, logo_url, website, city, is_active")
+      .in("id", partnerIds)
+      .eq("is_active", true)
+      .order("name", { ascending: true }) // Ordenar alfabéticamente por nombre
+
+    if (partnersError) {
+      console.error("🔧 getPartnersByTechCompanyId - Error al obtener detalles de partners:", partnersError)
+      return []
+    }
+
+    console.log(
+      `🔧 getPartnersByTechCompanyId - Se obtuvieron ${partnersData?.length || 0} partners activos:`,
+      partnersData?.map((p) => ({ id: p.id, name: p.name })),
+    )
+    return partnersData || []
+  } catch (error) {
+    console.error("🔧 getPartnersByTechCompanyId - Error inesperado:", error)
+    return []
+  }
+}
+
+// Modificar la función getScaleUpUsers para filtrar también por tech_company_id IS NULL
+async function getScaleUpUsers(): Promise<any[]> {
+  try {
+    console.log("Obteniendo usuarios de ScaleUp")
+
+    // Mostrar la consulta que se está ejecutando
+    console.log(
+      "CONSULTA SCALEUP USERS: ",
+      "SELECT id, first_name, last_name, email, role_id FROM users WHERE partner_id IS NULL AND tech_company_id IS NULL AND is_active = true ORDER BY first_name ASC",
+    )
+
+    const { data, error } = await supabase
+      .from("users")
+      .select("id, first_name, last_name, email, role_id")
+      .is("partner_id", null) // Usuarios que no pertenecen a ningún partner
+      .is("tech_company_id", null) // Usuarios que no pertenecen a ninguna tech company
+      .eq("is_active", true)
+      .order("first_name", { ascending: true })
+
+    if (error) {
+      console.error("Error al obtener usuarios de ScaleUp:", error)
+      return []
+    }
+
+    // Mostrar los resultados de la consulta
+    console.log(`Se obtuvieron ${data?.length || 0} usuarios de ScaleUp:`, data)
+    return data || []
+  } catch (error) {
+    console.error("Error inesperado al obtener usuarios de ScaleUp:", error)
+    return []
+  }
+}
+
+// Modificar la función getPartnerUsers para usar role_id en lugar de role_code
+async function getPartnerUsers(partnerId: string): Promise<any[]> {
+  try {
+    if (!partnerId) return []
+
+    console.log(`Obteniendo usuarios para el partner ID: ${partnerId}`)
+
+    // Mostrar la consulta que se está ejecutando
+    console.log(
+      "CONSULTA PARTNER USERS: ",
+      `SELECT id, first_name, last_name, email, role_id FROM users WHERE partner_id = '${partnerId}' AND is_active = true ORDER BY first_name ASC`,
+    )
+
+    const { data, error } = await supabase
+      .from("users")
+      .select("id, first_name, last_name, email, role_id")
+      .eq("partner_id", partnerId)
+      .eq("is_active", true)
+      .order("first_name", { ascending: true })
+
+    if (error) {
+      console.error("Error al obtener usuarios del partner:", error)
+      return []
+    }
+
+    // Mostrar los resultados de la consulta
+    console.log(`Se obtuvieron ${data?.length || 0} usuarios para el partner:`, data)
+    return data || []
+  } catch (error) {
+    console.error("Error inesperado al obtener usuarios del partner:", error)
+    return []
+  }
+}
+
+export function OpportunityCreateForm() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const preselectedStageId = searchParams.get("stage")
+
+  // Usar el contexto de autenticación para obtener la información del usuario
+  const { user, userInfo } = useAuth()
+
+  const { t, language, isLoaded } = useTranslations([
+    "opportunities.create_title",
+    "opportunities.form.title",
+    "opportunities.form.description",
+    "opportunities.form.stage",
+    "opportunities.form.tech_company",
+    "opportunities.form.partner",
+    "opportunities.form.end_customer",
+    "opportunities.form.estimated_value",
+    "opportunities.form.tech_fields",
+    "opportunities.form.submit",
+    "opportunities.form.cancel",
+    "opportunities.form.select_placeholder",
+    "opportunities.form.new_end_customer",
+    "opportunities.form.new_end_customer_name",
+    "opportunities.form.create_end_customer",
+    "opportunities.form.estimated_close_date",
+    "opportunities.form.country",
+    "opportunities.form.assigned_to",
+    "opportunities.form.partner_responsible",
+    "opportunities.form.no_countries",
+    "opportunities.form.loading",
+    "opportunities.form.responsible_persons",
+    "opportunities.form.no_partner",
+  ])
+
+  // 🔧 SOLUCIÓN: useRef para mantener datos persistentes
+  const persistentData = useRef<any>({})
+  const [forceUpdate, setForceUpdate] = useState(0)
+
+  // Estado para el paso actual del formulario
+  const [currentStep, setCurrentStep] = useState(1)
+  const totalSteps = 4
+
+  const [stages, setStages] = useState<Tables<"pipeline_stages">[]>([])
+  const [techCompanies, setTechCompanies] = useState<Tables<"tech_companies">[]>([])
+  const [partners, setPartners] = useState<Tables<"partners">[]>([])
+  const [filteredPartners, setFilteredPartners] = useState<Tables<"partners">[]>([])
+  const [endCustomers, setEndCustomers] = useState<Tables<"end_customers">[]>([])
+  const [techFields, setTechFields] = useState<any[]>([])
+  const [partnerCountries, setPartnerCountries] = useState<{ id: string; name: string; code: string }[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [newEndCustomerDialogOpen, setNewEndCustomerDialogOpen] = useState(false)
+  const [isCreatingEndCustomer, setIsCreatingEndCustomer] = useState(false)
+  const [loadingStages, setLoadingStages] = useState(true)
+  const [loadingPartners, setLoadingPartners] = useState(false)
+  const [loadingCountries, setLoadingCountries] = useState(false)
+  const [scaleUpManager, setScaleUpManager] = useState<string | null>(null)
+  const [loadingScaleUpManager, setLoadingScaleUpManager] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [debugInfo, setDebugInfo] = useState<any>(null)
+  const [formProgress, setFormProgress] = useState(25)
+  const [techFieldValues, setTechFieldValues] = useState<Record<string, any>>({})
+  const [techFieldsDebugInfo, setTechFieldsDebugInfo] = useState<any>(null)
+  const [loadingTechFields, setLoadingTechFields] = useState(false)
+  const [techFieldValidation, setTechFieldValidation] = useState<Record<string, boolean>>({})
+  const [scaleUpUsers, setScaleUpUsers] = useState<any[]>([])
+  const [partnerUsers, setPartnerUsers] = useState<any[]>([])
+  const [loadingScaleUpUsers, setLoadingScaleUpUsers] = useState(false)
+  const [loadingPartnerUsers, setLoadingPartnerUsers] = useState(false)
+  const [endCustomerSearchQuery, setEndCustomerSearchQuery] = useState("")
+  const [endCustomerPopoverOpen, setEndCustomerPopoverOpen] = useState(false)
+  const [industries, setIndustries] = useState<any[]>([])
+  const [loadingIndustries, setLoadingIndustries] = useState(false)
+  const [newEndCustomerData, setNewEndCustomerData] = useState({
+    name: "",
+    industry_id: "",
+    website: "",
+    tax_id: "",
+    country_id: "",
+  })
+
+  const [searchingEndCustomers, setSearchingEndCustomers] = useState(false)
+  const [searchResults, setSearchResults] = useState<Tables<"end_customers">[]>([])
+
+  // Obtener información del usuario directamente del contexto de autenticación
+  const isAdmin = userInfo?.isAdmin || false
+  const userRole = userInfo?.roleCode || ""
+  const partnerId = userInfo?.partnerId
+  const techCompanyId = userInfo?.techCompanyId
+  const partnerCountriesFromUser = userInfo?.partnerCountries || []
+
+  // Determinar si el usuario es de ScaleUp (Admin, BDD o cualquier rol que no sea Partner)
+  const isScaleUpUser = userRole.toLowerCase() !== "partneruser"
+
+  // 🔧 ARREGLO CRÍTICO: Esquema de validación más simple y permisivo
+  const formSchema = z.object({
+    title: z.string().min(1, "El título es obligatorio"),
+    description: z.string().optional(),
+    pipeline_stage_id: z.string().min(1, "La etapa es obligatoria"),
+    tech_company_id: z.string().min(1, "La empresa tecnológica es obligatoria"),
+    partner_id: z.string().optional().nullable(),
+    end_customer_id: z.string().optional().nullable(),
+    estimated_value: z.coerce.number().optional().nullable(),
+    tech_field_ids: z.array(z.string()).optional(),
+    estimated_close_date: z.string().optional().nullable(),
+    country: z.string().optional(),
+    assigned_to: z.string().optional().nullable(),
+    partner_responsible_id: z.string().optional().nullable(),
+    is_new_partner: z.boolean().optional(),
+  })
+
+  type FormValues = z.infer<typeof formSchema>
+
+  // Inicializar el formulario con valores por defecto
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    mode: "onChange", // 🔧 Cambiar a onChange para validación en tiempo real
+    defaultValues: {
+      title: "",
+      description: "",
+      pipeline_stage_id: preselectedStageId || "",
+      tech_company_id: techCompanyId || "",
+      partner_id: partnerId || null,
+      end_customer_id: null,
+      estimated_value: null,
+      tech_field_ids: [],
+      estimated_close_date: null,
+      country: "",
+      assigned_to: null,
+      partner_responsible_id: null,
+      is_new_partner: false, // Initialize is_new_partner
+    },
+  })
+
+  // 🔧 ARREGLO CRÍTICO: Función mejorada para setValue que sincroniza con react-hook-form
+  const setFormValue = (key: string, value: any) => {
+    console.log(`🔧 Setting form value: ${key} = ${value}`)
+    persistentData.current[key] = value
+    form.setValue(key as any, value, { shouldValidate: true, shouldDirty: true })
+    //setForceUpdate((prev) => prev + 1)
+  }
+
+  // 🔧 NUEVO: Función para sincronizar todos los datos persistentes con el formulario
+  const syncPersistentDataToForm = () => {
+    console.log("🔧 Sincronizando datos persistentes con el formulario:", persistentData.current)
+    Object.keys(persistentData.current).forEach((key) => {
+      if (persistentData.current[key] !== undefined && persistentData.current[key] !== null) {
+        form.setValue(key as any, persistentData.current[key], { shouldValidate: true, shouldDirty: true })
+      }
+    })
+  }
+
+  // Función para obtener datos actuales
+  const getCurrentData = () => {
+    const formValues = form.getValues()
+    return {
+      ...persistentData.current,
+      ...formValues,
+      techFieldValues,
+      newEndCustomerData,
+    }
+  }
+
+  // Cargar datos iniciales
+  useEffect(() => {
+    async function loadData() {
+      try {
+        setLoadingStages(true)
+        console.log("Cargando etapas del pipeline...")
+
+        // Cargar etapas primero
+        const stagesData = await getOpportunityStages()
+        console.log("Etapas del pipeline cargadas:", stagesData)
+        setStages(stagesData)
+
+        // Para usuarios Partner, buscar y asignar automáticamente la etapa "Lead"
+        if (!isScaleUpUser) {
+          const leadStage = stagesData.find((stage) => stage.code.toLowerCase() === "lead")
+          if (leadStage) {
+            console.log("Asignando automáticamente etapa Lead para usuario Partner:", leadStage.id)
+            setFormValue("pipeline_stage_id", leadStage.id)
+          } else if (stagesData.length > 0) {
+            // Si no encuentra "Lead", usar la primera etapa
+            console.log("Etapa Lead no encontrada, usando la primera etapa:", stagesData[0].id)
+            setFormValue("pipeline_stage_id", stagesData[0].id)
+          }
+        }
+        // Para usuarios ScaleUp, mantener la lógica original
+        else if (stagesData.length > 0 && !preselectedStageId) {
+          console.log("Estableciendo etapa por defecto:", stagesData[0].id)
+          setFormValue("pipeline_stage_id", stagesData[0].id)
+        } else if (preselectedStageId) {
+          // Verificar que la etapa preseleccionada existe
+          const stageExists = stagesData.some((stage) => stage.id === preselectedStageId)
+          if (stageExists) {
+            console.log("Usando etapa preseleccionada:", preselectedStageId)
+            setFormValue("pipeline_stage_id", preselectedStageId)
+          } else {
+            console.log("Etapa preseleccionada no encontrada, usando la primera etapa")
+            setFormValue("pipeline_stage_id", stagesData[0].id)
+          }
+        }
+
+        setLoadingStages(false)
+
+        // 🔧 Lógica de carga de tech companies actualizada
+        if (techCompanyId) {
+          console.log("Usuario con Tech Company ID: cargando tech companies relacionadas")
+          setFormValue("tech_company_id", techCompanyId) // Establecer por defecto
+
+          try {
+            const { data: relatedTechCompanies, error } = await supabase
+              .from("partner_tech_companies")
+              .select("tech_company_id")
+              .eq("partner_id", partnerId) // Asumiendo que si tiene techCompanyId, también tiene partnerId
+
+            if (error) {
+              console.error("Error al obtener tech companies relacionadas:", error)
+              throw error
+            }
+
+            if (relatedTechCompanies && relatedTechCompanies.length > 0) {
+              const techCompanyIds = relatedTechCompanies.map((item) => item.tech_company_id)
+              console.log("IDs de tech companies relacionadas:", techCompanyIds)
+
+              const { data: techCompaniesData, error: techError } = await supabase
+                .from("tech_companies")
+                .select("*")
+                .in("id", techCompanyIds)
+                .eq("is_active", true) // 🔧 Solo tech companies activas
+                .order("name", { ascending: true })
+
+              if (techError) {
+                console.error("Error al obtener detalles de tech companies:", techError)
+                throw techError
+              }
+
+              console.log("Tech companies relacionadas cargadas:", techCompaniesData)
+              setTechCompanies(techCompaniesData || [])
+
+              // Si solo hay una tech company, seleccionarla automáticamente
+              if (techCompaniesData && techCompaniesData.length === 1) {
+                console.log("Solo hay una tech company, seleccionándola automáticamente:", techCompaniesData[0].id)
+                setFormValue("tech_company_id", techCompaniesData[0].id)
+              }
+            } else {
+              console.log("No se encontraron tech companies relacionadas con este partner")
+              setTechCompanies([])
+            }
+          } catch (error) {
+            console.error("Error al cargar tech companies relacionadas:", error)
+            // Cargar todas las tech companies activas como fallback
+            const techCompaniesData = await getTechCompanies()
+            const activeTechCompanies = techCompaniesData.filter((company) => company.is_active)
+            setTechCompanies(activeTechCompanies)
+          }
+        } else if (partnerId && !isScaleUpUser) {
+          // 🔧 NUEVO: Para usuarios Partner sin techCompanyId específico, cargar solo las tech companies relacionadas
+          console.log("Usuario Partner: cargando tech companies relacionadas")
+
+          try {
+            const { data: relatedTechCompanies, error } = await supabase
+              .from("partner_tech_companies")
+              .select("tech_company_id")
+              .eq("partner_id", partnerId)
+
+            if (error) {
+              console.error("Error al obtener tech companies relacionadas:", error)
+              throw error
+            }
+
+            if (relatedTechCompanies && relatedTechCompanies.length > 0) {
+              const techCompanyIds = relatedTechCompanies.map((item) => item.tech_company_id)
+              console.log("IDs de tech companies relacionadas:", techCompanyIds)
+
+              const { data: techCompaniesData, error: techError } = await supabase
+                .from("tech_companies")
+                .select("*")
+                .in("id", techCompanyIds)
+                .eq("is_active", true)
+                .order("name", { ascending: true })
+
+              if (techError) {
+                console.error("Error al obtener detalles de tech companies:", techError)
+                throw techError
+              }
+
+              console.log("Tech companies relacionadas cargadas:", techCompaniesData)
+              setTechCompanies(techCompaniesData || [])
+
+              // Si solo hay una tech company, seleccionarla automáticamente
+              if (techCompaniesData && techCompaniesData.length === 1) {
+                console.log("Solo hay una tech company, seleccionándola automáticamente:", techCompaniesData[0].id)
+                setFormValue("tech_company_id", techCompaniesData[0].id)
+              }
+            } else {
+              console.log("No se encontraron tech companies relacionadas con este partner")
+              setTechCompanies([])
+            }
+          } catch (error) {
+            console.error("Error al cargar tech companies relacionadas:", error)
+            // Como fallback para usuarios Partner, no cargar nada
+            setTechCompanies([])
+          }
+        } else {
+          // Para usuarios ScaleUp, cargar todas las tech companies activas
+          console.log("Usuario ScaleUp: cargando todas las tech companies activas")
+          const techCompaniesData = await getTechCompanies()
+          const activeTechCompanies = techCompaniesData.filter((company) => company.is_active)
+          console.log(
+            `Se cargaron ${activeTechCompanies.length} tech companies activas de ${techCompaniesData.length} totales`,
+          )
+          setTechCompanies(activeTechCompanies)
+        }
+
+        // Cargar el resto de datos
+        const [allPartnersData, endCustomersData] = await Promise.all([
+          getPartners(),
+          // Si es un usuario Partner, cargar solo sus clientes finales
+          partnerId ? getEndCustomersForPartner(partnerId) : getEndCustomers(),
+        ])
+
+        // Ordenar los partners alfabéticamente por nombre
+        const sortedPartners = [...allPartnersData].sort((a, b) => a.name.localeCompare(b.name))
+        setPartners(sortedPartners)
+        setEndCustomers(endCustomersData)
+
+        // Si el usuario pertenece a una tech company, cargar partners relacionados
+        if (techCompanyId) {
+          setLoadingPartners(true)
+          const relatedPartners = await getPartnersByTechCompanyId(techCompanyId)
+
+          // Si es usuario ScaleUp, agregar opción "Sin Partner"
+          if (isScaleUpUser) {
+            const partnersWithNoPartnerOption = [
+              {
+                id: NO_PARTNER_VALUE,
+                name: t("opportunities.form.no_partner", "Sin Partner"),
+                is_active: true,
+                logo_url: null,
+                website: null,
+                city: null,
+              },
+              ...relatedPartners,
+            ]
+            setFilteredPartners(partnersWithNoPartnerOption)
+          } else {
+            setFilteredPartners(relatedPartners)
+          }
+          setLoadingPartners(false)
+        } else {
+          // Si no hay tech company seleccionada, mostrar todos los partners ordenados
+          if (isScaleUpUser) {
+            const partnersWithNoPartnerOption = [
+              {
+                id: NO_PARTNER_VALUE,
+                name: t("opportunities.form.no_partner", "Sin Partner"),
+                is_active: true,
+                logo_url: null,
+                website: null,
+                city: null,
+              },
+              ...sortedPartners,
+            ]
+            setFilteredPartners(partnersWithNoPartnerOption)
+          } else {
+            setFilteredPartners(sortedPartners)
+          }
+        }
+
+        // Si el usuario pertenece a un partner, establecerlo por defecto
+        if (partnerId) {
+          setFormValue("partner_id", partnerId)
+          persistentData.current.partner_id = partnerId
+        }
+
+        // Cargar usuarios de ScaleUp para asignación
+        setLoadingScaleUpUsers(true)
+        const scaleUpUsersData = await getScaleUpUsers()
+        setScaleUpUsers(scaleUpUsersData)
+        setLoadingScaleUpUsers(false)
+
+        // 🔧 NUEVO: Sincronizar datos después de cargar todo
+        //setTimeout(() => {
+        //  syncPersistentDataToForm()
+        //}, 100)
+      } catch (error) {
+        console.error("Error loading form data:", error)
+        setLoadingStages(false)
+        setError("Error al cargar los datos del formulario")
+      }
+    }
+
+    loadData()
+  }, []) // 🔧 Removemos dependencias que causaban loops
+
+  // Cargar industrias para el diálogo de nuevo cliente
+  useEffect(() => {
+    async function loadIndustries() {
+      try {
+        setLoadingIndustries(true)
+        const industriesData = await getIndustries()
+        setIndustries(industriesData)
+      } catch (error) {
+        console.error("Error loading industries:", error)
+      } finally {
+        setLoadingIndustries(false)
+      }
+    }
+
+    loadIndustries()
+  }, [])
+
+  // Watch para los campos dependientes - 🔧 Simplificado
+  const watchTechCompany = form.watch("tech_company_id")
+  const watchPartner = form.watch("partner_id")
+  const watchEndCustomer = form.watch("end_customer_id")
+
+  // 🔧 Efecto mejorado para partners
+  useEffect(() => {
+    async function loadPartnersForTechCompany() {
+      console.log(
+        `🔧 PARTNERS - watchTechCompany: ${watchTechCompany}, persistentData: ${persistentData.current.tech_company_id}`,
+      )
+
+      if (watchTechCompany && watchTechCompany !== persistentData.current.prev_tech_company_for_partners) {
+        persistentData.current.prev_tech_company_for_partners = watchTechCompany
+        persistentData.current.tech_company_id = watchTechCompany
+
+        try {
+          setLoadingPartners(true)
+          console.log(`🔧 Cargando partners para tech company ID: ${watchTechCompany}`)
+
+          if (partnerId) {
+            // Si el usuario es Partner, solo mostrar su partner
+            const currentPartner = partners.find((p) => p.id === partnerId)
+            if (currentPartner) {
+              console.log(`🔧 Usuario Partner - mostrando solo su partner:`, currentPartner.name)
+              setFilteredPartners([currentPartner])
+            } else {
+              console.log(`🔧 Usuario Partner - no se encontró su partner en la lista`)
+              setFilteredPartners([])
+            }
+          } else {
+            // Si es usuario ScaleUp, limpiar partner seleccionado y cargar partners relacionados
+            console.log(`🔧 Usuario ScaleUp - limpiando partner seleccionado`)
+            setFormValue("partner_id", null)
+
+            // Obtener partners relacionados con esta tech company
+            console.log(`🔧 Llamando a getPartnersByTechCompanyId con ID: ${watchTechCompany}`)
+            const relatedPartners = await getPartnersByTechCompanyId(watchTechCompany)
+            console.log(
+              `🔧 Partners relacionados obtenidos:`,
+              relatedPartners.map((p) => ({ id: p.id, name: p.name })),
+            )
+
+            // Para usuarios ScaleUp, agregar la opción "Sin Partner" al inicio
+            const partnersWithNoPartnerOption = [
+              {
+                id: NO_PARTNER_VALUE,
+                name: t("opportunities.form.no_partner", "Sin Partner"),
+                is_active: true,
+                logo_url: null,
+                website: null,
+                city: null,
+              },
+              ...relatedPartners,
+            ]
+
+            console.log(
+              `🔧 Partners finales con opción Sin Partner:`,
+              partnersWithNoPartnerOption.map((p) => ({ id: p.id, name: p.name })),
+            )
+            setFilteredPartners(partnersWithNoPartnerOption)
+          }
+        } catch (error) {
+          console.error("🔧 Error al cargar partners para tech company:", error)
+          // En caso de error, mostrar todos los partners con opción "Sin Partner"
+          if (!partnerId) {
+            const partnersWithNoPartnerOption = [
+              {
+                id: NO_PARTNER_VALUE,
+                name: t("opportunities.form.no_partner", "Sin Partner"),
+                is_active: true,
+                logo_url: null,
+                website: null,
+                city: null,
+              },
+              ...partners,
+            ]
+            console.log(`🔧 Error - usando todos los partners como fallback`)
+            setFilteredPartners(partnersWithNoPartnerOption)
+          }
+        } finally {
+          setLoadingPartners(false)
+        }
+      }
+    }
+
+    // Solo ejecutar si hay una tech company seleccionada
+    if (watchTechCompany) {
+      loadPartnersForTechCompany()
+    } else {
+      // Si no hay tech company seleccionada, limpiar partners filtrados
+      console.log(`🔧 No hay tech company seleccionada, limpiando partners filtrados`)
+      if (!partnerId) {
+        // Para usuarios ScaleUp sin tech company, mostrar todos los partners
+        const partnersWithNoPartnerOption = [
+          {
+            id: NO_PARTNER_VALUE,
+            name: t("opportunities.form.no_partner", "Sin Partner"),
+            is_active: true,
+            logo_url: null,
+            website: null,
+            city: null,
+          },
+          ...partners,
+        ]
+        setFilteredPartners(partnersWithNoPartnerOption)
+      } else {
+        // Para usuarios Partner, mostrar solo su partner
+        const currentPartner = partners.find((p) => p.id === partnerId)
+        setFilteredPartners(currentPartner ? [currentPartner] : [])
+      }
+    }
+  }, [watchTechCompany, partners, partnerId, t])
+
+  // 🔧 Efecto mejorado para ScaleUp Manager
+  useEffect(() => {
+    async function loadScaleUpManager() {
+      if (
+        watchTechCompany &&
+        watchPartner &&
+        (watchTechCompany !== persistentData.current.prev_tech_company_id ||
+          watchPartner !== persistentData.current.prev_partner_id)
+      ) {
+        persistentData.current.prev_tech_company_id = watchTechCompany
+        persistentData.current.prev_partner_id = watchPartner
+
+        try {
+          setLoadingScaleUpManager(true)
+          console.log(`Buscando ScaleUp Manager para Tech Company ${watchTechCompany} y Partner ${watchPartner}`)
+
+          const managerId = await getScaleUpManager(watchTechCompany, watchPartner)
+          setScaleUpManager(managerId)
+
+          if (managerId) {
+            console.log(`ScaleUp Manager encontrado: ${managerId}, asignando automáticamente`)
+            setFormValue("assigned_to", managerId)
+          } else {
+            console.log("No se encontró ScaleUp Manager, asignando al usuario actual")
+            setFormValue("assigned_to", user?.id || null)
+          }
+        } catch (error) {
+          console.error("Error al cargar ScaleUp Manager:", error)
+          setFormValue("assigned_to", user?.id || null)
+        } finally {
+          setLoadingScaleUpManager(false)
+        }
+      }
+    }
+
+    loadScaleUpManager()
+  }, [watchTechCompany, watchPartner, user])
+
+  // 🔧 Efecto mejorado para usuarios del partner
+  useEffect(() => {
+    async function loadPartnerUsers() {
+      if (watchPartner && watchPartner !== persistentData.current.prev_partner_for_users) {
+        persistentData.current.prev_partner_for_users = watchPartner
+
+        try {
+          setLoadingPartnerUsers(true)
+          console.log(`Cargando usuarios para el partner ID: ${watchPartner}`)
+
+          const users = await getPartnerUsers(watchPartner)
+          setPartnerUsers(users)
+
+          if (users.length > 0) {
+            setFormValue("partner_responsible_id", users[0].id)
+          } else {
+            setFormValue("partner_responsible_id", null)
+          }
+        } catch (error) {
+          console.error("Error al cargar usuarios del partner:", error)
+          setPartnerUsers([])
+          setFormValue("partner_responsible_id", null)
+        } finally {
+          setLoadingPartnerUsers(false)
+        }
+      } else if (!watchPartner) {
+        setPartnerUsers([])
+        setFormValue("partner_responsible_id", null)
+      }
+    }
+
+    loadPartnerUsers()
+  }, [watchPartner])
+
+  // 🔧 ARREGLO CRÍTICO: Efecto mejorado para tech fields
+  useEffect(() => {
+    async function loadTechFields() {
+      // 🔧 Usar tanto watchTechCompany como persistentData para asegurar que se carguen
+      const currentTechCompany = watchTechCompany || persistentData.current.tech_company_id
+
+      console.log("🔧 TECH FIELDS - Checking:", {
+        currentTechCompany,
+        watchTechCompany,
+        persistentTechCompany: persistentData.current.tech_company_id,
+        previousTechCompany: persistentData.current.prev_tech_company_for_fields,
+      })
+
+      if (currentTechCompany && currentTechCompany !== persistentData.current.prev_tech_company_for_fields) {
+        persistentData.current.prev_tech_company_for_fields = currentTechCompany
+
+        try {
+          setLoadingTechFields(true)
+          console.log(`🔧 Cargando campos técnicos para tech company ID: ${currentTechCompany}`)
+
+          const techFieldsData = await getOpportunityTechFieldsClient(currentTechCompany)
+          console.log(`🔧 Campos técnicos obtenidos:`, techFieldsData)
+
+          setTechFields(techFieldsData)
+
+          // Inicializar valores para todos los campos técnicos
+          const initialValues = {}
+          const initialValidation = {}
+
+          techFieldsData.forEach((field) => {
+            switch (field.field_type) {
+              case "boolean":
+                initialValues[field.id] = false
+                break
+              case "multiselect":
+                initialValues[field.id] = []
+                break
+              default:
+                initialValues[field.id] = ""
+            }
+            initialValidation[field.id] = !field.is_required
+          })
+
+          setTechFieldValues(initialValues)
+          setTechFieldValidation(initialValidation)
+
+          setFormValue(
+            "tech_field_ids",
+            techFieldsData.map((field) => field.id),
+          )
+        } catch (error) {
+          console.error("🔧 Error loading tech fields:", error)
+          setTechFieldsDebugInfo({
+            techCompanyId: currentTechCompany,
+            error: error.message || "Error desconocido",
+            stack: error.stack,
+            timestamp: new Date().toISOString(),
+          })
+        } finally {
+          setLoadingTechFields(false)
+        }
+      } else if (!currentTechCompany) {
+        console.log("🔧 No tech company selected, clearing tech fields")
+        setTechFields([])
+        setTechFieldsDebugInfo(null)
+        setTechFieldValues({})
+        setTechFieldValidation({})
+        setFormValue("tech_field_ids", [])
+      }
+    }
+
+    loadTechFields()
+  }, [watchTechCompany]) // 🔧 Agregar persistentData como dependencia
+
+  // 🔧 ARREGLO CRÍTICO: Efecto mejorado para países
+  useEffect(() => {
+    async function loadPartnerCountries() {
+      // 🔧 Usar tanto watchPartner como persistentData
+      const currentPartner = watchPartner || persistentData.current.partner_id
+
+      console.log(
+        `🔧 PAÍSES - Partner actual: ${currentPartner}, Partner anterior: ${persistentData.current.prev_partner_for_countries}`,
+      )
+
+      if (currentPartner !== persistentData.current.prev_partner_for_countries) {
+        persistentData.current.prev_partner_for_countries = currentPartner
+
+        try {
+          setLoadingCountries(true)
+          setPartnerCountries([])
+          setDebugInfo(null)
+
+          if (!currentPartner || currentPartner === NO_PARTNER_VALUE) {
+            console.log("🔧 Cargando todos los países (Sin Partner seleccionado)...")
+
+            const { data: allCountriesData, error: allCountriesError } = await supabase
+              .from("countries")
+              .select("id, name, code")
+              .order("name", { ascending: true })
+
+            if (allCountriesError) {
+              console.error("Error al obtener todos los países:", allCountriesError)
+              setDebugInfo({
+                error: allCountriesError.message || "Error al obtener todos los países",
+                details: allCountriesError,
+              })
+            } else {
+              console.log(`🔧 Se encontraron ${allCountriesData?.length || 0} países en total`)
+              setPartnerCountries(allCountriesData || [])
+
+              // 🔧 Restaurar el país persistente si existe
+              if (persistentData.current.country) {
+                const countryExists = allCountriesData?.some((c) => c.code === persistentData.current.country)
+                if (countryExists) {
+                  setFormValue("country", persistentData.current.country)
+                } else {
+                  // Si el país persistente no existe en todos los países, limpiar
+                  setFormValue("country", "")
+                  persistentData.current.country = ""
+                }
+              }
+            }
+          } else {
+            console.log(`🔧 Cargando países para el partner ${currentPartner}...`)
+
+            const countriesData = await getPartnerCountries(currentPartner)
+            console.log(`🔧 Países cargados para el partner ${currentPartner}:`, countriesData)
+
+            if (countriesData && countriesData.length > 0) {
+              setPartnerCountries(countriesData)
+
+              // 🔧 Solo establecer país automáticamente si no hay uno persistente
+              if (!persistentData.current.country) {
+                if (countriesData.length === 1) {
+                  console.log(`🔧 Solo un país disponible, seleccionándolo automáticamente: ${countriesData[0].code}`)
+                  setFormValue("country", countriesData[0].code)
+                }
+
+                if (partnerCountriesFromUser.length > 0) {
+                  const userCountryCode = partnerCountriesFromUser[0].code
+                  const countryExists = countriesData.some((c) => c.code === userCountryCode)
+                  if (countryExists) {
+                    console.log(`🔧 Seleccionando país del usuario: ${userCountryCode}`)
+                    setFormValue("country", userCountryCode)
+                  }
+                }
+              } else {
+                // 🔧 Restaurar el país persistente si existe en la lista
+                const countryExists = countriesData.some((c) => c.code === persistentData.current.country)
+                if (countryExists) {
+                  console.log(`🔧 Restaurando país persistente: ${persistentData.current.country}`)
+                  setFormValue("country", persistentData.current.country)
+                } else {
+                  // Si el país persistente no está en la lista del nuevo partner, limpiar
+                  console.log(`🔧 País persistente no disponible para este partner, limpiando`)
+                  setFormValue("country", "")
+                  persistentData.current.country = ""
+                }
+              }
+            } else {
+              console.log("🔧 No se encontraron países específicos para el partner, limpiando")
+              // Limpiar país si el partner no tiene países asignados
+              setFormValue("country", "")
+              persistentData.current.country = ""
+            }
+          }
+        } catch (error) {
+          console.error("🔧 Error loading countries:", error)
+          setDebugInfo({
+            error: error.message || "Error desconocido al cargar países",
+            stack: error.stack,
+          })
+        } finally {
+          setLoadingCountries(false)
+        }
+      }
+    }
+
+    loadPartnerCountries()
+  }, [watchPartner, partnerCountriesFromUser?.length])
+
+  // Actualizar validación de campos técnicos cuando cambian los valores
+  useEffect(() => {
+    const newValidation = { ...techFieldValidation }
+
+    techFields.forEach((field) => {
+      if (field.is_required) {
+        const value = techFieldValues[field.id]
+
+        switch (field.field_type) {
+          case "boolean":
+            newValidation[field.id] = true
+            break
+          case "multiselect":
+            newValidation[field.id] = Array.isArray(value) && value.length > 0
+            break
+          case "file":
+            newValidation[field.id] = !!value && value.trim() !== ""
+            break
+          default:
+            newValidation[field.id] = !!value && value.trim() !== ""
+        }
+      } else {
+        newValidation[field.id] = true
+      }
+    })
+
+    setTechFieldValidation(newValidation)
+  }, [techFieldValues, techFields])
+
+  // Función para buscar clientes finales en tiempo real
+  const searchEndCustomersInRealTime = async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([])
+      return
+    }
+
+    try {
+      setSearchingEndCustomers(true)
+
+      if (isScaleUpUser) {
+        const results = await searchEndCustomers(query)
+        setSearchResults(results)
+      } else {
+        const filtered = endCustomers.filter((customer) => customer.name.toLowerCase().includes(query.toLowerCase()))
+        setSearchResults(filtered)
+      }
+    } catch (error) {
+      console.error("Error searching end customers:", error)
+      setSearchResults([])
+    } finally {
+      setSearchingEndCustomers(false)
+    }
+  }
+
+  // Debounce para la búsqueda
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (endCustomerSearchQuery) {
+        searchEndCustomersInRealTime(endCustomerSearchQuery)
+      } else {
+        setSearchResults([])
+      }
+    }, 300)
+
+    return () => clearTimeout(timeoutId)
+  }, [endCustomerSearchQuery, endCustomers, isScaleUpUser])
+
+  // 🔧 ARREGLO CRÍTICO: Handle form submission completamente reescrito
+  const handleSubmit = async (values: FormValues) => {
+    console.log("🔧 SUBMIT INICIADO - handleSubmit llamado")
+    console.log("- Form values recibidos:", values)
+    console.log("- Persistent data:", persistentData.current)
+    console.log("- Tech field values:", techFieldValues)
+    console.log("- Form errors:", form.formState.errors)
+    console.log("- Form is valid:", form.formState.isValid)
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      if (!user || !user.id) {
+        console.error("No hay usuario autenticado")
+        setError("No hay usuario autenticado. Por favor, inicia sesión nuevamente.")
+        return
+      }
+
+      // 🔧 Combinar datos del formulario con datos persistentes
+      const finalValues = {
+        ...persistentData.current,
+        ...values,
+        // Asegurar que tenemos los valores críticos
+        title: values.title || persistentData.current.title,
+        tech_company_id: values.tech_company_id || persistentData.current.tech_company_id,
+        pipeline_stage_id: values.pipeline_stage_id || persistentData.current.pipeline_stage_id,
+        country: values.country || persistentData.current.country, // 🔧 Incluir país
+        is_new_partner:
+          values.is_new_partner !== undefined ? values.is_new_partner : persistentData.current.is_new_partner || false,
+      }
+
+      console.log("🔧 Final values para envío:", finalValues)
+
+      // Validaciones básicas
+      if (!finalValues.title) {
+        throw new Error("El título es obligatorio")
+      }
+      if (!finalValues.tech_company_id) {
+        throw new Error("La empresa tecnológica es obligatoria")
+      }
+      if (!finalValues.pipeline_stage_id) {
+        throw new Error("La etapa es obligatoria")
+      }
+
+      // 🔧 NUEVO: Procesar valores de campos técnicos
+      const techFieldData = []
+      if (techFields.length > 0) {
+        for (const field of techFields) {
+          const value = techFieldValues[field.id]
+          if (value !== undefined && value !== null && value !== "") {
+            techFieldData.push({
+              field_id: field.id,
+              value: typeof value === "object" ? JSON.stringify(value) : String(value),
+            })
+          }
+        }
+      }
+
+      // Crear la oportunidad
+      const opportunityData = {
+        title: finalValues.title,
+        description: finalValues.description || null,
+        pipeline_stage_id: finalValues.pipeline_stage_id,
+        tech_company_id: finalValues.tech_company_id,
+        partner_id: finalValues.partner_id === NO_PARTNER_VALUE ? null : finalValues.partner_id || null,
+        end_customer_id: finalValues.end_customer_id || null,
+        estimated_value: finalValues.estimated_value || null,
+        created_by: user.id,
+        estimated_close_date: finalValues.estimated_close_date || null,
+        country: finalValues.country || null, // 🔧 Incluir país
+        assigned_to: finalValues.assigned_to || user.id,
+        partner_responsible_id:
+          finalValues.partner_id === NO_PARTNER_VALUE ? null : finalValues.partner_responsible_id || null,
+        is_new_partner: finalValues.is_new_partner || false,
+      }
+
+      console.log("🔧 Datos de oportunidad a crear:", opportunityData)
+      console.log("🔧 Tech field data:", techFieldData)
+
+      const result = await createOpportunity(opportunityData, finalValues.tech_field_ids || [], userRole)
+
+      console.log("🔧 Resultado de la creación:", result)
+
+      toast({
+        title: "Oportunidad creada",
+        description: "La oportunidad se ha creado correctamente",
+      })
+
+      // Navegar a la lista de oportunidades
+      router.push("/dashboard/opportunities")
+    } catch (error: any) {
+      console.error("🔧 Error creating opportunity:", error)
+      const errorMessage = error.message || "Ha ocurrido un error al crear la oportunidad"
+      setError(errorMessage)
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // 🔧 ARREGLO CRÍTICO: Función para manejar submit manual mejorada
+  const handleManualSubmit = async () => {
+    console.log("🔧 MANUAL SUBMIT INICIADO")
+
+    // 🔧 NUEVO: Sincronizar datos persistentes antes de validar
+    syncPersistentDataToForm()
+
+    // Esperar un poco para que se actualice el formulario
+    await new Promise((resolve) => setTimeout(resolve, 50))
+
+    // Obtener valores actuales del formulario
+    const formValues = form.getValues()
+    console.log("🔧 Form values:", formValues)
+    console.log("🔧 Form errors:", form.formState.errors)
+    console.log("🔧 Persistent data:", persistentData.current)
+
+    // Validar manualmente
+    const isValid = await form.trigger()
+    console.log("🔧 Form is valid after trigger:", isValid)
+
+    if (isValid) {
+      await handleSubmit(formValues)
+    } else {
+      console.log("🔧 Form validation failed:", form.formState.errors)
+      setError("Por favor, completa todos los campos obligatorios")
+
+      // 🔧 NUEVO: Mostrar errores específicos
+      const errors = form.formState.errors
+      const errorMessages = []
+      if (errors.title) errorMessages.push("Título es obligatorio")
+      if (errors.pipeline_stage_id) errorMessages.push("Etapa es obligatoria")
+      if (errors.tech_company_id) errorMessages.push("Empresa tecnológica es obligatoria")
+
+      if (errorMessages.length > 0) {
+        setError(`Campos faltantes: ${errorMessages.join(", ")}`)
+      }
+    }
+  }
+
+  // Handle creating a new end customer
+  async function handleCreateEndCustomer() {
+    if (!newEndCustomerData.name.trim()) return
+
+    setIsCreatingEndCustomer(true)
+
+    try {
+      const customerData = {
+        name: newEndCustomerData.name.trim(),
+        industry_id: newEndCustomerData.industry_id || null,
+        website: newEndCustomerData.website || null,
+        tax_id: newEndCustomerData.tax_id || null,
+        country_id: newEndCustomerData.country_id || null,
+      }
+
+      const newEndCustomer = await createEndCustomer(customerData)
+
+      setEndCustomers((prev) => [...prev, newEndCustomer])
+      setFormValue("end_customer_id", newEndCustomer.id)
+      setNewEndCustomerData({
+        name: "",
+        industry_id: "",
+        website: "",
+        tax_id: "",
+        country_id: "",
+      })
+      setEndCustomerSearchQuery("")
+      setNewEndCustomerDialogOpen(false)
+      setEndCustomerPopoverOpen(false)
+
+      toast({
+        title: "Cliente creado",
+        description: `El cliente "${newEndCustomer.name}" ha sido creado correctamente`,
+      })
+    } catch (error) {
+      console.error("Error creating end customer:", error)
+      toast({
+        title: "Error",
+        description: "No se pudo crear el cliente final",
+        variant: "destructive",
+      })
+    } finally {
+      setIsCreatingEndCustomer(false)
+    }
+  }
+
+  // Función para obtener traducciones con fallback
+  const getTranslation = (key: string, fallback: string): string => {
+    const translation = t(key)
+    return translation === key ? fallback : translation
+  }
+
+  // 🔧 Función mejorada para avanzar al siguiente paso
+  const nextStep = () => {
+    if (currentStep < totalSteps) {
+      // Guardar datos del paso actual antes de avanzar
+      const currentData = form.getValues()
+      Object.keys(currentData).forEach((key) => {
+        if (currentData[key] !== undefined && currentData[key] !== null) {
+          persistentData.current[key] = currentData[key]
+        }
+      })
+
+      if (!isScaleUpUser) {
+        persistentData.current.is_new_partner = false
+      }
+
+      setCurrentStep(currentStep + 1)
+      setFormProgress((currentStep + 1) * (100 / totalSteps))
+      window.scrollTo(0, 0)
+    }
+  }
+
+  // Función para volver al paso anterior
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1)
+      setFormProgress((currentStep - 1) * (100 / totalSteps))
+      window.scrollTo(0, 0)
+    }
+  }
+  return (
+    <div className="flex h-screen items-center justify-center bg-slate-100">
+      <div className="p-10 bg-white shadow-xl rounded-lg">
+        <h1 className="text-2xl font-bold text-blue-600">
+          Hello World - Test de Renderizado
+        </h1>
+        <p className="text-gray-600">
+          Si ves esto, el error #185 es por el contenido del formulario.
+        </p>
+        <pre className="mt-4 p-2 bg-gray-50 text-xs">
+          ID Tech Company: {watchTechCompany || 'No seleccionada'}
+        </pre>
+      </div>
     </div>
-  </div>
-);
+  );
