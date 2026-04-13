@@ -351,7 +351,7 @@ export function OpportunityCreateForm() {
     console.log(`🔧 Setting form value: ${key} = ${value}`)
     persistentData.current[key] = value
     form.setValue(key as any, value, { shouldValidate: true, shouldDirty: true })
-    //setForceUpdate((prev) => prev + 1)
+    setForceUpdate((prev) => prev + 1)
   }
 
   // 🔧 NUEVO: Función para sincronizar todos los datos persistentes con el formulario
@@ -595,9 +595,9 @@ export function OpportunityCreateForm() {
         setLoadingScaleUpUsers(false)
 
         // 🔧 NUEVO: Sincronizar datos después de cargar todo
-        //setTimeout(() => {
-        //  syncPersistentDataToForm()
-        //}, 100)
+        setTimeout(() => {
+          syncPersistentDataToForm()
+        }, 100)
       } catch (error) {
         console.error("Error loading form data:", error)
         setLoadingStages(false)
@@ -883,7 +883,7 @@ export function OpportunityCreateForm() {
     }
 
     loadTechFields()
-  }, [watchTechCompany]) // 🔧 Agregar persistentData como dependencia
+  }, [watchTechCompany, persistentData.current.tech_company_id]) // 🔧 Agregar persistentData como dependencia
 
   // 🔧 ARREGLO CRÍTICO: Efecto mejorado para países
   useEffect(() => {
@@ -990,7 +990,7 @@ export function OpportunityCreateForm() {
     }
 
     loadPartnerCountries()
-  }, [watchPartner, partnerCountriesFromUser?.length])
+  }, [watchPartner, persistentData.current.partner_id, partnerCountriesFromUser, supabase])
 
   // Actualizar validación de campos técnicos cuando cambian los valores
   useEffect(() => {
@@ -1322,12 +1322,12 @@ export function OpportunityCreateForm() {
     switch (currentStep) {
       case 1:
         return renderBasicInfoStep()
-      /*case 2:
+      case 2:
         return renderCompaniesStep()
       case 3:
         return renderCustomerAndFinancialsStep()
       case 4:
-        return renderTechFieldsStep()*/
+        return renderTechFieldsStep()
       default:
         return null
     }
@@ -1433,44 +1433,80 @@ export function OpportunityCreateForm() {
             </FormItem>
           )}
         />
-        {/* --- BLOQUE DE PRUEBA: CERO SHADCN --- */}
-        <div className="space-y-4 p-4 border rounded-md">
 
-          {/* Switch nativo */}
-          <div className="flex items-center justify-between">
-            <label className="text-sm">¿Nuevo Partner?</label>
-            <input
-              type="checkbox"
-              checked={!!form.watch("is_new_partner")}
-              onChange={(e) => {
-                const val = e.target.checked;
-                form.setValue("is_new_partner", val);
-                persistentData.current.is_new_partner = val;
-              }}
-              className="h-5 w-5"
-            />
-          </div>
+        {isScaleUpUser && (
+          <FormField
+            control={form.control}
+            name="is_new_partner"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <FormLabel className="text-base">Oportunidad para nuevo partner</FormLabel>
+                  <FormDescription>
+                    Marca esta opción si la oportunidad es para incorporar un nuevo partner
+                  </FormDescription>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value || false}
+                    onCheckedChange={(checked) => {
+                      field.onChange(checked)
+                      persistentData.current.is_new_partner = checked
+                    }}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        )}
 
-          {/* Select nativo */}
-          <div className="flex flex-col space-y-2">
-            <label className="text-sm font-medium">Etapa (Nativa)</label>
-            <select
-              className="p-2 border rounded bg-white text-black"
-              value={form.watch("pipeline_stage_id") || ""}
-              onChange={(e) => {
-                const val = e.target.value;
-                form.setValue("pipeline_stage_id", val);
-                persistentData.current.pipeline_stage_id = val;
-              }}
-            >
-              <option value="">Seleccionar...</option>
-              {stages.map(s => (
-                <option key={s.id} value={s.id}>{s.code}</option>
-              ))}
-            </select>
-          </div>
-
-        </div>
+        {/* Mostrar el campo de etapa solo para usuarios ScaleUp */}
+        {isScaleUpUser && (
+          <FormField
+            control={form.control}
+            name="pipeline_stage_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  {getTranslation("opportunities.form.stage", "Etapa")}
+                  <span className="text-red-500 ml-1">*</span>
+                </FormLabel>
+                <Select
+                  onValueChange={(value) => {
+                    field.onChange(value)
+                    persistentData.current.pipeline_stage_id = value
+                  }}
+                  value={field.value || persistentData.current.pipeline_stage_id || ""}
+                  disabled={loadingStages}
+                >
+                  <FormControl>
+                    <SelectTrigger className="transition-all focus:ring-2 focus:ring-primary/20">
+                      <SelectValue
+                        placeholder={
+                          loadingStages
+                            ? getTranslation("opportunities.form.loading", "Cargando...")
+                            : getTranslation("opportunities.form.select_placeholder", "Seleccionar etapa")
+                        }
+                      />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {stages.length === 0 && !loadingStages && (
+                      <div className="p-2 text-sm text-gray-500">No hay etapas disponibles.</div>
+                    )}
+                    {stages.map((stage) => (
+                      <SelectItem key={stage.id} value={stage.id}>
+                        {stage.code.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormDescription>Selecciona la etapa actual en el proceso de ventas</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
       </div>
     )
   }
@@ -2270,8 +2306,8 @@ export function OpportunityCreateForm() {
                               allowedFileTypes={
                                 field.file_config?.allowed_mime_types
                                   ? field.file_config.allowed_mime_types
-                                    .split(",")
-                                    .map((type) => type.trim().replace(/^\./, ""))
+                                      .split(",")
+                                      .map((type) => type.trim().replace(/^\./, ""))
                                   : DEFAULT_ALLOWED_FILE_TYPES
                               }
                             />
@@ -2432,8 +2468,9 @@ export function OpportunityCreateForm() {
               {Array.from({ length: totalSteps }).map((_, i) => (
                 <div
                   key={i}
-                  className={`w-2 h-2 rounded-full ${i + 1 === currentStep ? "bg-primary" : i + 1 < currentStep ? "bg-primary/60" : "bg-gray-200"
-                    }`}
+                  className={`w-2 h-2 rounded-full ${
+                    i + 1 === currentStep ? "bg-primary" : i + 1 < currentStep ? "bg-primary/60" : "bg-gray-200"
+                  }`}
                 />
               ))}
             </div>
