@@ -135,7 +135,7 @@ export function ContactFormModal({ open, onOpenChange, onSuccess, initialData }:
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {/* Basic Information */}
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold">{t(DICT_LANG_CONTACTS["contacts.form.section.basic"]["es"])}</h3>
+              <h3 className="text-sm font-semibold">{t("contacts.form.section.basic")}</h3>
 
               <div className="grid grid-cols-2 gap-2">
                 <FormField
@@ -240,7 +240,7 @@ export function ContactFormModal({ open, onOpenChange, onSuccess, initialData }:
 
             {/* Professional Information */}
             <div className="space-y-3 border-t pt-3">
-              <h3 className="text-sm font-semibold">{t(DICT_LANG_CONTACTS["contacts.form.section.professional"]["es"])}</h3>
+              <h3 className="text-sm font-semibold">{t("contacts.form.section.professional")}</h3>
 
               <div className="grid grid-cols-2 gap-2">
                 <FormField

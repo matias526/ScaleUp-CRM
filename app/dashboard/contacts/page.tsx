@@ -10,6 +10,7 @@ import { Plus, Search, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react
 import { useDebounce } from "@/hooks/use-debounce"
 import { useTranslations } from "@/hooks/use-translations"
 import ContactsTable from "@/components/contacts/contacts-table"
+import { ContactFormModal } from "@/components/contacts/contact-form-modal"
 import { ContactService } from "@/lib/services/contact-service"
 import type { Contact, ContactFilters } from "@/lib/services/contact-service"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -24,6 +25,7 @@ export default function ContactsPage() {
   const [totalContacts, setTotalContacts] = useState(0)
   const [departmentFilter, setDepartmentFilter] = useState<string>("")
   const [languageFilter, setLanguageFilter] = useState<string>("")
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const pageSize = 10
   const { t } = useTranslations(DICT_LANG_CONTACTS)
 
@@ -83,7 +85,7 @@ export default function ContactsPage() {
           <h1 className="text-3xl font-bold tracking-tight">{t("contacts.page.title")}</h1>
           <p className="text-gray-600">{t("contacts.page.description")}</p>
         </div>
-        <Button onClick={() => router.push("/dashboard/contacts/create")}>
+        <Button onClick={() => setIsCreateModalOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           {t("contacts.create")}
         </Button>
@@ -92,7 +94,7 @@ export default function ContactsPage() {
       {/* Search and Filters Card */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">{t("Búsqueda y Filtros")}</CardTitle>
+          <CardTitle className="text-lg">{t("contacts.search.title")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-4">
@@ -120,15 +122,15 @@ export default function ContactsPage() {
                   <SelectValue placeholder={t("contacts.filter.department")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="sales">Ventas</SelectItem>
-                  <SelectItem value="technical">Técnico</SelectItem>
-                  <SelectItem value="marketing">Marketing</SelectItem>
-                  <SelectItem value="operations">Operaciones</SelectItem>
-                  <SelectItem value="finance">Finanzas</SelectItem>
-                  <SelectItem value="hr">RRHH</SelectItem>
-                  <SelectItem value="executive">Ejecutiva</SelectItem>
-                  <SelectItem value="other">Otro</SelectItem>
+                  <SelectItem value="all">{t("contacts.filter.all")}</SelectItem>
+                  <SelectItem value="sales">{t("contacts.department.sales")}</SelectItem>
+                  <SelectItem value="technical">{t("contacts.department.technical")}</SelectItem>
+                  <SelectItem value="marketing">{t("contacts.department.marketing")}</SelectItem>
+                  <SelectItem value="operations">{t("contacts.department.operations")}</SelectItem>
+                  <SelectItem value="finance">{t("contacts.department.finance")}</SelectItem>
+                  <SelectItem value="hr">{t("contacts.department.hr")}</SelectItem>
+                  <SelectItem value="executive">{t("contacts.department.executive")}</SelectItem>
+                  <SelectItem value="other">{t("contacts.department.other")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -142,10 +144,10 @@ export default function ContactsPage() {
                   <SelectValue placeholder={t("contacts.filter.language")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="es">Español</SelectItem>
-                  <SelectItem value="en">English</SelectItem>
-                  <SelectItem value="pt">Português</SelectItem>
+                  <SelectItem value="all">{t("contacts.filter.all")}</SelectItem>
+                  <SelectItem value="es">{t("contacts.language.spanish")}</SelectItem>
+                  <SelectItem value="en">{t("contacts.language.english")}</SelectItem>
+                  <SelectItem value="pt">{t("contacts.language.portuguese")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -177,7 +179,7 @@ export default function ContactsPage() {
         <CardHeader>
           <CardTitle>{t("contacts.title")}</CardTitle>
           <CardDescription>
-            {t(`Mostrando ${contacts.length} de ${totalContacts} contactos`)}
+            {t("contacts.showing")} {contacts.length} {t("contacts.of")} {totalContacts} {t("message.results")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -193,7 +195,7 @@ export default function ContactsPage() {
               {totalPages > 1 && (
                 <div className="mt-6 flex items-center justify-between border-t pt-4">
                   <div className="text-sm text-gray-600">
-                    {t(`Página ${page} de ${totalPages}`)}
+                    {t("contacts.pagination.page")} {page} {t("contacts.pagination.of")} {totalPages}
                   </div>
                   <div className="flex gap-2">
                     <Button
@@ -221,6 +223,16 @@ export default function ContactsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Create Contact Modal */}
+      <ContactFormModal 
+        open={isCreateModalOpen}
+        onOpenChange={setIsCreateModalOpen}
+        onSuccess={() => {
+          setIsCreateModalOpen(false)
+          loadContacts()
+        }}
+      />
     </main>
   )
 }

@@ -302,6 +302,11 @@ export const DICT_LANG_CONTACTS = {
     en: "Loading contacts...",
     pt: "Carregando contatos...",
   },
+  "message.results": {
+    es: "contactos",
+    en: "contacts",
+    pt: "contatos",
+  },
   "contacts.message.noContacts": {
     es: "No hay contactos",
     en: "No contacts found",
