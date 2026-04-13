@@ -1442,16 +1442,14 @@ export function OpportunityCreateForm() {
               <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                 <div className="space-y-0.5">
                   <FormLabel className="text-base">Oportunidad para nuevo partner</FormLabel>
-                  <FormDescription>
-                    Marca esta opción si la oportunidad es para incorporar un nuevo partner
-                  </FormDescription>
+                  <FormDescription>Marca esta opción si es para un nuevo partner</FormDescription>
                 </div>
                 <FormControl>
                   <Switch
-                    checked={!!field.value} // 👈 Forzamos a boolean puro
+                    checked={!!field.value}
                     onCheckedChange={(checked) => {
-                      field.onChange(checked)
-                      persistentData.current.is_new_partner = checked
+                      field.onChange(checked);
+                      persistentData.current.is_new_partner = checked;
                     }}
                   />
                 </FormControl>
@@ -1467,41 +1465,28 @@ export function OpportunityCreateForm() {
             name="pipeline_stage_id"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>
-                  {getTranslation("opportunities.form.stage", "Etapa")}
-                  <span className="text-red-500 ml-1">*</span>
-                </FormLabel>
+                <FormLabel>{getTranslation("opportunities.form.stage", "Etapa")} *</FormLabel>
                 <Select
                   onValueChange={(value) => {
-                    field.onChange(value)
-                    persistentData.current.pipeline_stage_id = value
+                    field.onChange(value);
+                    persistentData.current.pipeline_stage_id = value;
                   }}
-                  value={field.value || ""} // 👈 SOLO field.value, nada de persistentData acá
+                  value={field.value || ""}
                   disabled={loadingStages}
                 >
                   <FormControl>
-                    <SelectTrigger className="transition-all focus:ring-2 focus:ring-primary/20">
-                      <SelectValue
-                        placeholder={
-                          loadingStages
-                            ? getTranslation("opportunities.form.loading", "Cargando...")
-                            : getTranslation("opportunities.form.select_placeholder", "Seleccionar etapa")
-                        }
-                      />
+                    <SelectTrigger>
+                      <SelectValue placeholder={loadingStages ? "Cargando..." : "Seleccionar etapa"} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {stages.length === 0 && !loadingStages && (
-                      <div className="p-2 text-sm text-gray-500">No hay etapas disponibles.</div>
-                    )}
                     {stages.map((stage) => (
                       <SelectItem key={stage.id} value={stage.id}>
-                        {stage.code.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                        {stage.code.replace(/_/g, " ").toUpperCase()}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <FormDescription>Selecciona la etapa actual en el proceso de ventas</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
