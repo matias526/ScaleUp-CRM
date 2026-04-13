@@ -814,76 +814,66 @@ export function OpportunityCreateForm() {
   // 🔧 ARREGLO CRÍTICO: Efecto mejorado para tech fields
   useEffect(() => {
     async function loadTechFields() {
-      // 🔧 Usar tanto watchTechCompany como persistentData para asegurar que se carguen
-      const currentTechCompany = watchTechCompany || persistentData.current.tech_company_id
+      // 1. Priorizamos el watch, si no hay nada, no forzamos con el ref aquí para evitar loops
+      const currentTechCompany = watchTechCompany;
 
-      console.log("🔧 TECH FIELDS - Checking:", {
-        currentTechCompany,
-        watchTechCompany,
-        persistentTechCompany: persistentData.current.tech_company_id,
-        previousTechCompany: persistentData.current.prev_tech_company_for_fields,
-      })
+      // 2. Si no hay empresa, limpiamos y salimos (IMPORTANTE)
+      if (!currentTechCompany) {
+        if (techFields.length > 0) { // Solo si hay algo que limpiar
+          setTechFields([]);
+          setTechFieldValues({});
+          setTechFieldValidation({});
+        }
+        return;
+      }
 
-      if (currentTechCompany && currentTechCompany !== persistentData.current.prev_tech_company_for_fields) {
-        persistentData.current.prev_tech_company_for_fields = currentTechCompany
+      // 3. Solo ejecutamos si la empresa REALMENTE cambió respecto a la última carga exitosa
+      if (currentTechCompany === persistentData.current.prev_tech_company_for_fields) {
+        return;
+      }
 
-        try {
-          setLoadingTechFields(true)
-          console.log(`🔧 Cargando campos técnicos para tech company ID: ${currentTechCompany}`)
+      try {
+        setLoadingTechFields(true);
+        const techFieldsData = await getOpportunityTechFieldsClient(currentTechCompany);
 
-          const techFieldsData = await getOpportunityTechFieldsClient(currentTechCompany)
-          console.log(`🔧 Campos técnicos obtenidos:`, techFieldsData)
+        // Guardamos la empresa actual ANTES de los sets para bloquear otros triggers
+        persistentData.current.prev_tech_company_for_fields = currentTechCompany;
 
-          setTechFields(techFieldsData)
+        if (techFieldsData) {
+          setTechFields(techFieldsData);
 
-          // Inicializar valores para todos los campos técnicos
-          const initialValues = {}
-          const initialValidation = {}
+          const initialValues = {};
+          const initialValidation = {};
 
           techFieldsData.forEach((field) => {
             switch (field.field_type) {
-              case "boolean":
-                initialValues[field.id] = false
-                break
-              case "multiselect":
-                initialValues[field.id] = []
-                break
-              default:
-                initialValues[field.id] = ""
+              case "boolean": initialValues[field.id] = false; break;
+              case "multiselect": initialValues[field.id] = []; break;
+              default: initialValues[field.id] = "";
             }
-            initialValidation[field.id] = !field.is_required
-          })
+            initialValidation[field.id] = !field.is_required;
+          });
 
-          setTechFieldValues(initialValues)
-          setTechFieldValidation(initialValidation)
+          setTechFieldValues(initialValues);
+          setTechFieldValidation(initialValidation);
 
-          setFormValue(
+          // 🔥 LA CLAVE: Comentamos este setFormValue por ahora. 
+          // Es el principal sospechoso de gatillar el bucle infinito.
+          /* setFormValue(
             "tech_field_ids",
             techFieldsData.map((field) => field.id),
           )
-        } catch (error) {
-          console.error("🔧 Error loading tech fields:", error)
-          setTechFieldsDebugInfo({
-            techCompanyId: currentTechCompany,
-            error: error.message || "Error desconocido",
-            stack: error.stack,
-            timestamp: new Date().toISOString(),
-          })
-        } finally {
-          setLoadingTechFields(false)
+          */
         }
-      } else if (!currentTechCompany) {
-        console.log("🔧 No tech company selected, clearing tech fields")
-        setTechFields([])
-        setTechFieldsDebugInfo(null)
-        setTechFieldValues({})
-        setTechFieldValidation({})
-        setFormValue("tech_field_ids", [])
+      } catch (error) {
+        console.error("🔧 Error loading tech fields:", error);
+      } finally {
+        setLoadingTechFields(false);
       }
     }
 
-    loadTechFields()
-  }, [watchTechCompany]) // 🔧 Agregar persistentData como dependencia
+    loadTechFields();
+  }, [watchTechCompany]); // ❌ NO agregues persistentData aquí, o explotará.
 
   // 🔧 ARREGLO CRÍTICO: Efecto mejorado para países
   useEffect(() => {
