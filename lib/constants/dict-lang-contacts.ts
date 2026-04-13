@@ -603,4 +603,14 @@ export const DICT_LANG_CONTACTS = {
     en: "Are you sure you want to remove this contact from the opportunity?",
     pt: "Tem certeza que deseja remover este contato da oportunidade?",
   },
+  "contacts.removeConfirm.partner": {
+    es: "¿Estás seguro que deseas remover este contacto del partner?",
+    en: "Are you sure you want to remove this contact from the partner?",
+    pt: "Tem certeza que deseja remover este contato do partner?",
+  },
+  "contacts.removeConfirm.techCompany": {
+    es: "¿Estás seguro que deseas remover este contacto de la empresa?",
+    en: "Are you sure you want to remove this contact from the company?",
+    pt: "Tem certeza que deseja remover este contato da empresa?",
+  },
 }

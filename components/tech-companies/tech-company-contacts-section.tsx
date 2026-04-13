@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Star, Trash2, Plus } from "lucide-react"
+import { Star, Trash2, Plus, Edit2 } from "lucide-react"
 import { useTranslations } from "@/hooks/use-translations"
 import { DICT_LANG_CONTACTS } from "@/lib/constants/dict-lang-contacts"
 import { ContactFormModal } from "@/components/contacts/contact-form-modal"
@@ -40,6 +40,7 @@ export function TechCompanyContactsSection({ techCompanyId }: TechCompanyContact
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [contactToRemove, setContactToRemove] = useState<string | null>(null)
+  const [editingContact, setEditingContact] = useState<Contact | null>(null)
 
   const loadContacts = async () => {
     try {
@@ -167,14 +168,27 @@ export function TechCompanyContactsSection({ techCompanyId }: TechCompanyContact
                         )}
                       </td>
                       <td className="py-3 px-3 text-center">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => setContactToRemove(contact.id)}
-                          className="h-6 w-6 p-0 text-gray-400 hover:text-red-500"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex justify-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              setEditingContact(contact)
+                              setShowModal(true)
+                            }}
+                            className="h-6 w-6 p-0 text-gray-400 hover:text-blue-500"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setContactToRemove(contact.id)}
+                            className="h-6 w-6 p-0 text-gray-400 hover:text-red-500"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -188,8 +202,17 @@ export function TechCompanyContactsSection({ techCompanyId }: TechCompanyContact
       {/* Contact Form Modal */}
       <ContactFormModal
         open={showModal}
-        onOpenChange={setShowModal}
-        onSuccess={handleAddContact}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditingContact(null)
+          }
+          setShowModal(open)
+        }}
+        onSuccess={() => {
+          loadContacts()
+          setEditingContact(null)
+        }}
+        initialData={editingContact || undefined}
         entityType="tech-company"
         entityId={techCompanyId}
       />
@@ -199,7 +222,7 @@ export function TechCompanyContactsSection({ techCompanyId }: TechCompanyContact
         <AlertDialogContent>
           <AlertDialogTitle>Remover contacto</AlertDialogTitle>
           <AlertDialogDescription>
-            {t("opportunity.contacts.removeConfirm")}
+            {t("contacts.removeConfirm.techCompany")}
           </AlertDialogDescription>
           <div className="flex justify-end gap-2">
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
