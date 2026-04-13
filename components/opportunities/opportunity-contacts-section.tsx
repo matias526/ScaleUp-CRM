@@ -143,64 +143,69 @@ export function OpportunityContactsSection({ opportunityId }: OpportunityContact
           ) : contacts.length === 0 ? (
             <div className="text-center py-8 text-gray-500">{t("opportunity.contacts.noContacts")}</div>
           ) : (
-            <div className="space-y-3">
-              {contacts.map((oc) => {
-                const contact = oc.contact
-                if (!contact) return null
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-2 px-3 font-semibold text-gray-700">Contacto</th>
+                    <th className="text-left py-2 px-3 font-semibold text-gray-700">Email</th>
+                    <th className="text-left py-2 px-3 font-semibold text-gray-700">{t("opportunity.contacts.position")}</th>
+                    <th className="text-left py-2 px-3 font-semibold text-gray-700">{t("opportunity.contacts.department")}</th>
+                    <th className="text-center py-2 px-3 font-semibold text-gray-700">Principal</th>
+                    <th className="text-center py-2 px-3 font-semibold text-gray-700">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {contacts.map((oc) => {
+                    const contact = oc.contact
+                    if (!contact) return null
 
-                return (
-                  <div
-                    key={oc.id}
-                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium text-sm">
-                          {contact.first_name} {contact.last_name}
-                        </p>
-                        {oc.is_primary && (
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        )}
-                      </div>
-                      <p className="text-xs text-gray-500">{contact.email}</p>
-                      <div className="flex gap-2 mt-1">
-                        {contact.position && (
-                          <Badge variant="secondary" className="text-xs">
-                            {contact.position}
-                          </Badge>
-                        )}
-                        {contact.department && (
-                          <Badge variant="outline" className="text-xs">
-                            {t(`contacts.department.${contact.department}`)}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-1">
-                      {!oc.is_primary && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleSetPrimary(contact.id)}
-                          title={t("opportunity.contacts.primary")}
-                          className="text-gray-400 hover:text-yellow-400"
-                        >
-                          <Star className="h-4 w-4" />
-                        </Button>
-                      )}
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setContactToRemove(oc.id)}
-                        className="text-gray-400 hover:text-red-500"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                )
-              })}
+                    return (
+                      <tr key={oc.id} className="border-b hover:bg-gray-50 transition-colors">
+                        <td className="py-3 px-3">
+                          <p className="font-medium">{contact.first_name} {contact.last_name}</p>
+                        </td>
+                        <td className="py-3 px-3 text-gray-600">{contact.email}</td>
+                        <td className="py-3 px-3 text-gray-600">{contact.position || "-"}</td>
+                        <td className="py-3 px-3">
+                          {contact.department ? (
+                            <Badge variant="outline" className="text-xs">
+                              {t(`contacts.department.${contact.department}`)}
+                            </Badge>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-3 text-center">
+                          {oc.is_primary ? (
+                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mx-auto" />
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleSetPrimary(contact.id)}
+                              title={t("opportunity.contacts.primary")}
+                              className="h-6 w-6 p-0 text-gray-400 hover:text-yellow-400"
+                            >
+                              <Star className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </td>
+                        <td className="py-3 px-3 text-center">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setContactToRemove(oc.id)}
+                            className="h-6 w-6 p-0 text-gray-400 hover:text-red-500"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
         </CardContent>
