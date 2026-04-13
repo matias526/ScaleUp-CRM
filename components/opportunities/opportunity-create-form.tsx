@@ -1408,6 +1408,32 @@ export function OpportunityCreateForm() {
           )}
         />
 
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{getTranslation("opportunities.form.description", "Descripción")}</FormLabel>
+              <FormControl>
+                <Textarea
+                  {...field}
+                  value={field.value || ""}
+                  placeholder="Describe los detalles de esta oportunidad..."
+                  className="min-h-[120px] transition-all focus:ring-2 focus:ring-primary/20"
+                  onChange={(e) => {
+                    field.onChange(e)
+                    persistentData.current.description = e.target.value
+                  }}
+                />
+              </FormControl>
+              <FormDescription>
+                Proporciona detalles adicionales sobre la oportunidad, necesidades del cliente, etc.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
 
       </div>
     )
