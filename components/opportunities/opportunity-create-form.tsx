@@ -214,12 +214,12 @@ async function getPartnerUsers(partnerId: string): Promise<any[]> {
 }
 
 export function OpportunityCreateForm() {
-  // 🔧 IMPORTANTE: Los hooks que dependen de contextos deben ir PRIMERO
-  const { user, userInfo } = useAuth()
-  
   const router = useRouter()
   const searchParams = useSearchParams()
   const preselectedStageId = searchParams.get("stage")
+
+  // Usar el contexto de autenticación para obtener la información del usuario
+  const { user, userInfo } = useAuth()
 
   const { t, language, isLoaded } = useTranslations([
     "opportunities.create_title",
@@ -246,32 +246,6 @@ export function OpportunityCreateForm() {
     "opportunities.form.responsible_persons",
     "opportunities.form.no_partner",
   ])
-
-  // 🔧 Pre-calculate translations to avoid calling t() inside render functions
-  const translations = {
-    title: t("opportunities.form.title") || "Título",
-    description: t("opportunities.form.description") || "Descripción",
-    stage: t("opportunities.form.stage") || "Etapa",
-    tech_company: t("opportunities.form.tech_company") || "Empresa Tecnológica",
-    partner: t("opportunities.form.partner") || "Partner",
-    end_customer: t("opportunities.form.end_customer") || "Cliente Final",
-    estimated_value: t("opportunities.form.estimated_value") || "Valor Estimado",
-    tech_fields: t("opportunities.form.tech_fields") || "Campos Técnicos",
-    submit: t("opportunities.form.submit") || "Crear Oportunidad",
-    cancel: t("opportunities.form.cancel") || "Cancelar",
-    select_placeholder: t("opportunities.form.select_placeholder") || "Seleccionar...",
-    new_end_customer: t("opportunities.form.new_end_customer") || "Nuevo Cliente",
-    new_end_customer_name: t("opportunities.form.new_end_customer_name") || "Nombre del Cliente",
-    create_end_customer: t("opportunities.form.create_end_customer") || "Crear Cliente",
-    estimated_close_date: t("opportunities.form.estimated_close_date") || "Fecha Estimada de Cierre",
-    country: t("opportunities.form.country") || "País",
-    assigned_to: t("opportunities.form.assigned_to") || "Asignado a",
-    partner_responsible: t("opportunities.form.partner_responsible") || "Responsable del Partner",
-    no_countries: t("opportunities.form.no_countries") || "Sin países disponibles",
-    loading: t("opportunities.form.loading") || "Cargando...",
-    responsible_persons: t("opportunities.form.responsible_persons") || "Personas Responsables",
-    no_partner: t("opportunities.form.no_partner") || "Sin Partner",
-  }
 
   // 🔧 SOLUCIÓN: useRef para mantener datos persistentes
   const persistentData = useRef<any>({})
@@ -1277,9 +1251,8 @@ export function OpportunityCreateForm() {
 
   // Función para obtener traducciones con fallback
   const getTranslation = (key: string, fallback: string): string => {
-    // Use pre-calculated translations to avoid calling hooks inside functions
-    const translationKey = key.replace("opportunities.form.", "") as keyof typeof translations
-    return (translations[translationKey] && translations[translationKey] !== key) ? translations[translationKey] : fallback
+    const translation = t(key)
+    return translation === key ? fallback : translation
   }
 
   // 🔧 Función mejorada para avanzar al siguiente paso
