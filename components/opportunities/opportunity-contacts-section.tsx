@@ -210,9 +210,7 @@ export function OpportunityContactsSection({ opportunityId }: OpportunityContact
       <ContactFormModal
         open={showModal}
         onOpenChange={setShowModal}
-        onSuccess={(newContactId) => {
-          handleAddContact(newContactId)
-        }}
+        onSuccess={handleAddContact}
       />
 
       {/* Remove Confirmation Dialog */}
