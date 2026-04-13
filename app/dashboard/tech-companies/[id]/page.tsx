@@ -13,6 +13,7 @@ import { TechCompanyService } from "@/lib/services/tech-company-service"
 import { TechCompanyPartners } from "@/components/tech-companies/tech-company-partners"
 import { TechCompanyUsers } from "@/components/tech-companies/tech-company-users"
 import { TechCompanyTasks } from "@/components/tech-companies/tech-company-tasks"
+import { TechCompanyContactsSection } from "@/components/tech-companies/tech-company-contacts-section"
 
 export default function TechCompanyDetailsPage({ params }: { params: { id: string } }) {
   const router = useRouter()
@@ -195,6 +196,7 @@ export default function TechCompanyDetailsPage({ params }: { params: { id: strin
       <TechCompanyPartners techCompanyId={company.id} />
       <TechCompanyUsers techCompanyId={company.id} />
       <TechCompanyTasks techCompanyId={company.id} techCompanyName={companyName} />
+      <TechCompanyContactsSection techCompanyId={company.id} />
     </div>
   )
 }

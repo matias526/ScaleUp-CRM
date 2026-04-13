@@ -55,6 +55,20 @@ const PartnerTasks = dynamic(() => import("@/components/partners/partner-tasks")
   ),
 })
 
+const PartnerContactsSection = dynamic(() => import("@/components/partners/partner-contacts-section").then(m => ({ default: m.PartnerContactsSection })), {
+  ssr: false,
+  loading: () => (
+    <Card>
+      <CardContent className="py-8">
+        <div className="flex justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+        <p className="text-center mt-4">Cargando contactos...</p>
+      </CardContent>
+    </Card>
+  ),
+})
+
 export default function PartnerDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
@@ -212,6 +226,10 @@ export default function PartnerDetailPage({ params }: { params: { id: string } }
 
           <ErrorBoundary fallback={<ComponentErrorFallback title="Tareas" />}>
             <PartnerTasks partnerId={partner?.id} partnerName={partner?.name} />
+          </ErrorBoundary>
+
+          <ErrorBoundary fallback={<ComponentErrorFallback title="Contactos" />}>
+            <PartnerContactsSection partnerId={partner?.id} />
           </ErrorBoundary>
         </div>
       </div>

@@ -46,6 +46,9 @@ interface ContactFormModalProps {
     last_name?: string
     email?: string
   }
+  // Para crear contactos desde Partner o TechCompany
+  entityType?: "opportunity" | "partner" | "tech-company"
+  entityId?: string
 }
 
 const DEPARTMENTS = [
@@ -65,7 +68,14 @@ const LANGUAGES = [
   { value: "pt", label: "contacts.language.portuguese" },
 ]
 
-export function ContactFormModal({ open, onOpenChange, onSuccess, initialData }: ContactFormModalProps) {
+export function ContactFormModal({ 
+  open, 
+  onOpenChange, 
+  onSuccess, 
+  initialData,
+  entityType = "opportunity",
+  entityId,
+}: ContactFormModalProps) {
   const { t } = useTranslations(DICT_LANG_CONTACTS)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -109,8 +119,8 @@ export function ContactFormModal({ open, onOpenChange, onSuccess, initialData }:
       position: "",
       department: "",
       preferred_language: "es",
-      tech_company_id: initialData?.tech_company_id || "",
-      partner_id: initialData?.partner_id || "",
+      tech_company_id: entityType === "tech-company" ? entityId : (initialData?.tech_company_id || ""),
+      partner_id: entityType === "partner" ? entityId : (initialData?.partner_id || ""),
       end_customer_id: initialData?.end_customer_id || "",
       linkedin_url: "",
       notes: "",
