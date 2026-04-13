@@ -43,23 +43,7 @@ export default async function OpportunityPage({ params }: OpportunityPageProps) 
         tech_company:tech_companies(*),
         partner:partners(*),
         end_customer:end_customers(*),
-        creator:users!created_by(*),
-        opportunity_contacts(
-          id,
-          contact_id,
-          is_primary,
-          created_at,
-          contact:contacts(
-            id,
-            first_name,
-            last_name,
-            email,
-            phone,
-            position,
-            department,
-            preferred_language
-          )
-        )
+        creator:users!created_by(*)
       `)
       .eq("id", params.id)
       .single()
