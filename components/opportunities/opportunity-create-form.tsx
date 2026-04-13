@@ -595,9 +595,9 @@ export function OpportunityCreateForm() {
         setLoadingScaleUpUsers(false)
 
         // 🔧 NUEVO: Sincronizar datos después de cargar todo
-        setTimeout(() => {
-          syncPersistentDataToForm()
-        }, 100)
+        //setTimeout(() => {
+        //  syncPersistentDataToForm()
+        //}, 100)
       } catch (error) {
         console.error("Error loading form data:", error)
         setLoadingStages(false)
@@ -760,10 +760,10 @@ export function OpportunityCreateForm() {
 
           if (managerId) {
             console.log(`ScaleUp Manager encontrado: ${managerId}, asignando automáticamente`)
-            setFormValue("assigned_to", managerId)
+            //setFormValue("assigned_to", managerId)
           } else {
             console.log("No se encontró ScaleUp Manager, asignando al usuario actual")
-            setFormValue("assigned_to", user?.id || null)
+            //setFormValue("assigned_to", user?.id || null)
           }
         } catch (error) {
           console.error("Error al cargar ScaleUp Manager:", error)
