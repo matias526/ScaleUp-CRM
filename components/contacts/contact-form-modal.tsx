@@ -55,7 +55,6 @@ const DEPARTMENTS = [
   { value: "technical", label: "contacts.department.technical" },
   { value: "marketing", label: "contacts.department.marketing" },
   { value: "operations", label: "contacts.department.operations" },
-  { value: "finance", label: "contacts.department.finance" },
   { value: "hr", label: "contacts.department.hr" },
   { value: "executive", label: "contacts.department.executive" },
   { value: "other", label: "contacts.department.other" },
@@ -360,13 +359,21 @@ export function ContactFormModal({ open, onOpenChange, onSuccess, initialData }:
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs">{t("contacts.form.techCompany")}</FormLabel>
-                          <Select value={field.value || ""} onValueChange={field.onChange}>
+                          <Select 
+                            value={field.value || ""} 
+                            onValueChange={(value) => field.onChange(value || null)}
+                          >
                             <FormControl>
                               <SelectTrigger className="h-8">
                                 <SelectValue placeholder={t("contacts.filter.all")} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
+                              {field.value && (
+                                <SelectItem value="">
+                                  {t("contacts.filter.all")}
+                                </SelectItem>
+                              )}
                               {techCompanies.map((company) => (
                                 <SelectItem key={company.id} value={company.id}>
                                   {company.label}
@@ -384,13 +391,21 @@ export function ContactFormModal({ open, onOpenChange, onSuccess, initialData }:
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs">{t("contacts.form.partner")}</FormLabel>
-                          <Select value={field.value || ""} onValueChange={field.onChange}>
+                          <Select 
+                            value={field.value || ""} 
+                            onValueChange={(value) => field.onChange(value || null)}
+                          >
                             <FormControl>
                               <SelectTrigger className="h-8">
                                 <SelectValue placeholder={t("contacts.filter.all")} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
+                              {field.value && (
+                                <SelectItem value="">
+                                  {t("contacts.filter.all")}
+                                </SelectItem>
+                              )}
                               {partners.map((partner) => (
                                 <SelectItem key={partner.id} value={partner.id}>
                                   {partner.label}
@@ -409,13 +424,21 @@ export function ContactFormModal({ open, onOpenChange, onSuccess, initialData }:
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs">{t("contacts.form.linkedUser")}</FormLabel>
-                        <Select value={field.value || ""} onValueChange={field.onChange}>
+                        <Select 
+                          value={field.value || ""} 
+                          onValueChange={(value) => field.onChange(value || null)}
+                        >
                           <FormControl>
                             <SelectTrigger className="h-8">
                               <SelectValue placeholder={t("contacts.filter.all")} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
+                            {field.value && (
+                              <SelectItem value="">
+                                {t("contacts.filter.all")}
+                              </SelectItem>
+                            )}
                             {users.map((user) => (
                               <SelectItem key={user.id} value={user.id}>
                                 {user.label}

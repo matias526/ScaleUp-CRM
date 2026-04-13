@@ -48,7 +48,6 @@ const DEPARTMENTS = [
   { value: "technical", label: "contacts.department.technical" },
   { value: "marketing", label: "contacts.department.marketing" },
   { value: "operations", label: "contacts.department.operations" },
-  { value: "finance", label: "contacts.department.finance" },
   { value: "hr", label: "contacts.department.hr" },
   { value: "executive", label: "contacts.department.executive" },
   { value: "other", label: "contacts.department.other" },
