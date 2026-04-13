@@ -38,7 +38,7 @@ interface ContactFormModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSuccess?: (contact: Contact) => void
-  initialData?: {
+  initialData?: Contact | {
     tech_company_id?: string
     partner_id?: string
     end_customer_id?: string
@@ -82,6 +82,7 @@ export function ContactFormModal({
   const [showRelationships, setShowRelationships] = useState(false)
   const [techCompanies, setTechCompanies] = useState<{ id: string; label: string }[]>([])
   const [partners, setPartners] = useState<{ id: string; label: string }[]>([])
+  const isEditing = initialData && 'id' in initialData
 
   // Load relationship options
   useEffect(() => {
@@ -112,18 +113,18 @@ export function ContactFormModal({
   const form = useForm<z.infer<typeof contactModalSchema>>({
     resolver: zodResolver(contactModalSchema),
     defaultValues: {
-      first_name: initialData?.first_name || "",
-      last_name: initialData?.last_name || "",
-      email: initialData?.email || "",
-      phone: "",
-      position: "",
-      department: "",
-      preferred_language: "es",
-      tech_company_id: entityType === "tech-company" ? entityId : (initialData?.tech_company_id || ""),
-      partner_id: entityType === "partner" ? entityId : (initialData?.partner_id || ""),
-      end_customer_id: initialData?.end_customer_id || "",
-      linkedin_url: "",
-      notes: "",
+      first_name: (initialData && 'first_name' in initialData ? initialData.first_name : null) || "",
+      last_name: (initialData && 'last_name' in initialData ? initialData.last_name : null) || "",
+      email: (initialData && 'email' in initialData ? initialData.email : null) || "",
+      phone: (initialData && 'phone' in initialData ? initialData.phone : null) || "",
+      position: (initialData && 'position' in initialData ? initialData.position : null) || "",
+      department: (initialData && 'department' in initialData ? initialData.department : null) || "",
+      preferred_language: (initialData && 'preferred_language' in initialData ? initialData.preferred_language : null) || "es",
+      tech_company_id: entityType === "tech-company" ? entityId : (initialData && 'tech_company_id' in initialData ? initialData.tech_company_id : null) || "",
+      partner_id: entityType === "partner" ? entityId : (initialData && 'partner_id' in initialData ? initialData.partner_id : null) || "",
+      end_customer_id: (initialData && 'end_customer_id' in initialData ? initialData.end_customer_id : null) || "",
+      linkedin_url: (initialData && 'linkedin_url' in initialData ? initialData.linkedin_url : null) || "",
+      notes: (initialData && 'notes' in initialData ? initialData.notes : null) || "",
     },
   })
 
@@ -147,17 +148,24 @@ export function ContactFormModal({
         notes: values.notes || null,
       }
 
-      const result = await ContactService.createContact(contactData)
+      let result
+      if (isEditing && initialData && 'id' in initialData) {
+        // Update existing contact
+        result = await ContactService.updateContact(initialData.id, contactData)
+      } else {
+        // Create new contact
+        result = await ContactService.createContact(contactData)
+      }
 
       if (result) {
         onSuccess?.(result)
         onOpenChange(false)
         form.reset()
       } else {
-        throw new Error("No se pudo crear el contacto")
+        throw new Error(isEditing ? "No se pudo actualizar el contacto" : "No se pudo crear el contacto")
       }
     } catch (err: any) {
-      setError(err.message || "Ocurrió un error al crear el contacto")
+      setError(err.message || (isEditing ? "Ocurrió un error al actualizar el contacto" : "Ocurrió un error al crear el contacto"))
     } finally {
       setIsSubmitting(false)
     }
@@ -167,9 +175,9 @@ export function ContactFormModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{t("contacts.modal.title")}</DialogTitle>
+          <DialogTitle>{isEditing ? t("contacts.modal.titleEdit") : t("contacts.modal.title")}</DialogTitle>
           <DialogDescription>
-            {t("contacts.modal.description")}
+            {isEditing ? t("contacts.modal.descriptionEdit") : t("contacts.modal.description")}
           </DialogDescription>
         </DialogHeader>
 

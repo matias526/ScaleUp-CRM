@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Trash2, Plus, Edit2 } from "lucide-react"
+import { Trash2, Plus } from "lucide-react"
 import { useTranslations } from "@/hooks/use-translations"
 import { DICT_LANG_CONTACTS } from "@/lib/constants/dict-lang-contacts"
 import { ContactFormModal } from "@/components/contacts/contact-form-modal"
@@ -40,7 +40,6 @@ export function PartnerContactsSection({ partnerId }: PartnerContactsSectionProp
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [contactToRemove, setContactToRemove] = useState<string | null>(null)
-  const [editingContact, setEditingContact] = useState<Contact | null>(null)
 
   const loadContacts = async () => {
     try {
@@ -168,28 +167,14 @@ export function PartnerContactsSection({ partnerId }: PartnerContactsSectionProp
                         )}
                       </td>
                       <td className="py-3 px-3 text-center">
-                        <div className="flex justify-center gap-1">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => {
-                              console.log("[v0] Editing contact:", contact)
-                              setEditingContact(contact)
-                              setShowModal(true)
-                            }}
-                            className="h-6 w-6 p-0 text-gray-400 hover:text-blue-500"
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setContactToRemove(contact.id)}
-                            className="h-6 w-6 p-0 text-gray-400 hover:text-red-500"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setContactToRemove(contact.id)}
+                          className="h-6 w-6 p-0 text-gray-400 hover:text-red-500"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </td>
                     </tr>
                   ))}
@@ -203,17 +188,8 @@ export function PartnerContactsSection({ partnerId }: PartnerContactsSectionProp
       {/* Contact Form Modal */}
       <ContactFormModal
         open={showModal}
-        onOpenChange={(open) => {
-          if (!open) {
-            setEditingContact(null)
-          }
-          setShowModal(open)
-        }}
-        onSuccess={() => {
-          loadContacts()
-          setEditingContact(null)
-        }}
-        initialData={editingContact || undefined}
+        onOpenChange={setShowModal}
+        onSuccess={handleAddContact}
         entityType="partner"
         entityId={partnerId}
       />

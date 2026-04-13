@@ -2,7 +2,6 @@
 
 import type React from "react"
 import { useState, useEffect, useCallback } from "react"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -11,13 +10,13 @@ import { useDebounce } from "@/hooks/use-debounce"
 import { useTranslations } from "@/hooks/use-translations"
 import ContactsTable from "@/components/contacts/contacts-table"
 import { ContactFormModal } from "@/components/contacts/contact-form-modal"
+import { ContactDetailDrawer } from "@/components/contacts/contact-detail-drawer"
 import { ContactService } from "@/lib/services/contact-service"
 import type { Contact, ContactFilters } from "@/lib/services/contact-service"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DICT_LANG_CONTACTS } from "@/lib/constants/dict-lang-contacts"
 
 export default function ContactsPage() {
-  const router = useRouter()
   const [contacts, setContacts] = useState<Contact[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [isLoading, setIsLoading] = useState(true)
@@ -26,6 +25,9 @@ export default function ContactsPage() {
   const [departmentFilter, setDepartmentFilter] = useState<string>("")
   const [languageFilter, setLanguageFilter] = useState<string>("")
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null)
+  const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false)
   const pageSize = 10
   const { t } = useTranslations(DICT_LANG_CONTACTS)
 
@@ -71,6 +73,16 @@ export default function ContactsPage() {
   const handleNextPage = () => {
     const maxPage = Math.ceil(totalContacts / pageSize)
     setPage(Math.min(maxPage, page + 1))
+  }
+
+  const handleViewContact = (contact: Contact) => {
+    setSelectedContact(contact)
+    setIsDetailDrawerOpen(true)
+  }
+
+  const handleEditContact = (contact: Contact) => {
+    setSelectedContact(contact)
+    setIsEditModalOpen(true)
   }
 
   const totalPages = Math.ceil(totalContacts / pageSize)
@@ -189,7 +201,7 @@ export default function ContactsPage() {
             </div>
           ) : (
             <>
-              <ContactsTable contacts={contacts} onDelete={handleRefresh} />
+              <ContactsTable contacts={contacts} onDelete={handleRefresh} onView={handleViewContact} onEdit={handleEditContact} />
 
               {/* Pagination */}
               {totalPages > 1 && (
@@ -232,6 +244,25 @@ export default function ContactsPage() {
           setIsCreateModalOpen(false)
           loadContacts()
         }}
+      />
+
+      {/* Edit Contact Modal */}
+      <ContactFormModal 
+        open={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        initialData={selectedContact || undefined}
+        onSuccess={() => {
+          setIsEditModalOpen(false)
+          setSelectedContact(null)
+          loadContacts()
+        }}
+      />
+
+      {/* Contact Detail Drawer */}
+      <ContactDetailDrawer
+        contact={selectedContact}
+        open={isDetailDrawerOpen}
+        onOpenChange={setIsDetailDrawerOpen}
       />
     </main>
   )

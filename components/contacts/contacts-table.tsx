@@ -1,11 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Mail, Phone, Edit, Trash2, Eye, ExternalLink } from "lucide-react"
+import { Mail, Phone, Edit, Trash2, Eye } from "lucide-react"
 import { type Contact, ContactService } from "@/lib/services/contact-service"
 import {
   AlertDialog,
@@ -26,6 +25,7 @@ interface ContactsTableProps {
   contacts: Contact[]
   onDelete?: () => void
   onView?: (contact: Contact) => void
+  onEdit?: (contact: Contact) => void
 }
 
 const DEPARTMENT_COLORS: Record<string, string> = {
@@ -45,8 +45,7 @@ const LANGUAGE_LABELS: Record<string, string> = {
   pt: "PT",
 }
 
-export default function ContactsTable({ contacts, onDelete, onView }: ContactsTableProps) {
-  const router = useRouter()
+export default function ContactsTable({ contacts, onDelete, onView, onEdit }: ContactsTableProps) {
   const [contactToDelete, setContactToDelete] = useState<Contact | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const isMobile = useMobile()
@@ -114,14 +113,14 @@ export default function ContactsTable({ contacts, onDelete, onView }: ContactsTa
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => router.push(`/dashboard/contacts/${contact.id}`)}
+                    onClick={() => onView?.(contact)}
                   >
                     <Eye className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => router.push(`/dashboard/contacts/${contact.id}/edit`)}
+                    onClick={() => onEdit?.(contact)}
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -198,7 +197,7 @@ export default function ContactsTable({ contacts, onDelete, onView }: ContactsTa
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => router.push(`/dashboard/contacts/${contact.id}`)}
+                        onClick={() => onView?.(contact)}
                         title={t("contacts.view")}
                       >
                         <Eye className="h-4 w-4" />
@@ -206,7 +205,7 @@ export default function ContactsTable({ contacts, onDelete, onView }: ContactsTa
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => router.push(`/dashboard/contacts/${contact.id}/edit`)}
+                        onClick={() => onEdit?.(contact)}
                         title={t("contacts.edit")}
                       >
                         <Edit className="h-4 w-4" />
