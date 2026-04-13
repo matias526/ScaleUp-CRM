@@ -186,95 +186,7 @@ export function ContactFormModal({ open, onOpenChange, onSuccess, initialData }:
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Relationships - Collapsible */}
-            <div className="border rounded-lg overflow-hidden">
-              <button
-                type="button"
-                onClick={() => setShowRelationships(!showRelationships)}
-                className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 hover:bg-gray-100 transition-colors"
-              >
-                <h3 className="text-sm font-semibold">{t("contacts.form.section.relationships")}</h3>
-                {showRelationships ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              </button>
-
-              {showRelationships && (
-                <div className="p-3 space-y-3 border-t">
-                  <div className="grid grid-cols-2 gap-2">
-                    <FormField
-                      control={form.control}
-                      name="tech_company_id"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs">{t("contacts.form.techCompany")}</FormLabel>
-                          <Select value={field.value || ""} onValueChange={field.onChange}>
-                            <FormControl>
-                              <SelectTrigger className="h-8">
-                                <SelectValue placeholder={t("contacts.filter.all")} />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {techCompanies.map((company) => (
-                                <SelectItem key={company.id} value={company.id}>
-                                  {company.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="partner_id"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs">{t("contacts.form.partner")}</FormLabel>
-                          <Select value={field.value || ""} onValueChange={field.onChange}>
-                            <FormControl>
-                              <SelectTrigger className="h-8">
-                                <SelectValue placeholder={t("contacts.filter.all")} />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {partners.map((partner) => (
-                                <SelectItem key={partner.id} value={partner.id}>
-                                  {partner.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <FormField
-                    control={form.control}
-                    name="user_id"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">{t("contacts.form.linkedUser")}</FormLabel>
-                        <Select value={field.value || ""} onValueChange={field.onChange}>
-                          <FormControl>
-                            <SelectTrigger className="h-8">
-                              <SelectValue placeholder={t("contacts.filter.all")} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {users.map((user) => (
-                              <SelectItem key={user.id} value={user.id}>
-                                {user.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              )}
-            </div>
+            {/* Basic Information */}
             <div className="space-y-3">
               <h3 className="text-sm font-semibold">{t("contacts.form.section.basic")}</h3>
 
@@ -428,6 +340,93 @@ export function ContactFormModal({ open, onOpenChange, onSuccess, initialData }:
               </div>
             </div>
 
+            {/* Relationships - Collapsible */}
+            <div className="border rounded-lg overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setShowRelationships(!showRelationships)}
+                className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 hover:bg-gray-100 transition-colors"
+              >
+                <h3 className="text-sm font-semibold">{t("contacts.form.section.relationships")}</h3>
+                {showRelationships ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </button>
+
+              {showRelationships && (
+                <div className="p-3 space-y-3 border-t">
+                  <div className="grid grid-cols-2 gap-2">
+                    <FormField
+                      control={form.control}
+                      name="tech_company_id"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">{t("contacts.form.techCompany")}</FormLabel>
+                          <Select value={field.value || ""} onValueChange={field.onChange}>
+                            <FormControl>
+                              <SelectTrigger className="h-8">
+                                <SelectValue placeholder={t("contacts.filter.all")} />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {techCompanies.map((company) => (
+                                <SelectItem key={company.id} value={company.id}>
+                                  {company.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="partner_id"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">{t("contacts.form.partner")}</FormLabel>
+                          <Select value={field.value || ""} onValueChange={field.onChange}>
+                            <FormControl>
+                              <SelectTrigger className="h-8">
+                                <SelectValue placeholder={t("contacts.filter.all")} />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {partners.map((partner) => (
+                                <SelectItem key={partner.id} value={partner.id}>
+                                  {partner.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="user_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">{t("contacts.form.linkedUser")}</FormLabel>
+                        <Select value={field.value || ""} onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger className="h-8">
+                              <SelectValue placeholder={t("contacts.filter.all")} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {users.map((user) => (
+                              <SelectItem key={user.id} value={user.id}>
+                                {user.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+                </div>
               )}
             </div>
 
