@@ -1407,1139 +1407,1039 @@ export function OpportunityCreateForm() {
             </FormItem>
           )}
         />
-        {/*
+
+      </div>
+    )
+  }
+
+  // Paso 2: Empresas
+  const renderCompaniesStep = () => {
+    return (
+      <div className="space-y-6">
+        {/* {renderDebugInfo()} */}
+
+        <div className="flex items-center space-x-2 mb-6">
+          <Building2 className="h-5 w-5 text-primary" />
+          <h3 className="text-lg font-medium">Empresas involucradas</h3>
+        </div>
+
         <FormField
           control={form.control}
-          name="description"
+          name="tech_company_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{getTranslation("opportunities.form.description", "Descripción")}</FormLabel>
-              <FormControl>
-                <Textarea
-                  {...field}
-                  value={field.value || ""}
-                  placeholder="Describe los detalles de esta oportunidad..."
-                  className="min-h-[120px] transition-all focus:ring-2 focus:ring-primary/20"
-                  onChange={(e) => {
-                    field.onChange(e)
-                    persistentData.current.description = e.target.value
+              <FormLabel>
+                {getTranslation("opportunities.form.tech_company", "Empresa tecnológica")}
+                <span className="text-red-500 ml-1">*</span>
+              </FormLabel>
+              <Select
+                onValueChange={(value) => {
+                  field.onChange(value)
+                  persistentData.current.tech_company_id = value
+                }}
+                value={field.value || persistentData.current.tech_company_id || ""}
+                disabled={!!techCompanyId}
+              >
+                <FormControl>
+                  <SelectTrigger className="transition-all focus:ring-2 focus:ring-primary/20">
+                    <SelectValue
+                      placeholder={getTranslation("opportunities.form.select_placeholder", "Seleccionar empresa")}
+                    />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {techCompanies.map((company) => (
+                    <SelectItem key={company.id} value={company.id}>
+                      {company.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormDescription>Empresa tecnológica relacionada con esta oportunidad</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Mostrar el campo de partner solo para usuarios ScaleUp */}
+        {isScaleUpUser && (
+          <FormField
+            control={form.control}
+            name="partner_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  {getTranslation("opportunities.form.partner", "Partner")}
+                  {!isScaleUpUser && <span className="text-red-500 ml-1">*</span>}
+                </FormLabel>
+                <Select
+                  onValueChange={(value) => {
+                    field.onChange(value)
+                    persistentData.current.partner_id = value
                   }}
-                />
-              </FormControl>
+                  value={field.value || persistentData.current.partner_id || ""}
+                  disabled={!!partnerId || loadingPartners}
+                >
+                  <FormControl>
+                    <SelectTrigger className="transition-all focus:ring-2 focus:ring-primary/20">
+                      <SelectValue
+                        placeholder={
+                          loadingPartners
+                            ? getTranslation("opportunities.form.loading", "Cargando...")
+                            : getTranslation("opportunities.form.select_placeholder", "Seleccionar partner")
+                        }
+                      />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {filteredPartners.length === 0 && !loadingPartners && (
+                      <div className="p-2 text-sm text-gray-500">
+                        No hay partners disponibles para esta empresa tecnológica.
+                      </div>
+                    )}
+                    {filteredPartners.map((partner) => (
+                      <SelectItem key={partner.id} value={partner.id}>
+                        {partner.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormDescription>Partner que gestiona esta oportunidad</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        {/* Campo de país - Ahora siempre visible */}
+        <FormField
+          control={form.control}
+          name="country"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="flex items-center justify-between">
+                <span>{getTranslation("opportunities.form.country", "País")}</span>
+                <Badge variant="outline" className="ml-2 font-normal">
+                  {partnerCountries.length} países disponibles
+                </Badge>
+              </FormLabel>
+              <Select
+                onValueChange={(value) => {
+                  field.onChange(value)
+                  persistentData.current.country = value // 🔧 Persistir país
+                }}
+                value={field.value || persistentData.current.country || ""} // 🔧 Usar valor persistente
+                disabled={loadingCountries}
+              >
+                <FormControl>
+                  <SelectTrigger className="transition-all focus:ring-2 focus:ring-primary/20">
+                    <SelectValue
+                      placeholder={
+                        loadingCountries
+                          ? getTranslation("opportunities.form.loading", "Cargando...")
+                          : getTranslation("opportunities.form.select_placeholder", "Seleccionar país")
+                      }
+                    />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {loadingCountries ? (
+                    <div className="p-2 text-sm text-gray-500">
+                      {getTranslation("opportunities.form.loading", "Cargando...")}
+                    </div>
+                  ) : partnerCountries.length === 0 ? (
+                    <div className="p-2 text-sm text-gray-500">
+                      {watchPartner && watchPartner !== NO_PARTNER_VALUE
+                        ? getTranslation("opportunities.form.no_countries", "Este partner no tiene países asignados.")
+                        : "No hay países disponibles."}
+                    </div>
+                  ) : (
+                    partnerCountries.map((country) => (
+                      <SelectItem key={country.id} value={country.code}>
+                        {country.name}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
               <FormDescription>
-                Proporciona detalles adicionales sobre la oportunidad, necesidades del cliente, etc.
+                {watchPartner && watchPartner !== NO_PARTNER_VALUE
+                  ? "País donde se desarrollará esta oportunidad (limitado a los países del partner)"
+                  : "País donde se desarrollará esta oportunidad"}
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        {isScaleUpUser && (
-          <FormField
-            control={form.control}
-            name="is_new_partner"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                <div className="space-y-0.5">
-                  <FormLabel className="text-base">Oportunidad para nuevo partner</FormLabel>
-                  <FormDescription>
-                    Marca esta opción si la oportunidad es para incorporar un nuevo partner
-                  </FormDescription>
-                </div>
-                <FormControl>
-                  <Switch
-                    checked={field.value || false}
-                    onCheckedChange={(checked) => {
-                      field.onChange(checked)
-                      persistentData.current.is_new_partner = checked
-                    }}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-        )}
+        {/* Sección de personas responsables - Solo para usuarios ScaleUp */}
+        {(isScaleUpUser || (!isScaleUpUser && watchPartner)) && (
+          <div className="mt-8 pt-6 border-t">
+            <div className="flex items-center space-x-2 mb-6">
+              <UserCheck className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-medium">
+                {getTranslation("opportunities.form.responsible_persons", "Personas responsables")}
+              </h3>
+            </div>
 
-        {/* Mostrar el campo de etapa solo para usuarios ScaleUp */}
-        {/*
-        {isScaleUpUser && (
-          <FormField
-            control={form.control}
-            name="pipeline_stage_id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  {getTranslation("opportunities.form.stage", "Etapa")}
-                  <span className="text-red-500 ml-1">*</span>
-                </FormLabel>
-                <Select
-                  onValueChange={(value) => {
-                    field.onChange(value)
-                    persistentData.current.pipeline_stage_id = value
-                  }}
-                  value={field.value || persistentData.current.pipeline_stage_id || ""}
-                  disabled={loadingStages}
-                >
-                  <FormControl>
-                    <SelectTrigger className="transition-all focus:ring-2 focus:ring-primary/20">
-                      <SelectValue
-                        placeholder={
-                          loadingStages
-                            ? getTranslation("opportunities.form.loading", "Cargando...")
-                            : getTranslation("opportunities.form.select_placeholder", "Seleccionar etapa")
-                        }
-                      />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {stages.length === 0 && !loadingStages && (
-                      <div className="p-2 text-sm text-gray-500">No hay etapas disponibles.</div>
-                    )}
-                    {stages.map((stage) => (
-                      <SelectItem key={stage.id} value={stage.id}>
-                        {stage.code.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormDescription>Selecciona la etapa actual en el proceso de ventas</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )} */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Responsable de ScaleUp - Solo para usuarios ScaleUp */}
+              {isScaleUpUser && (
+                <FormField
+                  control={form.control}
+                  name="assigned_to"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        {getTranslation("opportunities.form.assigned_to", "Responsable de ScaleUp")}
+                      </FormLabel>
+                      <Select
+                        onValueChange={(value) => {
+                          field.onChange(value)
+                          persistentData.current.assigned_to = value
+                        }}
+                        value={field.value || persistentData.current.assigned_to || ""}
+                        disabled={loadingScaleUpUsers}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="transition-all focus:ring-2 focus:ring-primary/20">
+                            <SelectValue
+                              placeholder={
+                                loadingScaleUpUsers
+                                  ? getTranslation("opportunities.form.loading", "Cargando...")
+                                  : getTranslation("opportunities.form.select_placeholder", "Seleccionar responsable")
+                              }
+                            />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {loadingScaleUpUsers ? (
+                            <div className="p-2 text-sm text-gray-500">
+                              {getTranslation("opportunities.form.loading", "Cargando...")}
+                            </div>
+                          ) : scaleUpUsers.length === 0 ? (
+                            <div className="p-2 text-sm text-gray-500">No hay usuarios de ScaleUp disponibles.</div>
+                          ) : (
+                            scaleUpUsers.map((scaleUpUser) => (
+                              <SelectItem key={scaleUpUser.id} value={scaleUpUser.id}>
+                                {`${scaleUpUser.first_name} ${scaleUpUser.last_name}`}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>Persona de ScaleUp responsable de esta oportunidad</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              {/* Responsable del Partner */}
+              {watchPartner && watchPartner !== NO_PARTNER_VALUE && (
+                <FormField
+                  control={form.control}
+                  name="partner_responsible_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        {getTranslation("opportunities.form.partner_responsible", "Responsable del Partner")}
+                      </FormLabel>
+                      <Select
+                        onValueChange={(value) => {
+                          field.onChange(value)
+                          persistentData.current.partner_responsible_id = value
+                        }}
+                        value={field.value || persistentData.current.partner_responsible_id || ""}
+                        disabled={loadingPartnerUsers}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="transition-all focus:ring-2 focus:ring-primary/20">
+                            <SelectValue
+                              placeholder={
+                                loadingPartnerUsers
+                                  ? getTranslation("opportunities.form.loading", "Cargando...")
+                                  : getTranslation("opportunities.form.select_placeholder", "Seleccionar responsable")
+                              }
+                            />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {loadingPartnerUsers ? (
+                            <div className="p-2 text-sm text-gray-500">
+                              {getTranslation("opportunities.form.loading", "Cargando...")}
+                            </div>
+                          ) : partnerUsers.length === 0 ? (
+                            <div className="p-2 text-sm text-gray-500">
+                              No hay usuarios disponibles para este partner.
+                            </div>
+                          ) : (
+                            partnerUsers.map((partnerUser) => (
+                              <SelectItem key={partnerUser.id} value={partnerUser.id}>
+                                {`${partnerUser.first_name} ${partnerUser.last_name}`}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>Persona del partner responsable de esta oportunidad</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+            </div>
+          </div>
+        )}
       </div>
     )
+  }
 
+  // Paso 3: Cliente y detalles financieros
+  const renderCustomerAndFinancialsStep = () => {
+    // Obtener el cliente seleccionado para mostrar en el botón
+    const selectedCustomer = endCustomers.find((c) => c.id === watchEndCustomer)
 
-    // Paso 2: Empresas
-    const renderCompaniesStep = () => {
-      return (
-        <div className="space-y-6">
-          {/* {renderDebugInfo()} */}
+    return (
+      <div className="space-y-6">
+        {/* {renderDebugInfo()} */}
 
-          <div className="flex items-center space-x-2 mb-6">
-            <Building2 className="h-5 w-5 text-primary" />
-            <h3 className="text-lg font-medium">Empresas involucradas</h3>
-          </div>
+        <div className="flex items-center space-x-2 mb-6">
+          <Users className="h-5 w-5 text-primary" />
+          <h3 className="text-lg font-medium">Cliente y detalles financieros</h3>
+        </div>
 
-          <FormField
-            control={form.control}
-            name="tech_company_id"
-            render={({ field }) => (
-              <FormItem>
+        <FormField
+          control={form.control}
+          name="end_customer_id"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel className="flex items-center justify-between">
+                <span>
+                  {getTranslation("opportunities.form.end_customer", "Cliente final")}
+                  {!isScaleUpUser && <span className="text-red-500 ml-1">*</span>}
+                </span>
+              </FormLabel>
+              <div className="relative">
+                <Popover open={endCustomerPopoverOpen} onOpenChange={setEndCustomerPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        className={cn(
+                          "w-full justify-between",
+                          !field.value && "text-muted-foreground",
+                          "transition-all focus:ring-2 focus:ring-primary/20",
+                        )}
+                      >
+                        {field.value && selectedCustomer
+                          ? selectedCustomer.name
+                          : getTranslation("opportunities.form.select_placeholder", "Buscar cliente...")}
+                        <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" align="start">
+                    <div className="p-2">
+                      <Input
+                        placeholder={getTranslation("opportunities.form.select_placeholder", "Buscar cliente...")}
+                        value={endCustomerSearchQuery}
+                        onChange={(e) => setEndCustomerSearchQuery(e.target.value)}
+                        className="mb-2"
+                      />
+                      <div className="max-h-60 overflow-y-auto">
+                        {searchingEndCustomers ? (
+                          <div className="p-2 text-sm text-gray-500">Buscando...</div>
+                        ) : (
+                          (() => {
+                            // Determinar qué lista mostrar
+                            let customersToShow = []
+
+                            if (endCustomerSearchQuery.trim()) {
+                              // Si hay búsqueda, mostrar resultados de búsqueda
+                              customersToShow = searchResults
+                            } else {
+                              // Si no hay búsqueda, mostrar todos los clientes disponibles
+                              customersToShow = endCustomers
+                            }
+
+                            if (customersToShow.length === 0 && endCustomerSearchQuery.trim()) {
+                              return (
+                                <div className="p-2 text-sm text-gray-500">
+                                  No se encontraron clientes con "{endCustomerSearchQuery}"
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="mt-2 w-full gap-1 bg-transparent"
+                                    onClick={() => {
+                                      setNewEndCustomerData((prev) => ({ ...prev, name: endCustomerSearchQuery }))
+                                      setNewEndCustomerDialogOpen(true)
+                                    }}
+                                  >
+                                    <Plus className="h-4 w-4" />
+                                    Crear "{endCustomerSearchQuery}"
+                                  </Button>
+                                </div>
+                              )
+                            }
+
+                            return (
+                              <div className="space-y-1">
+                                {customersToShow.map((customer) => (
+                                  <div
+                                    key={customer.id}
+                                    className="px-2 py-1.5 text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground rounded-sm"
+                                    onClick={() => {
+                                      form.setValue("end_customer_id", customer.id)
+                                      persistentData.current.end_customer_id = customer.id
+                                      setEndCustomerPopoverOpen(false)
+                                      setEndCustomerSearchQuery("")
+                                    }}
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <span>{customer.name}</span>
+                                      <Check
+                                        className={cn(
+                                          "ml-auto h-4 w-4",
+                                          customer.id === field.value ? "opacity-100" : "opacity-0",
+                                        )}
+                                      />
+                                    </div>
+                                  </div>
+                                ))}
+                                <div className="border-t pt-2 mt-2">
+                                  <div
+                                    className="px-2 py-1.5 text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground rounded-sm flex items-center"
+                                    onClick={() => {
+                                      setNewEndCustomerData({
+                                        name: "",
+                                        industry_id: "",
+                                        website: "",
+                                        tax_id: "",
+                                        country_id: "",
+                                      })
+                                      setNewEndCustomerDialogOpen(true)
+                                    }}
+                                  >
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    {getTranslation("opportunities.form.new_end_customer", "Crear nuevo cliente")}
+                                  </div>
+                                </div>
+                              </div>
+                            )
+                          })()
+                        )}
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <FormDescription>Cliente final para quien se desarrollará esta oportunidad</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <Dialog open={newEndCustomerDialogOpen} onOpenChange={setNewEndCustomerDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>{getTranslation("opportunities.form.new_end_customer", "Nuevo cliente final")}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
                 <FormLabel>
-                  {getTranslation("opportunities.form.tech_company", "Empresa tecnológica")}
+                  {getTranslation("opportunities.form.new_end_customer_name", "Nombre del cliente")}
                   <span className="text-red-500 ml-1">*</span>
                 </FormLabel>
+                <Input
+                  value={newEndCustomerData.name}
+                  onChange={(e) => setNewEndCustomerData((prev) => ({ ...prev, name: e.target.value }))}
+                  placeholder="Nombre del nuevo cliente"
+                  className="transition-all focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <FormLabel>Industria</FormLabel>
                 <Select
-                  onValueChange={(value) => {
-                    field.onChange(value)
-                    persistentData.current.tech_company_id = value
-                  }}
-                  value={field.value || persistentData.current.tech_company_id || ""}
-                  disabled={!!techCompanyId}
+                  value={newEndCustomerData.industry_id}
+                  onValueChange={(value) => setNewEndCustomerData((prev) => ({ ...prev, industry_id: value }))}
+                  disabled={loadingIndustries}
                 >
-                  <FormControl>
-                    <SelectTrigger className="transition-all focus:ring-2 focus:ring-primary/20">
-                      <SelectValue
-                        placeholder={getTranslation("opportunities.form.select_placeholder", "Seleccionar empresa")}
-                      />
-                    </SelectTrigger>
-                  </FormControl>
+                  <SelectTrigger className="transition-all focus:ring-2 focus:ring-primary/20">
+                    <SelectValue placeholder={loadingIndustries ? "Cargando..." : "Seleccionar industria"} />
+                  </SelectTrigger>
                   <SelectContent>
-                    {techCompanies.map((company) => (
-                      <SelectItem key={company.id} value={company.id}>
-                        {company.name}
+                    {industries.map((industry) => (
+                      <SelectItem key={industry.id} value={industry.id}>
+                        {industry.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <FormDescription>Empresa tecnológica relacionada con esta oportunidad</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              </div>
 
-          {/* Mostrar el campo de partner solo para usuarios ScaleUp */}
+              <div className="space-y-2">
+                <FormLabel>Sitio web</FormLabel>
+                <Input
+                  value={newEndCustomerData.website}
+                  onChange={(e) => setNewEndCustomerData((prev) => ({ ...prev, website: e.target.value }))}
+                  placeholder="https://ejemplo.com"
+                  className="transition-all focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <FormLabel>ID Fiscal</FormLabel>
+                <Input
+                  value={newEndCustomerData.tax_id}
+                  onChange={(e) => setNewEndCustomerData((prev) => ({ ...prev, tax_id: e.target.value }))}
+                  placeholder="Número de identificación fiscal"
+                  className="transition-all focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <FormLabel>País</FormLabel>
+                <Select
+                  value={newEndCustomerData.country_id}
+                  onValueChange={(value) => setNewEndCustomerData((prev) => ({ ...prev, country_id: value }))}
+                  disabled={loadingCountries}
+                >
+                  <SelectTrigger className="transition-all focus:ring-2 focus:ring-primary/20">
+                    <SelectValue placeholder={loadingCountries ? "Cargando..." : "Seleccionar país"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {partnerCountries.map((country) => (
+                      <SelectItem key={country.id} value={country.id}>
+                        {country.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button
+                onClick={handleCreateEndCustomer}
+                disabled={!newEndCustomerData.name.trim() || isCreatingEndCustomer}
+                className="w-full gap-2"
+              >
+                {isCreatingEndCustomer ? (
+                  <>Creando...</>
+                ) : (
+                  <>
+                    <Check className="h-4 w-4" />
+                    {getTranslation("opportunities.form.create_end_customer", "Crear cliente")}
+                  </>
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Mostrar el valor estimado solo para usuarios ScaleUp */}
           {isScaleUpUser && (
             <FormField
               control={form.control}
-              name="partner_id"
+              name="estimated_value"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    {getTranslation("opportunities.form.partner", "Partner")}
-                    {!isScaleUpUser && <span className="text-red-500 ml-1">*</span>}
-                  </FormLabel>
-                  <Select
-                    onValueChange={(value) => {
-                      field.onChange(value)
-                      persistentData.current.partner_id = value
-                    }}
-                    value={field.value || persistentData.current.partner_id || ""}
-                    disabled={!!partnerId || loadingPartners}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="transition-all focus:ring-2 focus:ring-primary/20">
-                        <SelectValue
-                          placeholder={
-                            loadingPartners
-                              ? getTranslation("opportunities.form.loading", "Cargando...")
-                              : getTranslation("opportunities.form.select_placeholder", "Seleccionar partner")
-                          }
-                        />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {filteredPartners.length === 0 && !loadingPartners && (
-                        <div className="p-2 text-sm text-gray-500">
-                          No hay partners disponibles para esta empresa tecnológica.
-                        </div>
-                      )}
-                      {filteredPartners.map((partner) => (
-                        <SelectItem key={partner.id} value={partner.id}>
-                          {partner.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>Partner que gestiona esta oportunidad</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
-
-          {/* Campo de país - Ahora siempre visible */}
-          <FormField
-            control={form.control}
-            name="country"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="flex items-center justify-between">
-                  <span>{getTranslation("opportunities.form.country", "País")}</span>
-                  <Badge variant="outline" className="ml-2 font-normal">
-                    {partnerCountries.length} países disponibles
-                  </Badge>
-                </FormLabel>
-                <Select
-                  onValueChange={(value) => {
-                    field.onChange(value)
-                    persistentData.current.country = value // 🔧 Persistir país
-                  }}
-                  value={field.value || persistentData.current.country || ""} // 🔧 Usar valor persistente
-                  disabled={loadingCountries}
-                >
-                  <FormControl>
-                    <SelectTrigger className="transition-all focus:ring-2 focus:ring-primary/20">
-                      <SelectValue
-                        placeholder={
-                          loadingCountries
-                            ? getTranslation("opportunities.form.loading", "Cargando...")
-                            : getTranslation("opportunities.form.select_placeholder", "Seleccionar país")
-                        }
-                      />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {loadingCountries ? (
-                      <div className="p-2 text-sm text-gray-500">
-                        {getTranslation("opportunities.form.loading", "Cargando...")}
-                      </div>
-                    ) : partnerCountries.length === 0 ? (
-                      <div className="p-2 text-sm text-gray-500">
-                        {watchPartner && watchPartner !== NO_PARTNER_VALUE
-                          ? getTranslation("opportunities.form.no_countries", "Este partner no tiene países asignados.")
-                          : "No hay países disponibles."}
-                      </div>
-                    ) : (
-                      partnerCountries.map((country) => (
-                        <SelectItem key={country.id} value={country.code}>
-                          {country.name}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  {watchPartner && watchPartner !== NO_PARTNER_VALUE
-                    ? "País donde se desarrollará esta oportunidad (limitado a los países del partner)"
-                    : "País donde se desarrollará esta oportunidad"}
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Sección de personas responsables - Solo para usuarios ScaleUp */}
-          {(isScaleUpUser || (!isScaleUpUser && watchPartner)) && (
-            <div className="mt-8 pt-6 border-t">
-              <div className="flex items-center space-x-2 mb-6">
-                <UserCheck className="h-5 w-5 text-primary" />
-                <h3 className="text-lg font-medium">
-                  {getTranslation("opportunities.form.responsible_persons", "Personas responsables")}
-                </h3>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Responsable de ScaleUp - Solo para usuarios ScaleUp */}
-                {isScaleUpUser && (
-                  <FormField
-                    control={form.control}
-                    name="assigned_to"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          {getTranslation("opportunities.form.assigned_to", "Responsable de ScaleUp")}
-                        </FormLabel>
-                        <Select
-                          onValueChange={(value) => {
-                            field.onChange(value)
-                            persistentData.current.assigned_to = value
-                          }}
-                          value={field.value || persistentData.current.assigned_to || ""}
-                          disabled={loadingScaleUpUsers}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="transition-all focus:ring-2 focus:ring-primary/20">
-                              <SelectValue
-                                placeholder={
-                                  loadingScaleUpUsers
-                                    ? getTranslation("opportunities.form.loading", "Cargando...")
-                                    : getTranslation("opportunities.form.select_placeholder", "Seleccionar responsable")
-                                }
-                              />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {loadingScaleUpUsers ? (
-                              <div className="p-2 text-sm text-gray-500">
-                                {getTranslation("opportunities.form.loading", "Cargando...")}
-                              </div>
-                            ) : scaleUpUsers.length === 0 ? (
-                              <div className="p-2 text-sm text-gray-500">No hay usuarios de ScaleUp disponibles.</div>
-                            ) : (
-                              scaleUpUsers.map((scaleUpUser) => (
-                                <SelectItem key={scaleUpUser.id} value={scaleUpUser.id}>
-                                  {`${scaleUpUser.first_name} ${scaleUpUser.last_name}`}
-                                </SelectItem>
-                              ))
-                            )}
-                          </SelectContent>
-                        </Select>
-                        <FormDescription>Persona de ScaleUp responsable de esta oportunidad</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-
-                {/* Responsable del Partner */}
-                {watchPartner && watchPartner !== NO_PARTNER_VALUE && (
-                  <FormField
-                    control={form.control}
-                    name="partner_responsible_id"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          {getTranslation("opportunities.form.partner_responsible", "Responsable del Partner")}
-                        </FormLabel>
-                        <Select
-                          onValueChange={(value) => {
-                            field.onChange(value)
-                            persistentData.current.partner_responsible_id = value
-                          }}
-                          value={field.value || persistentData.current.partner_responsible_id || ""}
-                          disabled={loadingPartnerUsers}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="transition-all focus:ring-2 focus:ring-primary/20">
-                              <SelectValue
-                                placeholder={
-                                  loadingPartnerUsers
-                                    ? getTranslation("opportunities.form.loading", "Cargando...")
-                                    : getTranslation("opportunities.form.select_placeholder", "Seleccionar responsable")
-                                }
-                              />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {loadingPartnerUsers ? (
-                              <div className="p-2 text-sm text-gray-500">
-                                {getTranslation("opportunities.form.loading", "Cargando...")}
-                              </div>
-                            ) : partnerUsers.length === 0 ? (
-                              <div className="p-2 text-sm text-gray-500">
-                                No hay usuarios disponibles para este partner.
-                              </div>
-                            ) : (
-                              partnerUsers.map((partnerUser) => (
-                                <SelectItem key={partnerUser.id} value={partnerUser.id}>
-                                  {`${partnerUser.first_name} ${partnerUser.last_name}`}
-                                </SelectItem>
-                              ))
-                            )}
-                          </SelectContent>
-                        </Select>
-                        <FormDescription>Persona del partner responsable de esta oportunidad</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      )
-    }
-
-    // Paso 3: Cliente y detalles financieros
-    const renderCustomerAndFinancialsStep = () => {
-      // Obtener el cliente seleccionado para mostrar en el botón
-      const selectedCustomer = endCustomers.find((c) => c.id === watchEndCustomer)
-
-      return (
-        <div className="space-y-6">
-          {/* {renderDebugInfo()} */}
-
-          <div className="flex items-center space-x-2 mb-6">
-            <Users className="h-5 w-5 text-primary" />
-            <h3 className="text-lg font-medium">Cliente y detalles financieros</h3>
-          </div>
-
-          <FormField
-            control={form.control}
-            name="end_customer_id"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel className="flex items-center justify-between">
-                  <span>
-                    {getTranslation("opportunities.form.end_customer", "Cliente final")}
-                    {!isScaleUpUser && <span className="text-red-500 ml-1">*</span>}
-                  </span>
-                </FormLabel>
-                <div className="relative">
-                  <Popover open={endCustomerPopoverOpen} onOpenChange={setEndCustomerPopoverOpen}>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          className={cn(
-                            "w-full justify-between",
-                            !field.value && "text-muted-foreground",
-                            "transition-all focus:ring-2 focus:ring-primary/20",
-                          )}
-                        >
-                          {field.value && selectedCustomer
-                            ? selectedCustomer.name
-                            : getTranslation("opportunities.form.select_placeholder", "Buscar cliente...")}
-                          <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0" align="start">
-                      <div className="p-2">
-                        <Input
-                          placeholder={getTranslation("opportunities.form.select_placeholder", "Buscar cliente...")}
-                          value={endCustomerSearchQuery}
-                          onChange={(e) => setEndCustomerSearchQuery(e.target.value)}
-                          className="mb-2"
-                        />
-                        <div className="max-h-60 overflow-y-auto">
-                          {searchingEndCustomers ? (
-                            <div className="p-2 text-sm text-gray-500">Buscando...</div>
-                          ) : (
-                            (() => {
-                              // Determinar qué lista mostrar
-                              let customersToShow = []
-
-                              if (endCustomerSearchQuery.trim()) {
-                                // Si hay búsqueda, mostrar resultados de búsqueda
-                                customersToShow = searchResults
-                              } else {
-                                // Si no hay búsqueda, mostrar todos los clientes disponibles
-                                customersToShow = endCustomers
-                              }
-
-                              if (customersToShow.length === 0 && endCustomerSearchQuery.trim()) {
-                                return (
-                                  <div className="p-2 text-sm text-gray-500">
-                                    No se encontraron clientes con "{endCustomerSearchQuery}"
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="mt-2 w-full gap-1 bg-transparent"
-                                      onClick={() => {
-                                        setNewEndCustomerData((prev) => ({ ...prev, name: endCustomerSearchQuery }))
-                                        setNewEndCustomerDialogOpen(true)
-                                      }}
-                                    >
-                                      <Plus className="h-4 w-4" />
-                                      Crear "{endCustomerSearchQuery}"
-                                    </Button>
-                                  </div>
-                                )
-                              }
-
-                              return (
-                                <div className="space-y-1">
-                                  {customersToShow.map((customer) => (
-                                    <div
-                                      key={customer.id}
-                                      className="px-2 py-1.5 text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground rounded-sm"
-                                      onClick={() => {
-                                        form.setValue("end_customer_id", customer.id)
-                                        persistentData.current.end_customer_id = customer.id
-                                        setEndCustomerPopoverOpen(false)
-                                        setEndCustomerSearchQuery("")
-                                      }}
-                                    >
-                                      <div className="flex items-center justify-between">
-                                        <span>{customer.name}</span>
-                                        <Check
-                                          className={cn(
-                                            "ml-auto h-4 w-4",
-                                            customer.id === field.value ? "opacity-100" : "opacity-0",
-                                          )}
-                                        />
-                                      </div>
-                                    </div>
-                                  ))}
-                                  <div className="border-t pt-2 mt-2">
-                                    <div
-                                      className="px-2 py-1.5 text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground rounded-sm flex items-center"
-                                      onClick={() => {
-                                        setNewEndCustomerData({
-                                          name: "",
-                                          industry_id: "",
-                                          website: "",
-                                          tax_id: "",
-                                          country_id: "",
-                                        })
-                                        setNewEndCustomerDialogOpen(true)
-                                      }}
-                                    >
-                                      <Plus className="mr-2 h-4 w-4" />
-                                      {getTranslation("opportunities.form.new_end_customer", "Crear nuevo cliente")}
-                                    </div>
-                                  </div>
-                                </div>
-                              )
-                            })()
-                          )}
-                        </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <FormDescription>Cliente final para quien se desarrollará esta oportunidad</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <Dialog open={newEndCustomerDialogOpen} onOpenChange={setNewEndCustomerDialogOpen}>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>{getTranslation("opportunities.form.new_end_customer", "Nuevo cliente final")}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <FormLabel>
-                    {getTranslation("opportunities.form.new_end_customer_name", "Nombre del cliente")}
-                    <span className="text-red-500 ml-1">*</span>
-                  </FormLabel>
-                  <Input
-                    value={newEndCustomerData.name}
-                    onChange={(e) => setNewEndCustomerData((prev) => ({ ...prev, name: e.target.value }))}
-                    placeholder="Nombre del nuevo cliente"
-                    className="transition-all focus:ring-2 focus:ring-primary/20"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <FormLabel>Industria</FormLabel>
-                  <Select
-                    value={newEndCustomerData.industry_id}
-                    onValueChange={(value) => setNewEndCustomerData((prev) => ({ ...prev, industry_id: value }))}
-                    disabled={loadingIndustries}
-                  >
-                    <SelectTrigger className="transition-all focus:ring-2 focus:ring-primary/20">
-                      <SelectValue placeholder={loadingIndustries ? "Cargando..." : "Seleccionar industria"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {industries.map((industry) => (
-                        <SelectItem key={industry.id} value={industry.id}>
-                          {industry.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <FormLabel>Sitio web</FormLabel>
-                  <Input
-                    value={newEndCustomerData.website}
-                    onChange={(e) => setNewEndCustomerData((prev) => ({ ...prev, website: e.target.value }))}
-                    placeholder="https://ejemplo.com"
-                    className="transition-all focus:ring-2 focus:ring-primary/20"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <FormLabel>ID Fiscal</FormLabel>
-                  <Input
-                    value={newEndCustomerData.tax_id}
-                    onChange={(e) => setNewEndCustomerData((prev) => ({ ...prev, tax_id: e.target.value }))}
-                    placeholder="Número de identificación fiscal"
-                    className="transition-all focus:ring-2 focus:ring-primary/20"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <FormLabel>País</FormLabel>
-                  <Select
-                    value={newEndCustomerData.country_id}
-                    onValueChange={(value) => setNewEndCustomerData((prev) => ({ ...prev, country_id: value }))}
-                    disabled={loadingCountries}
-                  >
-                    <SelectTrigger className="transition-all focus:ring-2 focus:ring-primary/20">
-                      <SelectValue placeholder={loadingCountries ? "Cargando..." : "Seleccionar país"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {partnerCountries.map((country) => (
-                        <SelectItem key={country.id} value={country.id}>
-                          {country.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Button
-                  onClick={handleCreateEndCustomer}
-                  disabled={!newEndCustomerData.name.trim() || isCreatingEndCustomer}
-                  className="w-full gap-2"
-                >
-                  {isCreatingEndCustomer ? (
-                    <>Creando...</>
-                  ) : (
-                    <>
-                      <Check className="h-4 w-4" />
-                      {getTranslation("opportunities.form.create_end_customer", "Crear cliente")}
-                    </>
-                  )}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Mostrar el valor estimado solo para usuarios ScaleUp */}
-            {isScaleUpUser && (
-              <FormField
-                control={form.control}
-                name="estimated_value"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{getTranslation("opportunities.form.estimated_value", "Valor estimado")}</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-                        <Input
-                          type="number"
-                          {...field}
-                          value={field.value === null ? "" : field.value}
-                          onChange={(e) => {
-                            const value = e.target.value === "" ? null : Number.parseFloat(e.target.value)
-                            field.onChange(value)
-                            persistentData.current.estimated_value = value
-                          }}
-                          className="pl-10 transition-all focus:ring-2 focus:ring-primary/20"
-                          placeholder="0.00"
-                        />
-                      </div>
-                    </FormControl>
-                    <FormDescription>Valor monetario estimado de esta oportunidad</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-
-            <FormField
-              control={form.control}
-              name="estimated_close_date"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    {getTranslation("opportunities.form.estimated_close_date", "Fecha estimada de cierre")}
-                  </FormLabel>
+                  <FormLabel>{getTranslation("opportunities.form.estimated_value", "Valor estimado")}</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                      <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                       <Input
-                        type="date"
+                        type="number"
                         {...field}
-                        value={field.value || ""}
+                        value={field.value === null ? "" : field.value}
                         onChange={(e) => {
-                          field.onChange(e)
-                          persistentData.current.estimated_close_date = e.target.value
+                          const value = e.target.value === "" ? null : Number.parseFloat(e.target.value)
+                          field.onChange(value)
+                          persistentData.current.estimated_value = value
                         }}
                         className="pl-10 transition-all focus:ring-2 focus:ring-primary/20"
+                        placeholder="0.00"
                       />
                     </div>
                   </FormControl>
-                  <FormDescription>Fecha estimada para cerrar esta oportunidad</FormDescription>
+                  <FormDescription>Valor monetario estimado de esta oportunidad</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
-          </div>
-        </div>
-      )
-    }
+          )}
 
-    // Paso 4: Campos técnicos y finalización
-    const renderTechFieldsStep = () => {
-      return (
-        <div className="space-y-6">
-          {/* {renderDebugInfo()} */}
-
-          <div className="flex items-center space-x-2 mb-6">
-            <Tag className="h-5 w-5 text-primary" />
-            <h3 className="text-lg font-medium">Campos técnicos y finalización</h3>
-          </div>
-
-          {loadingTechFields ? (
-            <div className="flex items-center justify-center p-8">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                <p>Cargando campos técnicos...</p>
-              </div>
-            </div>
-          ) : techFields.length > 0 ? (
-            <div className="space-y-6">
-              <div className="mb-4">
-                <h4 className="text-sm font-medium mb-1">
-                  {getTranslation("opportunities.form.tech_fields", "Campos tecnológicos")}
-                </h4>
-                <p className="text-sm text-gray-500">Complete los campos específicos para esta tecnología</p>
-              </div>
-
-              <div className="grid grid-cols-1 gap-6 p-4 border rounded-md bg-gray-50">
-                {techFields.map((field) => (
-                  <div key={field.id} className="space-y-2">
-                    <div className="flex justify-between">
-                      <label className="text-sm font-medium">
-                        {field.field_name}
-                        {field.is_required && <span className="text-red-500 ml-1">*</span>}
-                      </label>
-                    </div>
-
-                    <div>
-                      {/* Renderizar el campo según su tipo */}
-                      {(() => {
-                        switch (field.field_type) {
-                          case "text":
-                            return (
-                              <Input
-                                value={techFieldValues[field.id] || ""}
-                                onChange={(e) => {
-                                  setTechFieldValues((prev) => ({
-                                    ...prev,
-                                    [field.id]: e.target.value,
-                                  }))
-                                }}
-                                placeholder={`Ingrese ${field.field_name}`}
-                                className="transition-all focus:ring-2 focus:ring-primary/20"
-                              />
-                            )
-                          case "number":
-                            return (
-                              <Input
-                                type="number"
-                                value={techFieldValues[field.id] || ""}
-                                onChange={(e) => {
-                                  setTechFieldValues((prev) => ({
-                                    ...prev,
-                                    [field.id]: e.target.value,
-                                  }))
-                                }}
-                                placeholder={`Ingrese ${field.field_name}`}
-                                className="transition-all focus:ring-2 focus:ring-primary/20"
-                              />
-                            )
-                          case "textarea":
-                            return (
-                              <Textarea
-                                value={techFieldValues[field.id] || ""}
-                                onChange={(e) => {
-                                  setTechFieldValues((prev) => ({
-                                    ...prev,
-                                    [field.id]: e.target.value,
-                                  }))
-                                }}
-                                placeholder={`Ingrese ${field.field_name}`}
-                                className="min-h-[100px] transition-all focus:ring-2 focus:ring-primary/20"
-                              />
-                            )
-                          case "select":
-                            const options = field.options
-                              ? typeof field.options === "string"
-                                ? JSON.parse(field.options)
-                                : field.options
-                              : []
-                            return (
-                              <Select
-                                value={techFieldValues[field.id] || ""}
-                                onValueChange={(value) => {
-                                  setTechFieldValues((prev) => ({
-                                    ...prev,
-                                    [field.id]: value,
-                                  }))
-                                }}
-                              >
-                                <SelectTrigger className="transition-all focus:ring-2 focus:ring-primary/20">
-                                  <SelectValue placeholder={`Seleccione ${field.field_name}`} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {Array.isArray(options) &&
-                                    options.map((option, index) => (
-                                      <SelectItem key={index} value={option.value || option}>
-                                        {option.label || option}
-                                      </SelectItem>
-                                    ))}
-                                </SelectContent>
-                              </Select>
-                            )
-                          case "multiselect":
-                            // Implementación simplificada de multiselect
-                            const multiOptions = field.options
-                              ? typeof field.options === "string"
-                                ? JSON.parse(field.options)
-                                : field.options
-                              : []
-                            return (
-                              <div className="border rounded-md p-2">
-                                {Array.isArray(multiOptions) &&
-                                  multiOptions.map((option, index) => {
-                                    const optionValue = option.value || option
-                                    const optionLabel = option.label || option
-                                    const isSelected = Array.isArray(techFieldValues[field.id])
-                                      ? techFieldValues[field.id].includes(optionValue)
-                                      : false
-
-                                    return (
-                                      <div key={index} className="flex items-center space-x-2 py-1">
-                                        <input
-                                          type="checkbox"
-                                          id={`option-${field.id}-${index}`}
-                                          checked={isSelected}
-                                          onChange={(e) => {
-                                            const currentValues = Array.isArray(techFieldValues[field.id])
-                                              ? [...techFieldValues[field.id]]
-                                              : []
-                                            const newValues = e.target.checked
-                                              ? [...currentValues, optionValue]
-                                              : currentValues.filter((v) => v !== optionValue)
-                                            setTechFieldValues((prev) => ({
-                                              ...prev,
-                                              [field.id]: newValues,
-                                            }))
-                                          }}
-                                        />
-                                        <label htmlFor={`option-${field.id}-${index}`}>{optionLabel}</label>
-                                      </div>
-                                    )
-                                  })}
-                              </div>
-                            )
-                          case "date":
-                            return (
-                              <Input
-                                type="date"
-                                value={techFieldValues[field.id] || ""}
-                                onChange={(e) => {
-                                  setTechFieldValues((prev) => ({
-                                    ...prev,
-                                    [field.id]: e.target.value,
-                                  }))
-                                }}
-                                className="transition-all focus:ring-2 focus:ring-primary/20"
-                              />
-                            )
-                          case "boolean":
-                            return (
-                              <div className="flex items-center space-x-2">
-                                <Switch
-                                  id={`boolean-${field.id}`}
-                                  checked={techFieldValues[field.id] === true}
-                                  onCheckedChange={(checked) => {
-                                    setTechFieldValues((prev) => ({
-                                      ...prev,
-                                      [field.id]: checked,
-                                    }))
-                                  }}
-                                />
-                                <Label htmlFor={`boolean-${field.id}`}>
-                                  {techFieldValues[field.id] === true ? "Sí" : "No"}
-                                </Label>
-                              </div>
-                            )
-                          case "file":
-                            return (
-                              <FileUpload
-                                value={techFieldValues[field.id] || ""}
-                                onChange={(value) => {
-                                  setTechFieldValues((prev) => ({
-                                    ...prev,
-                                    [field.id]: value,
-                                  }))
-                                }}
-                                opportunityId="temp"
-                                fieldId={field.id}
-                                maxSizeMB={field.file_config?.max_size_mb || 5}
-                                allowedFileTypes={
-                                  field.file_config?.allowed_mime_types
-                                    ? field.file_config.allowed_mime_types
-                                      .split(",")
-                                      .map((type) => type.trim().replace(/^\./, ""))
-                                    : DEFAULT_ALLOWED_FILE_TYPES
-                                }
-                              />
-                            )
-                          default:
-                            return (
-                              <Input
-                                value={techFieldValues[field.id] || ""}
-                                onChange={(e) => {
-                                  setTechFieldValues((prev) => ({
-                                    ...prev,
-                                    [field.id]: e.target.value,
-                                  }))
-                                }}
-                                placeholder={`Ingrese ${field.field_name}`}
-                                className="transition-all focus:ring-2 focus:ring-primary/20"
-                              />
-                            )
-                        }
-                      })()}
-
-                      {field.is_required && !techFieldValidation[field.id] && (
-                        <p className="text-xs text-red-500 mt-1">Este campo es obligatorio</p>
-                      )}
-                    </div>
-
-                    <p className="text-xs text-gray-500 italic">
-                      {field.description || `Campo de tipo ${field.field_type}`}
-                    </p>
+          <FormField
+            control={form.control}
+            name="estimated_close_date"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  {getTranslation("opportunities.form.estimated_close_date", "Fecha estimada de cierre")}
+                </FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                    <Input
+                      type="date"
+                      {...field}
+                      value={field.value || ""}
+                      onChange={(e) => {
+                        field.onChange(e)
+                        persistentData.current.estimated_close_date = e.target.value
+                      }}
+                      className="pl-10 transition-all focus:ring-2 focus:ring-primary/20"
+                    />
                   </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <Alert>
-              <Info className="h-4 w-4" />
-              <AlertTitle>Campos técnicos no disponibles</AlertTitle>
-              <AlertDescription>No hay campos técnicos definidos para esta empresa tecnológica.</AlertDescription>
-            </Alert>
-          )}
-
-          <div className="mt-8 p-4 border rounded-md bg-blue-50 border-blue-100">
-            <h4 className="font-medium text-blue-800 mb-2 flex items-center">
-              <Info className="h-4 w-4 mr-2" />
-              Resumen de la oportunidad
-            </h4>
-            <div className="space-y-2 text-sm text-blue-700">
-              <p>
-                <strong>Título:</strong> {persistentData.current.title || form.getValues("title") || "No especificado"}
-              </p>
-              <p>
-                <strong>Etapa:</strong>{" "}
-                {stages
-                  .find((s) => s.id === (persistentData.current.pipeline_stage_id || form.getValues("pipeline_stage_id")))
-                  ?.code.replace(/_/g, " ")
-                  .replace(/\b\w/g, (l) => l.toUpperCase()) || "No especificada"}
-              </p>
-              <p>
-                <strong>Empresa tecnológica:</strong>{" "}
-                {techCompanies.find(
-                  (c) => c.id === (persistentData.current.tech_company_id || form.getValues("tech_company_id")),
-                )?.name || "No especificada"}
-              </p>
-              <p>
-                <strong>Partner:</strong>{" "}
-                {partners.find((p) => p.id === (persistentData.current.partner_id || form.getValues("partner_id")))
-                  ?.name || "No especificado"}
-              </p>
-              <p>
-                <strong>País:</strong>{" "}
-                {partnerCountries.find((c) => c.code === (persistentData.current.country || form.getValues("country")))
-                  ?.name || "No especificado"}
-              </p>
-              <p>
-                <strong>Cliente final:</strong>{" "}
-                {endCustomers.find(
-                  (c) => c.id === (persistentData.current.end_customer_id || form.getValues("end_customer_id")),
-                )?.name || "No especificado"}
-              </p>
-              <p>
-                <strong>Valor estimado:</strong>{" "}
-                {persistentData.current.estimated_value || form.getValues("estimated_value")
-                  ? `${persistentData.current.estimated_value || form.getValues("estimated_value")}`
-                  : "No especificado"}
-              </p>
-              <p>
-                <strong>Fecha estimada de cierre:</strong>{" "}
-                {persistentData.current.estimated_close_date ||
-                  form.getValues("estimated_close_date") ||
-                  "No especificada"}
-              </p>
-              <p>
-                <strong>Responsable ScaleUp:</strong>{" "}
-                {scaleUpUsers.find((u) => u.id === (persistentData.current.assigned_to || form.getValues("assigned_to")))
-                  ? `${scaleUpUsers.find((u) => u.id === (persistentData.current.assigned_to || form.getValues("assigned_to")))?.first_name} ${scaleUpUsers.find((u) => u.id === (persistentData.current.assigned_to || form.getValues("assigned_to")))?.last_name}`
-                  : "No especificado"}
-              </p>
-              <p>
-                <strong>Responsable Partner:</strong>{" "}
-                {partnerUsers.find(
-                  (u) =>
-                    u.id === (persistentData.current.partner_responsible_id || form.getValues("partner_responsible_id")),
-                )
-                  ? `${partnerUsers.find((u) => u.id === (persistentData.current.partner_responsible_id || form.getValues("partner_responsible_id")))?.first_name} ${partnerUsers.find((u) => u.id === (persistentData.current.partner_responsible_id || form.getValues("partner_responsible_id")))?.last_name}`
-                  : "No especificado"}
-              </p>
-            </div>
-          </div>
-
-          {/* Campo oculto para assigned_to - No se muestra en la UI pero mantiene el valor */}
-          <input type="hidden" {...form.register("assigned_to")} />
-          <input type="hidden" {...form.register("partner_responsible_id")} />
+                </FormControl>
+                <FormDescription>Fecha estimada para cerrar esta oportunidad</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
-      )
-    }
-
-    return (
-      <Card className="w-full max-w-4xl mx-auto shadow-lg border-0">
-        <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 border-b">
-          <CardTitle className="text-2xl">
-            {getTranslation("opportunities.create_title", "Crear nueva oportunidad")}
-          </CardTitle>
-          <CardDescription>Completa el formulario para crear una nueva oportunidad de negocio</CardDescription>
-
-          <div className="mt-4">
-            <div className="flex justify-between mb-2 text-sm">
-              <span>Progreso</span>
-              <span>{formProgress}%</span>
-            </div>
-            <Progress value={formProgress} className="h-2" />
-          </div>
-        </CardHeader>
-
-        <CardContent className="p-6">
-          {error && (
-            <Alert variant="destructive" className="mb-6">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Error</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          <div className="mb-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold flex items-center gap-2">
-                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-white text-sm">
-                  {currentStep}
-                </span>
-                <span>
-                  {currentStep === 1 && "Información básica"}
-                  {currentStep === 2 && "Empresas involucradas"}
-                  {currentStep === 3 && "Cliente y detalles financieros"}
-                  {currentStep === 4 && "Campos técnicos y finalización"}
-                </span>
-              </h2>
-
-              <div className="flex gap-2">
-                {Array.from({ length: totalSteps }).map((_, i) => (
-                  <div
-                    key={i}
-                    className={`w-2 h-2 rounded-full ${i + 1 === currentStep ? "bg-primary" : i + 1 < currentStep ? "bg-primary/60" : "bg-gray-200"
-                      }`}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-              {renderStep()}
-
-              <div className="flex justify-between pt-6 border-t">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={prevStep}
-                  disabled={currentStep === 1}
-                  className="gap-2 bg-transparent"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Anterior
-                </Button>
-
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => router.push("/dashboard/opportunities")}
-                    className="gap-2"
-                  >
-                    <X className="h-4 w-4" />
-                    {getTranslation("opportunities.form.cancel", "Cancelar")}
-                  </Button>
-
-                  {currentStep < totalSteps ? (
-                    <Button type="button" onClick={nextStep} disabled={!isStepComplete()} className="gap-2">
-                      Siguiente
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            type="button"
-                            disabled={isLoading || !isStepComplete()}
-                            className="gap-2"
-                            onClick={handleManualSubmit}
-                          >
-                            {isLoading ? (
-                              <>Guardando...</>
-                            ) : (
-                              <>
-                                <Save className="h-4 w-4" />
-                                {getTranslation("opportunities.form.submit", "Guardar")}
-                              </>
-                            )}
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Guardar y crear la oportunidad</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  )}
-                </div>
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+      </div>
     )
   }
+
+  // Paso 4: Campos técnicos y finalización
+  const renderTechFieldsStep = () => {
+    return (
+      <div className="space-y-6">
+        {/* {renderDebugInfo()} */}
+
+        <div className="flex items-center space-x-2 mb-6">
+          <Tag className="h-5 w-5 text-primary" />
+          <h3 className="text-lg font-medium">Campos técnicos y finalización</h3>
+        </div>
+
+        {loadingTechFields ? (
+          <div className="flex items-center justify-center p-8">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p>Cargando campos técnicos...</p>
+            </div>
+          </div>
+        ) : techFields.length > 0 ? (
+          <div className="space-y-6">
+            <div className="mb-4">
+              <h4 className="text-sm font-medium mb-1">
+                {getTranslation("opportunities.form.tech_fields", "Campos tecnológicos")}
+              </h4>
+              <p className="text-sm text-gray-500">Complete los campos específicos para esta tecnología</p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 p-4 border rounded-md bg-gray-50">
+              {techFields.map((field) => (
+                <div key={field.id} className="space-y-2">
+                  <div className="flex justify-between">
+                    <label className="text-sm font-medium">
+                      {field.field_name}
+                      {field.is_required && <span className="text-red-500 ml-1">*</span>}
+                    </label>
+                  </div>
+
+                  <div>
+                    {/* Renderizar el campo según su tipo */}
+                    {(() => {
+                      switch (field.field_type) {
+                        case "text":
+                          return (
+                            <Input
+                              value={techFieldValues[field.id] || ""}
+                              onChange={(e) => {
+                                setTechFieldValues((prev) => ({
+                                  ...prev,
+                                  [field.id]: e.target.value,
+                                }))
+                              }}
+                              placeholder={`Ingrese ${field.field_name}`}
+                              className="transition-all focus:ring-2 focus:ring-primary/20"
+                            />
+                          )
+                        case "number":
+                          return (
+                            <Input
+                              type="number"
+                              value={techFieldValues[field.id] || ""}
+                              onChange={(e) => {
+                                setTechFieldValues((prev) => ({
+                                  ...prev,
+                                  [field.id]: e.target.value,
+                                }))
+                              }}
+                              placeholder={`Ingrese ${field.field_name}`}
+                              className="transition-all focus:ring-2 focus:ring-primary/20"
+                            />
+                          )
+                        case "textarea":
+                          return (
+                            <Textarea
+                              value={techFieldValues[field.id] || ""}
+                              onChange={(e) => {
+                                setTechFieldValues((prev) => ({
+                                  ...prev,
+                                  [field.id]: e.target.value,
+                                }))
+                              }}
+                              placeholder={`Ingrese ${field.field_name}`}
+                              className="min-h-[100px] transition-all focus:ring-2 focus:ring-primary/20"
+                            />
+                          )
+                        case "select":
+                          const options = field.options
+                            ? typeof field.options === "string"
+                              ? JSON.parse(field.options)
+                              : field.options
+                            : []
+                          return (
+                            <Select
+                              value={techFieldValues[field.id] || ""}
+                              onValueChange={(value) => {
+                                setTechFieldValues((prev) => ({
+                                  ...prev,
+                                  [field.id]: value,
+                                }))
+                              }}
+                            >
+                              <SelectTrigger className="transition-all focus:ring-2 focus:ring-primary/20">
+                                <SelectValue placeholder={`Seleccione ${field.field_name}`} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {Array.isArray(options) &&
+                                  options.map((option, index) => (
+                                    <SelectItem key={index} value={option.value || option}>
+                                      {option.label || option}
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                          )
+                        case "multiselect":
+                          // Implementación simplificada de multiselect
+                          const multiOptions = field.options
+                            ? typeof field.options === "string"
+                              ? JSON.parse(field.options)
+                              : field.options
+                            : []
+                          return (
+                            <div className="border rounded-md p-2">
+                              {Array.isArray(multiOptions) &&
+                                multiOptions.map((option, index) => {
+                                  const optionValue = option.value || option
+                                  const optionLabel = option.label || option
+                                  const isSelected = Array.isArray(techFieldValues[field.id])
+                                    ? techFieldValues[field.id].includes(optionValue)
+                                    : false
+
+                                  return (
+                                    <div key={index} className="flex items-center space-x-2 py-1">
+                                      <input
+                                        type="checkbox"
+                                        id={`option-${field.id}-${index}`}
+                                        checked={isSelected}
+                                        onChange={(e) => {
+                                          const currentValues = Array.isArray(techFieldValues[field.id])
+                                            ? [...techFieldValues[field.id]]
+                                            : []
+                                          const newValues = e.target.checked
+                                            ? [...currentValues, optionValue]
+                                            : currentValues.filter((v) => v !== optionValue)
+                                          setTechFieldValues((prev) => ({
+                                            ...prev,
+                                            [field.id]: newValues,
+                                          }))
+                                        }}
+                                      />
+                                      <label htmlFor={`option-${field.id}-${index}`}>{optionLabel}</label>
+                                    </div>
+                                  )
+                                })}
+                            </div>
+                          )
+                        case "date":
+                          return (
+                            <Input
+                              type="date"
+                              value={techFieldValues[field.id] || ""}
+                              onChange={(e) => {
+                                setTechFieldValues((prev) => ({
+                                  ...prev,
+                                  [field.id]: e.target.value,
+                                }))
+                              }}
+                              className="transition-all focus:ring-2 focus:ring-primary/20"
+                            />
+                          )
+                        case "boolean":
+                          return (
+                            <div className="flex items-center space-x-2">
+                              <Switch
+                                id={`boolean-${field.id}`}
+                                checked={techFieldValues[field.id] === true}
+                                onCheckedChange={(checked) => {
+                                  setTechFieldValues((prev) => ({
+                                    ...prev,
+                                    [field.id]: checked,
+                                  }))
+                                }}
+                              />
+                              <Label htmlFor={`boolean-${field.id}`}>
+                                {techFieldValues[field.id] === true ? "Sí" : "No"}
+                              </Label>
+                            </div>
+                          )
+                        case "file":
+                          return (
+                            <FileUpload
+                              value={techFieldValues[field.id] || ""}
+                              onChange={(value) => {
+                                setTechFieldValues((prev) => ({
+                                  ...prev,
+                                  [field.id]: value,
+                                }))
+                              }}
+                              opportunityId="temp"
+                              fieldId={field.id}
+                              maxSizeMB={field.file_config?.max_size_mb || 5}
+                              allowedFileTypes={
+                                field.file_config?.allowed_mime_types
+                                  ? field.file_config.allowed_mime_types
+                                    .split(",")
+                                    .map((type) => type.trim().replace(/^\./, ""))
+                                  : DEFAULT_ALLOWED_FILE_TYPES
+                              }
+                            />
+                          )
+                        default:
+                          return (
+                            <Input
+                              value={techFieldValues[field.id] || ""}
+                              onChange={(e) => {
+                                setTechFieldValues((prev) => ({
+                                  ...prev,
+                                  [field.id]: e.target.value,
+                                }))
+                              }}
+                              placeholder={`Ingrese ${field.field_name}`}
+                              className="transition-all focus:ring-2 focus:ring-primary/20"
+                            />
+                          )
+                      }
+                    })()}
+
+                    {field.is_required && !techFieldValidation[field.id] && (
+                      <p className="text-xs text-red-500 mt-1">Este campo es obligatorio</p>
+                    )}
+                  </div>
+
+                  <p className="text-xs text-gray-500 italic">
+                    {field.description || `Campo de tipo ${field.field_type}`}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertTitle>Campos técnicos no disponibles</AlertTitle>
+            <AlertDescription>No hay campos técnicos definidos para esta empresa tecnológica.</AlertDescription>
+          </Alert>
+        )}
+
+        <div className="mt-8 p-4 border rounded-md bg-blue-50 border-blue-100">
+          <h4 className="font-medium text-blue-800 mb-2 flex items-center">
+            <Info className="h-4 w-4 mr-2" />
+            Resumen de la oportunidad
+          </h4>
+          <div className="space-y-2 text-sm text-blue-700">
+            <p>
+              <strong>Título:</strong> {persistentData.current.title || form.getValues("title") || "No especificado"}
+            </p>
+            <p>
+              <strong>Etapa:</strong>{" "}
+              {stages
+                .find((s) => s.id === (persistentData.current.pipeline_stage_id || form.getValues("pipeline_stage_id")))
+                ?.code.replace(/_/g, " ")
+                .replace(/\b\w/g, (l) => l.toUpperCase()) || "No especificada"}
+            </p>
+            <p>
+              <strong>Empresa tecnológica:</strong>{" "}
+              {techCompanies.find(
+                (c) => c.id === (persistentData.current.tech_company_id || form.getValues("tech_company_id")),
+              )?.name || "No especificada"}
+            </p>
+            <p>
+              <strong>Partner:</strong>{" "}
+              {partners.find((p) => p.id === (persistentData.current.partner_id || form.getValues("partner_id")))
+                ?.name || "No especificado"}
+            </p>
+            <p>
+              <strong>País:</strong>{" "}
+              {partnerCountries.find((c) => c.code === (persistentData.current.country || form.getValues("country")))
+                ?.name || "No especificado"}
+            </p>
+            <p>
+              <strong>Cliente final:</strong>{" "}
+              {endCustomers.find(
+                (c) => c.id === (persistentData.current.end_customer_id || form.getValues("end_customer_id")),
+              )?.name || "No especificado"}
+            </p>
+            <p>
+              <strong>Valor estimado:</strong>{" "}
+              {persistentData.current.estimated_value || form.getValues("estimated_value")
+                ? `${persistentData.current.estimated_value || form.getValues("estimated_value")}`
+                : "No especificado"}
+            </p>
+            <p>
+              <strong>Fecha estimada de cierre:</strong>{" "}
+              {persistentData.current.estimated_close_date ||
+                form.getValues("estimated_close_date") ||
+                "No especificada"}
+            </p>
+            <p>
+              <strong>Responsable ScaleUp:</strong>{" "}
+              {scaleUpUsers.find((u) => u.id === (persistentData.current.assigned_to || form.getValues("assigned_to")))
+                ? `${scaleUpUsers.find((u) => u.id === (persistentData.current.assigned_to || form.getValues("assigned_to")))?.first_name} ${scaleUpUsers.find((u) => u.id === (persistentData.current.assigned_to || form.getValues("assigned_to")))?.last_name}`
+                : "No especificado"}
+            </p>
+            <p>
+              <strong>Responsable Partner:</strong>{" "}
+              {partnerUsers.find(
+                (u) =>
+                  u.id === (persistentData.current.partner_responsible_id || form.getValues("partner_responsible_id")),
+              )
+                ? `${partnerUsers.find((u) => u.id === (persistentData.current.partner_responsible_id || form.getValues("partner_responsible_id")))?.first_name} ${partnerUsers.find((u) => u.id === (persistentData.current.partner_responsible_id || form.getValues("partner_responsible_id")))?.last_name}`
+                : "No especificado"}
+            </p>
+          </div>
+        </div>
+
+        {/* Campo oculto para assigned_to - No se muestra en la UI pero mantiene el valor */}
+        <input type="hidden" {...form.register("assigned_to")} />
+        <input type="hidden" {...form.register("partner_responsible_id")} />
+      </div>
+    )
+  }
+
+  return (
+    <Card className="w-full max-w-4xl mx-auto shadow-lg border-0">
+      <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 border-b">
+        <CardTitle className="text-2xl">
+          {getTranslation("opportunities.create_title", "Crear nueva oportunidad")}
+        </CardTitle>
+        <CardDescription>Completa el formulario para crear una nueva oportunidad de negocio</CardDescription>
+
+        <div className="mt-4">
+          <div className="flex justify-between mb-2 text-sm">
+            <span>Progreso</span>
+            <span>{formProgress}%</span>
+          </div>
+          <Progress value={formProgress} className="h-2" />
+        </div>
+      </CardHeader>
+
+      <CardContent className="p-6">
+        {error && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        <div className="mb-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold flex items-center gap-2">
+              <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-white text-sm">
+                {currentStep}
+              </span>
+              <span>
+                {currentStep === 1 && "Información básica"}
+                {currentStep === 2 && "Empresas involucradas"}
+                {currentStep === 3 && "Cliente y detalles financieros"}
+                {currentStep === 4 && "Campos técnicos y finalización"}
+              </span>
+            </h2>
+
+            <div className="flex gap-2">
+              {Array.from({ length: totalSteps }).map((_, i) => (
+                <div
+                  key={i}
+                  className={`w-2 h-2 rounded-full ${i + 1 === currentStep ? "bg-primary" : i + 1 < currentStep ? "bg-primary/60" : "bg-gray-200"
+                    }`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            {renderStep()}
+
+            <div className="flex justify-between pt-6 border-t">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={prevStep}
+                disabled={currentStep === 1}
+                className="gap-2 bg-transparent"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Anterior
+              </Button>
+
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => router.push("/dashboard/opportunities")}
+                  className="gap-2"
+                >
+                  <X className="h-4 w-4" />
+                  {getTranslation("opportunities.form.cancel", "Cancelar")}
+                </Button>
+
+                {currentStep < totalSteps ? (
+                  <Button type="button" onClick={nextStep} disabled={!isStepComplete()} className="gap-2">
+                    Siguiente
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                ) : (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          type="button"
+                          disabled={isLoading || !isStepComplete()}
+                          className="gap-2"
+                          onClick={handleManualSubmit}
+                        >
+                          {isLoading ? (
+                            <>Guardando...</>
+                          ) : (
+                            <>
+                              <Save className="h-4 w-4" />
+                              {getTranslation("opportunities.form.submit", "Guardar")}
+                            </>
+                          )}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Guardar y crear la oportunidad</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </div>
+            </div>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
+  )
+}
