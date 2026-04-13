@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Star, Trash2, Plus, Edit2 } from "lucide-react"
+import { Trash2, Plus, Edit2 } from "lucide-react"
 import { useTranslations } from "@/hooks/use-translations"
 import { DICT_LANG_CONTACTS } from "@/lib/constants/dict-lang-contacts"
 import { ContactFormModal } from "@/components/contacts/contact-form-modal"
@@ -40,6 +40,7 @@ export function TechCompanyContactsSection({ techCompanyId }: TechCompanyContact
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [contactToRemove, setContactToRemove] = useState<string | null>(null)
+  const [editingContact, setEditingContact] = useState<Contact | null>(null)
   const [editingContact, setEditingContact] = useState<Contact | null>(null)
 
   const loadContacts = async () => {
