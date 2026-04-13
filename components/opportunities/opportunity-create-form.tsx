@@ -1433,7 +1433,6 @@ export function OpportunityCreateForm() {
             </FormItem>
           )}
         />
-
         {isScaleUpUser && (
           <FormField
             control={form.control}
@@ -1446,10 +1445,11 @@ export function OpportunityCreateForm() {
                 </div>
                 <FormControl>
                   <Switch
+                    // 🛡️ Blindaje 1: Aseguramos booleano puro
                     checked={!!field.value}
                     onCheckedChange={(checked) => {
                       field.onChange(checked);
-                      persistentData.current.is_new_partner = checked;
+                      if (persistentData.current) persistentData.current.is_new_partner = checked;
                     }}
                   />
                 </FormControl>
@@ -1458,7 +1458,6 @@ export function OpportunityCreateForm() {
           />
         )}
 
-        {/* Mostrar el campo de etapa solo para usuarios ScaleUp */}
         {isScaleUpUser && (
           <FormField
             control={form.control}
@@ -1466,27 +1465,35 @@ export function OpportunityCreateForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>{getTranslation("opportunities.form.stage", "Etapa")} *</FormLabel>
-                <Select
-                  onValueChange={(value) => {
-                    field.onChange(value);
-                    persistentData.current.pipeline_stage_id = value;
-                  }}
-                  value={field.value || ""}
-                  disabled={loadingStages}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder={loadingStages ? "Cargando..." : "Seleccionar etapa"} />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {stages.map((stage) => (
-                      <SelectItem key={stage.id} value={stage.id}>
-                        {stage.code.replace(/_/g, " ").toUpperCase()}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {/* 🛡️ Blindaje 2: Solo renderizamos el Select si hay stages cargadas 
+                    Esto evita que el Select intente 'corregir' su valor mientras la lista está vacía */}
+                {!loadingStages && stages.length > 0 ? (
+                  <Select
+                    onValueChange={(value) => {
+                      // Solo disparamos el cambio si el valor es realmente distinto
+                      if (value !== field.value) {
+                        field.onChange(value);
+                        if (persistentData.current) persistentData.current.pipeline_stage_id = value;
+                      }
+                    }}
+                    value={field.value || ""}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar etapa" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {stages.map((stage) => (
+                        <SelectItem key={stage.id} value={stage.id}>
+                          {stage.code ? stage.code.replace(/_/g, " ").toUpperCase() : "ETAPA"}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="h-10 w-full bg-gray-100 animate-pulse rounded-md" /> // Placeholder mientras carga
+                )}
                 <FormMessage />
               </FormItem>
             )}
