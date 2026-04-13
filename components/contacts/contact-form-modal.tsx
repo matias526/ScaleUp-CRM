@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Loader2, ChevronDown, ChevronUp } from "lucide-react"
+import { Loader2, ChevronDown, ChevronUp, X } from "lucide-react"
 import { useTranslations } from "@/hooks/use-translations"
 import { type Contact, type ContactFormData, ContactService } from "@/lib/services/contact-service"
 import { UserService } from "@/lib/services/user-service"
@@ -358,10 +358,21 @@ export function ContactFormModal({ open, onOpenChange, onSuccess, initialData }:
                       name="tech_company_id"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs">{t("contacts.form.techCompany")}</FormLabel>
+                          <div className="flex items-center justify-between">
+                            <FormLabel className="text-xs">{t("contacts.form.techCompany")}</FormLabel>
+                            {field.value && (
+                              <button
+                                type="button"
+                                onClick={() => field.onChange(null)}
+                                className="text-xs text-gray-400 hover:text-gray-600"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            )}
+                          </div>
                           <Select 
                             value={field.value || ""} 
-                            onValueChange={(value) => field.onChange(value || null)}
+                            onValueChange={field.onChange}
                           >
                             <FormControl>
                               <SelectTrigger className="h-8">
@@ -369,11 +380,6 @@ export function ContactFormModal({ open, onOpenChange, onSuccess, initialData }:
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {field.value && (
-                                <SelectItem value="">
-                                  {t("contacts.filter.all")}
-                                </SelectItem>
-                              )}
                               {techCompanies.map((company) => (
                                 <SelectItem key={company.id} value={company.id}>
                                   {company.label}
@@ -390,10 +396,21 @@ export function ContactFormModal({ open, onOpenChange, onSuccess, initialData }:
                       name="partner_id"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs">{t("contacts.form.partner")}</FormLabel>
+                          <div className="flex items-center justify-between">
+                            <FormLabel className="text-xs">{t("contacts.form.partner")}</FormLabel>
+                            {field.value && (
+                              <button
+                                type="button"
+                                onClick={() => field.onChange(null)}
+                                className="text-xs text-gray-400 hover:text-gray-600"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            )}
+                          </div>
                           <Select 
                             value={field.value || ""} 
-                            onValueChange={(value) => field.onChange(value || null)}
+                            onValueChange={field.onChange}
                           >
                             <FormControl>
                               <SelectTrigger className="h-8">
@@ -401,11 +418,6 @@ export function ContactFormModal({ open, onOpenChange, onSuccess, initialData }:
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {field.value && (
-                                <SelectItem value="">
-                                  {t("contacts.filter.all")}
-                                </SelectItem>
-                              )}
                               {partners.map((partner) => (
                                 <SelectItem key={partner.id} value={partner.id}>
                                   {partner.label}
@@ -423,10 +435,21 @@ export function ContactFormModal({ open, onOpenChange, onSuccess, initialData }:
                     name="user_id"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs">{t("contacts.form.linkedUser")}</FormLabel>
+                        <div className="flex items-center justify-between">
+                          <FormLabel className="text-xs">{t("contacts.form.linkedUser")}</FormLabel>
+                          {field.value && (
+                            <button
+                              type="button"
+                              onClick={() => field.onChange(null)}
+                              className="text-xs text-gray-400 hover:text-gray-600"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          )}
+                        </div>
                         <Select 
                           value={field.value || ""} 
-                          onValueChange={(value) => field.onChange(value || null)}
+                          onValueChange={field.onChange}
                         >
                           <FormControl>
                             <SelectTrigger className="h-8">
@@ -434,11 +457,6 @@ export function ContactFormModal({ open, onOpenChange, onSuccess, initialData }:
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {field.value && (
-                              <SelectItem value="">
-                                {t("contacts.filter.all")}
-                              </SelectItem>
-                            )}
                             {users.map((user) => (
                               <SelectItem key={user.id} value={user.id}>
                                 {user.label}
