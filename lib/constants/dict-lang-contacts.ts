@@ -557,4 +557,50 @@ export const DICT_LANG_CONTACTS = {
     en: "Cancel",
     pt: "Cancelar",
   },
+  // Opportunity Contacts
+  "opportunity.contacts.title": {
+    es: "Contactos",
+    en: "Contacts",
+    pt: "Contatos",
+  },
+  "opportunity.contacts.addContact": {
+    es: "Agregar Contacto",
+    en: "Add Contact",
+    pt: "Adicionar Contato",
+  },
+  "opportunity.contacts.primary": {
+    es: "Contacto Principal",
+    en: "Primary Contact",
+    pt: "Contato Principal",
+  },
+  "opportunity.contacts.noPrimary": {
+    es: "Sin contacto principal",
+    en: "No primary contact",
+    pt: "Sem contato principal",
+  },
+  "opportunity.contacts.noContacts": {
+    es: "No hay contactos relacionados",
+    en: "No related contacts",
+    pt: "Nenhum contato relacionado",
+  },
+  "opportunity.contacts.position": {
+    es: "Cargo",
+    en: "Position",
+    pt: "Cargo",
+  },
+  "opportunity.contacts.department": {
+    es: "Departamento",
+    en: "Department",
+    pt: "Departamento",
+  },
+  "opportunity.contacts.remove": {
+    es: "Remover",
+    en: "Remove",
+    pt: "Remover",
+  },
+  "opportunity.contacts.removeConfirm": {
+    es: "¿Estás seguro que deseas remover este contacto de la oportunidad?",
+    en: "Are you sure you want to remove this contact from the opportunity?",
+    pt: "Tem certeza que deseja remover este contato da oportunidade?",
+  },
 }

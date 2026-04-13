@@ -62,7 +62,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { RelatedTasksList } from "@/components/tasks/related-tasks-list"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { OpportunityContactsSection } from "./opportunity-contacts-section"
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"
 import { format as formatDate } from "date-fns"
 // Reemplazar la importación de getLocale
@@ -1859,6 +1859,11 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                 "Gestiona las tareas relacionadas a esta oportunidad",
               )}
             />
+          </div>
+
+          {/* Contactos relacionados */}
+          <div className="mt-6">
+            <OpportunityContactsSection opportunityId={opportunity?.id} />
           </div>
         </div>
 
