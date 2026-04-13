@@ -127,15 +127,35 @@ export const DICT_LANG_CONTACTS = {
     en: "Basic Information",
     pt: "Informações Básicas",
   },
+  "contacts.form.section.basicDescription": {
+    es: "Ingrese la información básica del contacto",
+    en: "Enter the contact's basic information",
+    pt: "Insira as informações básicas do contato",
+  },
   "contacts.form.section.professional": {
     es: "Información Profesional",
     en: "Professional Information",
     pt: "Informações Profissionais",
   },
+  "contacts.form.section.professionalDescription": {
+    es: "Ingrese la información profesional del contacto",
+    en: "Enter the contact's professional information",
+    pt: "Insira as informações profissionais do contato",
+  },
   "contacts.form.section.relationships": {
     es: "Relaciones",
     en: "Relationships",
     pt: "Relacionamentos",
+  },
+  "contacts.form.section.relationshipsDescription": {
+    es: "Vincula el contacto con usuarios y compañías",
+    en: "Link the contact to users and companies",
+    pt: "Vincule o contato a usuários e empresas",
+  },
+  "contacts.form.optional": {
+    es: "(Opcional)",
+    en: "(Optional)",
+    pt: "(Opcional)",
   },
 
   // Departments

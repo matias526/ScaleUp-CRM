@@ -18,7 +18,6 @@ import { type Contact, type ContactFormData, ContactService } from "@/lib/servic
 import { UserService } from "@/lib/services/user-service"
 import { TechCompanyService } from "@/lib/services/tech-company-service"
 import { PartnerService } from "@/lib/services/partner-service"
-import { DICT_LANG_CONTACTS } from "@/lib/constants/dict-lang-contacts"
 
 // Validation schema
 const contactSchema = z.object({
@@ -94,13 +93,19 @@ export function ContactForm({ initialData, onSuccess, showCancel = true }: Conta
     const loadUsers = async () => {
       try {
         const allUsers = await UserService.getUsers()
-        const formattedUsers = allUsers.map((user) => ({
-          id: user.id,
-          label: `${user.first_name} ${user.last_name} (${user.email})`,
-        }))
-        setUsers(formattedUsers)
+        if (Array.isArray(allUsers)) {
+          const formattedUsers = allUsers.map((user) => ({
+            id: user.id,
+            label: `${user.first_name} ${user.last_name} (${user.email})`,
+          }))
+          setUsers(formattedUsers)
+        } else {
+          console.error("Error loading users: users is not an array")
+          setUsers([])
+        }
       } catch (err) {
         console.error("Error loading users:", err)
+        setUsers([])
       }
     }
 
@@ -112,13 +117,19 @@ export function ContactForm({ initialData, onSuccess, showCancel = true }: Conta
     const loadTechCompanies = async () => {
       try {
         const companies = await TechCompanyService.getTechCompanies()
-        const formattedCompanies = companies.map((company) => ({
-          id: company.id,
-          label: company.name,
-        }))
-        setTechCompanies(formattedCompanies)
+        if (Array.isArray(companies)) {
+          const formattedCompanies = companies.map((company) => ({
+            id: company.id,
+            label: company.name,
+          }))
+          setTechCompanies(formattedCompanies)
+        } else {
+          console.error("Error loading tech companies: not an array")
+          setTechCompanies([])
+        }
       } catch (err) {
         console.error("Error loading tech companies:", err)
+        setTechCompanies([])
       }
     }
 
@@ -129,14 +140,22 @@ export function ContactForm({ initialData, onSuccess, showCancel = true }: Conta
   useEffect(() => {
     const loadPartners = async () => {
       try {
-        const { data } = await PartnerService.getPartners(1, 100)
-        const formattedPartners = data.map((partner) => ({
+        const response = await PartnerService.getPartners(1, 100)
+        let partners_array = []
+        if (response && response.data && Array.isArray(response.data)) {
+          partners_array = response.data
+        } else if (Array.isArray(response)) {
+          partners_array = response
+        }
+
+        const formattedPartners = partners_array.map((partner) => ({
           id: partner.id,
           label: partner.name,
         }))
         setPartners(formattedPartners)
       } catch (err) {
         console.error("Error loading partners:", err)
+        setPartners([])
       }
     }
 
@@ -212,9 +231,9 @@ export function ContactForm({ initialData, onSuccess, showCancel = true }: Conta
           {/* Section 1: Basic Information */}
           <Card>
             <CardHeader>
-              <CardTitle>{t(DICT_LANG_CONTACTS["contacts.form.section.basic"]["es"])}</CardTitle>
+              <CardTitle>{t("contacts.form.section.basic")}</CardTitle>
               <CardDescription>
-                {t("Ingrese la información básica del contacto")}
+                {t("contacts.form.section.basicDescription")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -313,9 +332,9 @@ export function ContactForm({ initialData, onSuccess, showCancel = true }: Conta
           {/* Section 2: Professional Information */}
           <Card>
             <CardHeader>
-              <CardTitle>{t(DICT_LANG_CONTACTS["contacts.form.section.professional"]["es"])}</CardTitle>
+              <CardTitle>{t("contacts.form.section.professional")}</CardTitle>
               <CardDescription>
-                {t("Ingrese la información profesional del contacto")}
+                {t("contacts.form.section.professionalDescription")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -400,9 +419,9 @@ export function ContactForm({ initialData, onSuccess, showCancel = true }: Conta
           {/* Section 3: Relationships */}
           <Card>
             <CardHeader>
-              <CardTitle>{t(DICT_LANG_CONTACTS["contacts.form.section.relationships"]["es"])}</CardTitle>
+              <CardTitle>{t("contacts.form.section.relationships")}</CardTitle>
               <CardDescription>
-                {t("Vincula el contacto con usuarios y compañías")}
+                {t("contacts.form.section.relationshipsDescription")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -419,7 +438,6 @@ export function ContactForm({ initialData, onSuccess, showCancel = true }: Conta
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">{t("contacts.form.selectUser")}</SelectItem>
                         {users.map((user) => (
                           <SelectItem key={user.id} value={user.id}>
                             {user.label}
@@ -427,7 +445,7 @@ export function ContactForm({ initialData, onSuccess, showCancel = true }: Conta
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormDescription>(Opcional)</FormDescription>
+                    <FormDescription>{t("contacts.form.optional")}</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -447,7 +465,6 @@ export function ContactForm({ initialData, onSuccess, showCancel = true }: Conta
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">{t("contacts.form.selectTechCompany")}</SelectItem>
                           {techCompanies.map((company) => (
                             <SelectItem key={company.id} value={company.id}>
                               {company.label}
@@ -455,7 +472,7 @@ export function ContactForm({ initialData, onSuccess, showCancel = true }: Conta
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormDescription>(Opcional)</FormDescription>
+                      <FormDescription>{t("contacts.form.optional")}</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -474,7 +491,6 @@ export function ContactForm({ initialData, onSuccess, showCancel = true }: Conta
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">{t("contacts.form.selectPartner")}</SelectItem>
                           {partners.map((partner) => (
                             <SelectItem key={partner.id} value={partner.id}>
                               {partner.label}
@@ -482,7 +498,7 @@ export function ContactForm({ initialData, onSuccess, showCancel = true }: Conta
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormDescription>(Opcional)</FormDescription>
+                      <FormDescription>{t("contacts.form.optional")}</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
