@@ -348,6 +348,9 @@ export function OpportunityCreateForm() {
 
   // 🔧 ARREGLO CRÍTICO: Función mejorada para setValue que sincroniza con react-hook-form
   const setFormValue = (key: string, value: any) => {
+    // 🛡️ CLÁUSULA DE GUARDIA: Si el valor es el mismo, no hagas nada
+    const currentValue = form.getValues(key as any);
+    if (currentValue === value) return;
     console.log(`🔧 Setting form value: ${key} = ${value}`)
     persistentData.current[key] = value
     form.setValue(key as any, value, { shouldValidate: true, shouldDirty: true })
@@ -2306,8 +2309,8 @@ export function OpportunityCreateForm() {
                               allowedFileTypes={
                                 field.file_config?.allowed_mime_types
                                   ? field.file_config.allowed_mime_types
-                                      .split(",")
-                                      .map((type) => type.trim().replace(/^\./, ""))
+                                    .split(",")
+                                    .map((type) => type.trim().replace(/^\./, ""))
                                   : DEFAULT_ALLOWED_FILE_TYPES
                               }
                             />
@@ -2468,9 +2471,8 @@ export function OpportunityCreateForm() {
               {Array.from({ length: totalSteps }).map((_, i) => (
                 <div
                   key={i}
-                  className={`w-2 h-2 rounded-full ${
-                    i + 1 === currentStep ? "bg-primary" : i + 1 < currentStep ? "bg-primary/60" : "bg-gray-200"
-                  }`}
+                  className={`w-2 h-2 rounded-full ${i + 1 === currentStep ? "bg-primary" : i + 1 < currentStep ? "bg-primary/60" : "bg-gray-200"
+                    }`}
                 />
               ))}
             </div>
