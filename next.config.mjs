@@ -15,11 +15,6 @@ const nextConfig = {
     },
     serverComponentsExternalPackages: ['unpdf', 'mammoth', 'xlsx'],
   },
-  api: {
-    bodyParser: {
-      sizeLimit: '50mb',
-    },
-  },
 }
 
 export default nextConfig

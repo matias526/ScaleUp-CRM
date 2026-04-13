@@ -19,7 +19,6 @@ import { UserService } from "@/lib/services/user-service"
 import { TechCompanyService } from "@/lib/services/tech-company-service"
 import { PartnerService } from "@/lib/services/partner-service"
 import { DICT_LANG_CONTACTS } from "@/lib/constants/dict-lang-contacts"
-import { Combobox } from "@/components/ui/combobox"
 
 // Validation schema
 const contactSchema = z.object({
@@ -413,14 +412,22 @@ export function ContactForm({ initialData, onSuccess, showCancel = true }: Conta
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t("contacts.form.linkedUser")}</FormLabel>
-                    <Combobox
-                      options={users}
-                      value={field.value || ""}
-                      onChange={field.onChange}
-                      placeholder={t("contacts.userCombobox.placeholder")}
-                      searchPlaceholder={t("contacts.userCombobox.search")}
-                    />
-                    <FormDescription>{t("contacts.form.linkedUser")} (Opcional)</FormDescription>
+                    <Select value={field.value || ""} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t("contacts.userCombobox.placeholder")} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="">{t("contacts.form.selectUser")}</SelectItem>
+                        {users.map((user) => (
+                          <SelectItem key={user.id} value={user.id}>
+                            {user.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>(Opcional)</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -433,13 +440,21 @@ export function ContactForm({ initialData, onSuccess, showCancel = true }: Conta
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t("contacts.form.techCompany")}</FormLabel>
-                      <Combobox
-                        options={techCompanies}
-                        value={field.value || ""}
-                        onChange={field.onChange}
-                        placeholder={t("contacts.userCombobox.placeholder")}
-                        searchPlaceholder={t("contacts.userCombobox.search")}
-                      />
+                      <Select value={field.value || ""} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t("contacts.userCombobox.placeholder")} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="">{t("contacts.form.selectTechCompany")}</SelectItem>
+                          {techCompanies.map((company) => (
+                            <SelectItem key={company.id} value={company.id}>
+                              {company.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormDescription>(Opcional)</FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -452,13 +467,21 @@ export function ContactForm({ initialData, onSuccess, showCancel = true }: Conta
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t("contacts.form.partner")}</FormLabel>
-                      <Combobox
-                        options={partners}
-                        value={field.value || ""}
-                        onChange={field.onChange}
-                        placeholder={t("contacts.userCombobox.placeholder")}
-                        searchPlaceholder={t("contacts.userCombobox.search")}
-                      />
+                      <Select value={field.value || ""} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t("contacts.userCombobox.placeholder")} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="">{t("contacts.form.selectPartner")}</SelectItem>
+                          {partners.map((partner) => (
+                            <SelectItem key={partner.id} value={partner.id}>
+                              {partner.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormDescription>(Opcional)</FormDescription>
                       <FormMessage />
                     </FormItem>
