@@ -214,12 +214,12 @@ async function getPartnerUsers(partnerId: string): Promise<any[]> {
 }
 
 export function OpportunityCreateForm() {
+  // 🔧 IMPORTANTE: Los hooks que dependen de contextos deben ir PRIMERO
+  const { user, userInfo } = useAuth()
+  
   const router = useRouter()
   const searchParams = useSearchParams()
   const preselectedStageId = searchParams.get("stage")
-
-  // Usar el contexto de autenticación para obtener la información del usuario
-  const { user, userInfo } = useAuth()
 
   const { t, language, isLoaded } = useTranslations([
     "opportunities.create_title",
