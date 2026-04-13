@@ -1319,16 +1319,15 @@ export function OpportunityCreateForm() {
 
   // Renderizar el paso actual
   const renderStep = () => {
-    return <div>Estamos probando si renderStep es el problema</div>;
     switch (currentStep) {
       case 1:
         return renderBasicInfoStep()
-      case 2:
+      /*case 2:
         return renderCompaniesStep()
       case 3:
         return renderCustomerAndFinancialsStep()
       case 4:
-        return renderTechFieldsStep()
+        return renderTechFieldsStep()*/
       default:
         return null
     }
