@@ -1441,15 +1441,14 @@ export function OpportunityCreateForm() {
               <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                 <div className="space-y-0.5">
                   <FormLabel className="text-base">Oportunidad para nuevo partner</FormLabel>
-                  <FormDescription>Marca esta opción si es para un partner potencial</FormDescription>
                 </div>
                 <FormControl>
                   <Switch
-                    // 🛡️ Blindaje 1: Aseguramos booleano puro
                     checked={!!field.value}
                     onCheckedChange={(checked) => {
                       field.onChange(checked);
-                      if (persistentData.current) persistentData.current.is_new_partner = checked;
+                      // Igual que el input: asignación directa
+                      persistentData.current.is_new_partner = checked;
                     }}
                   />
                 </FormControl>
@@ -1464,36 +1463,29 @@ export function OpportunityCreateForm() {
             name="pipeline_stage_id"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{getTranslation("opportunities.form.stage", "Etapa")} *</FormLabel>
-                {/* 🛡️ Blindaje 2: Solo renderizamos el Select si hay stages cargadas 
-                    Esto evita que el Select intente 'corregir' su valor mientras la lista está vacía */}
-                {!loadingStages && stages.length > 0 ? (
-                  <Select
-                    onValueChange={(value) => {
-                      // Solo disparamos el cambio si el valor es realmente distinto
-                      if (value !== field.value) {
-                        field.onChange(value);
-                        if (persistentData.current) persistentData.current.pipeline_stage_id = value;
-                      }
-                    }}
-                    value={field.value || ""}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar etapa" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {stages.map((stage) => (
-                        <SelectItem key={stage.id} value={stage.id}>
-                          {stage.code ? stage.code.replace(/_/g, " ").toUpperCase() : "ETAPA"}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <div className="h-10 w-full bg-gray-100 animate-pulse rounded-md" /> // Placeholder mientras carga
-                )}
+                <FormLabel>Etapa *</FormLabel>
+                <Select
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    // Igual que el input: asignación directa
+                    persistentData.current.pipeline_stage_id = value;
+                  }}
+                  value={field.value || ""}
+                  disabled={loadingStages}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar etapa" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {stages.map((stage) => (
+                      <SelectItem key={stage.id} value={stage.id}>
+                        {stage.code.replace(/_/g, " ").toUpperCase()}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
