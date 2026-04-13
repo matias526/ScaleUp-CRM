@@ -16,6 +16,7 @@ import {
   Building,
   BookOpen,
   Sparkles,
+  UserCheck,
 } from "lucide-react"
 import { useTranslations } from "@/hooks/use-translations"
 import { useState, useEffect, useRef } from "react"
@@ -29,6 +30,7 @@ const sidebarTranslations = {
     "sidebar.dashboard": "Dashboard",
     "sidebar.opportunities": "Opportunities",
     "sidebar.partners": "Partners",
+    "sidebar.contacts": "Contacts",
     "sidebar.tech_companies": "Tech Companies",
     "sidebar.users": "Users",
     "sidebar.tasks": "Tasks",
@@ -51,6 +53,7 @@ const sidebarTranslations = {
     "sidebar.dashboard": "Dashboard",
     "sidebar.opportunities": "Oportunidades",
     "sidebar.partners": "Socios",
+    "sidebar.contacts": "Contactos",
     "sidebar.tech_companies": "Empresas Tech",
     "sidebar.users": "Usuarios",
     "sidebar.tasks": "Tareas",
@@ -73,6 +76,7 @@ const sidebarTranslations = {
     "sidebar.dashboard": "Dashboard",
     "sidebar.opportunities": "Oportunidades",
     "sidebar.partners": "Parceiros",
+    "sidebar.contacts": "Contatos",
     "sidebar.tech_companies": "Empresas Tech",
     "sidebar.users": "Usuários",
     "sidebar.tasks": "Tarefas",
@@ -85,7 +89,7 @@ const sidebarTranslations = {
     "sidebar.settings.translations": "Traduções",
     "sidebar.settings.supabase": "Configuração Supabase",
     "sidebar.knowledge_base": "Base de Conhecimento",
-    "sidebar.ai_knowledge_base": "Base de Conhecimiento IA",
+    "sidebar.ai_knowledge_base": "Base de Conocimiento IA",
     "sidebar.ai_knowledge_base.chat": "Chat com Mika",
     "sidebar.ai_knowledge_base.documents": "Documentos",
     "sidebar.ai_knowledge_base.feedback": "Feedback",
@@ -200,6 +204,12 @@ export function Sidebar() {
       href: "/dashboard/partners",
       icon: Handshake,
       labelKey: "sidebar.partners",
+      adminOnly: true,
+    },
+    {
+      href: "/dashboard/contacts",
+      icon: UserCheck,
+      labelKey: "sidebar.contacts",
       adminOnly: true,
     },
     {
