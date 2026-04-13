@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -347,20 +347,22 @@ export function OpportunityCreateForm() {
   })
 
   // 🔧 ARREGLO CRÍTICO: Función mejorada para setValue que sincroniza con react-hook-form
-  const setFormValue = useCallback((key: string, value: any) => {
+  const setFormValue = (key: string, value: any) => {
     console.log(`🔧 Setting form value: ${key} = ${value}`)
-    form.setValue(key as any, value, { shouldValidate: false, shouldDirty: false })
-  }, [form])
+    persistentData.current[key] = value
+    form.setValue(key as any, value, { shouldValidate: true, shouldDirty: true })
+    setForceUpdate((prev) => prev + 1)
+  }
 
   // 🔧 NUEVO: Función para sincronizar todos los datos persistentes con el formulario
-  const syncPersistentDataToForm = useCallback(() => {
+  const syncPersistentDataToForm = () => {
     console.log("🔧 Sincronizando datos persistentes con el formulario:", persistentData.current)
     Object.keys(persistentData.current).forEach((key) => {
       if (persistentData.current[key] !== undefined && persistentData.current[key] !== null) {
         form.setValue(key as any, persistentData.current[key], { shouldValidate: true, shouldDirty: true })
       }
     })
-  }, [form])
+  }
 
   // Función para obtener datos actuales
   const getCurrentData = () => {
@@ -592,8 +594,10 @@ export function OpportunityCreateForm() {
         setScaleUpUsers(scaleUpUsersData)
         setLoadingScaleUpUsers(false)
 
-        // 🔧 NUEVO: Sincronizar datos después de cargar todo (sin setTimeout para evitar loops)
-        syncPersistentDataToForm()
+        // 🔧 NUEVO: Sincronizar datos después de cargar todo
+        setTimeout(() => {
+          syncPersistentDataToForm()
+        }, 100)
       } catch (error) {
         console.error("Error loading form data:", error)
         setLoadingStages(false)
@@ -602,7 +606,7 @@ export function OpportunityCreateForm() {
     }
 
     loadData()
-  }, [syncPersistentDataToForm]) // Incluir syncPersistentDataToForm como dependencia
+  }, []) // 🔧 Removemos dependencias que causaban loops
 
   // Cargar industrias para el diálogo de nuevo cliente
   useEffect(() => {
@@ -733,7 +737,7 @@ export function OpportunityCreateForm() {
         setFilteredPartners(currentPartner ? [currentPartner] : [])
       }
     }
-  }, [watchTechCompany, partners, partnerId, t, setFormValue])
+  }, [watchTechCompany, partners, partnerId, t])
 
   // 🔧 Efecto mejorado para ScaleUp Manager
   useEffect(() => {
@@ -771,7 +775,7 @@ export function OpportunityCreateForm() {
     }
 
     loadScaleUpManager()
-  }, [watchTechCompany, watchPartner, user, setFormValue])
+  }, [watchTechCompany, watchPartner, user])
 
   // 🔧 Efecto mejorado para usuarios del partner
   useEffect(() => {
@@ -805,7 +809,7 @@ export function OpportunityCreateForm() {
     }
 
     loadPartnerUsers()
-  }, [watchPartner, setFormValue])
+  }, [watchPartner])
 
   // 🔧 ARREGLO CRÍTICO: Efecto mejorado para tech fields
   useEffect(() => {
@@ -879,7 +883,7 @@ export function OpportunityCreateForm() {
     }
 
     loadTechFields()
-  }, [watchTechCompany, setFormValue])
+  }, [watchTechCompany, persistentData.current.tech_company_id]) // 🔧 Agregar persistentData como dependencia
 
   // 🔧 ARREGLO CRÍTICO: Efecto mejorado para países
   useEffect(() => {
@@ -986,7 +990,7 @@ export function OpportunityCreateForm() {
     }
 
     loadPartnerCountries()
-  }, [watchPartner, partnerCountriesFromUser, setFormValue])
+  }, [watchPartner, persistentData.current.partner_id, partnerCountriesFromUser, supabase])
 
   // Actualizar validación de campos técnicos cuando cambian los valores
   useEffect(() => {

@@ -128,28 +128,6 @@ export function ContactFormModal({
     },
   })
 
-  // Reset form when initialData changes
-  useEffect(() => {
-    if (open && initialData) {
-      form.reset({
-        first_name: (initialData && 'first_name' in initialData ? initialData.first_name : null) || "",
-        last_name: (initialData && 'last_name' in initialData ? initialData.last_name : null) || "",
-        email: (initialData && 'email' in initialData ? initialData.email : null) || "",
-        phone: (initialData && 'phone' in initialData ? initialData.phone : null) || "",
-        position: (initialData && 'position' in initialData ? initialData.position : null) || "",
-        department: (initialData && 'department' in initialData ? initialData.department : null) || "",
-        preferred_language: (initialData && 'preferred_language' in initialData ? initialData.preferred_language : null) || "es",
-        tech_company_id: entityType === "tech-company" ? entityId : (initialData && 'tech_company_id' in initialData ? initialData.tech_company_id : null) || "",
-        partner_id: entityType === "partner" ? entityId : (initialData && 'partner_id' in initialData ? initialData.partner_id : null) || "",
-        end_customer_id: (initialData && 'end_customer_id' in initialData ? initialData.end_customer_id : null) || "",
-        linkedin_url: (initialData && 'linkedin_url' in initialData ? initialData.linkedin_url : null) || "",
-        notes: (initialData && 'notes' in initialData ? initialData.notes : null) || "",
-      })
-    } else if (!open) {
-      form.reset()
-    }
-  }, [initialData, open, form])
-
   const onSubmit = async (values: z.infer<typeof contactModalSchema>) => {
     setIsSubmitting(true)
     setError(null)
