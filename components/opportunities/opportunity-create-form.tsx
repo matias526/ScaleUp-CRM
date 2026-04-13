@@ -351,7 +351,7 @@ export function OpportunityCreateForm() {
     console.log(`🔧 Setting form value: ${key} = ${value}`)
     persistentData.current[key] = value
     form.setValue(key as any, value, { shouldValidate: true, shouldDirty: true })
-    setForceUpdate((prev) => prev + 1)
+    //setForceUpdate((prev) => prev + 1)
   }
 
   // 🔧 NUEVO: Función para sincronizar todos los datos persistentes con el formulario
@@ -883,7 +883,7 @@ export function OpportunityCreateForm() {
     }
 
     loadTechFields()
-  }, [watchTechCompany, persistentData.current.tech_company_id]) // 🔧 Agregar persistentData como dependencia
+  }, [watchTechCompany]) // 🔧 Agregar persistentData como dependencia
 
   // 🔧 ARREGLO CRÍTICO: Efecto mejorado para países
   useEffect(() => {
@@ -990,7 +990,7 @@ export function OpportunityCreateForm() {
     }
 
     loadPartnerCountries()
-  }, [watchPartner, persistentData.current.partner_id, partnerCountriesFromUser, supabase])
+  }, [watchPartner, partnerCountriesFromUser])
 
   // Actualizar validación de campos técnicos cuando cambian los valores
   useEffect(() => {
@@ -2306,8 +2306,8 @@ export function OpportunityCreateForm() {
                               allowedFileTypes={
                                 field.file_config?.allowed_mime_types
                                   ? field.file_config.allowed_mime_types
-                                      .split(",")
-                                      .map((type) => type.trim().replace(/^\./, ""))
+                                    .split(",")
+                                    .map((type) => type.trim().replace(/^\./, ""))
                                   : DEFAULT_ALLOWED_FILE_TYPES
                               }
                             />
@@ -2468,9 +2468,8 @@ export function OpportunityCreateForm() {
               {Array.from({ length: totalSteps }).map((_, i) => (
                 <div
                   key={i}
-                  className={`w-2 h-2 rounded-full ${
-                    i + 1 === currentStep ? "bg-primary" : i + 1 < currentStep ? "bg-primary/60" : "bg-gray-200"
-                  }`}
+                  className={`w-2 h-2 rounded-full ${i + 1 === currentStep ? "bg-primary" : i + 1 < currentStep ? "bg-primary/60" : "bg-gray-200"
+                    }`}
                 />
               ))}
             </div>
