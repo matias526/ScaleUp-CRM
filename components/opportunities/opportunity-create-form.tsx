@@ -1433,64 +1433,44 @@ export function OpportunityCreateForm() {
             </FormItem>
           )}
         />
-        {isScaleUpUser && (
-          <FormField
-            control={form.control}
-            name="is_new_partner"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                <div className="space-y-0.5">
-                  <FormLabel className="text-base">Oportunidad para nuevo partner</FormLabel>
-                </div>
-                <FormControl>
-                  <Switch
-                    checked={!!field.value}
-                    onCheckedChange={(checked) => {
-                      field.onChange(checked);
-                      // Igual que el input: asignación directa
-                      persistentData.current.is_new_partner = checked;
-                    }}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-        )}
+        {/* --- BLOQUE DE PRUEBA: CERO SHADCN --- */}
+        <div className="space-y-4 p-4 border rounded-md">
 
-        {isScaleUpUser && (
-          <FormField
-            control={form.control}
-            name="pipeline_stage_id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Etapa *</FormLabel>
-                <Select
-                  onValueChange={(value) => {
-                    field.onChange(value);
-                    // Igual que el input: asignación directa
-                    persistentData.current.pipeline_stage_id = value;
-                  }}
-                  value={field.value || ""}
-                  disabled={loadingStages}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar etapa" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {stages.map((stage) => (
-                      <SelectItem key={stage.id} value={stage.id}>
-                        {stage.code.replace(/_/g, " ").toUpperCase()}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
+          {/* Switch nativo */}
+          <div className="flex items-center justify-between">
+            <label className="text-sm">¿Nuevo Partner?</label>
+            <input
+              type="checkbox"
+              checked={!!form.watch("is_new_partner")}
+              onChange={(e) => {
+                const val = e.target.checked;
+                form.setValue("is_new_partner", val);
+                persistentData.current.is_new_partner = val;
+              }}
+              className="h-5 w-5"
+            />
+          </div>
+
+          {/* Select nativo */}
+          <div className="flex flex-col space-y-2">
+            <label className="text-sm font-medium">Etapa (Nativa)</label>
+            <select
+              className="p-2 border rounded bg-white text-black"
+              value={form.watch("pipeline_stage_id") || ""}
+              onChange={(e) => {
+                const val = e.target.value;
+                form.setValue("pipeline_stage_id", val);
+                persistentData.current.pipeline_stage_id = val;
+              }}
+            >
+              <option value="">Seleccionar...</option>
+              {stages.map(s => (
+                <option key={s.id} value={s.id}>{s.code}</option>
+              ))}
+            </select>
+          </div>
+
+        </div>
       </div>
     )
   }
