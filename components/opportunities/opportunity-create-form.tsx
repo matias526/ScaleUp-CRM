@@ -936,7 +936,7 @@ export function OpportunityCreateForm() {
               if (!persistentData.current.country) {
                 if (countriesData.length === 1) {
                   console.log(`🔧 Solo un país disponible, seleccionándolo automáticamente: ${countriesData[0].code}`)
-                  setFormValue("country", countriesData[0].code)
+                  //setFormValue("country", countriesData[0].code)
                 }
 
                 if (partnerCountriesFromUser.length > 0) {
@@ -952,7 +952,7 @@ export function OpportunityCreateForm() {
                 const countryExists = countriesData.some((c) => c.code === persistentData.current.country)
                 if (countryExists) {
                   console.log(`🔧 Restaurando país persistente: ${persistentData.current.country}`)
-                  setFormValue("country", persistentData.current.country)
+                  //setFormValue("country", persistentData.current.country)
                 } else {
                   // Si el país persistente no está en la lista del nuevo partner, limpiar
                   console.log(`🔧 País persistente no disponible para este partner, limpiando`)
@@ -984,6 +984,8 @@ export function OpportunityCreateForm() {
 
   // Actualizar validación de campos técnicos cuando cambian los valores
   useEffect(() => {
+    // Si no hay campos, no hay nada que validar
+    if (!techFields || techFields.length === 0) return;
     const newValidation = { ...techFieldValidation }
 
     techFields.forEach((field) => {
