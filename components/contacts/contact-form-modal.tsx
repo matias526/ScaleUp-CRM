@@ -2,9 +2,12 @@
 
 import { useState } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Loader2 } from "lucide-react"
+import { Loader2, ChevronDown, ChevronUp } from "lucide-react"
 import { useTranslations } from "@/hooks/use-translations"
 import { type Contact, type ContactFormData, ContactService } from "@/lib/services/contact-service"
+import { UserService } from "@/lib/services/user-service"
+import { TechCompanyService } from "@/lib/services/tech-company-service"
+import { PartnerService } from "@/lib/services/partner-service"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Input } from "@/components/ui/input"
@@ -15,6 +18,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { DICT_LANG_CONTACTS } from "@/lib/constants/dict-lang-contacts"
+import { useEffect } from "react"
 
 const contactModalSchema = z.object({
   first_name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
@@ -27,6 +31,9 @@ const contactModalSchema = z.object({
   tech_company_id: z.string().optional().or(z.literal("")),
   partner_id: z.string().optional().or(z.literal("")),
   end_customer_id: z.string().optional().or(z.literal("")),
+  user_id: z.string().optional().or(z.literal("")),
+  linkedin_url: z.string().optional().or(z.literal("")),
+  notes: z.string().optional().or(z.literal("")),
 })
 
 interface ContactFormModalProps {
@@ -64,6 +71,46 @@ export function ContactFormModal({ open, onOpenChange, onSuccess, initialData }:
   const { t } = useTranslations(DICT_LANG_CONTACTS)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showRelationships, setShowRelationships] = useState(false)
+  const [users, setUsers] = useState<{ id: string; label: string }[]>([])
+  const [techCompanies, setTechCompanies] = useState<{ id: string; label: string }[]>([])
+  const [partners, setPartners] = useState<{ id: string; label: string }[]>([])
+
+  // Load relationship options
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [allUsers, companies, partnersRes] = await Promise.all([
+          UserService.getUsers(),
+          TechCompanyService.getTechCompanies(),
+          PartnerService.getPartners(1, 100),
+        ])
+
+        if (Array.isArray(allUsers)) {
+          setUsers(
+            allUsers.map((u) => ({
+              id: u.id,
+              label: `${u.first_name} ${u.last_name} (${u.email})`,
+            })),
+          )
+        }
+
+        if (Array.isArray(companies)) {
+          setTechCompanies(companies.map((c) => ({ id: c.id, label: c.name })))
+        }
+
+        if (partnersRes?.data && Array.isArray(partnersRes.data)) {
+          setPartners(partnersRes.data.map((p) => ({ id: p.id, label: p.name })))
+        }
+      } catch (err) {
+        console.error("Error loading relationships:", err)
+      }
+    }
+
+    if (open) {
+      loadData()
+    }
+  }, [open])
 
   const form = useForm<z.infer<typeof contactModalSchema>>({
     resolver: zodResolver(contactModalSchema),
@@ -78,6 +125,9 @@ export function ContactFormModal({ open, onOpenChange, onSuccess, initialData }:
       tech_company_id: initialData?.tech_company_id || "",
       partner_id: initialData?.partner_id || "",
       end_customer_id: initialData?.end_customer_id || "",
+      user_id: "",
+      linkedin_url: "",
+      notes: "",
     },
   })
 
@@ -97,6 +147,9 @@ export function ContactFormModal({ open, onOpenChange, onSuccess, initialData }:
         tech_company_id: values.tech_company_id || null,
         partner_id: values.partner_id || null,
         end_customer_id: values.end_customer_id || null,
+        user_id: values.user_id || null,
+        linkedin_url: values.linkedin_url || null,
+        notes: values.notes || null,
       }
 
       const result = await ContactService.createContact(contactData)
@@ -133,7 +186,95 @@ export function ContactFormModal({ open, onOpenChange, onSuccess, initialData }:
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Basic Information */}
+            {/* Relationships - Collapsible */}
+            <div className="border rounded-lg overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setShowRelationships(!showRelationships)}
+                className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 hover:bg-gray-100 transition-colors"
+              >
+                <h3 className="text-sm font-semibold">{t("contacts.form.section.relationships")}</h3>
+                {showRelationships ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </button>
+
+              {showRelationships && (
+                <div className="p-3 space-y-3 border-t">
+                  <div className="grid grid-cols-2 gap-2">
+                    <FormField
+                      control={form.control}
+                      name="tech_company_id"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">{t("contacts.form.techCompany")}</FormLabel>
+                          <Select value={field.value || ""} onValueChange={field.onChange}>
+                            <FormControl>
+                              <SelectTrigger className="h-8">
+                                <SelectValue placeholder={t("contacts.filter.all")} />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {techCompanies.map((company) => (
+                                <SelectItem key={company.id} value={company.id}>
+                                  {company.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="partner_id"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">{t("contacts.form.partner")}</FormLabel>
+                          <Select value={field.value || ""} onValueChange={field.onChange}>
+                            <FormControl>
+                              <SelectTrigger className="h-8">
+                                <SelectValue placeholder={t("contacts.filter.all")} />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {partners.map((partner) => (
+                                <SelectItem key={partner.id} value={partner.id}>
+                                  {partner.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="user_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">{t("contacts.form.linkedUser")}</FormLabel>
+                        <Select value={field.value || ""} onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger className="h-8">
+                              <SelectValue placeholder={t("contacts.filter.all")} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {users.map((user) => (
+                              <SelectItem key={user.id} value={user.id}>
+                                {user.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+            </div>
             <div className="space-y-3">
               <h3 className="text-sm font-semibold">{t("contacts.form.section.basic")}</h3>
 
@@ -285,6 +426,46 @@ export function ContactFormModal({ open, onOpenChange, onSuccess, initialData }:
                   )}
                 />
               </div>
+            </div>
+
+              )}
+            </div>
+
+            {/* LinkedIn and Notes - Optional Footer */}
+            <div className="border-t pt-2 space-y-2">
+              <FormField
+                control={form.control}
+                name="linkedin_url"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">{t("contacts.form.linkedin")}</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="https://linkedin.com/in/..."
+                        className="h-8"
+                        {...field}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">{t("contacts.form.notes")}</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder={t("contacts.placeholder.enterNotes")}
+                        className="min-h-16 resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
             </div>
 
             {/* Form Actions */}

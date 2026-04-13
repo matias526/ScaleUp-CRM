@@ -307,6 +307,57 @@ export const DICT_LANG_CONTACTS = {
     en: "contacts",
     pt: "contatos",
   },
+  "contacts.search.title": {
+    es: "Búsqueda y Filtros",
+    en: "Search and Filters",
+    pt: "Busca e Filtros",
+  },
+  "contacts.showing": {
+    es: "Mostrando",
+    en: "Showing",
+    pt: "Mostrando",
+  },
+  "contacts.of": {
+    es: "de",
+    en: "of",
+    pt: "de",
+  },
+  "contacts.pagination.page": {
+    es: "Página",
+    en: "Page",
+    pt: "Página",
+  },
+  "contacts.pagination.of": {
+    es: "de",
+    en: "of",
+    pt: "de",
+  },
+  "contacts.form.linkedUser": {
+    es: "Usuario Vinculado",
+    en: "Linked User",
+    pt: "Usuário Vinculado",
+  },
+  "contacts.form.linkedin": {
+    es: "LinkedIn",
+    en: "LinkedIn",
+    pt: "LinkedIn",
+  },
+  "contacts.form.notes": {
+    es: "Notas",
+    en: "Notes",
+    pt: "Notas",
+  },
+  "contacts.form.section.relationships": {
+    es: "Relaciones",
+    en: "Relationships",
+    pt: "Relacionamentos",
+  },
+  // Placeholders
+  "contacts.placeholder.enterNotes": {
+    es: "Añade notas sobre este contacto...",
+    en: "Add notes about this contact...",
+    pt: "Adicione notas sobre este contato...",
+  },
   "contacts.message.noContacts": {
     es: "No hay contactos",
     en: "No contacts found",
