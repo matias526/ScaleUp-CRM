@@ -21,8 +21,8 @@ importers:
         specifier: latest
         version: 3.2.2(react@18.3.1)
       '@hookform/resolvers':
-        specifier: latest
-        version: 5.2.2(react-hook-form@7.53.0(react@18.3.1))
+        specifier: 3.9.0
+        version: 3.9.0(react-hook-form@7.53.0(react@18.3.1))
       '@napi-rs/canvas':
         specifier: latest
         version: 0.1.97
@@ -415,10 +415,10 @@ packages:
   '@hexagon/base64@1.1.28':
     resolution: {integrity: sha512-lhqDEAvWixy3bZ+UOYbPwUbBkwBq5C1LAJ/xPC8Oi+lL54oyakv/npbA0aU2hgCsx/1NUd4IBvV03+aUBWxerw==}
 
-  '@hookform/resolvers@5.2.2':
-    resolution: {integrity: sha512-A/IxlMLShx3KjV/HeTcTfaMxdwy690+L/ZADoeaTltLx+CVuzkeVIPuybK3jrRfw7YZnmdKsVVHAlEPIAEUNlA==}
+  '@hookform/resolvers@3.9.0':
+    resolution: {integrity: sha512-bU0Gr4EepJ/EQsH/IwEzYLsT/PEj5C0ynLQ4m+GSHS+xKH4TfSelhluTgOaoc4kA5s7eCsQbM4wvZLzELmWzUg==}
     peerDependencies:
-      react-hook-form: ^7.55.0
+      react-hook-form: ^7.0.0
 
   '@jridgewell/gen-mapping@0.3.13':
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
@@ -1887,9 +1887,6 @@ packages:
 
   '@stablelib/base64@1.0.1':
     resolution: {integrity: sha512-1bnPQqSxSuc3Ii6MhBysoWCg58j97aUjuCSZrGSmDxNqtytIi0k8utUenAwTZN4V5mXXYGsVUI9zeBqy+jBOSQ==}
-
-  '@standard-schema/utils@0.3.0':
-    resolution: {integrity: sha512-e7Mew686owMaPJVNNLs55PUvgz371nKgwsc4vxE49zsODpJEnxgxRo2y/OKrqueavXgZNMDVj3DdHFlaSAeU8g==}
 
   '@supabase/auth-js@2.99.3':
     resolution: {integrity: sha512-vMEVLA1kGGYd/kdsJSwtjiFUZM1nGfrz2DWmgMBZtocV48qL+L2+4QpIkueXyBEumMQZFEyhz57i/5zGHjvdBw==}
@@ -3763,9 +3760,8 @@ snapshots:
 
   '@hexagon/base64@1.1.28': {}
 
-  '@hookform/resolvers@5.2.2(react-hook-form@7.53.0(react@18.3.1))':
+  '@hookform/resolvers@3.9.0(react-hook-form@7.53.0(react@18.3.1))':
     dependencies:
-      '@standard-schema/utils': 0.3.0
       react-hook-form: 7.53.0(react@18.3.1)
 
   '@jridgewell/gen-mapping@0.3.13':
@@ -5210,8 +5206,6 @@ snapshots:
       '@peculiar/x509': 1.14.3
 
   '@stablelib/base64@1.0.1': {}
-
-  '@standard-schema/utils@0.3.0': {}
 
   '@supabase/auth-js@2.99.3':
     dependencies:

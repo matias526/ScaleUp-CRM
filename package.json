@@ -13,7 +13,7 @@
     "@dnd-kit/core": "latest",
     "@dnd-kit/sortable": "latest",
     "@dnd-kit/utilities": "latest",
-    "@hookform/resolvers": "latest",
+    "@hookform/resolvers": "3.9.0",
     "@napi-rs/canvas": "latest",
     "@radix-ui/react-accordion": "1.2.2",
     "@radix-ui/react-alert-dialog": "1.1.4",
