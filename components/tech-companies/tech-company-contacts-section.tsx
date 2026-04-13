@@ -41,7 +41,6 @@ export function TechCompanyContactsSection({ techCompanyId }: TechCompanyContact
   const [showModal, setShowModal] = useState(false)
   const [contactToRemove, setContactToRemove] = useState<string | null>(null)
   const [editingContact, setEditingContact] = useState<Contact | null>(null)
-  const [editingContact, setEditingContact] = useState<Contact | null>(null)
 
   const loadContacts = async () => {
     try {
