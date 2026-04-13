@@ -5,7 +5,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Loader2, ChevronDown, ChevronUp, X } from "lucide-react"
 import { useTranslations } from "@/hooks/use-translations"
 import { type Contact, type ContactFormData, ContactService } from "@/lib/services/contact-service"
-import { UserService } from "@/lib/services/user-service"
 import { TechCompanyService } from "@/lib/services/tech-company-service"
 import { PartnerService } from "@/lib/services/partner-service"
 import { Button } from "@/components/ui/button"
@@ -32,7 +31,6 @@ const contactModalSchema = z.object({
   partner_id: z.string().optional().or(z.literal("")),
   end_customer_id: z.string().optional().or(z.literal("")),
   user_id: z.string().optional().or(z.literal("")),
-  linkedin_url: z.string().optional().or(z.literal("")),
   notes: z.string().optional().or(z.literal("")),
 })
 
@@ -55,6 +53,7 @@ const DEPARTMENTS = [
   { value: "technical", label: "contacts.department.technical" },
   { value: "marketing", label: "contacts.department.marketing" },
   { value: "operations", label: "contacts.department.operations" },
+  { value: "finance", label: "contacts.department.finance" },
   { value: "hr", label: "contacts.department.hr" },
   { value: "executive", label: "contacts.department.executive" },
   { value: "other", label: "contacts.department.other" },
@@ -71,7 +70,6 @@ export function ContactFormModal({ open, onOpenChange, onSuccess, initialData }:
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showRelationships, setShowRelationships] = useState(false)
-  const [users, setUsers] = useState<{ id: string; label: string }[]>([])
   const [techCompanies, setTechCompanies] = useState<{ id: string; label: string }[]>([])
   const [partners, setPartners] = useState<{ id: string; label: string }[]>([])
 
@@ -79,20 +77,10 @@ export function ContactFormModal({ open, onOpenChange, onSuccess, initialData }:
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [allUsers, companies, partnersRes] = await Promise.all([
-          UserService.getUsers(),
+        const [companies, partnersRes] = await Promise.all([
           TechCompanyService.getTechCompanies(),
           PartnerService.getPartners(1, 100),
         ])
-
-        if (Array.isArray(allUsers)) {
-          setUsers(
-            allUsers.map((u) => ({
-              id: u.id,
-              label: `${u.first_name} ${u.last_name} (${u.email})`,
-            })),
-          )
-        }
 
         if (Array.isArray(companies)) {
           setTechCompanies(companies.map((c) => ({ id: c.id, label: c.name })))
@@ -124,7 +112,6 @@ export function ContactFormModal({ open, onOpenChange, onSuccess, initialData }:
       tech_company_id: initialData?.tech_company_id || "",
       partner_id: initialData?.partner_id || "",
       end_customer_id: initialData?.end_customer_id || "",
-      user_id: "",
       linkedin_url: "",
       notes: "",
     },
@@ -146,7 +133,6 @@ export function ContactFormModal({ open, onOpenChange, onSuccess, initialData }:
         tech_company_id: values.tech_company_id || null,
         partner_id: values.partner_id || null,
         end_customer_id: values.end_customer_id || null,
-        user_id: values.user_id || null,
         linkedin_url: values.linkedin_url || null,
         notes: values.notes || null,
       }
@@ -184,10 +170,10 @@ export function ContactFormModal({ open, onOpenChange, onSuccess, initialData }:
         )}
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
             {/* Basic Information */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold">{t("contacts.form.section.basic")}</h3>
+            <div className="space-y-2">
+              <h3 className="text-xs font-bold uppercase tracking-wide text-gray-700">{t("contacts.form.section.basic")}</h3>
 
               <div className="grid grid-cols-2 gap-2">
                 <FormField
@@ -245,54 +231,56 @@ export function ContactFormModal({ open, onOpenChange, onSuccess, initialData }:
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs">{t("contacts.form.phone")}</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="tel"
-                        placeholder={t("contacts.placeholder.enterPhone")}
-                        className="h-8"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage className="text-xs" />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="preferred_language"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs">{t("contacts.form.preferredLanguage")}</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
+              <div className="grid grid-cols-3 gap-2">
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs">{t("contacts.form.phone")}</FormLabel>
                       <FormControl>
-                        <SelectTrigger className="h-8">
-                          <SelectValue />
-                        </SelectTrigger>
+                        <Input
+                          type="tel"
+                          placeholder={t("contacts.placeholder.enterPhone")}
+                          className="h-8 text-xs"
+                          {...field}
+                        />
                       </FormControl>
-                      <SelectContent>
-                        {LANGUAGES.map((lang) => (
-                          <SelectItem key={lang.value} value={lang.value}>
-                            {t(lang.label)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage className="text-xs" />
-                  </FormItem>
-                )}
-              />
+                      <FormMessage className="text-xs" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="preferred_language"
+                  render={({ field }) => (
+                    <FormItem className="col-span-2">
+                      <FormLabel className="text-xs">{t("contacts.form.preferredLanguage")}</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger className="h-8">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {LANGUAGES.map((lang) => (
+                            <SelectItem key={lang.value} value={lang.value}>
+                              {t(lang.label)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage className="text-xs" />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
             {/* Professional Information */}
-            <div className="space-y-3 border-t pt-3">
-              <h3 className="text-sm font-semibold">{t("contacts.form.section.professional")}</h3>
+            <div className="space-y-2 border-t pt-3">
+              <h3 className="text-xs font-bold uppercase tracking-wide text-gray-700">{t("contacts.form.section.professional")}</h3>
 
               <div className="grid grid-cols-2 gap-2">
                 <FormField
@@ -346,12 +334,12 @@ export function ContactFormModal({ open, onOpenChange, onSuccess, initialData }:
                 onClick={() => setShowRelationships(!showRelationships)}
                 className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 hover:bg-gray-100 transition-colors"
               >
-                <h3 className="text-sm font-semibold">{t("contacts.form.section.relationships")}</h3>
+                <h3 className="text-xs font-bold uppercase tracking-wide text-gray-700">{t("contacts.form.section.relationships")}</h3>
                 {showRelationships ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </button>
 
               {showRelationships && (
-                <div className="p-3 space-y-3 border-t">
+                <div className="p-3 space-y-2 border-t">
                   <div className="grid grid-cols-2 gap-2">
                     <FormField
                       control={form.control}
@@ -429,50 +417,69 @@ export function ContactFormModal({ open, onOpenChange, onSuccess, initialData }:
                       )}
                     />
                   </div>
-
-                  <FormField
-                    control={form.control}
-                    name="user_id"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex items-center justify-between">
-                          <FormLabel className="text-xs">{t("contacts.form.linkedUser")}</FormLabel>
-                          {field.value && (
-                            <button
-                              type="button"
-                              onClick={() => field.onChange(null)}
-                              className="text-xs text-gray-400 hover:text-gray-600"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          )}
-                        </div>
-                        <Select 
-                          value={field.value || ""} 
-                          onValueChange={field.onChange}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="h-8">
-                              <SelectValue placeholder={t("contacts.filter.all")} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {users.map((user) => (
-                              <SelectItem key={user.id} value={user.id}>
-                                {user.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </FormItem>
-                    )}
-                  />
                 </div>
               )}
             </div>
 
             {/* LinkedIn and Notes - Optional Footer */}
             <div className="border-t pt-2 space-y-2">
+              <FormField
+                control={form.control}
+                name="linkedin_url"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">{t("contacts.form.linkedin")}</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="https://linkedin.com/in/..."
+                        className="h-8"
+                        {...field}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">{t("contacts.form.notes")}</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder={t("contacts.placeholder.enterNotes")}
+                        className="min-h-16 resize-none text-xs"
+                        {...field}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Form Actions */}
+            <div className="flex justify-end gap-2 border-t pt-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => onOpenChange(false)}
+                disabled={isSubmitting}
+              >
+                {t("contacts.modal.cancel")}
+              </Button>
+              <Button type="submit" size="sm" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {t("contacts.modal.save")}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  )
+}
               <FormField
                 control={form.control}
                 name="linkedin_url"
