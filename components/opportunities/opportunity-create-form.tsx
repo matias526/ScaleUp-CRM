@@ -1319,6 +1319,7 @@ export function OpportunityCreateForm() {
 
   // Renderizar el paso actual
   const renderStep = () => {
+    return <div>Estamos probando si renderStep es el problema</div>;
     switch (currentStep) {
       case 1:
         return renderBasicInfoStep()
@@ -2424,15 +2425,6 @@ export function OpportunityCreateForm() {
     )
   }
 
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-blue-600 text-white p-20">
-      <div className="text-center">
-        <h1 className="text-5xl font-bold mb-4">¡HELLO WORLD!</h1>
-        <p className="text-2xl">Si ves esto, el modal ABRE y el problema es el contenido del Formulario.</p>
-        <p className="mt-4 opacity-80">Si seguís viendo el error blanco, el problema es un useEffect de arriba.</p>
-      </div>
-    </div>
-  );
   return (
     <Card className="w-full max-w-4xl mx-auto shadow-lg border-0">
       <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 border-b">
