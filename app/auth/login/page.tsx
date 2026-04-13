@@ -14,7 +14,7 @@ export default function LoginPage() {
             height={60}
             className="h-auto w-auto mb-4"
           />
-          <h1 className="text-2xl font-bold text-primary">Login</h1>
+          <h1 className="text-2xl font-bold text-primary">Login CRM</h1>
           <p className="text-gray-500">Inicia sesión para continuar</p>
         </div>
         <Suspense fallback={<div className="flex items-center justify-center min-h-[300px]">Cargando...</div>}>
