@@ -1442,7 +1442,7 @@ export function OpportunityCreateForm() {
               <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                 <div className="space-y-0.5">
                   <FormLabel className="text-base">Oportunidad para nuevo partner</FormLabel>
-                  <FormDescription>Marca esta opción si es para un nuevo partner</FormDescription>
+                  <FormDescription>Marca esta opción si es para un partner potencial</FormDescription>
                 </div>
                 <FormControl>
                   <Switch
