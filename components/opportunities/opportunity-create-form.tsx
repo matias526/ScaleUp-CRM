@@ -2433,7 +2433,6 @@ export function OpportunityCreateForm() {
       </div>
     </div>
   );
-
   return (
     <Card className="w-full max-w-4xl mx-auto shadow-lg border-0">
       <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 border-b">
