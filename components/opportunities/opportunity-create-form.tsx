@@ -204,7 +204,7 @@ export function OpportunityCreateForm() {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    mode: "onChange",
+    mode: "onSubmit",
     defaultValues: {
       title: "",
       description: "",
@@ -386,13 +386,18 @@ export function OpportunityCreateForm() {
   // Handle form submission - Now only on Step 5 (Confirmation)
   const onSubmit = async (data: FormValues) => {
     try {
-      setLoadingScaleUpManager(true)
+      console.log("[v0] onSubmit triggered - currentStep:", currentStep, "totalSteps:", totalSteps)
 
-      // Only submit on the confirmation step
-      if (currentStep !== totalSteps) {
+      // If not on the final step, just advance to next step without validating
+      if (currentStep < totalSteps) {
+        console.log("[v0] Moving to next step from", currentStep, "to", currentStep + 1)
         setCurrentStep(currentStep + 1)
         return
       }
+
+      // Only create opportunity on the final step (Step 5)
+      console.log("[v0] Creating opportunity with data:", data)
+      setLoadingScaleUpManager(true)
 
       // Obtener el manager de ScaleUp que maneja la relación entre Tech Company y Partner (solo si hay Partner)
       let assignedToUserId = data.assigned_to || null
