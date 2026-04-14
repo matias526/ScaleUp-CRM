@@ -709,13 +709,13 @@ export function OpportunityCreateForm() {
                                 <SelectValue placeholder="Seleccionar manager" />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent>
-                              {scaleUpManagers.map((manager) => (
-                                <SelectItem key={manager.id} value={manager.id}>
-                                  {manager.first_name} {manager.last_name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
+                          <SelectContent>
+                            {scaleUpUsers.map((manager) => (
+                              <SelectItem key={manager.id} value={manager.id}>
+                                {manager.first_name} {manager.last_name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
                           </Select>
                           <FormMessage />
                         </FormItem>
