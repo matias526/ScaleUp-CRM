@@ -874,8 +874,12 @@ export function OpportunityCreateForm() {
                 </Button>
                 {currentStep < totalSteps ? (
                   <Button
-                    type="submit"
+                    type="button"
                     disabled={loadingScaleUpManager}
+                    onClick={() => {
+                      console.log("[v0] Botón Siguiente clickeado - currentStep:", currentStep)
+                      setCurrentStep(currentStep + 1)
+                    }}
                   >
                     Siguiente
                   </Button>
