@@ -173,10 +173,10 @@ export async function getOpportunityStages(): Promise<Tables<"pipeline_stages">[
   }
 }
 
-// Modificar la función createOpportunity para añadir la creación de nota
+// Modificar la función createOpportunity para manejar todos los campos correctamente
 export async function createOpportunity(
   opportunityData: any,
-  techFieldIds: string[] = [],
+  techValues: Array<{ opportunity_tech_field_id: string; value: any; valueType: string }> = [],
   userRole: string | null = null,
 ): Promise<any> {
   try {
@@ -205,16 +205,15 @@ export async function createOpportunity(
       }
     }
 
-    // Eliminar el campo probability si existe
+    // Eliminar el campo probability si existe (será calculado automáticamente)
     if (opportunityData.hasOwnProperty("probability")) {
       delete opportunityData.probability
     }
 
+    // Asegurar que is_new_partner sea un boolean
     if (opportunityData.hasOwnProperty("is_new_partner")) {
-      // Convertir a boolean si viene como string
       opportunityData.is_new_partner = Boolean(opportunityData.is_new_partner)
     } else {
-      // Si no existe el campo, establecer como false por defecto
       opportunityData.is_new_partner = false
     }
 
@@ -228,20 +227,13 @@ export async function createOpportunity(
       throw error
     }
 
-    console.log("🔧 is_new_partner en la respuesta de Supabase:", data?.is_new_partner)
+    console.log("🔧 Oportunidad creada con ID:", data?.id)
 
-    // Si hay campos tecnológicos seleccionados, crear las relaciones
-    if (techFieldIds.length > 0 && data) {
-      const techFieldRelations = techFieldIds.map((fieldId) => ({
-        opportunity_id: data.id,
-        tech_field_id: fieldId,
-      }))
-
-      const { error: relationError } = await supabase.from("opportunity_tech_fields").insert(techFieldRelations)
-
-      if (relationError) {
-        console.error("Error al crear relaciones con campos tecnológicos:", relationError)
-        // No revertimos la creación de la oportunidad, solo registramos el error
+    // Crear los valores técnicos si existen
+    if (techValues.length > 0 && data) {
+      const techValuesCreated = await createOpportunityTechValues(data.id, techValues)
+      if (!techValuesCreated) {
+        console.warn("Advertencia: No se pudieron crear todos los valores técnicos")
       }
     }
 
@@ -363,6 +355,147 @@ export async function getPartnerCountries(partnerId: string): Promise<{ id: stri
     return countriesData
   } catch (error) {
     console.error(`Error inesperado al obtener países del partner con ID ${partnerId}:`, error)
+    return []
+  }
+}
+
+// Función para obtener usuarios del partner (PartnerUser role)
+export async function getPartnerUsers(partnerId: string): Promise<Array<{ id: string; first_name: string; last_name: string; email: string }>> {
+  try {
+    if (!partnerId) {
+      console.log("No se proporcionó ID de partner")
+      return []
+    }
+
+    console.log(`Obteniendo usuarios del partner con ID: ${partnerId}`)
+
+    const { data, error } = await supabase
+      .from("users")
+      .select("id, first_name, last_name, email")
+      .eq("partner_id", partnerId)
+      .eq("role_code", "PartnerUser")
+      .order("first_name", { ascending: true })
+
+    if (error) {
+      console.error(`Error al obtener usuarios del partner ${partnerId}:`, error)
+      return []
+    }
+
+    console.log(`Se encontraron ${data?.length || 0} usuarios del partner`)
+    return data || []
+  } catch (error) {
+    console.error(`Error inesperado al obtener usuarios del partner:`, error)
+    return []
+  }
+}
+
+// Función para obtener usuarios ScaleUp con roles Admin o BDD
+export async function getScaleUpUsers(): Promise<Array<{ id: string; first_name: string; last_name: string; email: string; role_code: string }>> {
+  try {
+    console.log("Obteniendo usuarios ScaleUp (Admin o BDD)")
+
+    const { data, error } = await supabase
+      .from("users")
+      .select("id, first_name, last_name, email, role_code")
+      .in("role_code", ["Admin", "BDD"])
+      .is("partner_id", null)
+      .order("first_name", { ascending: true })
+
+    if (error) {
+      console.error("Error al obtener usuarios ScaleUp:", error)
+      return []
+    }
+
+    console.log(`Se encontraron ${data?.length || 0} usuarios ScaleUp`)
+    return data || []
+  } catch (error) {
+    console.error("Error inesperado al obtener usuarios ScaleUp:", error)
+    return []
+  }
+}
+
+// Función para crear los valores técnicos de una oportunidad
+export async function createOpportunityTechValues(
+  opportunityId: string,
+  techValues: Array<{ opportunity_tech_field_id: string; value: any; valueType: string }>,
+): Promise<boolean> {
+  try {
+    if (!opportunityId || techValues.length === 0) {
+      console.log("No hay valores técnicos para crear o ID de oportunidad no válido")
+      return true
+    }
+
+    console.log(`Creando ${techValues.length} valores técnicos para la oportunidad ${opportunityId}`)
+
+    // Preparar los datos para insertar
+    const valuesToInsert = techValues.map((item) => {
+      const record: any = {
+        opportunity_id: opportunityId,
+        opportunity_tech_field_id: item.opportunity_tech_field_id,
+      }
+
+      // Asignar el valor al campo correcto según el tipo
+      switch (item.valueType) {
+        case "text":
+          record.value_text = item.value
+          break
+        case "numeric":
+          record.value_numeric = parseFloat(item.value)
+          break
+        case "boolean":
+          record.value_boolean = Boolean(item.value)
+          break
+        case "date":
+          record.value_date = item.value
+          break
+        case "json":
+          record.value_json = typeof item.value === "string" ? JSON.parse(item.value) : item.value
+          break
+      }
+
+      return record
+    })
+
+    const { error } = await supabase.from("opportunity_tech_values").insert(valuesToInsert)
+
+    if (error) {
+      console.error("Error al crear valores técnicos:", error)
+      return false
+    }
+
+    console.log(`Valores técnicos creados exitosamente para la oportunidad ${opportunityId}`)
+    return true
+  } catch (error) {
+    console.error("Error inesperado al crear valores técnicos:", error)
+    return false
+  }
+}
+
+// Función para obtener oportunidades tecnicas de una tech company
+export async function getOpportunityTechFields(techCompanyId: string): Promise<any[]> {
+  try {
+    if (!techCompanyId) {
+      console.log("No se proporcionó ID de tech company")
+      return []
+    }
+
+    console.log(`Obteniendo campos técnicos para tech company ${techCompanyId}`)
+
+    const { data, error } = await supabase
+      .from("opportunity_tech_fields")
+      .select("*")
+      .eq("tech_company_id", techCompanyId)
+      .order("display_order", { ascending: true })
+
+    if (error) {
+      console.error(`Error al obtener campos técnicos:`, error)
+      return []
+    }
+
+    console.log(`Se encontraron ${data?.length || 0} campos técnicos`)
+    return data || []
+  } catch (error) {
+    console.error("Error inesperado al obtener campos técnicos:", error)
     return []
   }
 }
