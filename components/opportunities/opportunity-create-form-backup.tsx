@@ -247,9 +247,9 @@ export function OpportunityCreateForm() {
     "opportunities.form.no_partner",
   ])
 
-  // 🔧 SOLUCIÓN MEJORADA: useRef para mantener datos persistentes y prevenir infinite loops
+  // 🔧 SOLUCIÓN: useRef para mantener datos persistentes
   const persistentData = useRef<any>({})
-  const hasInitialized = useRef(false) // 🔧 CRÍTICO: Previene que loadData se ejecute múltiples veces
+  const [forceUpdate, setForceUpdate] = useState(0)
 
   // Estado para el paso actual del formulario
   const [currentStep, setCurrentStep] = useState(1)
@@ -346,18 +346,12 @@ export function OpportunityCreateForm() {
     },
   })
 
-  // 🔧 ARREGLO CRÍTICO: Función mejorada para setValue con deduplicación para evitar re-renders innecesarios
+  // 🔧 ARREGLO CRÍTICO: Función mejorada para setValue que sincroniza con react-hook-form
   const setFormValue = (key: string, value: any) => {
-    const currentValue = form.getValues(key)
-    // 🔧 DEDUPLICACIÓN: Si el valor es igual al actual, no hacer nada (PREVIENE LOOPS)
-    if (currentValue === value) {
-      console.log(`🔧 Deduplicación: ${key} ya tiene el valor ${value}, ignorando`)
-      return
-    }
     console.log(`🔧 Setting form value: ${key} = ${value}`)
     persistentData.current[key] = value
-    // 🔧 IMPORTANTE: Removed setForceUpdate to prevent cascading re-renders
-    form.setValue(key as any, value, { shouldValidate: false, shouldDirty: true })
+    form.setValue(key as any, value, { shouldValidate: true, shouldDirty: true })
+    setForceUpdate((prev) => prev + 1)
   }
 
   // 🔧 NUEVO: Función para sincronizar todos los datos persistentes con el formulario
@@ -383,13 +377,6 @@ export function OpportunityCreateForm() {
 
   // Cargar datos iniciales
   useEffect(() => {
-    // 🔧 PREVENCIÓN DE LOOPS INFINITOS: Si ya se inicializó, no ejecutar de nuevo
-    if (hasInitialized.current) {
-      console.log("🔧 Datos ya inicializados, saltando carga")
-      return
-    }
-    hasInitialized.current = true
-
     async function loadData() {
       try {
         setLoadingStages(true)
