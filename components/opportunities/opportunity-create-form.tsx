@@ -99,41 +99,6 @@ async function getPartnersByTechCompanyId(techCompanyId: string): Promise<Tables
   }
 }
 
-async function getScaleUpUsers(): Promise<any[]> {
-  try {
-    const { data, error } = await supabase
-      .from("users")
-      .select("id, first_name, last_name, email, role_id")
-      .is("partner_id", null)
-      .is("tech_company_id", null)
-      .eq("is_active", true)
-      .order("first_name", { ascending: true })
-
-    return error ? [] : (data || [])
-  } catch (error) {
-    console.error("Error en getScaleUpUsers:", error)
-    return []
-  }
-}
-
-async function getPartnerUsers(partnerId: string): Promise<any[]> {
-  try {
-    if (!partnerId) return []
-
-    const { data, error } = await supabase
-      .from("users")
-      .select("id, first_name, last_name, email, role_id")
-      .eq("partner_id", partnerId)
-      .eq("is_active", true)
-      .order("first_name", { ascending: true })
-
-    return error ? [] : (data || [])
-  } catch (error) {
-    console.error("Error en getPartnerUsers:", error)
-    return []
-  }
-}
-
 export function OpportunityCreateForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
