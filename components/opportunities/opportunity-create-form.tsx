@@ -349,14 +349,11 @@ export function OpportunityCreateForm() {
   // 🔧 ARREGLO CRÍTICO: Función mejorada para setValue con deduplicación para evitar re-renders innecesarios
   const setFormValue = (key: string, value: any) => {
     const currentValue = form.getValues(key)
-    // 🔧 DEDUPLICACIÓN: Si el valor es igual al actual, no hacer nada (PREVIENE LOOPS)
     if (currentValue === value) {
-      console.log(`🔧 Deduplicación: ${key} ya tiene el valor ${value}, ignorando`)
       return
     }
     console.log(`🔧 Setting form value: ${key} = ${value}`)
     persistentData.current[key] = value
-    // 🔧 IMPORTANTE: Removed setForceUpdate to prevent cascading re-renders
     form.setValue(key as any, value, { shouldValidate: false, shouldDirty: true })
   }
 
