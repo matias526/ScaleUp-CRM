@@ -11,6 +11,9 @@ import {
   getOpportunityStages,
   getPartnerCountries,
   getScaleUpManager,
+  getPartnerUsers,
+  getOpportunityTechFields,
+  createOpportunityTechValues,
 } from "@/lib/services/opportunity-service"
 import { getTechCompanies } from "@/lib/services/tech-company-service"
 import { getPartners } from "@/lib/services/partner-service"
@@ -410,13 +413,49 @@ export function OpportunityCreateForm() {
   const onSubmit = async (data: FormValues) => {
     try {
       setLoadingScaleUpManager(true)
-      const oppData = {
-        ...data,
-        created_by: user?.id,
-        assigned_to: data.assigned_to || null,
+
+      // Obtener el manager de ScaleUp que maneja la relación entre Tech Company y Partner
+      let assignedToUserId = data.assigned_to || null
+      
+      if (data.partner_id && data.tech_company_id) {
+        try {
+          const manager = await getScaleUpManager(data.tech_company_id, data.partner_id)
+          if (manager) {
+            assignedToUserId = manager.id
+          }
+        } catch (error) {
+          console.error("Error al obtener el manager de ScaleUp:", error)
+        }
       }
 
-      const result = await createOpportunity(oppData)
+      // Preparar datos de la oportunidad
+      const opportunityData: any = {
+        name: data.title,
+        description: data.description || null,
+        pipeline_stage_id: data.pipeline_stage_id,
+        tech_company_id: data.tech_company_id,
+        partner_id: data.partner_id || null,
+        end_customer_id: data.end_customer_id || null,
+        estimated_value: data.estimated_value || null,
+        estimated_close_date: data.estimated_close_date || null,
+        country: data.country || null,
+        is_new_partner: data.is_new_partner || false,
+        assigned_to: assignedToUserId,
+        partner_responsible_id: data.partner_responsible_id || null,
+        created_by: user?.id,
+      }
+
+      // Preparar tech values si existen
+      const techValues: Array<{ opportunity_tech_field_id: string; value: any; valueType: string }> = []
+      
+      if (data.tech_field_ids && data.tech_field_ids.length > 0) {
+        // Aquí se cargarían los valores de los campos técnicos
+        // Por ahora dejamos el array vacío, se puede mejorar después con UI dinámico
+      }
+
+      // Crear la oportunidad
+      const result = await createOpportunity(opportunityData, techValues, userRole)
+      
       toast({
         title: "Éxito",
         description: "Oportunidad creada correctamente",
@@ -426,7 +465,7 @@ export function OpportunityCreateForm() {
       console.error("Error creating opportunity:", error)
       toast({
         title: "Error",
-        description: "Error al crear la oportunidad",
+        description: error instanceof Error ? error.message : "Error al crear la oportunidad",
         variant: "destructive",
       })
     } finally {
