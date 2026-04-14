@@ -542,7 +542,7 @@ export function OpportunityCreateForm() {
                           <SelectContent>
                             {stages.map((stage) => (
                               <SelectItem key={stage.id} value={stage.id}>
-                                {stage.name}
+                                {stage.code}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -799,7 +799,7 @@ export function OpportunityCreateForm() {
                     <h3 className="font-semibold">Resumen de la Oportunidad</h3>
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div><span className="font-medium">Título:</span> {form.watch("title")}</div>
-                      <div><span className="font-medium">Etapa:</span> {stages.find(s => s.id === form.watch("pipeline_stage_id"))?.name}</div>
+                      <div><span className="font-medium">Etapa:</span> {stages.find(s => s.id === form.watch("pipeline_stage_id"))?.code}</div>
                       <div><span className="font-medium">Empresa Tech:</span> {techCompanies.find(c => c.id === form.watch("tech_company_id"))?.name}</div>
                       <div><span className="font-medium">Partner:</span> {form.watch("partner_id") ? filteredPartners.find(p => p.id === form.watch("partner_id"))?.name : "N/A"}</div>
                       <div><span className="font-medium">País:</span> {form.watch("country") || "N/A"}</div>
