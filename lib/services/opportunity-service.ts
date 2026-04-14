@@ -404,7 +404,7 @@ export async function getPartnerUsers(partnerId: string): Promise<Array<{ id: st
 // Función para obtener usuarios ScaleUp con roles Admin o BDD
 export async function getScaleUpUsers(): Promise<Array<{ id: string; first_name: string; last_name: string; email: string; role_code: string }>> {
   try {
-    console.log("Obteniendo usuarios ScaleUp (Admin o BDD)")
+    console.log("Obteniendo usuarios ScaleUp (Admin o BDD, is_active = true)")
 
     // Primero obtener los role_ids para "Admin" y "BDD"
     const { data: rolesData, error: rolesError } = await supabase
@@ -422,10 +422,11 @@ export async function getScaleUpUsers(): Promise<Array<{ id: string; first_name:
     const { data, error } = await supabase
       .from("users")
       .select(`
-        id, first_name, last_name, email, role_id,
+        id, first_name, last_name, email, role_id, is_active,
         roles:role_id (code)
       `)
       .in("role_id", roleIds)
+      .eq("is_active", true)
       .is("partner_id", null)
       .order("first_name", { ascending: true })
 
@@ -443,7 +444,7 @@ export async function getScaleUpUsers(): Promise<Array<{ id: string; first_name:
       role_code: user.roles?.code || null,
     }))
 
-    console.log(`Se encontraron ${formattedData.length} usuarios ScaleUp`)
+    console.log(`Se encontraron ${formattedData.length} usuarios ScaleUp activos`)
     return formattedData
   } catch (error) {
     console.error("Error inesperado al obtener usuarios ScaleUp:", error)

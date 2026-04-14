@@ -287,30 +287,17 @@ export function OpportunityCreateForm() {
 
         setLoadingStages(false)
 
-        // Load tech companies
-        if (techCompanyId) {
-          form.setValue("tech_company_id", techCompanyId, { shouldValidate: false })
-
-          const { data: relatedTechCompanies, error } = await supabase
-            .from("partner_tech_companies")
-            .select("tech_company_id")
-            .eq("partner_id", partnerId || "")
-
-          if (!error && relatedTechCompanies && relatedTechCompanies.length > 0) {
-            const techCompanyIds = relatedTechCompanies.map((item) => item.tech_company_id)
-            const { data: techCompaniesData } = await supabase
-              .from("tech_companies")
-              .select("*")
-              .in("id", techCompanyIds)
-              .eq("is_active", true)
-              .order("name", { ascending: true })
-
-            setTechCompanies(techCompaniesData || [])
-          }
-        }
-
-        // Load tech companies for Partner users
-        if (partnerId && !isScaleUpUser) {
+        // Load tech companies - para ScaleUp users carga todas, para Partner users solo las asociadas
+        if (isScaleUpUser) {
+          // Para usuarios ScaleUp, cargar todas las tech companies activas
+          const { data: techCompaniesData } = await supabase
+            .from("tech_companies")
+            .select("*")
+            .eq("is_active", true)
+            .order("name", { ascending: true })
+          setTechCompanies(techCompaniesData || [])
+        } else if (partnerId) {
+          // Para usuarios Partner, cargar solo las asociadas a su partner
           const { data: relatedTechCompanies } = await supabase
             .from("partner_tech_companies")
             .select("tech_company_id")
