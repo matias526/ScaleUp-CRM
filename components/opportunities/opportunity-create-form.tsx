@@ -461,144 +461,390 @@ export function OpportunityCreateForm() {
       <Card>
         <CardHeader>
           <CardTitle>{t("opportunities.form.title") || "Crear Oportunidad"}</CardTitle>
-          <CardDescription>{t("opportunities.form.description") || "Completa los datos de la nueva oportunidad"}</CardDescription>
+          <CardDescription>
+            Paso {currentStep} de {totalSteps} - {
+              currentStep === 1 ? "Información básica"
+              : currentStep === 2 ? "Empresas involucradas"
+              : currentStep === 3 ? "Cliente y detalles financieros"
+              : currentStep === 4 ? "Campos técnicos"
+              : "Confirmación"
+            }
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {/* Title Field */}
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Título</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nombre de la oportunidad" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* ===== PASO 1: INFORMACIÓN BÁSICA ===== */}
+              {currentStep === 1 && (
+                <div className="space-y-4">
+                  <div className="text-sm font-medium text-blue-600">Paso 1: Información Básica</div>
+                  
+                  {/* Título */}
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Título *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Nombre descriptivo de la oportunidad" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              {/* Description Field */}
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Descripción</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Detalles adicionales" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  {/* Descripción */}
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Descripción</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="Detalles adicionales sobre la oportunidad" className="min-h-24" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              {/* ✅ FIXED: Controlled Select for Pipeline Stage */}
-              <FormField
-                control={form.control}
-                name="pipeline_stage_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("opportunities.form.stage") || "Etapa"}</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={t("opportunities.form.select_placeholder") || "Seleccionar..."} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {stages.map((stage) => (
-                          <SelectItem key={stage.id} value={stage.id}>
-                            {stage.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  {/* Es oportunidad de nuevo partner */}
+                  <FormField
+                    control={form.control}
+                    name="is_new_partner"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base cursor-pointer">¿Oportunidad para nuevo partner?</FormLabel>
+                          <p className="text-sm text-gray-500">Marca si esta oportunidad es para incorporar un nuevo partner</p>
+                        </div>
+                        <FormControl>
+                          <input type="checkbox" checked={field.value} onChange={field.onChange} className="h-4 w-4" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
 
-              {/* ✅ FIXED: Controlled Select for Tech Company */}
-              <FormField
-                control={form.control}
-                name="tech_company_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("opportunities.form.tech_company") || "Empresa Tecnológica"}</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={t("opportunities.form.select_placeholder") || "Seleccionar..."} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {techCompanies.map((company) => (
-                          <SelectItem key={company.id} value={company.id}>
-                            {company.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  {/* Etapa del Pipeline */}
+                  <FormField
+                    control={form.control}
+                    name="pipeline_stage_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Etapa del Pipeline *</FormLabel>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleccionar etapa" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {stages.map((stage) => (
+                              <SelectItem key={stage.id} value={stage.id}>
+                                {stage.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
 
-              {/* Partner Select */}
-              <FormField
-                control={form.control}
-                name="partner_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("opportunities.form.partner") || "Partner"}</FormLabel>
-                    <Select value={field.value || ""} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={t("opportunities.form.select_placeholder") || "Seleccionar..."} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {filteredPartners.length === 0 ? (
-                          <div className="p-2 text-sm text-gray-500 text-center">
-                            {loadingPartners ? "Cargando..." : "No hay partners disponibles"}
-                          </div>
-                        ) : (
-                          filteredPartners.map((partner) => (
-                            <SelectItem key={partner.id} value={partner.id}>
-                              {partner.name}
-                            </SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* ===== PASO 2: EMPRESAS INVOLUCRADAS ===== */}
+              {currentStep === 2 && (
+                <div className="space-y-4">
+                  <div className="text-sm font-medium text-blue-600">Paso 2: Empresas Involucradas</div>
 
-              {/* Estimated Value */}
-              <FormField
-                control={form.control}
-                name="estimated_value"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("opportunities.form.estimated_value") || "Valor Estimado"}</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="0.00" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  {/* Empresa Tecnológica */}
+                  <FormField
+                    control={form.control}
+                    name="tech_company_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Empresa Tecnológica *</FormLabel>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleccionar empresa" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {techCompanies.map((company) => (
+                              <SelectItem key={company.id} value={company.id}>
+                                {company.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              {/* Submit Button */}
-              <Button type="submit" disabled={loadingScaleUpManager} className="w-full">
-                {loadingScaleUpManager ? "Creando..." : t("opportunities.form.submit") || "Crear Oportunidad"}
-              </Button>
+                  {/* Partner */}
+                  <FormField
+                    control={form.control}
+                    name="partner_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Partner</FormLabel>
+                        <Select value={field.value || ""} onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleccionar partner" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {filteredPartners.length === 0 ? (
+                              <div className="p-2 text-sm text-gray-500 text-center">
+                                {loadingPartners ? "Cargando..." : "No hay partners disponibles"}
+                              </div>
+                            ) : (
+                              filteredPartners.map((partner) => (
+                                <SelectItem key={partner.id} value={partner.id}>
+                                  {partner.name}
+                                </SelectItem>
+                              ))
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* País - Solo si hay partner seleccionado */}
+                  {form.watch("partner_id") && (
+                    <FormField
+                      control={form.control}
+                      name="country"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>País *</FormLabel>
+                          <Select value={field.value || ""} onValueChange={field.onChange}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Seleccionar país" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {partnerCountries.length === 0 ? (
+                                <div className="p-2 text-sm text-gray-500 text-center">
+                                  {loadingPartnerCountries ? "Cargando..." : "No hay países disponibles"}
+                                </div>
+                              ) : (
+                                partnerCountries.map((country) => (
+                                  <SelectItem key={country} value={country}>
+                                    {country}
+                                  </SelectItem>
+                                ))
+                              )}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
+                  {/* Manager de ScaleUp - Solo si es usuario ScaleUp */}
+                  {isScaleUpUser && (
+                    <FormField
+                      control={form.control}
+                      name="assigned_to"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Manager de ScaleUp *</FormLabel>
+                          <Select value={field.value || ""} onValueChange={field.onChange}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Seleccionar manager" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {scaleUpManagers.map((manager) => (
+                                <SelectItem key={manager.id} value={manager.id}>
+                                  {manager.first_name} {manager.last_name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
+                  {/* Partner Responsible - Solo si hay partner seleccionado */}
+                  {form.watch("partner_id") && (
+                    <FormField
+                      control={form.control}
+                      name="partner_responsible_id"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Responsable del Partner *</FormLabel>
+                          <Select value={field.value || ""} onValueChange={field.onChange}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Seleccionar responsable" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {partnerUsers.length === 0 ? (
+                                <div className="p-2 text-sm text-gray-500 text-center">
+                                  {loadingPartnerUsers ? "Cargando..." : "No hay usuarios disponibles"}
+                                </div>
+                              ) : (
+                                partnerUsers.map((user) => (
+                                  <SelectItem key={user.id} value={user.id}>
+                                    {user.first_name} {user.last_name}
+                                  </SelectItem>
+                                ))
+                              )}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                </div>
+              )}
+
+              {/* ===== PASO 3: CLIENTE Y DETALLES FINANCIEROS ===== */}
+              {currentStep === 3 && (
+                <div className="space-y-4">
+                  <div className="text-sm font-medium text-blue-600">Paso 3: Cliente y Detalles Financieros</div>
+
+                  {/* End Customer - OBLIGATORIO para Partner users */}
+                  <FormField
+                    control={form.control}
+                    name="end_customer_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Cliente Final {!isScaleUpUser && "*"}</FormLabel>
+                        <Select value={field.value || ""} onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleccionar o crear cliente" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {endCustomers.map((customer) => (
+                              <SelectItem key={customer.id} value={customer.id}>
+                                {customer.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                        {!isScaleUpUser && <p className="text-sm text-red-600">Campo obligatorio para usuarios Partner</p>}
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Estimated Value */}
+                  <FormField
+                    control={form.control}
+                    name="estimated_value"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Valor Estimado (USD)</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="0.00" step="0.01" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Estimated Close Date */}
+                  <FormField
+                    control={form.control}
+                    name="estimated_close_date"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Fecha Estimada de Cierre</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+
+              {/* ===== PASO 4: CAMPOS TÉCNICOS ===== */}
+              {currentStep === 4 && (
+                <div className="space-y-4">
+                  <div className="text-sm font-medium text-blue-600">Paso 4: Campos Técnicos</div>
+                  {techFields.length === 0 ? (
+                    <p className="text-gray-500">No hay campos técnicos definidos para esta empresa</p>
+                  ) : (
+                    <p className="text-sm text-gray-600">Completa los campos técnicos específicos de la empresa seleccionada (se mostrarían aquí)</p>
+                  )}
+                </div>
+              )}
+
+              {/* ===== PASO 5: CONFIRMACIÓN ===== */}
+              {currentStep === 5 && (
+                <div className="space-y-4">
+                  <div className="text-sm font-medium text-green-600">Paso 5: Confirmación</div>
+                  <div className="rounded-lg border p-4 space-y-3">
+                    <h3 className="font-semibold">Resumen de la Oportunidad</h3>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div><span className="font-medium">Título:</span> {form.watch("title")}</div>
+                      <div><span className="font-medium">Etapa:</span> {stages.find(s => s.id === form.watch("pipeline_stage_id"))?.name}</div>
+                      <div><span className="font-medium">Empresa Tech:</span> {techCompanies.find(c => c.id === form.watch("tech_company_id"))?.name}</div>
+                      <div><span className="font-medium">Partner:</span> {form.watch("partner_id") ? filteredPartners.find(p => p.id === form.watch("partner_id"))?.name : "N/A"}</div>
+                      <div><span className="font-medium">País:</span> {form.watch("country") || "N/A"}</div>
+                      <div><span className="font-medium">Cliente:</span> {form.watch("end_customer_id") ? endCustomers.find(c => c.id === form.watch("end_customer_id"))?.name : "N/A"}</div>
+                      <div><span className="font-medium">Valor Estimado:</span> USD {form.watch("estimated_value") || "0"}</div>
+                      <div><span className="font-medium">Fecha Cierre:</span> {form.watch("estimated_close_date") || "N/A"}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Navigation Buttons */}
+              <div className="flex justify-between gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
+                  disabled={currentStep === 1}
+                >
+                  Anterior
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => router.back()}
+                >
+                  Cancelar
+                </Button>
+                {currentStep < totalSteps ? (
+                  <Button
+                    type="submit"
+                    disabled={loadingScaleUpManager}
+                  >
+                    Siguiente
+                  </Button>
+                ) : (
+                  <Button
+                    type="submit"
+                    disabled={loadingScaleUpManager}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    {loadingScaleUpManager ? "Creando..." : "Crear Oportunidad"}
+                  </Button>
+                )}
+              </div>
             </form>
           </Form>
         </CardContent>
