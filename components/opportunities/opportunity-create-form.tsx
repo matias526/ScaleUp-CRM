@@ -184,6 +184,34 @@ export function OpportunityCreateForm() {
     form.setValue(field, value, { shouldValidate: false, shouldDirty: true })
   }
 
+  // ✅ Validate only fields for current step
+  const validateCurrentStep = async (): Promise<boolean> => {
+    const fieldsToValidate: (keyof FormValues)[] = []
+
+    if (currentStep === 1) {
+      fieldsToValidate.push("title", "pipeline_stage_id", "tech_company_id")
+    } else if (currentStep === 2) {
+      fieldsToValidate.push("tech_company_id", "pipeline_stage_id")
+      if (form.watch("partner_id")) {
+        fieldsToValidate.push("partner_responsible_id")
+      }
+    } else if (currentStep === 3) {
+      if (!isScaleUpUser && !form.watch("end_customer_id")) {
+        form.setError("end_customer_id", { message: "El cliente final es obligatorio para usuarios Partner" })
+        return false
+      }
+    }
+
+    // Validate only the fields for this step
+    if (fieldsToValidate.length > 0) {
+      const isValid = await form.trigger(fieldsToValidate)
+      console.log("[v0] Step", currentStep, "validation result:", isValid, "Fields validated:", fieldsToValidate)
+      return isValid
+    }
+
+    return true
+  }
+
   // ✅ SIMPLIFIED: Cleaner validation schema
   const formSchema = z.object({
     title: z.string().min(1, "El título es obligatorio"),
@@ -388,8 +416,18 @@ export function OpportunityCreateForm() {
   const onSubmit = async (data: FormValues) => {
     try {
       console.log("[v0] onSubmit triggered - currentStep:", currentStep, "totalSteps:", totalSteps)
+      console.log("[v0] Form data:", data)
 
-      // If not on the final step, just advance to next step without validating
+      // Validate only the fields for the current step
+      const isStepValid = await validateCurrentStep()
+      console.log("[v0] Current step valid:", isStepValid)
+
+      if (!isStepValid) {
+        console.log("[v0] Step validation failed, not advancing")
+        return
+      }
+
+      // If not on the final step, just advance to next step
       if (currentStep < totalSteps) {
         console.log("[v0] Moving to next step from", currentStep, "to", currentStep + 1)
         setCurrentStep(currentStep + 1)
