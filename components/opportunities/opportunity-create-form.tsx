@@ -12,6 +12,7 @@ import {
   getPartnerCountries,
   getScaleUpManager,
   getPartnerUsers,
+  getScaleUpUsers,
   getOpportunityTechFields,
   createOpportunityTechValues,
 } from "@/lib/services/opportunity-service"
