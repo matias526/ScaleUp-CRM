@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useMemo } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -26,46 +26,23 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "@/components/ui/use-toast"
 import { useAuth } from "@/components/auth/auth-provider"
 import { supabase } from "@/lib/supabase/client"
 import {
   Building2,
-  Users,
   FileText,
   DollarSign,
   Calendar,
-  Tag,
   ArrowRight,
   ArrowLeft,
-  Save,
-  X,
-  Plus,
   Check,
   Info,
-  AlertCircle,
-  UserCheck,
-  Search,
 } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Progress } from "@/components/ui/progress"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { getOpportunityTechFieldsClient } from "@/lib/services/opportunity-tech-field-service-client"
-import { FileUpload } from "@/components/file-upload"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
-import { getIndustries } from "@/lib/services/industry-service-client"
-
-const DEFAULT_ALLOWED_FILE_TYPES = [
-  "jpg", "jpeg", "png", "gif", "svg",
-  "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "csv",
-  "zip", "rar",
-]
 
 const NO_PARTNER_VALUE = "no_partner"
 
@@ -99,12 +76,10 @@ async function getPartnersByTechCompanyId(techCompanyId: string): Promise<Tables
 async function getScaleUpUsers(): Promise<any[]> {
   try {
     const { data, error } = await supabase
-      .from("users")
-      .select("id, first_name, last_name, email, role_id")
-      .is("partner_id", null)
-      .is("tech_company_id", null)
-      .eq("is_active", true)
-      .order("first_name", { ascending: true })
+      .from("profiles")
+      .select("id, full_name, email")
+      .eq("role", "scaleup_admin")
+      .order("full_name", { ascending: true })
 
     return error ? [] : (data || [])
   } catch (error) {
@@ -113,478 +88,550 @@ async function getScaleUpUsers(): Promise<any[]> {
   }
 }
 
-async function getPartnerUsers(partnerId: string): Promise<any[]> {
-  try {
-    if (!partnerId) return []
+const opportunitySchema = z.object({
+  name: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
+  description: z.string().optional(),
+  pipeline_stage_id: z.string().min(1, "Debes seleccionar una etapa"),
+  tech_company_id: z.string().min(1, "Debes seleccionar una empresa tecnológica"),
+  partner_id: z.string().optional(),
+  end_customer_id: z.string().optional(),
+  estimated_value: z.number().optional(),
+  estimated_close_date: z.string().optional(),
+  for_new_partner: z.boolean().default(false),
+  assigned_to: z.string().optional(),
+})
 
-    const { data, error } = await supabase
-      .from("users")
-      .select("id, first_name, last_name, email, role_id")
-      .eq("partner_id", partnerId)
-      .eq("is_active", true)
-      .order("first_name", { ascending: true })
-
-    return error ? [] : (data || [])
-  } catch (error) {
-    console.error("Error en getPartnerUsers:", error)
-    return []
-  }
-}
+type OpportunityFormData = z.infer<typeof opportunitySchema>
 
 export function OpportunityCreateForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { user } = useAuth()
   const preselectedStageId = searchParams.get("stage")
 
-  const { user, userInfo } = useAuth()
-  const { t, language, isLoaded } = useTranslations([
-    "opportunities.create_title",
-    "opportunities.form.title",
-    "opportunities.form.description",
-    "opportunities.form.stage",
-    "opportunities.form.tech_company",
-    "opportunities.form.partner",
-    "opportunities.form.end_customer",
-    "opportunities.form.estimated_value",
-    "opportunities.form.tech_fields",
-    "opportunities.form.submit",
-    "opportunities.form.cancel",
-    "opportunities.form.select_placeholder",
-    "opportunities.form.new_end_customer",
-    "opportunities.form.new_end_customer_name",
-    "opportunities.form.create_end_customer",
-    "opportunities.form.estimated_close_date",
-    "opportunities.form.country",
-    "opportunities.form.assigned_to",
-    "opportunities.form.partner_responsible",
-    "opportunities.form.no_countries",
-    "opportunities.form.loading",
-    "opportunities.form.responsible_persons",
-    "opportunities.form.no_partner",
-  ])
-
-  // ✅ FIXED: Removed setForceUpdate and persistentData ref - using form.watch() instead
+  // ✅ CONTROL REFS to prevent infinite loops
   const hasInitialized = useRef(false)
-  
-  const [currentStep, setCurrentStep] = useState(1)
-  const totalSteps = 4
+  const isMounting = useRef(true)
 
-  const [stages, setStages] = useState<Tables<"pipeline_stages">[]>([])
+  // ✅ STATE
+  const [currentStep, setCurrentStep] = useState(1)
+  const [stages, setStages] = useState<Tables<"opportunity_pipeline_stages">[]>([])
   const [techCompanies, setTechCompanies] = useState<Tables<"tech_companies">[]>([])
+  const [partners, setPartners] = useState<Tables<"partners">[]>([])
   const [filteredPartners, setFilteredPartners] = useState<Tables<"partners">[]>([])
   const [endCustomers, setEndCustomers] = useState<Tables<"end_customers">[]>([])
-  const [techFields, setTechFields] = useState<any[]>([])
-  const [partnerCountries, setPartnerCountries] = useState<{ id: string; name: string; code: string }[]>([])
-  const [loadingStages, setLoadingStages] = useState(true)
-  const [loadingPartners, setLoadingPartners] = useState(false)
-  const [loadingCountries, setLoadingCountries] = useState(false)
-  const [scaleUpManager, setScaleUpManager] = useState<string | null>(null)
-  const [loadingScaleUpManager, setLoadingScaleUpManager] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [formProgress, setFormProgress] = useState(25)
-  const [loadingTechFields, setLoadingTechFields] = useState(false)
   const [scaleUpUsers, setScaleUpUsers] = useState<any[]>([])
-  const [partnerUsers, setPartnerUsers] = useState<any[]>([])
-  const [newEndCustomerDialogOpen, setNewEndCustomerDialogOpen] = useState(false)
-  const [isCreatingEndCustomer, setIsCreatingEndCustomer] = useState(false)
-  const [endCustomerSearchQuery, setEndCustomerSearchQuery] = useState("")
-  const [searchingEndCustomers, setSearchingEndCustomers] = useState(false)
-  const [searchResults, setSearchResults] = useState<Tables<"end_customers">[]>([])
-  const [industries, setIndustries] = useState<any[]>([])
-  const [newEndCustomerData, setNewEndCustomerData] = useState({
-    name: "",
-    industry_id: "",
-    website: "",
-    tax_id: "",
-    country_id: "",
-  })
 
-  const isAdmin = userInfo?.isAdmin || false
-  const userRole = userInfo?.roleCode || ""
-  const partnerId = userInfo?.partnerId
-  const techCompanyId = userInfo?.techCompanyId
-  const partnerCountriesFromUser = userInfo?.partnerCountries || []
-  const isScaleUpUser = userRole.toLowerCase() !== "partneruser"
+  const [loadingStages, setLoadingStages] = useState(false)
+  const [loadingPartners, setLoadingPartners] = useState(false)
+  const [loadingTechCompanies, setLoadingTechCompanies] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
 
-  // ✅ SIMPLIFIED: Cleaner validation schema
-  const formSchema = z.object({
-    title: z.string().min(1, "El título es obligatorio"),
-    description: z.string().optional(),
-    pipeline_stage_id: z.string().min(1, "La etapa es obligatoria"),
-    tech_company_id: z.string().min(1, "La empresa tecnológica es obligatoria"),
-    partner_id: z.string().optional().nullable(),
-    end_customer_id: z.string().optional().nullable(),
-    estimated_value: z.coerce.number().optional().nullable(),
-    tech_field_ids: z.array(z.string()).optional(),
-    estimated_close_date: z.string().optional().nullable(),
-    country: z.string().optional(),
-    assigned_to: z.string().optional().nullable(),
-    partner_responsible_id: z.string().optional().nullable(),
-    is_new_partner: z.boolean().optional(),
-  })
-
-  type FormValues = z.infer<typeof formSchema>
-
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    mode: "onChange",
+  const form = useForm<OpportunityFormData>({
+    resolver: zodResolver(opportunitySchema),
     defaultValues: {
-      title: "",
+      name: "",
       description: "",
       pipeline_stage_id: preselectedStageId || "",
-      tech_company_id: techCompanyId || "",
-      partner_id: partnerId || null,
-      end_customer_id: null,
-      estimated_value: null,
-      tech_field_ids: [],
-      estimated_close_date: null,
-      country: "",
-      assigned_to: null,
-      partner_responsible_id: null,
-      is_new_partner: false,
+      tech_company_id: "",
+      partner_id: "",
+      end_customer_id: "",
+      estimated_value: undefined,
+      estimated_close_date: "",
+      for_new_partner: false,
+      assigned_to: "",
     },
   })
 
-  // ✅ FIXED: Use form.watch() instead of manual state
-  const watchTechCompany = form.watch("tech_company_id")
-  const watchPartner = form.watch("partner_id")
+  // ✅ WATCH form values
+  const watchTechCompanyId = form.watch("tech_company_id")
+  const watchForNewPartner = form.watch("for_new_partner")
 
-  // ✅ FIXED: Initialize form data ONCE on component mount
+  // ✅ HELPER: Safe setValue with deduplication
+  const setFormValue = (fieldName: keyof OpportunityFormData, value: any) => {
+    const currentValue = form.getValues(fieldName)
+    if (currentValue === value) return // Prevent redundant updates
+    form.setValue(fieldName, value, { shouldValidate: false })
+  }
+
+  // ✅ INIT: Load all static data once on mount
   useEffect(() => {
     if (hasInitialized.current) return
     hasInitialized.current = true
 
-    async function loadData() {
+    const loadInitialData = async () => {
       try {
-        setLoadingStages(true)
-
         // Load stages
+        setLoadingStages(true)
         const stagesData = await getOpportunityStages()
-        setStages(stagesData)
-
-        // Set default stage for Partner users
-        if (!isScaleUpUser) {
-          const leadStage = stagesData.find((stage) => stage.code.toLowerCase() === "lead")
-          if (leadStage) {
-            form.setValue("pipeline_stage_id", leadStage.id, { shouldValidate: false })
-          } else if (stagesData.length > 0) {
-            form.setValue("pipeline_stage_id", stagesData[0].id, { shouldValidate: false })
-          }
-        } else if (stagesData.length > 0 && !preselectedStageId) {
-          form.setValue("pipeline_stage_id", stagesData[0].id, { shouldValidate: false })
-        } else if (preselectedStageId) {
-          const stageExists = stagesData.some((stage) => stage.id === preselectedStageId)
-          if (stageExists) {
-            form.setValue("pipeline_stage_id", preselectedStageId, { shouldValidate: false })
-          }
-        }
-
-        setLoadingStages(false)
+        setStages(stagesData || [])
 
         // Load tech companies
-        if (techCompanyId) {
-          form.setValue("tech_company_id", techCompanyId, { shouldValidate: false })
+        setLoadingTechCompanies(true)
+        const techCompaniesData = await getTechCompanies()
+        setTechCompanies(techCompaniesData || [])
 
-          const { data: relatedTechCompanies, error } = await supabase
-            .from("partner_tech_companies")
-            .select("tech_company_id")
-            .eq("partner_id", partnerId || "")
+        // Load all partners
+        const partnersData = await getPartners()
+        setPartners(partnersData || [])
 
-          if (!error && relatedTechCompanies && relatedTechCompanies.length > 0) {
-            const techCompanyIds = relatedTechCompanies.map((item) => item.tech_company_id)
-            const { data: techCompaniesData } = await supabase
-              .from("tech_companies")
-              .select("*")
-              .in("id", techCompanyIds)
-              .eq("is_active", true)
-              .order("name", { ascending: true })
+        // Load ScaleUp users
+        const usersData = await getScaleUpUsers()
+        setScaleUpUsers(usersData || [])
 
-            setTechCompanies(techCompaniesData || [])
-          }
+        // If there's a preselected stage, set it
+        if (preselectedStageId && stagesData) {
+          setFormValue("pipeline_stage_id", preselectedStageId)
         }
-
-        // Load tech companies for Partner users
-        if (partnerId && !isScaleUpUser) {
-          const { data: relatedTechCompanies } = await supabase
-            .from("partner_tech_companies")
-            .select("tech_company_id")
-            .eq("partner_id", partnerId)
-
-          if (relatedTechCompanies && relatedTechCompanies.length > 0) {
-            const techCompanyIds = relatedTechCompanies.map((item) => item.tech_company_id)
-            const { data: techCompaniesData } = await supabase
-              .from("tech_companies")
-              .select("*")
-              .in("id", techCompanyIds)
-              .eq("is_active", true)
-              .order("name", { ascending: true })
-
-            setTechCompanies(techCompaniesData || [])
-
-            if (techCompaniesData && techCompaniesData.length === 1) {
-              form.setValue("tech_company_id", techCompaniesData[0].id, { shouldValidate: false })
-            }
-          }
-        }
-
-        // Load scale up users
-        const users = await getScaleUpUsers()
-        setScaleUpUsers(users)
       } catch (error) {
-        console.error("Error loading form data:", error)
-        setError("Error al cargar los datos del formulario")
+        console.error("Error loading initial data:", error)
+        toast({
+          title: "Error",
+          description: "No se pudieron cargar los datos necesarios",
+          variant: "destructive",
+        })
+      } finally {
         setLoadingStages(false)
+        setLoadingTechCompanies(false)
       }
     }
 
-    loadData()
-  }, [isScaleUpUser, techCompanyId, partnerId, preselectedStageId, form])
+    loadInitialData()
+  }, [preselectedStageId])
 
-  // ✅ FIXED: Load partners when tech company changes
+  // ✅ WATCH: Filter partners when tech company changes
   useEffect(() => {
-    if (!watchTechCompany) {
-      setFilteredPartners([])
+    if (!watchTechCompanyId) {
+      setFilteredPartners(partners)
+      setFormValue("partner_id", "")
       return
     }
 
-    const loadPartners = async () => {
+    const filterPartners = async () => {
       setLoadingPartners(true)
       try {
-        const partners = await getPartnersByTechCompanyId(watchTechCompany)
-        setFilteredPartners(partners)
+        const filtered = await getPartnersByTechCompanyId(watchTechCompanyId)
+        setFilteredPartners(filtered || [])
+        // Reset partner selection when tech company changes
+        setFormValue("partner_id", "")
       } catch (error) {
-        console.error("Error loading partners:", error)
+        console.error("Error filtering partners:", error)
         setFilteredPartners([])
       } finally {
         setLoadingPartners(false)
       }
     }
 
-    loadPartners()
-  }, [watchTechCompany])
+    filterPartners()
+  }, [watchTechCompanyId])
 
-  // ✅ FIXED: Load partner users when partner changes
-  useEffect(() => {
-    if (!watchPartner) {
-      setPartnerUsers([])
-      return
-    }
-
-    const loadUsers = async () => {
-      try {
-        const users = await getPartnerUsers(watchPartner)
-        setPartnerUsers(users)
-      } catch (error) {
-        console.error("Error loading partner users:", error)
-        setPartnerUsers([])
-      }
-    }
-
-    loadUsers()
-  }, [watchPartner])
-
-  // ✅ FIXED: Load partner countries when partner changes
-  useEffect(() => {
-    if (!watchPartner) {
-      setPartnerCountries([])
-      return
-    }
-
-    const loadCountries = async () => {
-      setLoadingCountries(true)
-      try {
-        const countries = await getPartnerCountries(watchPartner)
-        setPartnerCountries(countries || [])
-      } catch (error) {
-        console.error("Error loading partner countries:", error)
-        setPartnerCountries([])
-      } finally {
-        setLoadingCountries(false)
-      }
-    }
-
-    loadCountries()
-  }, [watchPartner])
-
-  // Handle form submission
-  const onSubmit = async (data: FormValues) => {
-    try {
-      setLoadingScaleUpManager(true)
-      const oppData = {
-        ...data,
-        created_by: user?.id,
-        assigned_to: data.assigned_to || null,
-      }
-
-      const result = await createOpportunity(oppData)
+  // ✅ SUBMIT: Create opportunity
+  const onSubmit = async (data: OpportunityFormData) => {
+    if (!user) {
       toast({
-        title: "Éxito",
-        description: "Oportunidad creada correctamente",
+        title: "Error",
+        description: "Debes estar autenticado para crear una oportunidad",
+        variant: "destructive",
       })
-      router.push(`/dashboard/opportunities/${result.id}`)
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      const opportunityData = {
+        name: data.name,
+        description: data.description || "",
+        pipeline_stage_id: data.pipeline_stage_id,
+        tech_company_id: data.tech_company_id,
+        partner_id: data.partner_id || null,
+        end_customer_id: data.end_customer_id || null,
+        estimated_value: data.estimated_value || 0,
+        estimated_close_date: data.estimated_close_date || null,
+        for_new_partner: data.for_new_partner,
+        assigned_to: data.assigned_to || null,
+        created_by: user.id,
+      }
+
+      const result = await createOpportunity(opportunityData)
+
+      if (result) {
+        toast({
+          title: "Éxito",
+          description: "Oportunidad creada correctamente",
+        })
+        router.push(`/dashboard/opportunities/${result.id}`)
+      }
     } catch (error) {
       console.error("Error creating opportunity:", error)
       toast({
         title: "Error",
-        description: "Error al crear la oportunidad",
+        description: "No se pudo crear la oportunidad",
         variant: "destructive",
       })
     } finally {
-      setLoadingScaleUpManager(false)
+      setSubmitting(false)
     }
   }
 
-  if (!isLoaded) {
-    return <div>Cargando...</div>
-  }
+  const progressPercentage = (currentStep / 3) * 100
+  const totalSteps = 3
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("opportunities.form.title") || "Crear Oportunidad"}</CardTitle>
-          <CardDescription>{t("opportunities.form.description") || "Completa los datos de la nueva oportunidad"}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {/* Title Field */}
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Título</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nombre de la oportunidad" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+    <div className="space-y-6 p-6 max-w-3xl mx-auto">
+      {/* Header */}
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold text-gray-900">Crear nueva oportunidad</h1>
+        <p className="text-gray-600">Completa el formulario para crear una nueva oportunidad de negocio</p>
+      </div>
 
-              {/* Description Field */}
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Descripción</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Detalles adicionales" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* ✅ FIXED: Controlled Select for Pipeline Stage */}
-              <FormField
-                control={form.control}
-                name="pipeline_stage_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("opportunities.form.stage") || "Etapa"}</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={t("opportunities.form.select_placeholder") || "Seleccionar..."} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {stages.map((stage) => (
-                          <SelectItem key={stage.id} value={stage.id}>
-                            {stage.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* ✅ FIXED: Controlled Select for Tech Company */}
-              <FormField
-                control={form.control}
-                name="tech_company_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("opportunities.form.tech_company") || "Empresa Tecnológica"}</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={t("opportunities.form.select_placeholder") || "Seleccionar..."} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {techCompanies.map((company) => (
-                          <SelectItem key={company.id} value={company.id}>
-                            {company.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Partner Select */}
-              <FormField
-                control={form.control}
-                name="partner_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("opportunities.form.partner") || "Partner"}</FormLabel>
-                    <Select value={field.value || ""} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={t("opportunities.form.select_placeholder") || "Seleccionar..."} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {filteredPartners.length === 0 ? (
-                          <div className="p-2 text-sm text-gray-500 text-center">
-                            {loadingPartners ? "Cargando..." : "No hay partners disponibles"}
-                          </div>
-                        ) : (
-                          filteredPartners.map((partner) => (
-                            <SelectItem key={partner.id} value={partner.id}>
-                              {partner.name}
-                            </SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Estimated Value */}
-              <FormField
-                control={form.control}
-                name="estimated_value"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("opportunities.form.estimated_value") || "Valor Estimado"}</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="0.00" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Submit Button */}
-              <Button type="submit" disabled={loadingScaleUpManager} className="w-full">
-                {loadingScaleUpManager ? "Creando..." : t("opportunities.form.submit") || "Crear Oportunidad"}
-              </Button>
-            </form>
-          </Form>
+      {/* Progress Section */}
+      <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
+        <CardContent className="pt-6">
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium text-gray-700">Progreso</span>
+              <span className="text-sm font-semibold text-blue-600">{Math.round(progressPercentage)}%</span>
+            </div>
+            <Progress value={progressPercentage} className="h-2" />
+          </div>
         </CardContent>
       </Card>
+
+      {/* Step Indicators */}
+      <div className="flex justify-between items-center gap-4">
+        {[1, 2, 3].map((step) => (
+          <div key={step} className="flex items-center gap-2 flex-1">
+            <div
+              className={`flex items-center justify-center w-10 h-10 rounded-full font-bold text-sm transition-colors ${
+                step === currentStep
+                  ? "bg-blue-600 text-white"
+                  : step < currentStep
+                    ? "bg-green-600 text-white"
+                    : "bg-gray-300 text-gray-600"
+              }`}
+            >
+              {step < currentStep ? <Check className="w-5 h-5" /> : step}
+            </div>
+            {step < 3 && (
+              <div
+                className={`flex-1 h-1 rounded transition-colors ${
+                  step < currentStep ? "bg-green-600" : "bg-gray-300"
+                }`}
+              />
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Form */}
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* Step 1: Basic Information */}
+          {currentStep === 1 && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Info className="w-5 h-5 text-blue-600" />
+                  <CardTitle>Información básica</CardTitle>
+                </div>
+                <CardDescription>Información básica de la oportunidad</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Title */}
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Título *</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Ej: Implementación de solución CRM para empresa X"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>Nombre descriptivo y conciso de la oportunidad</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Description */}
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Descripción</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Describe los detalles de esta oportunidad..."
+                          className="min-h-24"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>Proporciona detalles adicionales sobre la oportunidad, necesidades del cliente, etc.</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Stage */}
+                <FormField
+                  control={form.control}
+                  name="pipeline_stage_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Etapa *</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccionar etapa" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {loadingStages ? (
+                            <div className="p-2 text-sm text-gray-500 text-center">Cargando...</div>
+                          ) : stages.length === 0 ? (
+                            <div className="p-2 text-sm text-gray-500 text-center">No hay etapas disponibles</div>
+                          ) : (
+                            stages.map((stage) => (
+                              stage.id && (
+                                <SelectItem key={stage.id} value={stage.id}>
+                                  {stage.name}
+                                </SelectItem>
+                              )
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>Selecciona la etapa actual en el proceso de ventas</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* For New Partner Toggle */}
+                <FormField
+                  control={form.control}
+                  name="for_new_partner"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center justify-between">
+                        <Label>Oportunidad para nuevo partner</Label>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      </div>
+                      <FormDescription>Marca esta opción si la oportunidad es para incorporar un nuevo partner</FormDescription>
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Step 2: Companies and Partners */}
+          {currentStep === 2 && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-blue-600" />
+                  <CardTitle>Empresas y Partners</CardTitle>
+                </div>
+                <CardDescription>Selecciona la empresa tecnológica y partner relacionados</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Tech Company */}
+                <FormField
+                  control={form.control}
+                  name="tech_company_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Empresa Tecnológica *</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccionar empresa" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {loadingTechCompanies ? (
+                            <div className="p-2 text-sm text-gray-500 text-center">Cargando...</div>
+                          ) : techCompanies.length === 0 ? (
+                            <div className="p-2 text-sm text-gray-500 text-center">No hay empresas disponibles</div>
+                          ) : (
+                            techCompanies.map((company) => (
+                              company.id && (
+                                <SelectItem key={company.id} value={company.id}>
+                                  {company.name}
+                                </SelectItem>
+                              )
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Partner */}
+                {!watchForNewPartner && (
+                  <FormField
+                    control={form.control}
+                    name="partner_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Partner</FormLabel>
+                        <Select value={field.value || ""} onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleccionar partner" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {loadingPartners ? (
+                              <div className="p-2 text-sm text-gray-500 text-center">Cargando...</div>
+                            ) : filteredPartners.length === 0 ? (
+                              <div className="p-2 text-sm text-gray-500 text-center">
+                                {watchTechCompanyId
+                                  ? "No hay partners disponibles para esta empresa"
+                                  : "Selecciona una empresa primero"}
+                              </div>
+                            ) : (
+                              filteredPartners.map((partner) => (
+                                partner.id && (
+                                  <SelectItem key={partner.id} value={partner.id}>
+                                    {partner.name}
+                                  </SelectItem>
+                                )
+                              ))
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Step 3: Additional Details */}
+          {currentStep === 3 && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-blue-600" />
+                  <CardTitle>Detalles adicionales</CardTitle>
+                </div>
+                <CardDescription>Información adicional sobre la oportunidad</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Estimated Value */}
+                <FormField
+                  control={form.control}
+                  name="estimated_value"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Valor Estimado</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Estimated Close Date */}
+                <FormField
+                  control={form.control}
+                  name="estimated_close_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Fecha Estimada de Cierre</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Assigned To */}
+                <FormField
+                  control={form.control}
+                  name="assigned_to"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Asignado a</FormLabel>
+                      <Select value={field.value || ""} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccionar usuario" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {scaleUpUsers.length === 0 ? (
+                            <div className="p-2 text-sm text-gray-500 text-center">No hay usuarios disponibles</div>
+                          ) : (
+                            scaleUpUsers.map((user) => (
+                              user.id && (
+                                <SelectItem key={user.id} value={user.id}>
+                                  {user.full_name}
+                                </SelectItem>
+                              )
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Navigation Buttons */}
+          <div className="flex justify-between gap-3 pt-6">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
+              disabled={currentStep === 1}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Anterior
+            </Button>
+
+            {currentStep < 3 ? (
+              <Button
+                type="button"
+                onClick={() => setCurrentStep(Math.min(3, currentStep + 1))}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+              >
+                Siguiente
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                disabled={submitting}
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+              >
+                {submitting ? "Creando..." : "Crear oportunidad"}
+              </Button>
+            )}
+          </div>
+        </form>
+      </Form>
     </div>
   )
 }
