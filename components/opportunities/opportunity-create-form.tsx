@@ -135,7 +135,7 @@ export function OpportunityCreateForm() {
   const hasInitialized = useRef(false)
   
   const [currentStep, setCurrentStep] = useState(1)
-  const totalSteps = 4
+  const totalSteps = 5
 
   const [stages, setStages] = useState<Tables<"pipeline_stages">[]>([])
   const [techCompanies, setTechCompanies] = useState<Tables<"tech_companies">[]>([])
@@ -173,6 +173,15 @@ export function OpportunityCreateForm() {
   const techCompanyId = userInfo?.techCompanyId
   const partnerCountriesFromUser = userInfo?.partnerCountries || []
   const isScaleUpUser = userRole.toLowerCase() !== "partneruser"
+
+  // ✅ HELPER: safeSet function with deduplication to prevent infinite loops
+  const safeSet = (field: keyof FormValues, value: any) => {
+    const currentValue = form.getValues(field)
+    if (currentValue === value) {
+      return
+    }
+    form.setValue(field, value, { shouldValidate: false, shouldDirty: true })
+  }
 
   // ✅ SIMPLIFIED: Cleaner validation schema
   const formSchema = z.object({
@@ -374,15 +383,21 @@ export function OpportunityCreateForm() {
     loadCountries()
   }, [watchPartner])
 
-  // Handle form submission
+  // Handle form submission - Now only on Step 5 (Confirmation)
   const onSubmit = async (data: FormValues) => {
     try {
       setLoadingScaleUpManager(true)
 
-      // Obtener el manager de ScaleUp que maneja la relación entre Tech Company y Partner
+      // Only submit on the confirmation step
+      if (currentStep !== totalSteps) {
+        setCurrentStep(currentStep + 1)
+        return
+      }
+
+      // Obtener el manager de ScaleUp que maneja la relación entre Tech Company y Partner (solo si hay Partner)
       let assignedToUserId = data.assigned_to || null
       
-      if (data.partner_id && data.tech_company_id) {
+      if (data.partner_id && data.tech_company_id && isScaleUpUser) {
         try {
           const manager = await getScaleUpManager(data.tech_company_id, data.partner_id)
           if (manager) {
@@ -414,8 +429,7 @@ export function OpportunityCreateForm() {
       const techValues: Array<{ opportunity_tech_field_id: string; value: any; valueType: string }> = []
       
       if (data.tech_field_ids && data.tech_field_ids.length > 0) {
-        // Aquí se cargarían los valores de los campos técnicos
-        // Por ahora dejamos el array vacío, se puede mejorar después con UI dinámico
+        // Los valores técnicos se recopilarían aquí si hay UI para ello
       }
 
       // Crear la oportunidad
