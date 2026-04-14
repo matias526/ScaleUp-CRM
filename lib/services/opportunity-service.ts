@@ -369,11 +369,23 @@ export async function getPartnerUsers(partnerId: string): Promise<Array<{ id: st
 
     console.log(`Obteniendo usuarios del partner con ID: ${partnerId}`)
 
+    // Primero obtener el role_id para "PartnerUser"
+    const { data: roleData, error: roleError } = await supabase
+      .from("roles")
+      .select("id")
+      .eq("code", "PartnerUser")
+      .single()
+
+    if (roleError || !roleData) {
+      console.error("Error al obtener el role_id para PartnerUser:", roleError)
+      return []
+    }
+
     const { data, error } = await supabase
       .from("users")
       .select("id, first_name, last_name, email")
       .eq("partner_id", partnerId)
-      .eq("role_code", "PartnerUser")
+      .eq("role_id", roleData.id)
       .order("first_name", { ascending: true })
 
     if (error) {
@@ -394,10 +406,26 @@ export async function getScaleUpUsers(): Promise<Array<{ id: string; first_name:
   try {
     console.log("Obteniendo usuarios ScaleUp (Admin o BDD)")
 
+    // Primero obtener los role_ids para "Admin" y "BDD"
+    const { data: rolesData, error: rolesError } = await supabase
+      .from("roles")
+      .select("id, code")
+      .in("code", ["Admin", "BDD"])
+
+    if (rolesError || !rolesData || rolesData.length === 0) {
+      console.error("Error al obtener los roles Admin/BDD:", rolesError)
+      return []
+    }
+
+    const roleIds = rolesData.map(r => r.id)
+
     const { data, error } = await supabase
       .from("users")
-      .select("id, first_name, last_name, email, role_code")
-      .in("role_code", ["Admin", "BDD"])
+      .select(`
+        id, first_name, last_name, email, role_id,
+        roles:role_id (code)
+      `)
+      .in("role_id", roleIds)
       .is("partner_id", null)
       .order("first_name", { ascending: true })
 
@@ -406,8 +434,17 @@ export async function getScaleUpUsers(): Promise<Array<{ id: string; first_name:
       return []
     }
 
-    console.log(`Se encontraron ${data?.length || 0} usuarios ScaleUp`)
-    return data || []
+    // Formatear los datos
+    const formattedData = (data || []).map((user: any) => ({
+      id: user.id,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      email: user.email,
+      role_code: user.roles?.code || null,
+    }))
+
+    console.log(`Se encontraron ${formattedData.length} usuarios ScaleUp`)
+    return formattedData
   } catch (error) {
     console.error("Error inesperado al obtener usuarios ScaleUp:", error)
     return []
