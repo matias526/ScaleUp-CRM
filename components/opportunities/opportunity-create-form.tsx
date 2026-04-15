@@ -1068,7 +1068,7 @@ export function OpportunityCreateForm() {
                 setNewEndCustomerData({ ...newEndCustomerData, country_id: value })
               }}>
                 <SelectTrigger>
-                  <SelectValue placeholder={Seleccionar} />
+                  <SelectValue placeholder="Seleccionar" />
                 </SelectTrigger>
                 <SelectContent>
                   {allCountries.map((country) => (
