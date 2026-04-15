@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { getTranslations } from "@/lib/translations/opportunities"
+import { useAuth } from "@/components/auth/auth-provider"
 import {
   createOpportunity,
   getOpportunityStages,
