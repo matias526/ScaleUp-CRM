@@ -634,14 +634,20 @@ export function OpportunityCreateForm() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Partner (Opcional)</FormLabel>
-                          <Select value={field.value || ""} onValueChange={field.onChange}>
+                          <Select value={field.value || "null"} onValueChange={(value) => {
+                            if (value === "null") {
+                              field.onChange(null)
+                            } else {
+                              field.onChange(value)
+                            }
+                          }}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Seleccionar partner" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="">
+                              <SelectItem value="null">
                                 Sin Partner
                               </SelectItem>
                               {filteredPartners.length === 0 ? (
