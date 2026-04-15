@@ -670,8 +670,8 @@ export function OpportunityCreateForm() {
                                 </div>
                               ) : (
                                 partnerCountries.map((country) => (
-                                  <SelectItem key={country} value={country}>
-                                    {country}
+                                  <SelectItem key={country.id} value={country.code}>
+                                    {String(country.name || country.code || country.id)}
                                   </SelectItem>
                                 ))
                               )}
