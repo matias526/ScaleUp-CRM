@@ -28,7 +28,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { toast } from "@/components/ui/use-toast"
+import { useToast } from "@/components/ui/use-toast"
 import { useAuth } from "@/components/auth/auth-provider"
 import { supabase } from "@/lib/supabase/client"
 import {
@@ -107,7 +107,7 @@ export function OpportunityCreateForm() {
 
   // ✅ FIXED: Removed setForceUpdate and persistentData ref - using form.watch() instead
   const hasInitialized = useRef(false)
-  
+
   const [currentStep, setCurrentStep] = useState(1)
   const [stages, setStages] = useState<Tables<"pipeline_stages">[]>([])
   const [techCompanies, setTechCompanies] = useState<Tables<"tech_companies">[]>([])
@@ -144,7 +144,7 @@ export function OpportunityCreateForm() {
   // totalSteps es dinámico: 5 si hay campos técnicos, 4 si no
   const hasTechFields = techFields.length > 0
   const totalSteps = hasTechFields ? 5 : 4
-  
+
   // Cuando se carga una tech company sin campos técnicos, saltar Paso 4
   useEffect(() => {
     if (currentStep === 4 && !hasTechFields) {
@@ -434,7 +434,7 @@ export function OpportunityCreateForm() {
 
       // Obtener el manager de ScaleUp que maneja la relación entre Tech Company y Partner (solo si hay Partner)
       let assignedToUserId = data.assigned_to || null
-      
+
       if (data.partner_id && data.tech_company_id && isScaleUpUser) {
         try {
           const manager = await getScaleUpManager(data.tech_company_id, data.partner_id)
@@ -465,14 +465,14 @@ export function OpportunityCreateForm() {
 
       // Preparar tech values si existen
       const techValues: Array<{ opportunity_tech_field_id: string; value: any; valueType: string }> = []
-      
+
       if (data.tech_field_ids && data.tech_field_ids.length > 0) {
         // Los valores técnicos se recopilarían aquí si hay UI para ello
       }
 
       // Crear la oportunidad
       const result = await createOpportunity(opportunityData, techValues, userRole)
-      
+
       toast({
         title: "Éxito",
         description: "Oportunidad creada correctamente",
@@ -502,10 +502,10 @@ export function OpportunityCreateForm() {
           <CardDescription>
             Paso {currentStep} de {totalSteps} - {
               currentStep === 1 ? "Información básica"
-              : currentStep === 2 ? "Empresas involucradas"
-              : currentStep === 3 ? "Cliente y detalles financieros"
-              : currentStep === 4 ? "Campos técnicos"
-              : "Confirmación"
+                : currentStep === 2 ? "Empresas involucradas"
+                  : currentStep === 3 ? "Cliente y detalles financieros"
+                    : currentStep === 4 ? "Campos técnicos"
+                      : "Confirmación"
             }
           </CardDescription>
         </CardHeader>
@@ -516,7 +516,7 @@ export function OpportunityCreateForm() {
               {currentStep === 1 && (
                 <div className="space-y-4">
                   <div className="text-sm font-medium text-blue-600">Paso 1: Información Básica</div>
-                  
+
                   {/* Título */}
                   <FormField
                     control={form.control}
@@ -681,9 +681,9 @@ export function OpportunityCreateForm() {
                           </FormControl>
                           <SelectContent>
                             {partnerCountries.length === 0 ? (
-                                <div className="p-2 text-sm text-gray-500 text-center">
-                                  {loadingCountries ? (t("opportunities.form.loading") || "Cargando...") : (t("opportunities.form.noCountriesAvailable") || "No hay países disponibles")}
-                                </div>
+                              <div className="p-2 text-sm text-gray-500 text-center">
+                                {loadingCountries ? (t("opportunities.form.loading") || "Cargando...") : (t("opportunities.form.noCountriesAvailable") || "No hay países disponibles")}
+                              </div>
                             ) : (
                               partnerCountries.map((country) => (
                                 <SelectItem key={country.id} value={country.code}>
@@ -712,13 +712,13 @@ export function OpportunityCreateForm() {
                                 <SelectValue placeholder={t("opportunities.form.select_placeholder") || "Seleccionar"} />
                               </SelectTrigger>
                             </FormControl>
-                          <SelectContent>
-                            {scaleUpUsers.map((manager) => (
-                              <SelectItem key={manager.id} value={manager.id}>
-                                {manager.first_name} {manager.last_name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
+                            <SelectContent>
+                              {scaleUpUsers.map((manager) => (
+                                <SelectItem key={manager.id} value={manager.id}>
+                                  {manager.first_name} {manager.last_name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
                           </Select>
                           <FormMessage />
                         </FormItem>
@@ -796,7 +796,7 @@ export function OpportunityCreateForm() {
                                 setSearchResults(endCustomers)
                               }}
                             />
-                            
+
                             {/* Resultados de búsqueda */}
                             {endCustomerSearchQuery && (
                               <div className="border rounded-md p-2 max-h-48 overflow-y-auto space-y-1">
@@ -942,14 +942,14 @@ export function OpportunityCreateForm() {
                     disabled={loadingScaleUpManager}
                     onClick={async () => {
                       console.log("[v0] Botón Siguiente clickeado - currentStep:", currentStep)
-                      
+
                       // Validar el paso actual ANTES de avanzar
                       const isValid = await validateCurrentStep()
                       if (!isValid) {
                         console.log("[v0] Step validation failed, not advancing")
                         return
                       }
-                      
+
                       let newStep = currentStep + 1
                       // Saltar Paso 4 si no hay campos técnicos
                       if (newStep === 4 && !hasTechFields) {
@@ -1068,7 +1068,7 @@ export function OpportunityCreateForm() {
                   if (newCustomer) {
                     // Agregar el nuevo cliente a la lista
                     setEndCustomers([...endCustomers, newCustomer])
-                    
+
                     // Seleccionar automáticamente el nuevo cliente
                     form.setValue("end_customer_id", newCustomer.id, { shouldValidate: false })
                     setEndCustomerSearchQuery(newCustomer.name)
