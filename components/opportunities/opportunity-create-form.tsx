@@ -147,6 +147,7 @@ export function OpportunityCreateForm() {
   const [loadingStages, setLoadingStages] = useState(true)
   const [loadingPartners, setLoadingPartners] = useState(false)
   const [loadingCountries, setLoadingCountries] = useState(false)
+  const [loadingPartnerUsers, setLoadingPartnerUsers] = useState(false)
   const [scaleUpManager, setScaleUpManager] = useState<string | null>(null)
   const [loadingScaleUpManager, setLoadingScaleUpManager] = useState(false)
   const [error, setError] = useState<string | null>(null)
