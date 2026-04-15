@@ -523,7 +523,7 @@ export function OpportunityCreateForm() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>{"Crear Oportunidad"}</CardTitle>
+          <CardTitle>"Crear Oportunidad"</CardTitle>
           <CardDescription>
             Paso {currentStep} de {totalSteps} - {
               currentStep === 1 ? "Información básica"
