@@ -198,8 +198,7 @@ export function OpportunityCreateForm() {
       // Validar que si no es new_partner, debe haber partner seleccionado
       if (!form.watch("is_new_partner") && !form.watch("partner_id")) {
         form.setError("partner_id", { message: "El partner es obligatorio" })
-      } catch (error) {
-        console.error("Error validating partner:", error)
+        return false
       }
       // Validar que siempre haya país seleccionado
       if (!form.watch("country")) {
@@ -517,7 +516,7 @@ export function OpportunityCreateForm() {
   }
 
   if (!stages || stages.length === 0 || loadingStages) {
-    return <div className="p-4 text-center">{Cargando...}</div>
+    return <div className="p-4 text-center">{"Cargando..."}</div>
   }
 
   return (
