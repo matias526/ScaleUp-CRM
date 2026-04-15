@@ -67,81 +67,23 @@ const DEFAULT_ALLOWED_FILE_TYPES = [
 
 const NO_PARTNER_VALUE = "no_partner"
 
-// Static translations object
-const TRANSLATIONS = {
-  es: {
-    error: {
-      titleRequired: "El título es obligatorio",
-      stageRequired: "La etapa es obligatoria",
-      techCompanyRequired: "La empresa tecnológica es obligatoria",
-      partnerRequired: "El partner es obligatorio",
-      countryRequired: "El país es obligatorio",
-      endCustomerRequired: "El cliente final es obligatorio",
-    },
-    form: {
-      loading: "Cargando...",
-      select_placeholder: "Seleccionar",
-      no_partner: "Sin Partner",
-      noPartnersAvailable: "No hay partners disponibles",
-      noCountriesAvailable: "No hay países disponibles",
-      noUsersAvailable: "No hay usuarios disponibles",
-      no_tech_fields: "No hay campos técnicos definidos para esta empresa",
-      stepConfirmation: "Paso 5: Confirmación",
-      summaryTitle: "Resumen de la Oportunidad",
-      title_label: "Título",
-      stage: "Etapa",
-      tech_company: "Empresa Tech",
-      partner: "Partner",
-      country: "País",
-      end_customer: "Cliente",
-      estimated_value: "Valor Estimado",
-      estimated_close_date: "Fecha Cierre",
-      creating: "Creando...",
-    },
-    buttons: {
-      previous: "Anterior",
-      cancel: "Cancelar",
-      next: "Siguiente",
-      create: "Crear Oportunidad",
-    },
-  },
-  en: {
-    error: {
-      titleRequired: "Title is required",
-      stageRequired: "Stage is required",
-      techCompanyRequired: "Tech company is required",
-      partnerRequired: "Partner is required",
-      countryRequired: "Country is required",
-      endCustomerRequired: "End customer is required",
-    },
-    form: {
-      loading: "Loading...",
-      select_placeholder: "Select",
-      no_partner: "No Partner",
-      noPartnersAvailable: "No partners available",
-      noCountriesAvailable: "No countries available",
-      noUsersAvailable: "No users available",
-      no_tech_fields: "No tech fields defined for this company",
-      stepConfirmation: "Step 5: Confirmation",
-      summaryTitle: "Opportunity Summary",
-      title_label: "Title",
-      stage: "Stage",
-      tech_company: "Tech Company",
-      partner: "Partner",
-      country: "Country",
-      end_customer: "Customer",
-      estimated_value: "Estimated Value",
-      estimated_close_date: "Close Date",
-      creating: "Creating...",
-    },
-    buttons: {
-      previous: "Previous",
-      cancel: "Cancel",
-      next: "Next",
-      create: "Create Opportunity",
-    },
-  },
+// Simple type definitions for form values
+type FormValues = {
+  title: string
+  description?: string
+  pipeline_stage_id: string
+  tech_company_id: string
+  partner_id?: string | null
+  end_customer_id?: string | null
+  estimated_value?: number | null
+  tech_field_ids?: string[]
+  estimated_close_date?: string | null
+  country?: string
+  assigned_to?: string | null
+  partner_responsible_id?: string | null
+  is_new_partner?: boolean
 }
+
 
 async function getPartnersByTechCompanyId(techCompanyId: string): Promise<Tables<"partners">[]> {
   try {
@@ -177,10 +119,11 @@ export function OpportunityCreateForm() {
 
   const { user, userInfo } = useAuth()
   const { toast } = useToast()
-  
-  // Obtener idioma del usuario (por defecto español)
-  const locale = (userInfo?.language || "es") as "es" | "en"
-  const t = TRANSLATIONS[locale]
+
+  // Safety check - ensure auth is ready
+  if (!user || !userInfo) {
+    return <div className="p-4 text-center">Cargando autenticación...</div>
+  }
 
   // ✅ FIXED: Removed setForceUpdate and persistentData ref - using form.watch() instead
   const hasInitialized = useRef(false)
@@ -254,12 +197,13 @@ export function OpportunityCreateForm() {
     } else if (currentStep === 2) {
       // Validar que si no es new_partner, debe haber partner seleccionado
       if (!form.watch("is_new_partner") && !form.watch("partner_id")) {
-        form.setError("partner_id", { message: t.error.partnerRequired })
-        return false
+        form.setError("partner_id", { message: "El partner es obligatorio" })
+      } catch (error) {
+        console.error("Error validating partner:", error)
       }
       // Validar que siempre haya país seleccionado
       if (!form.watch("country")) {
-        form.setError("country", { message: t.error.countryRequired })
+        form.setError("country", { message: "El país es obligatorio" })
         return false
       }
       // Si hay partner, validar responsable
@@ -268,7 +212,7 @@ export function OpportunityCreateForm() {
       }
     } else if (currentStep === 3) {
       if (!isScaleUpUser && !form.watch("end_customer_id")) {
-        form.setError("end_customer_id", { message: t.error.endCustomerRequired })
+        form.setError("end_customer_id", { message: "El cliente final es obligatorio" })
         return false
       }
     }
@@ -288,12 +232,12 @@ export function OpportunityCreateForm() {
     return true
   }
 
-  // ✅ SIMPLIFIED: Cleaner validation schema
+  // ✅ SIMPLIFIED: Cleaner validation schema with hardcoded Spanish messages
   const formSchema = z.object({
-    title: z.string().min(1, t.error.titleRequired),
+    title: z.string().min(1, "El título es obligatorio"),
     description: z.string().optional(),
-    pipeline_stage_id: z.string().min(1, t.error.stageRequired),
-    tech_company_id: z.string().min(1, t.error.techCompanyRequired),
+    pipeline_stage_id: z.string().min(1, "La etapa es obligatoria"),
+    tech_company_id: z.string().min(1, "La empresa tecnológica es obligatoria"),
     partner_id: z.string().optional().nullable(),
     end_customer_id: z.string().optional().nullable(),
     estimated_value: z.coerce.number().optional().nullable(),
@@ -573,7 +517,7 @@ export function OpportunityCreateForm() {
   }
 
   if (!stages || stages.length === 0 || loadingStages) {
-    return <div className="p-4 text-center">{t.form.loading}</div>
+    return <div className="p-4 text-center">{Cargando...}</div>
   }
 
   return (
@@ -661,7 +605,7 @@ export function OpportunityCreateForm() {
                         <Select value={field.value} onValueChange={field.onChange}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder={t.form.select_placeholder} />
+                              <SelectValue placeholder={Seleccionar} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -694,7 +638,7 @@ export function OpportunityCreateForm() {
                         <Select value={field.value} onValueChange={field.onChange}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder={t.form.select_placeholder} />
+                              <SelectValue placeholder={Seleccionar} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -727,16 +671,16 @@ export function OpportunityCreateForm() {
                           }}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder={t.form.select_placeholder} />
+                                <SelectValue placeholder={Seleccionar} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
                               <SelectItem value="null">
-                                {t.form.no_partner}
+                                {Sin Partner}
                               </SelectItem>
                               {filteredPartners.length === 0 ? (
                                 <div className="p-2 text-sm text-gray-500 text-center">
-                                  {loadingPartners ? (t.form.loading) : (t.form.noPartnersAvailable)}
+                                  {loadingPartners ? (Cargando...) : (No hay partners disponibles)}
                                 </div>
                               ) : (
                                 filteredPartners.map((partner) => (
@@ -763,13 +707,13 @@ export function OpportunityCreateForm() {
                         <Select value={field.value || ""} onValueChange={field.onChange}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder={t.form.select_placeholder} />
+                              <SelectValue placeholder={Seleccionar} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             {partnerCountries.length === 0 ? (
                                 <div className="p-2 text-sm text-gray-500 text-center">
-                                  {loadingCountries ? (t.form.loading) : (t.form.noCountriesAvailable)}
+                                  {loadingCountries ? (Cargando...) : (No hay países disponibles)}
                                 </div>
                             ) : (
                               partnerCountries.map((country) => (
@@ -796,7 +740,7 @@ export function OpportunityCreateForm() {
                           <Select value={field.value || ""} onValueChange={field.onChange}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder={t.form.select_placeholder} />
+                                <SelectValue placeholder={Seleccionar} />
                               </SelectTrigger>
                             </FormControl>
                           <SelectContent>
@@ -824,13 +768,13 @@ export function OpportunityCreateForm() {
                           <Select value={field.value || ""} onValueChange={field.onChange}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder={t.form.select_placeholder} />
+                                <SelectValue placeholder={Seleccionar} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
                               {partnerUsers.length === 0 ? (
                                 <div className="p-2 text-sm text-gray-500 text-center">
-                                  {loadingPartnerUsers ? (t.form.loading) : (t.form.noUsersAvailable)}
+                                  {loadingPartnerUsers ? (Cargando...) : (No hay usuarios disponibles)}
                                 </div>
                               ) : (
                                 partnerUsers.map((user) => {
@@ -972,7 +916,7 @@ export function OpportunityCreateForm() {
                 <div className="space-y-4">
                   <div className="text-sm font-medium text-blue-600">Paso 4: Campos Técnicos</div>
                   {techFields.length === 0 ? (
-                    <p className="text-gray-500">{t.form.no_tech_fields}</p>
+                    <p className="text-gray-500">{No hay campos técnicos definidos para esta empresa}</p>
                   ) : (
                     <p className="text-sm text-gray-600">Completa los campos técnicos específicos de la empresa seleccionada (se mostrarían aquí)</p>
                   )}
@@ -982,18 +926,18 @@ export function OpportunityCreateForm() {
               {/* ===== PASO 5: CONFIRMACIÓN ===== */}
               {currentStep === 5 && (
                 <div className="space-y-4">
-                  <div className="text-sm font-medium text-green-600">{t.form.stepConfirmation}</div>
+                  <div className="text-sm font-medium text-green-600">{Paso 5: Confirmación}</div>
                   <div className="rounded-lg border p-4 space-y-3">
-                    <h3 className="font-semibold">{t.form.summaryTitle}</h3>
+                    <h3 className="font-semibold">{Resumen de la Oportunidad}</h3>
                     <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div><span className="font-medium">{t.form.title_label}:</span> {form.watch("title") || "N/A"}</div>
-                      <div><span className="font-medium">{t.form.stage}:</span> {stages.find(s => s.id === form.watch("pipeline_stage_id"))?.code || "N/A"}</div>
-                      <div><span className="font-medium">{t.form.tech_company}:</span> {techCompanies.find(c => c.id === form.watch("tech_company_id"))?.name || "N/A"}</div>
-                      <div><span className="font-medium">{t.form.partner}:</span> {form.watch("partner_id") ? (filteredPartners.find(p => p.id === form.watch("partner_id"))?.name || "N/A") : "N/A"}</div>
-                      <div><span className="font-medium">{t.form.country}:</span> {form.watch("country") || "N/A"}</div>
-                      <div><span className="font-medium">{t.form.end_customer}:</span> {form.watch("end_customer_id") ? (endCustomers.find(c => c.id === form.watch("end_customer_id"))?.name || "N/A") : "N/A"}</div>
-                      <div><span className="font-medium">{t.form.estimated_value}:</span> USD {form.watch("estimated_value") || "0"}</div>
-                      <div><span className="font-medium">{t.form.estimated_close_date}:</span> {form.watch("estimated_close_date") || "N/A"}</div>
+                      <div><span className="font-medium">{Título}:</span> {form.watch("title") || "N/A"}</div>
+                      <div><span className="font-medium">{Etapa}:</span> {stages.find(s => s.id === form.watch("pipeline_stage_id"))?.code || "N/A"}</div>
+                      <div><span className="font-medium">{Empresa Tech}:</span> {techCompanies.find(c => c.id === form.watch("tech_company_id"))?.name || "N/A"}</div>
+                      <div><span className="font-medium">{Partner}:</span> {form.watch("partner_id") ? (filteredPartners.find(p => p.id === form.watch("partner_id"))?.name || "N/A") : "N/A"}</div>
+                      <div><span className="font-medium">{País}:</span> {form.watch("country") || "N/A"}</div>
+                      <div><span className="font-medium">{Cliente}:</span> {form.watch("end_customer_id") ? (endCustomers.find(c => c.id === form.watch("end_customer_id"))?.name || "N/A") : "N/A"}</div>
+                      <div><span className="font-medium">{Valor Estimado}:</span> USD {form.watch("estimated_value") || "0"}</div>
+                      <div><span className="font-medium">{Fecha Cierre}:</span> {form.watch("estimated_close_date") || "N/A"}</div>
                     </div>
                   </div>
                 </div>
@@ -1014,14 +958,14 @@ export function OpportunityCreateForm() {
                   }}
                   disabled={currentStep === 1}
                 >
-                  {t.buttons.previous}
+                  {Anterior}
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => router.back()}
                 >
-                  {t.buttons.cancel}
+                  {Cancelar}
                 </Button>
                 {currentStep < totalSteps ? (
                   <Button
@@ -1045,7 +989,7 @@ export function OpportunityCreateForm() {
                       setCurrentStep(newStep)
                     }}
                   >
-                    {t.buttons.next}
+                    {Siguiente}
                   </Button>
                 ) : (
                   <Button
@@ -1053,7 +997,7 @@ export function OpportunityCreateForm() {
                     disabled={loadingScaleUpManager}
                     className="bg-green-600 hover:bg-green-700"
                   >
-                    {loadingScaleUpManager ? t.form.creating : t.buttons.create}
+                    {loadingScaleUpManager ? Creando... : Crear Oportunidad}
                   </Button>
                 )}
               </div>
@@ -1086,7 +1030,7 @@ export function OpportunityCreateForm() {
                 setNewEndCustomerData({ ...newEndCustomerData, industry_id: value })
               }}>
                 <SelectTrigger>
-                  <SelectValue placeholder={t.form.select_placeholder} />
+                  <SelectValue placeholder={Seleccionar} />
                 </SelectTrigger>
                 <SelectContent>
                   {industries.map((industry) => (
@@ -1125,7 +1069,7 @@ export function OpportunityCreateForm() {
                 setNewEndCustomerData({ ...newEndCustomerData, country_id: value })
               }}>
                 <SelectTrigger>
-                  <SelectValue placeholder={t.form.select_placeholder} />
+                  <SelectValue placeholder={Seleccionar} />
                 </SelectTrigger>
                 <SelectContent>
                   {allCountries.map((country) => (
