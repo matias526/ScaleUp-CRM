@@ -96,7 +96,7 @@ async function getPartnersByTechCompanyId(techCompanyId: string): Promise<Tables
   }
 }
 
-export function OpportunityCreateForm() {
+export default function OpportunityCreateForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const preselectedStageId = searchParams.get("stage")
