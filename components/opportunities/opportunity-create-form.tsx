@@ -28,7 +28,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { toast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/lib/supabase/client"
 import {
   Building2,
@@ -101,6 +101,7 @@ export function OpportunityCreateForm() {
   const preselectedStageId = searchParams.get("stage")
 
   const { user, userInfo } = useAuth()
+  const { toast } = useToast()
   
   // Obtener idioma del usuario (por defecto español)
   const locale = userInfo?.language || "es"
