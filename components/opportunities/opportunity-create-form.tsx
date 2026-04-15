@@ -152,6 +152,40 @@ export function OpportunityCreateForm() {
     }
   }, [hasTechFields, currentStep])
 
+  // ✅ FIXED: Load stages and countries on component mount
+  useEffect(() => {
+    const loadInitialData = async () => {
+      try {
+        // Load stages
+        const stagesData = await getOpportunityStages()
+        setStages(stagesData || [])
+
+        // Load all countries
+        const countriesData = await getAllCountries()
+        setAllCountries(countriesData || [])
+
+        // Load partner countries if applicable
+        if (isScaleUpUser || !partnerCountriesFromUser || partnerCountriesFromUser.length === 0) {
+          setPartnerCountries(countriesData || [])
+        } else {
+          const filtered = countriesData?.filter((c) =>
+            partnerCountriesFromUser.includes(c.id)
+          ) || []
+          setPartnerCountries(filtered)
+        }
+      } catch (err) {
+        console.error("[v0] Error loading initial data:", err)
+        setError("Error loading form data")
+      } finally {
+        setLoadingStages(false)
+      }
+    }
+
+    if (isLoaded) {
+      loadInitialData()
+    }
+  }, [isLoaded, isScaleUpUser, partnerCountriesFromUser])
+
   const isAdmin = userInfo?.isAdmin || false
   const userRole = userInfo?.roleCode || ""
   const partnerId = userInfo?.partnerId
