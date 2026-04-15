@@ -136,7 +136,17 @@ export function OpportunityCreateForm() {
   const hasInitialized = useRef(false)
   
   const [currentStep, setCurrentStep] = useState(1)
-  const totalSteps = 5
+  
+  // totalSteps es dinámico: 5 si hay campos técnicos, 4 si no
+  const hasTechFields = techFields.length > 0
+  const totalSteps = hasTechFields ? 5 : 4
+  
+  // Cuando se carga una tech company sin campos técnicos, saltar Paso 4
+  useEffect(() => {
+    if (currentStep === 4 && !hasTechFields) {
+      setCurrentStep(5)
+    }
+  }, [hasTechFields, currentStep])
 
   const [stages, setStages] = useState<Tables<"pipeline_stages">[]>([])
   const [techCompanies, setTechCompanies] = useState<Tables<"tech_companies">[]>([])
@@ -617,61 +627,32 @@ export function OpportunityCreateForm() {
                     )}
                   />
 
-                  {/* Partner */}
-                  <FormField
-                    control={form.control}
-                    name="partner_id"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Partner</FormLabel>
-                        <Select value={field.value || ""} onValueChange={field.onChange}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Seleccionar partner" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {filteredPartners.length === 0 ? (
-                              <div className="p-2 text-sm text-gray-500 text-center">
-                                {loadingPartners ? "Cargando..." : "No hay partners disponibles"}
-                              </div>
-                            ) : (
-                              filteredPartners.map((partner) => (
-                                <SelectItem key={partner.id} value={partner.id}>
-                                  {String(partner.name || partner.id)}
-                                </SelectItem>
-                              ))
-                            )}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* País - Solo si hay partner seleccionado */}
-                  {form.watch("partner_id") && (
+                  {/* Partner - Oculto si es new_partner */}
+                  {!form.watch("is_new_partner") && (
                     <FormField
                       control={form.control}
-                      name="country"
+                      name="partner_id"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>País *</FormLabel>
+                          <FormLabel>Partner (Opcional)</FormLabel>
                           <Select value={field.value || ""} onValueChange={field.onChange}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Seleccionar país" />
+                                <SelectValue placeholder="Seleccionar partner" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {partnerCountries.length === 0 ? (
+                              <SelectItem value="">
+                                Sin Partner
+                              </SelectItem>
+                              {filteredPartners.length === 0 ? (
                                 <div className="p-2 text-sm text-gray-500 text-center">
-                                  {loadingCountries ? "Cargando..." : "No hay países disponibles"}
+                                  {loadingPartners ? "Cargando..." : "No hay partners disponibles"}
                                 </div>
                               ) : (
-                                partnerCountries.map((country) => (
-                                  <SelectItem key={country.id} value={country.code}>
-                                    {String(country.name || country.code || country.id)}
+                                filteredPartners.map((partner) => (
+                                  <SelectItem key={partner.id} value={partner.id}>
+                                    {String(partner.name || partner.id)}
                                   </SelectItem>
                                 ))
                               )}
@@ -682,6 +663,38 @@ export function OpportunityCreateForm() {
                       )}
                     />
                   )}
+
+                  {/* País - Siempre visible, filtrado por partner si existe */}
+                  <FormField
+                    control={form.control}
+                    name="country"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>País {form.watch("partner_id") && "*"}</FormLabel>
+                        <Select value={field.value || ""} onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleccionar país" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {partnerCountries.length === 0 ? (
+                              <div className="p-2 text-sm text-gray-500 text-center">
+                                {loadingCountries ? "Cargando..." : "No hay países disponibles"}
+                              </div>
+                            ) : (
+                              partnerCountries.map((country) => (
+                                <SelectItem key={country.id} value={country.code}>
+                                  {String(country.name || country.code || country.id)}
+                                </SelectItem>
+                              ))
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
                   {/* Manager de ScaleUp - Solo si es usuario ScaleUp */}
                   {isScaleUpUser && (
@@ -757,27 +770,76 @@ export function OpportunityCreateForm() {
                 <div className="space-y-4">
                   <div className="text-sm font-medium text-blue-600">Paso 3: Cliente y Detalles Financieros</div>
 
-                  {/* End Customer - OBLIGATORIO para Partner users */}
+                  {/* End Customer - AUTOCOMPLETE CON BÚSQUEDA */}
                   <FormField
                     control={form.control}
                     name="end_customer_id"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Cliente Final {!isScaleUpUser && "*"}</FormLabel>
-                        <Select value={field.value || ""} onValueChange={field.onChange}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Seleccionar o crear cliente" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {endCustomers.map((customer) => (
-                              <SelectItem key={customer.id} value={customer.id}>
-                                {customer.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <div className="space-y-2">
+                            <Input
+                              placeholder="Buscar cliente..."
+                              value={endCustomerSearchQuery}
+                              onChange={(e) => {
+                                setEndCustomerSearchQuery(e.target.value)
+                                // Filtrar endCustomers en base a la búsqueda
+                                const filtered = endCustomers.filter(c =>
+                                  String(c.name || "").toLowerCase().includes(e.target.value.toLowerCase())
+                                )
+                                setSearchResults(filtered)
+                              }}
+                              onFocus={() => {
+                                setSearchResults(endCustomers)
+                              }}
+                            />
+                            
+                            {/* Resultados de búsqueda */}
+                            {endCustomerSearchQuery && (
+                              <div className="border rounded-md p-2 max-h-48 overflow-y-auto space-y-1">
+                                {searchResults.length === 0 ? (
+                                  <div className="text-sm text-gray-500 p-2">
+                                    No se encontraron clientes con "{endCustomerSearchQuery}"
+                                  </div>
+                                ) : (
+                                  searchResults.map((customer) => (
+                                    <button
+                                      key={customer.id}
+                                      type="button"
+                                      className="w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
+                                      onClick={() => {
+                                        field.onChange(customer.id)
+                                        setEndCustomerSearchQuery(customer.name)
+                                        setSearchResults([])
+                                      }}
+                                    >
+                                      {customer.name}
+                                    </button>
+                                  ))
+                                )}
+                              </div>
+                            )}
+
+                            {/* Botón Crear Cliente */}
+                            {endCustomerSearchQuery && searchResults.length === 0 && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className="w-full"
+                                onClick={() => {
+                                  setNewEndCustomerData({
+                                    ...newEndCustomerData,
+                                    name: endCustomerSearchQuery
+                                  })
+                                  setNewEndCustomerDialogOpen(true)
+                                }}
+                              >
+                                + Crear "{endCustomerSearchQuery}"
+                              </Button>
+                            )}
+                          </div>
+                        </FormControl>
                         <FormMessage />
                         {!isScaleUpUser && <p className="text-sm text-red-600">Campo obligatorio para usuarios Partner</p>}
                       </FormItem>
@@ -853,7 +915,14 @@ export function OpportunityCreateForm() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
+                  onClick={() => {
+                    let newStep = Math.max(1, currentStep - 1)
+                    // Saltar Paso 4 si no hay campos técnicos
+                    if (newStep === 4 && !hasTechFields) {
+                      newStep = 3
+                    }
+                    setCurrentStep(newStep)
+                  }}
                   disabled={currentStep === 1}
                 >
                   Anterior
@@ -871,7 +940,12 @@ export function OpportunityCreateForm() {
                     disabled={loadingScaleUpManager}
                     onClick={() => {
                       console.log("[v0] Botón Siguiente clickeado - currentStep:", currentStep)
-                      setCurrentStep(currentStep + 1)
+                      let newStep = currentStep + 1
+                      // Saltar Paso 4 si no hay campos técnicos
+                      if (newStep === 4 && !hasTechFields) {
+                        newStep = 5
+                      }
+                      setCurrentStep(newStep)
                     }}
                   >
                     Siguiente
