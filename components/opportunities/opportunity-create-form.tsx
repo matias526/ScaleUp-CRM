@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { useTranslations } from "@/hooks/use-translations"
+import { DICT_LANG_OPPORTUNITIES } from "@/lib/constants/dict-lang-opportunities"
 import {
   createOpportunity,
   getOpportunityStages,
@@ -101,31 +102,8 @@ export function OpportunityCreateForm() {
   const preselectedStageId = searchParams.get("stage")
 
   const { user, userInfo } = useAuth()
-  const { t, language, isLoaded } = useTranslations([
-    "opportunities.create_title",
-    "opportunities.form.title",
-    "opportunities.form.description",
-    "opportunities.form.stage",
-    "opportunities.form.tech_company",
-    "opportunities.form.partner",
-    "opportunities.form.end_customer",
-    "opportunities.form.estimated_value",
-    "opportunities.form.tech_fields",
-    "opportunities.form.submit",
-    "opportunities.form.cancel",
-    "opportunities.form.select_placeholder",
-    "opportunities.form.new_end_customer",
-    "opportunities.form.new_end_customer_name",
-    "opportunities.form.create_end_customer",
-    "opportunities.form.estimated_close_date",
-    "opportunities.form.country",
-    "opportunities.form.assigned_to",
-    "opportunities.form.partner_responsible",
-    "opportunities.form.no_countries",
-    "opportunities.form.loading",
-    "opportunities.form.responsible_persons",
-    "opportunities.form.no_partner",
-  ])
+  const { toast } = useToast()
+  const { t, locale } = useTranslations(DICT_LANG_OPPORTUNITIES)
 
   // ✅ FIXED: Removed setForceUpdate and persistentData ref - using form.watch() instead
   const hasInitialized = useRef(false)
