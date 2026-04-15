@@ -523,7 +523,7 @@ export function OpportunityCreateForm() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>"Crear Oportunidad"</CardTitle>
+          <CardTitle>{"Crear Oportunidad"}</CardTitle>
           <CardDescription>
             Paso {currentStep} de {totalSteps} - {
               currentStep === 1 ? "Información básica"
@@ -925,18 +925,18 @@ export function OpportunityCreateForm() {
               {/* ===== PASO 5: CONFIRMACIÓN ===== */}
               {currentStep === 5 && (
                 <div className="space-y-4">
-                  <div className="text-sm font-medium text-green-600">{Paso 5: Confirmación}</div>
+                  <div className="text-sm font-medium text-green-600">{"Paso 5: Confirmación"}</div>
                   <div className="rounded-lg border p-4 space-y-3">
-                    <h3 className="font-semibold">Resumen de la Oportunidad</h3>
+                    <h3 className="font-semibold">{"Resumen de la Oportunidad"}</h3>
                     <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div><span className="font-medium">{Título}:</span> {form.watch("title") || "N/A"}</div>
-                      <div><span className="font-medium">{Etapa}:</span> {stages.find(s => s.id === form.watch("pipeline_stage_id"))?.code || "N/A"}</div>
-                      <div><span className="font-medium">{Empresa Tech}:</span> {techCompanies.find(c => c.id === form.watch("tech_company_id"))?.name || "N/A"}</div>
-                      <div><span className="font-medium">{Partner}:</span> {form.watch("partner_id") ? (filteredPartners.find(p => p.id === form.watch("partner_id"))?.name || "N/A") : "N/A"}</div>
-                      <div><span className="font-medium">{País}:</span> {form.watch("country") || "N/A"}</div>
-                      <div><span className="font-medium">{Cliente}:</span> {form.watch("end_customer_id") ? (endCustomers.find(c => c.id === form.watch("end_customer_id"))?.name || "N/A") : "N/A"}</div>
-                      <div><span className="font-medium">{Valor Estimado}:</span> USD {form.watch("estimated_value") || "0"}</div>
-                      <div><span className="font-medium">{Fecha Cierre}:</span> {form.watch("estimated_close_date") || "N/A"}</div>
+                      <div><span className="font-medium">{"Título"}:</span> {form.watch("title") || "N/A"}</div>
+                      <div><span className="font-medium">{"Etapa"}:</span> {stages.find(s => s.id === form.watch("pipeline_stage_id"))?.code || "N/A"}</div>
+                      <div><span className="font-medium">{"Empresa Tech"}:</span> {techCompanies.find(c => c.id === form.watch("tech_company_id"))?.name || "N/A"}</div>
+                      <div><span className="font-medium">{"Partner"}:</span> {form.watch("partner_id") ? (filteredPartners.find(p => p.id === form.watch("partner_id"))?.name || "N/A") : "N/A"}</div>
+                      <div><span className="font-medium">{"País"}:</span> {form.watch("country") || "N/A"}</div>
+                      <div><span className="font-medium">{"Cliente"}:</span> {form.watch("end_customer_id") ? (endCustomers.find(c => c.id === form.watch("end_customer_id"))?.name || "N/A") : "N/A"}</div>
+                      <div><span className="font-medium">{"Valor Estimado"}:</span> USD {form.watch("estimated_value") || "0"}</div>
+                      <div><span className="font-medium">{"Fecha Cierre"}:</span> {form.watch("estimated_close_date") || "N/A"}</div>
                     </div>
                   </div>
                 </div>
