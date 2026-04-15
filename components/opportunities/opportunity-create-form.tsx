@@ -460,7 +460,7 @@ export function OpportunityCreateForm() {
 
       // Preparar datos de la oportunidad
       const opportunityData: any = {
-        name: data.title,
+        title: data.title,
         description: data.description || null,
         pipeline_stage_id: data.pipeline_stage_id,
         tech_company_id: data.tech_company_id,
