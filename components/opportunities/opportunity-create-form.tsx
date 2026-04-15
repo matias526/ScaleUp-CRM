@@ -731,11 +731,16 @@ export function OpportunityCreateForm() {
                                   {loadingPartnerUsers ? "Cargando..." : "No hay usuarios disponibles"}
                                 </div>
                               ) : (
-                                partnerUsers.map((user) => (
-                                  <SelectItem key={user.id} value={user.id}>
-                                    {String(user.first_name || "")} {String(user.last_name || "")}
-                                  </SelectItem>
-                                ))
+                                partnerUsers.map((user) => {
+                                  const firstName = typeof user?.first_name === 'string' ? user.first_name : ''
+                                  const lastName = typeof user?.last_name === 'string' ? user.last_name : ''
+                                  const displayName = `${firstName} ${lastName}`.trim() || user?.id
+                                  return (
+                                    <SelectItem key={user.id} value={user.id}>
+                                      {displayName}
+                                    </SelectItem>
+                                  )
+                                })
                               )}
                             </SelectContent>
                           </Select>
