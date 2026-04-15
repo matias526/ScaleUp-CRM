@@ -572,3 +572,83 @@ export async function getScaleUpManager(techCompanyId: string, partnerId: string
     return null
   }
 }
+
+// Función para obtener todos los países
+export async function getAllCountries(): Promise<{ id: string; name: string; code: string }[]> {
+  try {
+    console.log("Obteniendo todos los países")
+    
+    const { data, error } = await supabase
+      .from("countries")
+      .select("id, name, code")
+      .order("name", { ascending: true })
+    
+    if (error) {
+      console.error("Error al obtener países:", error)
+      return []
+    }
+    
+    console.log(`Se encontraron ${data?.length || 0} países`)
+    return data || []
+  } catch (error) {
+    console.error("Error inesperado al obtener países:", error)
+    return []
+  }
+}
+
+// Función para obtener clientes finales (filtrados por partner si aplica)
+export async function getEndCustomers(partnerId?: string): Promise<Tables<"end_customers">[]> {
+  try {
+    let query = supabase.from("end_customers").select("*").order("name", { ascending: true })
+    
+    if (partnerId) {
+      console.log(`Obteniendo clientes finales para el partner: ${partnerId}`)
+      query = query.eq("partner_id", partnerId)
+    } else {
+      console.log("Obteniendo todos los clientes finales")
+    }
+    
+    const { data, error } = await query
+    
+    if (error) {
+      console.error("Error al obtener clientes finales:", error)
+      return []
+    }
+    
+    console.log(`Se encontraron ${data?.length || 0} clientes finales`)
+    return data || []
+  } catch (error) {
+    console.error("Error inesperado al obtener clientes finales:", error)
+    return []
+  }
+}
+
+// Función para crear un nuevo cliente final
+export async function createEndCustomer(data: {
+  name: string
+  industry_id?: string
+  website?: string
+  tax_id?: string
+  country_id?: string
+}): Promise<Tables<"end_customers"> | null> {
+  try {
+    console.log("Creando nuevo cliente final:", data)
+    
+    const { data: result, error } = await supabase
+      .from("end_customers")
+      .insert([data])
+      .select()
+      .single()
+    
+    if (error) {
+      console.error("Error al crear cliente final:", error)
+      return null
+    }
+    
+    console.log("Cliente final creado exitosamente:", result)
+    return result
+  } catch (error) {
+    console.error("Error inesperado al crear cliente final:", error)
+    return null
+  }
+}

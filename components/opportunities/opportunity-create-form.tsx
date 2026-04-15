@@ -15,15 +15,10 @@ import {
   getScaleUpUsers,
   getOpportunityTechFields,
   createOpportunityTechValues,
-} from "@/lib/services/opportunity-service"
-import { getTechCompanies } from "@/lib/services/tech-company-service"
-import { getPartners } from "@/lib/services/partner-service"
-import {
+  getAllCountries,
   getEndCustomers,
   createEndCustomer,
-  getEndCustomersForPartner,
-  searchEndCustomers,
-} from "@/lib/services/end-customer-service-client"
+} from "@/lib/services/opportunity-service"
 import type { Tables } from "@/types/supabase"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -141,6 +136,7 @@ export function OpportunityCreateForm() {
   const [filteredPartners, setFilteredPartners] = useState<Tables<"partners">[]>([])
   const [endCustomers, setEndCustomers] = useState<Tables<"end_customers">[]>([])
   const [techFields, setTechFields] = useState<any[]>([])
+  const [allCountries, setAllCountries] = useState<{ id: string; name: string; code: string }[]>([])
   const [partnerCountries, setPartnerCountries] = useState<{ id: string; name: string; code: string }[]>([])
   const [loadingStages, setLoadingStages] = useState(true)
   const [loadingPartners, setLoadingPartners] = useState(false)
@@ -333,6 +329,18 @@ export function OpportunityCreateForm() {
         // Load scale up users
         const users = await getScaleUpUsers()
         setScaleUpUsers(users)
+
+        // Load all countries (para usarlos en el selector de país)
+        const countries = await getAllCountries()
+        setAllCountries(countries)
+
+        // Load all end customers
+        const customers = await getEndCustomers()
+        setEndCustomers(customers)
+
+        // Load industries for the modal
+        const industriesData = await getIndustries()
+        setIndustries(industriesData || [])
       } catch (error) {
         console.error("Error loading form data:", error)
         setError("Error al cargar los datos del formulario")
@@ -389,7 +397,8 @@ export function OpportunityCreateForm() {
   // ✅ FIXED: Load partner countries when partner changes
   useEffect(() => {
     if (!watchPartner) {
-      setPartnerCountries([])
+      // Si no hay partner, mostrar todos los países
+      setPartnerCountries(allCountries)
       return
     }
 
@@ -407,7 +416,7 @@ export function OpportunityCreateForm() {
     }
 
     loadCountries()
-  }, [watchPartner])
+  }, [watchPartner, allCountries])
 
   // Handle form submission - Now only on Step 5 (Confirmation)
   const onSubmit = async (data: FormValues) => {
@@ -969,6 +978,144 @@ export function OpportunityCreateForm() {
           </Form>
         </CardContent>
       </Card>
+
+      {/* Modal: Crear Nuevo Cliente Final */}
+      <Dialog open={newEndCustomerDialogOpen} onOpenChange={setNewEndCustomerDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Nuevo cliente final</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {/* Nombre */}
+            <FormItem>
+              <FormLabel>Nombre del cliente *</FormLabel>
+              <Input
+                placeholder="Nombre del nuevo cliente"
+                value={newEndCustomerData.name}
+                onChange={(e) => setNewEndCustomerData({ ...newEndCustomerData, name: e.target.value })}
+              />
+            </FormItem>
+
+            {/* Industria */}
+            <FormItem>
+              <FormLabel>Industria</FormLabel>
+              <Select value={newEndCustomerData.industry_id} onValueChange={(value) => {
+                setNewEndCustomerData({ ...newEndCustomerData, industry_id: value })
+              }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar industria" />
+                </SelectTrigger>
+                <SelectContent>
+                  {industries.map((industry) => (
+                    <SelectItem key={industry.id} value={industry.id}>
+                      {industry.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FormItem>
+
+            {/* Sitio Web */}
+            <FormItem>
+              <FormLabel>Sitio web</FormLabel>
+              <Input
+                placeholder="https://ejemplo.com"
+                value={newEndCustomerData.website}
+                onChange={(e) => setNewEndCustomerData({ ...newEndCustomerData, website: e.target.value })}
+              />
+            </FormItem>
+
+            {/* ID Fiscal */}
+            <FormItem>
+              <FormLabel>ID Fiscal</FormLabel>
+              <Input
+                placeholder="Número de identificación fiscal"
+                value={newEndCustomerData.tax_id}
+                onChange={(e) => setNewEndCustomerData({ ...newEndCustomerData, tax_id: e.target.value })}
+              />
+            </FormItem>
+
+            {/* País */}
+            <FormItem>
+              <FormLabel>País</FormLabel>
+              <Select value={newEndCustomerData.country_id} onValueChange={(value) => {
+                setNewEndCustomerData({ ...newEndCustomerData, country_id: value })
+              }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar país" />
+                </SelectTrigger>
+                <SelectContent>
+                  {allCountries.map((country) => (
+                    <SelectItem key={country.id} value={country.id}>
+                      {country.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FormItem>
+
+            {/* Botón Crear */}
+            <Button
+              className="w-full bg-blue-600 hover:bg-blue-700"
+              disabled={!newEndCustomerData.name || isCreatingEndCustomer}
+              onClick={async () => {
+                try {
+                  setIsCreatingEndCustomer(true)
+                  const newCustomer = await createEndCustomer({
+                    name: newEndCustomerData.name,
+                    industry_id: newEndCustomerData.industry_id || undefined,
+                    website: newEndCustomerData.website || undefined,
+                    tax_id: newEndCustomerData.tax_id || undefined,
+                    country_id: newEndCustomerData.country_id || undefined,
+                  })
+
+                  if (newCustomer) {
+                    // Agregar el nuevo cliente a la lista
+                    setEndCustomers([...endCustomers, newCustomer])
+                    
+                    // Seleccionar automáticamente el nuevo cliente
+                    form.setValue("end_customer_id", newCustomer.id, { shouldValidate: false })
+                    setEndCustomerSearchQuery(newCustomer.name)
+
+                    // Cerrar modal y resetear datos
+                    setNewEndCustomerDialogOpen(false)
+                    setNewEndCustomerData({
+                      name: "",
+                      industry_id: "",
+                      website: "",
+                      tax_id: "",
+                      country_id: "",
+                    })
+
+                    toast({
+                      title: "Éxito",
+                      description: "Cliente final creado correctamente",
+                    })
+                  } else {
+                    toast({
+                      title: "Error",
+                      description: "No se pudo crear el cliente final",
+                      variant: "destructive",
+                    })
+                  }
+                } catch (error) {
+                  console.error("Error creating end customer:", error)
+                  toast({
+                    title: "Error",
+                    description: "Error al crear el cliente final",
+                    variant: "destructive",
+                  })
+                } finally {
+                  setIsCreatingEndCustomer(false)
+                }
+              }}
+            >
+              <Check className="mr-2 h-4 w-4" />
+              Crear Nuevo Cliente Final
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
