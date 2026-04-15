@@ -962,8 +962,16 @@ export function OpportunityCreateForm() {
                   <Button
                     type="button"
                     disabled={loadingScaleUpManager}
-                    onClick={() => {
+                    onClick={async () => {
                       console.log("[v0] Botón Siguiente clickeado - currentStep:", currentStep)
+                      
+                      // Validar el paso actual ANTES de avanzar
+                      const isValid = await validateCurrentStep()
+                      if (!isValid) {
+                        console.log("[v0] Step validation failed, not advancing")
+                        return
+                      }
+                      
                       let newStep = currentStep + 1
                       // Saltar Paso 4 si no hay campos técnicos
                       if (newStep === 4 && !hasTechFields) {
