@@ -987,18 +987,18 @@ export function OpportunityCreateForm() {
           </DialogHeader>
           <div className="space-y-4">
             {/* Nombre */}
-            <FormItem>
-              <FormLabel>Nombre del cliente *</FormLabel>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Nombre del cliente *</label>
               <Input
                 placeholder="Nombre del nuevo cliente"
                 value={newEndCustomerData.name}
                 onChange={(e) => setNewEndCustomerData({ ...newEndCustomerData, name: e.target.value })}
               />
-            </FormItem>
+            </div>
 
             {/* Industria */}
-            <FormItem>
-              <FormLabel>Industria</FormLabel>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Industria</label>
               <Select value={newEndCustomerData.industry_id} onValueChange={(value) => {
                 setNewEndCustomerData({ ...newEndCustomerData, industry_id: value })
               }}>
@@ -1013,31 +1013,31 @@ export function OpportunityCreateForm() {
                   ))}
                 </SelectContent>
               </Select>
-            </FormItem>
+            </div>
 
             {/* Sitio Web */}
-            <FormItem>
-              <FormLabel>Sitio web</FormLabel>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Sitio web</label>
               <Input
                 placeholder="https://ejemplo.com"
                 value={newEndCustomerData.website}
                 onChange={(e) => setNewEndCustomerData({ ...newEndCustomerData, website: e.target.value })}
               />
-            </FormItem>
+            </div>
 
             {/* ID Fiscal */}
-            <FormItem>
-              <FormLabel>ID Fiscal</FormLabel>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">ID Fiscal</label>
               <Input
                 placeholder="Número de identificación fiscal"
                 value={newEndCustomerData.tax_id}
                 onChange={(e) => setNewEndCustomerData({ ...newEndCustomerData, tax_id: e.target.value })}
               />
-            </FormItem>
+            </div>
 
             {/* País */}
-            <FormItem>
-              <FormLabel>País</FormLabel>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">País</label>
               <Select value={newEndCustomerData.country_id} onValueChange={(value) => {
                 setNewEndCustomerData({ ...newEndCustomerData, country_id: value })
               }}>
@@ -1052,7 +1052,7 @@ export function OpportunityCreateForm() {
                   ))}
                 </SelectContent>
               </Select>
-            </FormItem>
+            </div>
 
             {/* Botón Crear */}
             <Button
