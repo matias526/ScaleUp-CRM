@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { getTranslations } from "@/lib/translations/opportunities"
 import { useAuth } from "@/components/auth/auth-provider"
 import {
   createOpportunity,
@@ -68,6 +67,82 @@ const DEFAULT_ALLOWED_FILE_TYPES = [
 
 const NO_PARTNER_VALUE = "no_partner"
 
+// Static translations object
+const TRANSLATIONS = {
+  es: {
+    error: {
+      titleRequired: "El título es obligatorio",
+      stageRequired: "La etapa es obligatoria",
+      techCompanyRequired: "La empresa tecnológica es obligatoria",
+      partnerRequired: "El partner es obligatorio",
+      countryRequired: "El país es obligatorio",
+      endCustomerRequired: "El cliente final es obligatorio",
+    },
+    form: {
+      loading: "Cargando...",
+      select_placeholder: "Seleccionar",
+      no_partner: "Sin Partner",
+      noPartnersAvailable: "No hay partners disponibles",
+      noCountriesAvailable: "No hay países disponibles",
+      noUsersAvailable: "No hay usuarios disponibles",
+      no_tech_fields: "No hay campos técnicos definidos para esta empresa",
+      stepConfirmation: "Paso 5: Confirmación",
+      summaryTitle: "Resumen de la Oportunidad",
+      title_label: "Título",
+      stage: "Etapa",
+      tech_company: "Empresa Tech",
+      partner: "Partner",
+      country: "País",
+      end_customer: "Cliente",
+      estimated_value: "Valor Estimado",
+      estimated_close_date: "Fecha Cierre",
+      creating: "Creando...",
+    },
+    buttons: {
+      previous: "Anterior",
+      cancel: "Cancelar",
+      next: "Siguiente",
+      create: "Crear Oportunidad",
+    },
+  },
+  en: {
+    error: {
+      titleRequired: "Title is required",
+      stageRequired: "Stage is required",
+      techCompanyRequired: "Tech company is required",
+      partnerRequired: "Partner is required",
+      countryRequired: "Country is required",
+      endCustomerRequired: "End customer is required",
+    },
+    form: {
+      loading: "Loading...",
+      select_placeholder: "Select",
+      no_partner: "No Partner",
+      noPartnersAvailable: "No partners available",
+      noCountriesAvailable: "No countries available",
+      noUsersAvailable: "No users available",
+      no_tech_fields: "No tech fields defined for this company",
+      stepConfirmation: "Step 5: Confirmation",
+      summaryTitle: "Opportunity Summary",
+      title_label: "Title",
+      stage: "Stage",
+      tech_company: "Tech Company",
+      partner: "Partner",
+      country: "Country",
+      end_customer: "Customer",
+      estimated_value: "Estimated Value",
+      estimated_close_date: "Close Date",
+      creating: "Creating...",
+    },
+    buttons: {
+      previous: "Previous",
+      cancel: "Cancel",
+      next: "Next",
+      create: "Create Opportunity",
+    },
+  },
+}
+
 async function getPartnersByTechCompanyId(techCompanyId: string): Promise<Tables<"partners">[]> {
   try {
     if (!techCompanyId) return []
@@ -103,13 +178,9 @@ export function OpportunityCreateForm() {
   const { user, userInfo } = useAuth()
   const { toast } = useToast()
   
-  console.log("[v0] Component rendering - user:", user?.id, "userInfo:", userInfo?.id)
-  
   // Obtener idioma del usuario (por defecto español)
-  const locale = userInfo?.language || "es"
-  const t = getTranslations(locale)
-  
-  console.log("[v0] Translations loaded for locale:", locale)
+  const locale = (userInfo?.language || "es") as "es" | "en"
+  const t = TRANSLATIONS[locale]
 
   // ✅ FIXED: Removed setForceUpdate and persistentData ref - using form.watch() instead
   const hasInitialized = useRef(false)
@@ -613,7 +684,7 @@ export function OpportunityCreateForm() {
                 <div className="space-y-4">
                   <div className="text-sm font-medium text-blue-600">Paso 2: Empresas Involucradas</div>
 
-                  {/* Empresa Tecnológica */}
+                  {/* Empresa Tecnol��gica */}
                   <FormField
                     control={form.control}
                     name="tech_company_id"
