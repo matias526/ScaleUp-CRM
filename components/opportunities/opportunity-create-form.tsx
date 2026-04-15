@@ -103,9 +103,13 @@ export function OpportunityCreateForm() {
   const { user, userInfo } = useAuth()
   const { toast } = useToast()
   
+  console.log("[v0] Component rendering - user:", user?.id, "userInfo:", userInfo?.id)
+  
   // Obtener idioma del usuario (por defecto español)
   const locale = userInfo?.language || "es"
   const t = getTranslations(locale)
+  
+  console.log("[v0] Translations loaded for locale:", locale)
 
   // ✅ FIXED: Removed setForceUpdate and persistentData ref - using form.watch() instead
   const hasInitialized = useRef(false)
@@ -356,7 +360,7 @@ export function OpportunityCreateForm() {
     const loadPartners = async () => {
       setLoadingPartners(true)
       try {
-        const partners = await getPartnersByTechCompanyId(watchTechCompany)
+        const partners = await getPartners()
         setFilteredPartners(partners)
       } catch (error) {
         console.error("Error loading partners:", error)
@@ -565,7 +569,12 @@ export function OpportunityCreateForm() {
                           <p className="text-sm text-gray-500">Marca si esta oportunidad es para incorporar un nuevo partner</p>
                         </div>
                         <FormControl>
-                          <input type="checkbox" checked={field.value} onChange={field.onChange} className="h-4 w-4" />
+                          <input 
+                            type="checkbox" 
+                            checked={field.value || false} 
+                            onChange={(e) => field.onChange(e.target.checked)} 
+                            className="h-4 w-4" 
+                          />
                         </FormControl>
                       </FormItem>
                     )}
