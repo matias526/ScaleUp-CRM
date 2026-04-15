@@ -136,18 +136,6 @@ export function OpportunityCreateForm() {
   const hasInitialized = useRef(false)
   
   const [currentStep, setCurrentStep] = useState(1)
-  
-  // totalSteps es dinámico: 5 si hay campos técnicos, 4 si no
-  const hasTechFields = techFields.length > 0
-  const totalSteps = hasTechFields ? 5 : 4
-  
-  // Cuando se carga una tech company sin campos técnicos, saltar Paso 4
-  useEffect(() => {
-    if (currentStep === 4 && !hasTechFields) {
-      setCurrentStep(5)
-    }
-  }, [hasTechFields, currentStep])
-
   const [stages, setStages] = useState<Tables<"pipeline_stages">[]>([])
   const [techCompanies, setTechCompanies] = useState<Tables<"tech_companies">[]>([])
   const [filteredPartners, setFilteredPartners] = useState<Tables<"partners">[]>([])
@@ -178,6 +166,17 @@ export function OpportunityCreateForm() {
     tax_id: "",
     country_id: "",
   })
+
+  // totalSteps es dinámico: 5 si hay campos técnicos, 4 si no
+  const hasTechFields = techFields.length > 0
+  const totalSteps = hasTechFields ? 5 : 4
+  
+  // Cuando se carga una tech company sin campos técnicos, saltar Paso 4
+  useEffect(() => {
+    if (currentStep === 4 && !hasTechFields) {
+      setCurrentStep(5)
+    }
+  }, [hasTechFields, currentStep])
 
   const isAdmin = userInfo?.isAdmin || false
   const userRole = userInfo?.roleCode || ""
