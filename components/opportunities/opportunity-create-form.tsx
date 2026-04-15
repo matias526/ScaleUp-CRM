@@ -23,27 +23,6 @@ import type { Tables } from "@/types/supabase"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { useToast } from "@/hooks/use-toast"
-import { getTechCompanies } from "@/lib/services/tech-company-service"
-import { getPartners } from "@/lib/services/partner-service"
-import { getIndustries } from "@/lib/services/industry-service-client"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -457,16 +436,11 @@ export function OpportunityCreateForm() {
       // If not on the final step, just advance to next step
       if (currentStep < totalSteps) {
         console.log("[v0] Moving to next step from", currentStep, "to", currentStep + 1)
-        let newStep = currentStep + 1
-        // Saltar Paso 4 si no hay campos técnicos
-        if (newStep === 4 && !hasTechFields) {
-          newStep = 5
-        }
-        setCurrentStep(newStep)
+        setCurrentStep(currentStep + 1)
         return
       }
 
-      // Only create opportunity on the final step (Step 5) when explicitly clicked
+      // Only create opportunity on the final step (Step 5)
       console.log("[v0] Creating opportunity with data:", data)
       setLoadingScaleUpManager(true)
 
