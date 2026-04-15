@@ -101,7 +101,7 @@ export function OpportunityCreateForm() {
   const searchParams = useSearchParams()
   const preselectedStageId = searchParams.get("stage")
 
-  const { user, userInfo } = useAuth()
+  const { user, userInfo, isLoaded } = useAuth()
   const { toast } = useToast()
   const { t, locale } = useTranslations(DICT_LANG_OPPORTUNITIES)
 
