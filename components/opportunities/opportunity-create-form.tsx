@@ -665,7 +665,7 @@ export function OpportunityCreateForm() {
                             <SelectContent>
                               {partnerCountries.length === 0 ? (
                                 <div className="p-2 text-sm text-gray-500 text-center">
-                                  {loadingPartnerCountries ? "Cargando..." : "No hay países disponibles"}
+                                  {loadingCountries ? "Cargando..." : "No hay países disponibles"}
                                 </div>
                               ) : (
                                 partnerCountries.map((country) => (
