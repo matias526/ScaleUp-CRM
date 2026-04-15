@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { useAuth } from "@/components/auth/auth-provider"
+import { useTranslations } from "@/hooks/use-translations"
 import {
   createOpportunity,
   getOpportunityStages,
@@ -23,11 +23,12 @@ import type { Tables } from "@/types/supabase"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "@/components/ui/use-toast"
+import { useAuth } from "@/components/auth/auth-provider"
 import { supabase } from "@/lib/supabase/client"
 import {
   Building2,
@@ -67,24 +68,6 @@ const DEFAULT_ALLOWED_FILE_TYPES = [
 
 const NO_PARTNER_VALUE = "no_partner"
 
-// Simple type definitions for form values
-type FormValues = {
-  title: string
-  description?: string
-  pipeline_stage_id: string
-  tech_company_id: string
-  partner_id?: string | null
-  end_customer_id?: string | null
-  estimated_value?: number | null
-  tech_field_ids?: string[]
-  estimated_close_date?: string | null
-  country?: string
-  assigned_to?: string | null
-  partner_responsible_id?: string | null
-  is_new_partner?: boolean
-}
-
-
 async function getPartnersByTechCompanyId(techCompanyId: string): Promise<Tables<"partners">[]> {
   try {
     if (!techCompanyId) return []
@@ -118,16 +101,35 @@ export function OpportunityCreateForm() {
   const preselectedStageId = searchParams.get("stage")
 
   const { user, userInfo } = useAuth()
-  const { toast } = useToast()
-
-  // Safety check - ensure auth is ready
-  if (!user || !userInfo) {
-    return <div className="p-4 text-center">Cargando autenticación...</div>
-  }
+  const { t, language, isLoaded } = useTranslations([
+    "opportunities.create_title",
+    "opportunities.form.title",
+    "opportunities.form.description",
+    "opportunities.form.stage",
+    "opportunities.form.tech_company",
+    "opportunities.form.partner",
+    "opportunities.form.end_customer",
+    "opportunities.form.estimated_value",
+    "opportunities.form.tech_fields",
+    "opportunities.form.submit",
+    "opportunities.form.cancel",
+    "opportunities.form.select_placeholder",
+    "opportunities.form.new_end_customer",
+    "opportunities.form.new_end_customer_name",
+    "opportunities.form.create_end_customer",
+    "opportunities.form.estimated_close_date",
+    "opportunities.form.country",
+    "opportunities.form.assigned_to",
+    "opportunities.form.partner_responsible",
+    "opportunities.form.no_countries",
+    "opportunities.form.loading",
+    "opportunities.form.responsible_persons",
+    "opportunities.form.no_partner",
+  ])
 
   // ✅ FIXED: Removed setForceUpdate and persistentData ref - using form.watch() instead
   const hasInitialized = useRef(false)
-
+  
   const [currentStep, setCurrentStep] = useState(1)
   const [stages, setStages] = useState<Tables<"pipeline_stages">[]>([])
   const [techCompanies, setTechCompanies] = useState<Tables<"tech_companies">[]>([])
@@ -164,7 +166,7 @@ export function OpportunityCreateForm() {
   // totalSteps es dinámico: 5 si hay campos técnicos, 4 si no
   const hasTechFields = techFields.length > 0
   const totalSteps = hasTechFields ? 5 : 4
-
+  
   // Cuando se carga una tech company sin campos técnicos, saltar Paso 4
   useEffect(() => {
     if (currentStep === 4 && !hasTechFields) {
@@ -197,12 +199,12 @@ export function OpportunityCreateForm() {
     } else if (currentStep === 2) {
       // Validar que si no es new_partner, debe haber partner seleccionado
       if (!form.watch("is_new_partner") && !form.watch("partner_id")) {
-        form.setError("partner_id", { message: "El partner es obligatorio" })
+        form.setError("partner_id", { message: t("error.partnerRequired") })
         return false
       }
       // Validar que siempre haya país seleccionado
       if (!form.watch("country")) {
-        form.setError("country", { message: "El país es obligatorio" })
+        form.setError("country", { message: t("error.countryRequired") })
         return false
       }
       // Si hay partner, validar responsable
@@ -211,32 +213,27 @@ export function OpportunityCreateForm() {
       }
     } else if (currentStep === 3) {
       if (!isScaleUpUser && !form.watch("end_customer_id")) {
-        form.setError("end_customer_id", { message: "El cliente final es obligatorio" })
+        form.setError("end_customer_id", { message: t("error.endCustomerRequired") })
         return false
       }
     }
 
-    // Validate only the fields for this step using form.trigger()
+    // Validate only the fields for this step
     if (fieldsToValidate.length > 0) {
       const isValid = await form.trigger(fieldsToValidate)
       console.log("[v0] Step", currentStep, "validation result:", isValid, "Fields validated:", fieldsToValidate)
-      if (!isValid) {
-        // Mostrar los errores
-        const errors = form.formState.errors
-        console.log("[v0] Validation errors:", errors)
-      }
       return isValid
     }
 
     return true
   }
 
-  // ✅ SIMPLIFIED: Cleaner validation schema with hardcoded Spanish messages
+  // ✅ SIMPLIFIED: Cleaner validation schema
   const formSchema = z.object({
-    title: z.string().min(1, "El título es obligatorio"),
+    title: z.string().min(1, t("error.titleRequired") || "El título es obligatorio"),
     description: z.string().optional(),
-    pipeline_stage_id: z.string().min(1, "La etapa es obligatoria"),
-    tech_company_id: z.string().min(1, "La empresa tecnológica es obligatoria"),
+    pipeline_stage_id: z.string().min(1, t("error.stageRequired") || "La etapa es obligatoria"),
+    tech_company_id: z.string().min(1, t("error.techCompanyRequired") || "La empresa tecnológica es obligatoria"),
     partner_id: z.string().optional().nullable(),
     end_customer_id: z.string().optional().nullable(),
     estimated_value: z.coerce.number().optional().nullable(),
@@ -374,7 +371,7 @@ export function OpportunityCreateForm() {
     const loadPartners = async () => {
       setLoadingPartners(true)
       try {
-        const partners = await getPartners()
+        const partners = await getPartnersByTechCompanyId(watchTechCompany)
         setFilteredPartners(partners)
       } catch (error) {
         console.error("Error loading partners:", error)
@@ -459,7 +456,7 @@ export function OpportunityCreateForm() {
 
       // Obtener el manager de ScaleUp que maneja la relación entre Tech Company y Partner (solo si hay Partner)
       let assignedToUserId = data.assigned_to || null
-
+      
       if (data.partner_id && data.tech_company_id && isScaleUpUser) {
         try {
           const manager = await getScaleUpManager(data.tech_company_id, data.partner_id)
@@ -490,14 +487,14 @@ export function OpportunityCreateForm() {
 
       // Preparar tech values si existen
       const techValues: Array<{ opportunity_tech_field_id: string; value: any; valueType: string }> = []
-
+      
       if (data.tech_field_ids && data.tech_field_ids.length > 0) {
         // Los valores técnicos se recopilarían aquí si hay UI para ello
       }
 
       // Crear la oportunidad
       const result = await createOpportunity(opportunityData, techValues, userRole)
-
+      
       toast({
         title: "Éxito",
         description: "Oportunidad creada correctamente",
@@ -515,22 +512,22 @@ export function OpportunityCreateForm() {
     }
   }
 
-  if (!stages || stages.length === 0 || loadingStages) {
-    return <div className="p-4 text-center">{"Cargando..."}</div>
+  if (!isLoaded) {
+    return <div>{t("opportunities.form.loading") || "Cargando..."}</div>
   }
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>{"Crear Oportunidad"}</CardTitle>
+          <CardTitle>{t("opportunities.form.title") || "Crear Oportunidad"}</CardTitle>
           <CardDescription>
             Paso {currentStep} de {totalSteps} - {
               currentStep === 1 ? "Información básica"
-                : currentStep === 2 ? "Empresas involucradas"
-                  : currentStep === 3 ? "Cliente y detalles financieros"
-                    : currentStep === 4 ? "Campos técnicos"
-                      : "Confirmación"
+              : currentStep === 2 ? "Empresas involucradas"
+              : currentStep === 3 ? "Cliente y detalles financieros"
+              : currentStep === 4 ? "Campos técnicos"
+              : "Confirmación"
             }
           </CardDescription>
         </CardHeader>
@@ -541,7 +538,7 @@ export function OpportunityCreateForm() {
               {currentStep === 1 && (
                 <div className="space-y-4">
                   <div className="text-sm font-medium text-blue-600">Paso 1: Información Básica</div>
-
+                  
                   {/* Título */}
                   <FormField
                     control={form.control}
@@ -583,12 +580,7 @@ export function OpportunityCreateForm() {
                           <p className="text-sm text-gray-500">Marca si esta oportunidad es para incorporar un nuevo partner</p>
                         </div>
                         <FormControl>
-                          <input
-                            type="checkbox"
-                            checked={field.value || false}
-                            onChange={(e) => field.onChange(e.target.checked)}
-                            className="h-4 w-4"
-                          />
+                          <input type="checkbox" checked={field.value} onChange={field.onChange} className="h-4 w-4" />
                         </FormControl>
                       </FormItem>
                     )}
@@ -604,7 +596,7 @@ export function OpportunityCreateForm() {
                         <Select value={field.value} onValueChange={field.onChange}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Seleccionar" />
+                              <SelectValue placeholder={t("opportunities.form.select_placeholder") || "Seleccionar"} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -627,7 +619,7 @@ export function OpportunityCreateForm() {
                 <div className="space-y-4">
                   <div className="text-sm font-medium text-blue-600">Paso 2: Empresas Involucradas</div>
 
-                  {/* Empresa Tecnol��gica */}
+                  {/* Empresa Tecnológica */}
                   <FormField
                     control={form.control}
                     name="tech_company_id"
@@ -637,7 +629,7 @@ export function OpportunityCreateForm() {
                         <Select value={field.value} onValueChange={field.onChange}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Seleccionar" />
+                              <SelectValue placeholder={t("opportunities.form.select_placeholder") || "Seleccionar"} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -670,16 +662,16 @@ export function OpportunityCreateForm() {
                           }}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Seleccionar" />
+                                <SelectValue placeholder={t("opportunities.form.select_placeholder") || "Seleccionar"} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
                               <SelectItem value="null">
-                                "Sin Partner"
+                                {t("opportunities.form.no_partner") || "Sin Partner"}
                               </SelectItem>
                               {filteredPartners.length === 0 ? (
                                 <div className="p-2 text-sm text-gray-500 text-center">
-                                  {loadingPartners ? "Cargando..." : "No hay partners disponibles)"
+                                  {loadingPartners ? (t("opportunities.form.loading") || "Cargando...") : (t("opportunities.form.noPartnersAvailable") || "No hay partners disponibles")}
                                 </div>
                               ) : (
                                 filteredPartners.map((partner) => (
@@ -706,14 +698,14 @@ export function OpportunityCreateForm() {
                         <Select value={field.value || ""} onValueChange={field.onChange}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Seleccionar" />
+                              <SelectValue placeholder={t("opportunities.form.select_placeholder") || "Seleccionar"} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             {partnerCountries.length === 0 ? (
-                              <div className="p-2 text-sm text-gray-500 text-center">
-                                {loadingCountries ? "Cargando..." : "No hay países disponibles"}
-                              </div>
+                                <div className="p-2 text-sm text-gray-500 text-center">
+                                  {loadingCountries ? (t("opportunities.form.loading") || "Cargando...") : (t("opportunities.form.noCountriesAvailable") || "No hay países disponibles")}
+                                </div>
                             ) : (
                               partnerCountries.map((country) => (
                                 <SelectItem key={country.id} value={country.code}>
@@ -739,16 +731,16 @@ export function OpportunityCreateForm() {
                           <Select value={field.value || ""} onValueChange={field.onChange}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Seleccionar" />
+                                <SelectValue placeholder={t("opportunities.form.select_placeholder") || "Seleccionar"} />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent>
-                              {scaleUpUsers.map((manager) => (
-                                <SelectItem key={manager.id} value={manager.id}>
-                                  {manager.first_name} {manager.last_name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
+                          <SelectContent>
+                            {scaleUpUsers.map((manager) => (
+                              <SelectItem key={manager.id} value={manager.id}>
+                                {manager.first_name} {manager.last_name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
                           </Select>
                           <FormMessage />
                         </FormItem>
@@ -767,13 +759,13 @@ export function OpportunityCreateForm() {
                           <Select value={field.value || ""} onValueChange={field.onChange}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Seleccionar" />
+                                <SelectValue placeholder={t("opportunities.form.select_placeholder") || "Seleccionar"} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
                               {partnerUsers.length === 0 ? (
                                 <div className="p-2 text-sm text-gray-500 text-center">
-                                  {loadingPartnerUsers ? "Cargando..." : "No hay usuarios disponibles"}
+                                  {loadingPartnerUsers ? (t("opportunities.form.loading") || "Cargando...") : (t("opportunities.form.noUsersAvailable") || "No hay usuarios disponibles")}
                                 </div>
                               ) : (
                                 partnerUsers.map((user) => {
@@ -826,7 +818,7 @@ export function OpportunityCreateForm() {
                                 setSearchResults(endCustomers)
                               }}
                             />
-
+                            
                             {/* Resultados de búsqueda */}
                             {endCustomerSearchQuery && (
                               <div className="border rounded-md p-2 max-h-48 overflow-y-auto space-y-1">
@@ -915,7 +907,7 @@ export function OpportunityCreateForm() {
                 <div className="space-y-4">
                   <div className="text-sm font-medium text-blue-600">Paso 4: Campos Técnicos</div>
                   {techFields.length === 0 ? (
-                    <p className="text-gray-500">{No hay campos técnicos definidos para esta empresa}</p>
+                    <p className="text-gray-500">{t("opportunities.form.noTechFields") || "No hay campos técnicos definidos para esta empresa"}</p>
                   ) : (
                     <p className="text-sm text-gray-600">Completa los campos técnicos específicos de la empresa seleccionada (se mostrarían aquí)</p>
                   )}
@@ -925,18 +917,18 @@ export function OpportunityCreateForm() {
               {/* ===== PASO 5: CONFIRMACIÓN ===== */}
               {currentStep === 5 && (
                 <div className="space-y-4">
-                  <div className="text-sm font-medium text-green-600">{"Paso 5: Confirmación"}</div>
+                  <div className="text-sm font-medium text-green-600">{t("opportunities.form.stepConfirmation") || "Paso 5: Confirmación"}</div>
                   <div className="rounded-lg border p-4 space-y-3">
-                    <h3 className="font-semibold">{"Resumen de la Oportunidad"}</h3>
+                    <h3 className="font-semibold">{t("opportunities.form.summaryTitle") || "Resumen de la Oportunidad"}</h3>
                     <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div><span className="font-medium">{"Título"}:</span> {form.watch("title") || "N/A"}</div>
-                      <div><span className="font-medium">{"Etapa"}:</span> {stages.find(s => s.id === form.watch("pipeline_stage_id"))?.code || "N/A"}</div>
-                      <div><span className="font-medium">{"Empresa Tech"}:</span> {techCompanies.find(c => c.id === form.watch("tech_company_id"))?.name || "N/A"}</div>
-                      <div><span className="font-medium">{"Partner"}:</span> {form.watch("partner_id") ? (filteredPartners.find(p => p.id === form.watch("partner_id"))?.name || "N/A") : "N/A"}</div>
-                      <div><span className="font-medium">{"País"}:</span> {form.watch("country") || "N/A"}</div>
-                      <div><span className="font-medium">{"Cliente"}:</span> {form.watch("end_customer_id") ? (endCustomers.find(c => c.id === form.watch("end_customer_id"))?.name || "N/A") : "N/A"}</div>
-                      <div><span className="font-medium">{"Valor Estimado"}:</span> USD {form.watch("estimated_value") || "0"}</div>
-                      <div><span className="font-medium">{"Fecha Cierre"}:</span> {form.watch("estimated_close_date") || "N/A"}</div>
+                      <div><span className="font-medium">{t("opportunities.form.title") || "Título"}:</span> {form.watch("title") || "N/A"}</div>
+                      <div><span className="font-medium">{t("opportunities.form.stage") || "Etapa"}:</span> {stages.find(s => s.id === form.watch("pipeline_stage_id"))?.code || "N/A"}</div>
+                      <div><span className="font-medium">{t("opportunities.form.tech_company") || "Empresa Tech"}:</span> {techCompanies.find(c => c.id === form.watch("tech_company_id"))?.name || "N/A"}</div>
+                      <div><span className="font-medium">{t("opportunities.form.partner") || "Partner"}:</span> {form.watch("partner_id") ? (filteredPartners.find(p => p.id === form.watch("partner_id"))?.name || "N/A") : "N/A"}</div>
+                      <div><span className="font-medium">{t("opportunities.form.country") || "País"}:</span> {form.watch("country") || "N/A"}</div>
+                      <div><span className="font-medium">{t("opportunities.form.end_customer") || "Cliente"}:</span> {form.watch("end_customer_id") ? (endCustomers.find(c => c.id === form.watch("end_customer_id"))?.name || "N/A") : "N/A"}</div>
+                      <div><span className="font-medium">{t("opportunities.form.estimated_value") || "Valor Estimado"}:</span> USD {form.watch("estimated_value") || "0"}</div>
+                      <div><span className="font-medium">{t("opportunities.form.estimated_close_date") || "Fecha Cierre"}:</span> {form.watch("estimated_close_date") || "N/A"}</div>
                     </div>
                   </div>
                 </div>
@@ -957,14 +949,14 @@ export function OpportunityCreateForm() {
                   }}
                   disabled={currentStep === 1}
                 >
-                  Anterior
+                  {t("common.previous") || "Anterior"}
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => router.back()}
                 >
-                  Cancelar
+                  {t("common.cancel") || "Cancelar"}
                 </Button>
                 {currentStep < totalSteps ? (
                   <Button
@@ -972,14 +964,14 @@ export function OpportunityCreateForm() {
                     disabled={loadingScaleUpManager}
                     onClick={async () => {
                       console.log("[v0] Botón Siguiente clickeado - currentStep:", currentStep)
-
+                      
                       // Validar el paso actual ANTES de avanzar
                       const isValid = await validateCurrentStep()
                       if (!isValid) {
                         console.log("[v0] Step validation failed, not advancing")
                         return
                       }
-
+                      
                       let newStep = currentStep + 1
                       // Saltar Paso 4 si no hay campos técnicos
                       if (newStep === 4 && !hasTechFields) {
@@ -988,7 +980,7 @@ export function OpportunityCreateForm() {
                       setCurrentStep(newStep)
                     }}
                   >
-                    Siguiente
+                    {t("common.next") || "Siguiente"}
                   </Button>
                 ) : (
                   <Button
@@ -996,7 +988,7 @@ export function OpportunityCreateForm() {
                     disabled={loadingScaleUpManager}
                     className="bg-green-600 hover:bg-green-700"
                   >
-                    {loadingScaleUpManager ? Creando... : Crear Oportunidad}
+                    {loadingScaleUpManager ? (t("opportunities.form.creating") || "Creando...") : (t("opportunities.form.submit") || "Crear Oportunidad")}
                   </Button>
                 )}
               </div>
@@ -1029,7 +1021,7 @@ export function OpportunityCreateForm() {
                 setNewEndCustomerData({ ...newEndCustomerData, industry_id: value })
               }}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar" />
+                  <SelectValue placeholder={t("opportunities.form.select_placeholder") || "Seleccionar"} />
                 </SelectTrigger>
                 <SelectContent>
                   {industries.map((industry) => (
@@ -1068,7 +1060,7 @@ export function OpportunityCreateForm() {
                 setNewEndCustomerData({ ...newEndCustomerData, country_id: value })
               }}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar" />
+                  <SelectValue placeholder={t("opportunities.form.select_placeholder") || "Seleccionar"} />
                 </SelectTrigger>
                 <SelectContent>
                   {allCountries.map((country) => (
@@ -1098,7 +1090,7 @@ export function OpportunityCreateForm() {
                   if (newCustomer) {
                     // Agregar el nuevo cliente a la lista
                     setEndCustomers([...endCustomers, newCustomer])
-
+                    
                     // Seleccionar automáticamente el nuevo cliente
                     form.setValue("end_customer_id", newCustomer.id, { shouldValidate: false })
                     setEndCustomerSearchQuery(newCustomer.name)
