@@ -98,6 +98,7 @@ async function getPartnersByTechCompanyId(techCompanyId: string): Promise<Tables
 }
 
 export default function OpportunityCreateForm() {
+  const [isConfirming, setIsConfirming] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
   const preselectedStageId = searchParams.get("stage")
@@ -114,6 +115,7 @@ export default function OpportunityCreateForm() {
   const [techCompanies, setTechCompanies] = useState<Tables<"tech_companies">[]>([])
   const [filteredPartners, setFilteredPartners] = useState<Tables<"partners">[]>([])
   const [endCustomers, setEndCustomers] = useState<Tables<"end_customers">[]>([])
+  const [filteredEndCustomers, setFilteredEndCustomers] = useState<Tables<"end_customers">[]>([])
   const [techFields, setTechFields] = useState<any[]>([])
   const [allCountries, setAllCountries] = useState<{ id: string; name: string; code: string }[]>([])
   const [partnerCountries, setPartnerCountries] = useState<{ id: string; name: string; code: string }[]>([])
@@ -383,6 +385,11 @@ export default function OpportunityCreateForm() {
               form.setValue("tech_company_id", techCompaniesData[0].id, { shouldValidate: false })
             }
           }
+          
+          // Set partner_id automatically for Partner users
+          if (partnerId) {
+            form.setValue("partner_id", partnerId, { shouldValidate: false })
+          }
         }
 
         // Load scale up users
@@ -476,9 +483,12 @@ export default function OpportunityCreateForm() {
     loadUsers()
   }, [watchPartner])
 
-  // ✅ FIXED: Load partner countries when partner changes
+  // ✅ FIXED: Load partner countries when partner changes (or for Partner users on initial load)
   useEffect(() => {
-    if (!watchPartner) {
+    // Para Partner users, siempre cargar los países del partner
+    const partnerIdToUse = isScaleUpUser ? watchPartner : partnerId
+    
+    if (!partnerIdToUse) {
       // Si no hay partner, mostrar todos los países
       setPartnerCountries(allCountries)
       return
@@ -487,7 +497,7 @@ export default function OpportunityCreateForm() {
     const loadCountries = async () => {
       setLoadingCountries(true)
       try {
-        const countries = await getPartnerCountries(watchPartner)
+        const countries = await getPartnerCountries(partnerIdToUse)
         setPartnerCountries(countries || [])
       } catch (error) {
         console.error("Error loading partner countries:", error)
@@ -498,7 +508,21 @@ export default function OpportunityCreateForm() {
     }
 
     loadCountries()
-  }, [watchPartner, allCountries])
+  }, [watchPartner, allCountries, isScaleUpUser, partnerId])
+
+  // ✅ Filter end customers for Partner users
+  useEffect(() => {
+    if (isScaleUpUser) {
+      // Para usuarios ScaleUp, mostrar todos los clientes
+      setFilteredEndCustomers(endCustomers)
+    } else if (partnerId) {
+      // Para Partner users, filtrar solo los clientes del partner
+      const partnerCustomers = endCustomers.filter((customer: any) => customer.partner_id === partnerId)
+      setFilteredEndCustomers(partnerCustomers)
+    } else {
+      setFilteredEndCustomers([])
+    }
+  }, [endCustomers, partnerId, isScaleUpUser])
 
   // Handle form submission - Now only on Step 5 (Confirmation)
   const onSubmit = async (data: FormValues) => {
@@ -715,7 +739,14 @@ export default function OpportunityCreateForm() {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={(e) => {
+              e.preventDefault(); // Evita el envío automático del navegador
+              if (currentStep === 5 && isConfirming) {
+                form.handleSubmit(onSubmit)(e);
+                setIsConfirming(false); // Lo reseteamos por seguridad
+              }
+            }}
+              className="space-y-6">
               {/* ===== PASO 1: INFORMACIÓN BÁSICA ===== */}
               {currentStep === 1 && (
                 <div className="space-y-4">
@@ -822,31 +853,33 @@ export default function OpportunityCreateForm() {
                     </div>
                   )}
 
-                  {/* Etapa del Pipeline */}
-                  <FormField
-                    control={form.control}
-                    name="pipeline_stage_id"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("opportunities.form.stage")} *</FormLabel>
-                        <Select value={field.value} onValueChange={field.onChange}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={t("opportunities.form.select_placeholder")} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {stages.map((stage) => (
-                              <SelectItem key={stage.id} value={stage.id}>
-                                {stage.code}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {/* Etapa del Pipeline - OCULTA para usuarios Partner */}
+                  {isScaleUpUser && (
+                    <FormField
+                      control={form.control}
+                      name="pipeline_stage_id"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("opportunities.form.stage")} *</FormLabel>
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder={t("opportunities.form.select_placeholder")} />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {stages.map((stage) => (
+                                <SelectItem key={stage.id} value={stage.id}>
+                                  {stage.code}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
                 </div>
               )}
 
@@ -881,8 +914,8 @@ export default function OpportunityCreateForm() {
                     )}
                   />
 
-                  {/* Partner - Oculto si es prospect */}
-                  {!form.watch("is_prospect") && (
+                  {/* Partner - Oculto si es prospect o si es usuario Partner */}
+                  {!form.watch("is_prospect") && isScaleUpUser && (
                     <FormField
                       control={form.control}
                       name="partner_id"
@@ -1044,14 +1077,14 @@ export default function OpportunityCreateForm() {
                               value={endCustomerSearchQuery}
                               onChange={(e) => {
                                 setEndCustomerSearchQuery(e.target.value)
-                                // Filtrar endCustomers en base a la búsqueda
-                                const filtered = endCustomers.filter(c =>
+                                // Filtrar en base a la búsqueda
+                                const filtered = filteredEndCustomers.filter(c =>
                                   String(c.name || "").toLowerCase().includes(e.target.value.toLowerCase())
                                 )
                                 setSearchResults(filtered)
                               }}
                               onFocus={() => {
-                                setSearchResults(endCustomers)
+                                setSearchResults(filteredEndCustomers)
                               }}
                             />
 
@@ -1317,7 +1350,7 @@ export default function OpportunityCreateForm() {
                       <div><span className="font-medium">{t("opportunities.form.summary.techCompany")}:</span> {techCompanies.find(c => c.id === form.watch("tech_company_id"))?.name || "N/A"}</div>
                       <div><span className="font-medium">{t("opportunities.form.summary.partner")}:</span> {form.watch("partner_id") ? (filteredPartners.find(p => p.id === form.watch("partner_id"))?.name || "N/A") : "N/A"}</div>
                       <div><span className="font-medium">{t("opportunities.form.summary.country")}:</span> {form.watch("country") || "N/A"}</div>
-                      <div><span className="font-medium">{t("opportunities.form.summary.customer")}:</span> {form.watch("end_customer_id") ? (endCustomers.find(c => c.id === form.watch("end_customer_id"))?.name || "N/A") : "N/A"}</div>
+                      <div><span className="font-medium">{t("opportunities.form.summary.customer")}:</span> {form.watch("end_customer_id") ? (filteredEndCustomers.find(c => c.id === form.watch("end_customer_id"))?.name || "N/A") : "N/A"}</div>
                       <div><span className="font-medium">{t("opportunities.form.summary.value")}:</span> USD {form.watch("estimated_value") || "0"}</div>
                       <div><span className="font-medium">{t("opportunities.form.summary.closeDate")}:</span> {form.watch("estimated_close_date") || "N/A"}</div>
                     </div>
@@ -1460,6 +1493,7 @@ export default function OpportunityCreateForm() {
                     type="submit"
                     disabled={loadingScaleUpManager}
                     className="bg-green-600 hover:bg-green-700"
+                    onClick={() => setIsConfirming(true)}
                   >
                     {loadingScaleUpManager ? t("opportunities.form.creating") : t("opportunities.form.submit")}
                   </Button>
