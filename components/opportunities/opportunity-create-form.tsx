@@ -201,7 +201,7 @@ export default function OpportunityCreateForm() {
       // Require partner_id only if NOT a prospect
       const isProspect = form.watch("is_prospect")
       if (!isProspect && !form.watch("partner_id")) {
-        form.setError("partner_id", { message: "El partner es obligatorio" })
+        form.setError("partner_id", { message: t("opportunities.form.requiredField") })
         return false
       }
 
@@ -211,7 +211,7 @@ export default function OpportunityCreateForm() {
       }
     } else if (currentStep === 3) {
       if (!isScaleUpUser && !form.watch("end_customer_id")) {
-        form.setError("end_customer_id", { message: "El cliente final es obligatorio para usuarios Partner" })
+        form.setError("end_customer_id", { message: t("opportunities.form.requiredField") })
         return false
       }
     } else if (currentStep === 4 && hasTechFields) {
@@ -224,7 +224,7 @@ export default function OpportunityCreateForm() {
         if (!value || (Array.isArray(value) && value.length === 0)) {
           form.setError(`opportunity_tech_fields.${field.id}` as any, {
             type: "manual",
-            message: `${field.field_name} es obligatorio`
+            message: t("opportunities.form.mandatoryField")
           })
           hasError = true
         }
@@ -410,7 +410,7 @@ export default function OpportunityCreateForm() {
         setIndustries(industriesData || [])
       } catch (error) {
         console.error("Error loading form data:", error)
-        setError("Error al cargar los datos del formulario")
+        setError(t("opportunities.form.savingError"))
         setLoadingStages(false)
       }
     }
@@ -752,7 +752,7 @@ export default function OpportunityCreateForm() {
                       <FormItem>
                         <FormLabel>{t("opportunities.form.title")} *</FormLabel>
                         <FormControl>
-                          <Input placeholder="Nombre descriptivo de la oportunidad" {...field} />
+                          <Input placeholder={t("opportunities.form.title")} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -767,7 +767,7 @@ export default function OpportunityCreateForm() {
                       <FormItem>
                         <FormLabel>{t("opportunities.form.description")}</FormLabel>
                         <FormControl>
-                          <Textarea placeholder="Detalles adicionales sobre la oportunidad" className="min-h-24" {...field} />
+                          <Textarea placeholder={t("opportunities.form.description")} className="min-h-24" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -1065,7 +1065,7 @@ export default function OpportunityCreateForm() {
                         <FormControl>
                           <div className="space-y-2">
                             <Input
-                              placeholder="Buscar cliente..."
+                              placeholder={t("opportunities.form.searchPlaceholder")}
                               value={endCustomerSearchQuery}
                               onChange={(e) => {
                                 setEndCustomerSearchQuery(e.target.value)
@@ -1085,7 +1085,7 @@ export default function OpportunityCreateForm() {
                               <div className="border rounded-md p-2 max-h-48 overflow-y-auto space-y-1">
                                 {searchResults.length === 0 ? (
                                   <div className="text-sm text-gray-500 p-2">
-                                    No se encontraron clientes con "{endCustomerSearchQuery}"
+                                    {t("opportunities.form.noCustomersFound").replace("{query}", endCustomerSearchQuery)}
                                   </div>
                                 ) : (
                                   searchResults.map((customer) => (
@@ -1192,9 +1192,9 @@ export default function OpportunityCreateForm() {
                             {field.field_type === "text" && (
                               <>
                                 <Input
-                                  placeholder={`Ingresa ${field.field_name.toLowerCase()}`}
+                                  placeholder={t("opportunities.form.inputPlaceholder").replace("{field}", field.field_name.toLowerCase())}
                                   {...register(fieldKey as any, {
-                                    required: field.is_required ? `${field.field_name} es obligatorio` : false,
+                                    required: field.is_required ? t("opportunities.form.mandatoryField") : false,
                                   })}
                                   className={hasError ? "border-red-500" : ""}
                                 />
@@ -1207,9 +1207,9 @@ export default function OpportunityCreateForm() {
                               <>
                                 <Input
                                   type="number"
-                                  placeholder={`Ingresa ${field.field_name.toLowerCase()}`}
+                                  placeholder={t("opportunities.form.inputPlaceholder").replace("{field}", field.field_name.toLowerCase())}
                                   {...register(fieldKey as any, {
-                                    required: field.is_required ? `${field.field_name} es obligatorio` : false,
+                                    required: field.is_required ? t("opportunities.form.mandatoryField") : false,
                                     valueAsNumber: true,
                                   })}
                                   className={hasError ? "border-red-500" : ""}
@@ -1254,11 +1254,11 @@ export default function OpportunityCreateForm() {
                               <div className="space-y-2">
                                 <select
                                   {...register(fieldKey as any, {
-                                    required: field.is_required ? `${field.field_name} es obligatorio` : false,
+                                    required: field.is_required ? t("opportunities.form.mandatoryField") : false,
                                   })}
                                   className={`w-full px-3 py-2 border rounded-md text-sm ${hasError ? "border-red-500" : "border-gray-300"}`}
                                 >
-                                  <option value="">Selecciona {field.field_name.toLowerCase()}</option>
+                                  <option value="">{t("opportunities.form.selectOption").replace("{field}", field.field_name.toLowerCase())}</option>
                                   {field.options.map((option: any, idx: number) => {
                                     const optionValue = typeof option === 'string' ? option : option.value
                                     const optionLabel = typeof option === 'string' ? option : option.label
@@ -1472,7 +1472,7 @@ export default function OpportunityCreateForm() {
                               if (!val || (Array.isArray(val) && val.length === 0)) {
                                 form.setError(`opportunity_tech_fields.${field.id}` as any, {
                                   type: "manual",
-                                  message: "Obligatorio"
+                                  message: t("opportunities.form.mandatoryField")
                                 })
                                 hasTechError = true
                               }
@@ -1622,16 +1622,16 @@ export default function OpportunityCreateForm() {
                     })
                   } else {
                     toast({
-                      title: "Error",
-                      description: "No se pudo crear el cliente final",
+                      title: t("common.error"),
+                      description: t("opportunities.form.creatingFailed"),
                       variant: "destructive",
                     })
                   }
                 } catch (error) {
                   console.error("Error creating end customer:", error)
                   toast({
-                    title: "Error",
-                    description: "Error al crear el cliente final",
+                    title: t("common.error"),
+                    description: t("opportunities.form.creatingError"),
                     variant: "destructive",
                   })
                 } finally {

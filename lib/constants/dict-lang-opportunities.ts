@@ -326,4 +326,51 @@ export const DICT_LANG_OPPORTUNITIES = {
     en: "Is a Prospect Partner",
     pt: "É um Partner Prospecto",
   },
+
+  // Additional missing translations
+  "opportunities.form.savingError": {
+    es: "Error al cargar los datos del formulario",
+    en: "Error loading form data",
+    pt: "Erro ao carregar os dados do formulário",
+  },
+  "opportunities.form.searchPlaceholder": {
+    es: "Buscar cliente...",
+    en: "Search customer...",
+    pt: "Procurar cliente...",
+  },
+  "opportunities.form.noCustomersFound": {
+    es: 'No se encontraron clientes con "{query}"',
+    en: 'No customers found with "{query}"',
+    pt: 'Nenhum cliente encontrado com "{query}"',
+  },
+  "opportunities.form.inputPlaceholder": {
+    es: "Ingresa {field}",
+    en: "Enter {field}",
+    pt: "Insira {field}",
+  },
+  "opportunities.form.selectOption": {
+    es: "Selecciona {field}",
+    en: "Select {field}",
+    pt: "Selecione {field}",
+  },
+  "opportunities.form.requiredField": {
+    es: "Este campo es obligatorio para Partners",
+    en: "This field is required for Partners",
+    pt: "Este campo é obrigatório para Partners",
+  },
+  "opportunities.form.mandatoryField": {
+    es: "Este campo es obligatorio",
+    en: "This field is required",
+    pt: "Este campo é obrigatório",
+  },
+  "opportunities.form.creatingFailed": {
+    es: "No se pudo crear el cliente final",
+    en: "Failed to create end customer",
+    pt: "Falha ao criar cliente final",
+  },
+  "opportunities.form.creatingError": {
+    es: "Error al crear el cliente final",
+    en: "Error creating end customer",
+    pt: "Erro ao criar cliente final",
+  },
 }
