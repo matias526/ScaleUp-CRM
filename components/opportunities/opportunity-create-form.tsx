@@ -90,7 +90,7 @@ async function getPartnersByTechCompanyId(techCompanyId: string): Promise<Tables
       .eq("is_active", true)
       .order("name", { ascending: true })
 
-    return partnersError ? [] : (partnersData || [])
+    return partnersError ? [] : (partnersData as any || [])
   } catch (error) {
     console.error("Error en getPartnersByTechCompanyId:", error)
     return []
@@ -430,7 +430,7 @@ export default function OpportunityCreateForm() {
         try {
           const manager = await getScaleUpManager(data.tech_company_id, data.partner_id)
           if (manager) {
-            assignedToUserId = manager.id
+            assignedToUserId = manager
           }
         } catch (error) {
           console.error("Error al obtener el manager de ScaleUp:", error)
@@ -847,7 +847,7 @@ export default function OpportunityCreateForm() {
                       <FormItem>
                         <FormLabel>Valor Estimado (USD)</FormLabel>
                         <FormControl>
-                          <Input type="number" placeholder="0.00" step="0.01" {...field} />
+                          <Input type="number" placeholder="0.00" step="0.01" {...field} value={field.value ?? ""} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -862,7 +862,7 @@ export default function OpportunityCreateForm() {
                       <FormItem>
                         <FormLabel>Fecha Estimada de Cierre</FormLabel>
                         <FormControl>
-                          <Input type="date" {...field} />
+                          <Input type="date" {...field} value={field.value ? new Date(field.value).toISOString().split('T')[0] : ""} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

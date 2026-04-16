@@ -538,10 +538,10 @@ export const OpportunitiesKanban = ({
         prevOpportunities.map((opp) =>
           opp.id === opportunityId
             ? {
-                ...opp,
-                pipeline_stage_id: targetStageId,
-                stage: newStage,
-              }
+              ...opp,
+              pipeline_stage_id: targetStageId,
+              stage: newStage,
+            }
             : opp,
         ),
       )
@@ -674,9 +674,8 @@ export const OpportunitiesKanban = ({
     return (
       <div
         key={opportunity.id}
-        className={`rounded-md border bg-card p-2 sm:p-3 shadow-sm cursor-pointer hover:shadow-md transition-all h-[140px] sm:h-[160px] flex flex-col ${
-          draggingId === opportunity.id ? "opacity-50 border-dashed border-primary" : ""
-        } ${requiresAttention ? "border-l-4 border-l-red-500" : ""}`}
+        className={`rounded-md border bg-card p-2 sm:p-3 shadow-sm cursor-pointer hover:shadow-md transition-all h-[140px] sm:h-[160px] flex flex-col ${draggingId === opportunity.id ? "opacity-50 border-dashed border-primary" : ""
+          } ${requiresAttention ? "border-l-4 border-l-red-500" : ""}`}
         draggable
         onDragStart={(e) => handleDragStart(e, opportunity.id)}
         onDragEnd={handleDragEnd}
@@ -783,9 +782,8 @@ export const OpportunitiesKanban = ({
     return (
       <div key={stage.id} onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, stage.id)}>
         <Card
-          className={`h-full ${draggingId ? "border-dashed border-2 border-primary/30" : ""} transition-all ${
-            isSpecialStage ? getSpecialStageColor(stage.code) : ""
-          }`}
+          className={`h-full ${draggingId ? "border-dashed border-2 border-primary/30" : ""} transition-all ${isSpecialStage ? getSpecialStageColor(stage.code) : ""
+            }`}
         >
           <CardHeader className="py-3 px-3">
             <div className="flex items-center justify-between">
@@ -934,16 +932,16 @@ export const OpportunitiesKanban = ({
                   filterValidation ||
                   sortBy !== "title" ||
                   sortDirection !== "asc") && (
-                  <Badge variant="secondary" className="ml-2 h-5 px-1">
-                    {[
-                      filterTechCompany ? 1 : 0,
-                      filterPartner ? 1 : 0,
-                      filterResponsible ? 1 : 0,
-                      filterValidation ? 1 : 0,
-                      sortBy !== "title" || sortDirection !== "asc" ? 1 : 0,
-                    ].reduce((a, b) => a + b, 0)}
-                  </Badge>
-                )}
+                    <Badge variant="secondary" className="ml-2 h-5 px-1">
+                      {[
+                        filterTechCompany ? 1 : 0,
+                        filterPartner ? 1 : 0,
+                        filterResponsible ? 1 : 0,
+                        filterValidation ? 1 : 0,
+                        sortBy !== "title" || sortDirection !== "asc" ? 1 : 0,
+                      ].reduce((a, b) => a + b, 0)}
+                    </Badge>
+                  )}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-80">
@@ -1063,8 +1061,8 @@ export const OpportunitiesKanban = ({
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Ordenar por</label>
                   <div className="flex gap-2">
-                    <Select value={sortBy} onValueChange={setSortBy} className="flex-1">
-                      <SelectTrigger>
+                    <Select value={sortBy} onValueChange={setSortBy}>
+                      <SelectTrigger className="flex-1">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -1157,9 +1155,8 @@ export const OpportunitiesKanban = ({
                   key={stage.id}
                   className={`flex-1 max-w-xs p-4 rounded-lg border-2 ${getSpecialStageColor(
                     stage.code,
-                  )} flex flex-col items-center justify-center cursor-pointer transition-all hover:shadow-md ${
-                    draggingId ? "border-dashed" : ""
-                  }`}
+                  )} flex flex-col items-center justify-center cursor-pointer transition-all hover:shadow-md ${draggingId ? "border-dashed" : ""
+                    }`}
                   onDragOver={handleDragOver}
                   onDrop={(e) => handleDrop(e, stage.id)}
                 >
