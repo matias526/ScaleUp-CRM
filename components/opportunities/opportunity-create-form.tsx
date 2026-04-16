@@ -20,6 +20,7 @@ import {
   getEndCustomers,
   createEndCustomer,
 } from "@/lib/services/opportunity-service"
+import { getEndCustomersForPartner } from "@/lib/services/end-customer-service-client"
 import type { Tables } from "@/types/supabase"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -400,8 +401,8 @@ export default function OpportunityCreateForm() {
         const countries = await getAllCountries()
         setAllCountries(countries)
 
-        // Load all end customers - filtrar por partner si es Partner user
-        const customers = isScaleUpUser ? await getEndCustomers() : await getEndCustomers(partnerId)
+        // Load all end customers - usar getEndCustomersForPartner para Partner users
+        const customers = isScaleUpUser ? await getEndCustomers() : await getEndCustomersForPartner(partnerId)
         setEndCustomers(customers)
 
         // Load industries for the modal
