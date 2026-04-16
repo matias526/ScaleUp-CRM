@@ -264,4 +264,66 @@ export const DICT_LANG_OPPORTUNITIES = {
     en: "Close Date",
     pt: "Data de Fechamento",
   },
+
+  // Prospect Partner Modal
+  "opportunities.prospect.title": {
+    es: "Nuevo Partner Prospecto",
+    en: "New Prospect Partner",
+    pt: "Novo Partner Prospecto",
+  },
+  "opportunities.prospect.name": {
+    es: "Nombre del Partner",
+    en: "Partner Name",
+    pt: "Nome do Partner",
+  },
+  "opportunities.prospect.website": {
+    es: "Sitio Web",
+    en: "Website",
+    pt: "Site",
+  },
+  "opportunities.prospect.country": {
+    es: "País Principal",
+    en: "Main Country",
+    pt: "País Principal",
+  },
+  "opportunities.prospect.contact_title": {
+    es: "Información de Contacto",
+    en: "Contact Information",
+    pt: "Informações de Contato",
+  },
+  "opportunities.prospect.first_name": {
+    es: "Nombre",
+    en: "First Name",
+    pt: "Nome",
+  },
+  "opportunities.prospect.last_name": {
+    es: "Apellido",
+    en: "Last Name",
+    pt: "Sobrenome",
+  },
+  "opportunities.prospect.email": {
+    es: "Email",
+    en: "Email",
+    pt: "Email",
+  },
+  "opportunities.prospect.phone": {
+    es: "Teléfono",
+    en: "Phone",
+    pt: "Telefone",
+  },
+  "opportunities.prospect.preferred_language": {
+    es: "Idioma Preferido",
+    en: "Preferred Language",
+    pt: "Idioma Preferido",
+  },
+  "opportunities.prospect.save": {
+    es: "Guardar Prospecto",
+    en: "Save Prospect",
+    pt: "Salvar Prospecto",
+  },
+  "opportunities.prospect.is_prospect": {
+    es: "Es un Partner Prospecto",
+    en: "Is a Prospect Partner",
+    pt: "É um Partner Prospecto",
+  },
 }

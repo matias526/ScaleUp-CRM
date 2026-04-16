@@ -141,6 +141,21 @@ export default function OpportunityCreateForm() {
     tax_id: "",
     country_id: "",
   })
+  
+  // Prospect Partner States
+  const [prospectDialogOpen, setProspectDialogOpen] = useState(false)
+  const [prospectPartnerData, setProspectPartnerData] = useState({
+    name: "",
+    website: "",
+    main_country_id: "",
+  })
+  const [prospectContactData, setProspectContactData] = useState({
+    first_name: "",
+    last_name: "",
+    email: "",
+    phone: "",
+    preferred_language: "es" as "es" | "en" | "pt",
+  })
 
   // totalSteps es dinámico: 5 si hay campos técnicos, 4 si no
   const hasTechFields = techFields.length > 0
@@ -176,7 +191,16 @@ export default function OpportunityCreateForm() {
     if (currentStep === 1) {
       fieldsToValidate.push("title", "pipeline_stage_id", "tech_company_id")
     } else if (currentStep === 2) {
-      fieldsToValidate.push("tech_company_id", "pipeline_stage_id")
+      fieldsToValidate.push("tech_company_id", "assigned_to", "country")
+      
+      // Require partner_id only if NOT a prospect
+      const isProspect = form.watch("is_prospect")
+      if (!isProspect && !form.watch("partner_id")) {
+        form.setError("partner_id", { message: "El partner es obligatorio" })
+        return false
+      }
+      
+      // If there is a partner, validate responsible
       if (form.watch("partner_id")) {
         fieldsToValidate.push("partner_responsible_id")
       }
@@ -203,7 +227,20 @@ export default function OpportunityCreateForm() {
     description: z.string().optional(),
     pipeline_stage_id: z.string().min(1, "La etapa es obligatoria"),
     tech_company_id: z.string().min(1, "La empresa tecnológica es obligatoria"),
+    is_prospect: z.boolean().optional(),
     partner_id: z.string().optional().nullable(),
+    prospect_partner_data: z.object({
+      name: z.string().optional(),
+      website: z.string().optional(),
+      main_country_id: z.string().optional(),
+    }).optional(),
+    prospect_contact_data: z.object({
+      first_name: z.string().optional(),
+      last_name: z.string().optional(),
+      email: z.string().optional(),
+      phone: z.string().optional(),
+      preferred_language: z.enum(["es", "en", "pt"]).optional(),
+    }).optional(),
     end_customer_id: z.string().optional().nullable(),
     estimated_value: z.coerce.number().optional().nullable(),
     tech_field_ids: z.array(z.string()).optional(),
@@ -224,7 +261,20 @@ export default function OpportunityCreateForm() {
       description: "",
       pipeline_stage_id: preselectedStageId || "",
       tech_company_id: techCompanyId || "",
+      is_prospect: false,
       partner_id: partnerId || null,
+      prospect_partner_data: {
+        name: "",
+        website: "",
+        main_country_id: "",
+      },
+      prospect_contact_data: {
+        first_name: "",
+        last_name: "",
+        email: "",
+        phone: "",
+        preferred_language: "es",
+      },
       end_customer_id: null,
       estimated_value: null,
       tech_field_ids: [],
@@ -401,32 +451,85 @@ export default function OpportunityCreateForm() {
   const onSubmit = async (data: FormValues) => {
     try {
       console.log("[v0] onSubmit triggered - currentStep:", currentStep, "totalSteps:", totalSteps)
-      console.log("[v0] Form data:", data)
 
       // Validate only the fields for the current step
       const isStepValid = await validateCurrentStep()
-      console.log("[v0] Current step valid:", isStepValid)
 
       if (!isStepValid) {
-        console.log("[v0] Step validation failed, not advancing")
         return
       }
 
       // If not on the final step, just advance to next step
       if (currentStep < totalSteps) {
-        console.log("[v0] Moving to next step from", currentStep, "to", currentStep + 1)
         setCurrentStep(currentStep + 1)
         return
       }
 
       // Only create opportunity on the final step (Step 5)
-      console.log("[v0] Creating opportunity with data:", data)
       setLoadingScaleUpManager(true)
 
-      // Obtener el manager de ScaleUp que maneja la relación entre Tech Company y Partner (solo si hay Partner)
+      let prospectPartnerId: string | null = null
+      let prospectContactId: string | null = null
+
+      // ✅ ATOMIC INSERTION: If is_prospect is true, insert prospect partner and contact first
+      if (data.is_prospect && data.prospect_partner_data && data.prospect_contact_data) {
+        try {
+          // 1. INSERT into prospect_partners
+          const { data: prospectPartnerResult, error: prospectError } = await supabase
+            .from("prospect_partners")
+            .insert([
+              {
+                name: data.prospect_partner_data.name,
+                website: data.prospect_partner_data.website || null,
+                main_country_id: data.prospect_partner_data.main_country_id,
+              },
+            ])
+            .select("id")
+
+          if (prospectError || !prospectPartnerResult || prospectPartnerResult.length === 0) {
+            throw new Error("Error creando partner prospecto: " + prospectError?.message)
+          }
+
+          prospectPartnerId = prospectPartnerResult[0].id
+          console.log("[v0] Created prospect partner with ID:", prospectPartnerId)
+
+          // 2. INSERT into contacts with prospect_id
+          const { data: contactResult, error: contactError } = await supabase
+            .from("contacts")
+            .insert([
+              {
+                first_name: data.prospect_contact_data.first_name,
+                last_name: data.prospect_contact_data.last_name,
+                email: data.prospect_contact_data.email,
+                phone: data.prospect_contact_data.phone || null,
+                preferred_language: data.prospect_contact_data.preferred_language || "es",
+                prospect_id: prospectPartnerId,
+              },
+            ])
+            .select("id")
+
+          if (contactError || !contactResult || contactResult.length === 0) {
+            throw new Error("Error creando contacto prospecto: " + contactError?.message)
+          }
+
+          prospectContactId = contactResult[0].id
+          console.log("[v0] Created prospect contact with ID:", prospectContactId)
+        } catch (error) {
+          console.error("[v0] Error in atomic insertion:", error)
+          toast({
+            title: "Error",
+            description: error instanceof Error ? error.message : "Error al crear partner prospecto",
+            variant: "destructive",
+          })
+          setLoadingScaleUpManager(false)
+          return
+        }
+      }
+
+      // Obtener el manager de ScaleUp que maneja la relación entre Tech Company y Partner (solo si hay Partner y no es prospecto)
       let assignedToUserId = data.assigned_to || null
 
-      if (data.partner_id && data.tech_company_id && isScaleUpUser) {
+      if (data.partner_id && data.tech_company_id && isScaleUpUser && !data.is_prospect) {
         try {
           const manager = await getScaleUpManager(data.tech_company_id, data.partner_id)
           if (manager) {
@@ -443,7 +546,8 @@ export default function OpportunityCreateForm() {
         description: data.description || null,
         pipeline_stage_id: data.pipeline_stage_id,
         tech_company_id: data.tech_company_id,
-        partner_id: data.partner_id || null,
+        partner_id: data.is_prospect ? null : (data.partner_id || null),
+        prospect_id: prospectPartnerId,
         end_customer_id: data.end_customer_id || null,
         estimated_value: data.estimated_value || null,
         estimated_close_date: data.estimated_close_date || null,
@@ -461,7 +565,7 @@ export default function OpportunityCreateForm() {
         // Los valores técnicos se recopilarían aquí si hay UI para ello
       }
 
-      // Crear la oportunidad
+      // 3. INSERT into opportunities
       const result = await createOpportunity(opportunityData, techValues, userRole)
 
       toast({
@@ -538,22 +642,32 @@ export default function OpportunityCreateForm() {
                     )}
                   />
 
-                  {/* Es oportunidad de nuevo partner */}
-                  <FormField
-                    control={form.control}
-                    name="is_new_partner"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center justify-between rounded-lg border p-4">
-                        <div className="space-y-0.5">
-                          <FormLabel className="text-base cursor-pointer">¿Oportunidad para nuevo partner?</FormLabel>
-                          <p className="text-sm text-gray-500">Marca si esta oportunidad es para incorporar un nuevo partner</p>
-                        </div>
-                        <FormControl>
-                          <input type="checkbox" checked={field.value} onChange={field.onChange} className="h-4 w-4" />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+                  {/* Es Partner Prospecto (Solo para ScaleUp) */}
+                  {isScaleUpUser && (
+                    <FormField
+                      control={form.control}
+                      name="is_prospect"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base cursor-pointer">{t("opportunities.prospect.is_prospect")}</FormLabel>
+                            <p className="text-sm text-gray-500">Marca si este partner es prospecto</p>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={(checked) => {
+                                field.onChange(checked)
+                                if (checked) {
+                                  setProspectDialogOpen(true)
+                                }
+                              }}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  )}
 
                   {/* Etapa del Pipeline */}
                   <FormField
@@ -1137,6 +1251,148 @@ export default function OpportunityCreateForm() {
             >
               <Check className="mr-2 h-4 w-4" />
               {t("opportunities.form.create_end_customer")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: Nuevo Partner Prospecto */}
+      <Dialog open={prospectDialogOpen} onOpenChange={setProspectDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("opportunities.prospect.title")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            {/* Partner Prospecto Info */}
+            <div className="space-y-4">
+              <h4 className="font-medium text-sm">{t("opportunities.prospect.name")}</h4>
+              
+              {/* Nombre del Partner */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{t("opportunities.prospect.name")} *</label>
+                <Input
+                  placeholder="Nombre de la empresa"
+                  value={prospectPartnerData.name}
+                  onChange={(e) => setProspectPartnerData({ ...prospectPartnerData, name: e.target.value })}
+                />
+              </div>
+
+              {/* Sitio Web */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{t("opportunities.prospect.website")}</label>
+                <Input
+                  placeholder="https://ejemplo.com"
+                  value={prospectPartnerData.website}
+                  onChange={(e) => setProspectPartnerData({ ...prospectPartnerData, website: e.target.value })}
+                />
+              </div>
+
+              {/* País Principal */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{t("opportunities.prospect.country")} *</label>
+                <Select value={prospectPartnerData.main_country_id} onValueChange={(value) => {
+                  setProspectPartnerData({ ...prospectPartnerData, main_country_id: value })
+                }}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t("opportunities.form.select_placeholder")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allCountries.map((country) => (
+                      <SelectItem key={country.id} value={country.id}>
+                        {country.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Contact Info */}
+            <div className="space-y-4 border-t pt-4">
+              <h4 className="font-medium text-sm">{t("opportunities.prospect.contact_title")}</h4>
+              
+              {/* Nombre del Contacto */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{t("opportunities.prospect.first_name")} *</label>
+                <Input
+                  placeholder="Nombre"
+                  value={prospectContactData.first_name}
+                  onChange={(e) => setProspectContactData({ ...prospectContactData, first_name: e.target.value })}
+                />
+              </div>
+
+              {/* Apellido */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{t("opportunities.prospect.last_name")} *</label>
+                <Input
+                  placeholder="Apellido"
+                  value={prospectContactData.last_name}
+                  onChange={(e) => setProspectContactData({ ...prospectContactData, last_name: e.target.value })}
+                />
+              </div>
+
+              {/* Email */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{t("opportunities.prospect.email")} *</label>
+                <Input
+                  placeholder="correo@ejemplo.com"
+                  type="email"
+                  value={prospectContactData.email}
+                  onChange={(e) => setProspectContactData({ ...prospectContactData, email: e.target.value })}
+                />
+              </div>
+
+              {/* Teléfono */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{t("opportunities.prospect.phone")}</label>
+                <Input
+                  placeholder="+1234567890"
+                  value={prospectContactData.phone}
+                  onChange={(e) => setProspectContactData({ ...prospectContactData, phone: e.target.value })}
+                />
+              </div>
+
+              {/* Idioma Preferido */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{t("opportunities.prospect.preferred_language")}</label>
+                <Select value={prospectContactData.preferred_language} onValueChange={(value: any) => {
+                  setProspectContactData({ ...prospectContactData, preferred_language: value })
+                }}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t("opportunities.form.select_placeholder")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="es">Español</SelectItem>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="pt">Português</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Botón Guardar */}
+            <Button
+              className="w-full bg-green-600 hover:bg-green-700"
+              disabled={
+                !prospectPartnerData.name ||
+                !prospectPartnerData.main_country_id ||
+                !prospectContactData.first_name ||
+                !prospectContactData.last_name ||
+                !prospectContactData.email
+              }
+              onClick={() => {
+                // Guardar datos en el form state
+                form.setValue("prospect_partner_data", prospectPartnerData, { shouldValidate: false })
+                form.setValue("prospect_contact_data", prospectContactData, { shouldValidate: false })
+                setProspectDialogOpen(false)
+                toast({
+                  title: "Éxito",
+                  description: "Datos del prospecto guardados",
+                })
+              }}
+            >
+              <Check className="mr-2 h-4 w-4" />
+              {t("opportunities.prospect.save")}
             </Button>
           </div>
         </DialogContent>
