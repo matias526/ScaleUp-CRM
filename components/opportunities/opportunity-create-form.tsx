@@ -421,7 +421,6 @@ export default function OpportunityCreateForm() {
   useEffect(() => {
     if (!watchTechCompany) {
       setTechFields([])
-      setTechFieldValues({}) // Reset valores cuando cambia tech company
       return
     }
 
