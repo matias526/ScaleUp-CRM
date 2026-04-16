@@ -215,7 +215,7 @@ export default function OpportunityCreateForm() {
       // Validar que todos los campos técnicos obligatorios estén completos
       const requiredFields = techFields.filter((field: any) => field.is_required)
       let hasError = false
-      
+
       requiredFields.forEach((field: any) => {
         const value = form.getValues(`opportunity_tech_fields.${field.id}` as any)
         if (!value || (Array.isArray(value) && value.length === 0)) {
@@ -621,9 +621,9 @@ export default function OpportunityCreateForm() {
       techFields.forEach((field: any) => {
         const fieldKey = `opportunity_tech_fields.${field.id}`
         const value = form.getValues(fieldKey as any)
-        
+
         console.log("[v0] Tech field:", field.field_name, "Type:", field.field_type, "Value:", value)
-        
+
         if (value !== undefined && value !== null && value !== "" && !(Array.isArray(value) && value.length === 0)) {
           const techValue: any = {
             opportunity_tech_field_id: field.id,
@@ -785,7 +785,7 @@ export default function OpportunityCreateForm() {
                         <Check className="h-5 w-5 text-green-600" />
                         <span className="font-semibold text-gray-900">Datos del Prospecto Guardados</span>
                       </div>
-                      
+
                       {/* Grid con datos de empresa */}
                       <div className="grid grid-cols-2 gap-3 text-sm">
                         <div className="bg-white rounded p-3">
@@ -810,10 +810,10 @@ export default function OpportunityCreateForm() {
                       </div>
 
                       {/* Botón para editar */}
-                      <Button 
+                      <Button
                         type="button"
-                        variant="outline" 
-                        size="sm" 
+                        variant="outline"
+                        size="sm"
                         className="w-full"
                         onClick={() => setProspectDialogOpen(true)}
                       >
@@ -1142,7 +1142,7 @@ export default function OpportunityCreateForm() {
               {currentStep === 4 && (
                 <div className="space-y-4">
                   <div className="text-sm font-medium text-blue-600">{t("opportunities.step.4")}</div>
-                  
+
                   {loadingTechFields ? (
                     <p className="text-gray-500">{t("opportunities.form.loading")}</p>
                   ) : techFields.length === 0 ? (
@@ -1358,29 +1358,29 @@ export default function OpportunityCreateForm() {
                       const value = form.getValues(fieldKey as any)
                       return value !== undefined && value !== null && value !== "" && !(Array.isArray(value) && value.length === 0)
                     }) && (
-                      <div className="mt-4 pt-4 border-t space-y-3">
-                        <h4 className="font-semibold text-sm flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-purple-600" />
-                          Campos Técnicos
-                        </h4>
-                        <div className="bg-purple-50 rounded p-3 space-y-2 text-sm">
-                          {techFields.map((field: any) => {
-                            const fieldKey = `opportunity_tech_fields.${field.id}`
-                            const value = form.getValues(fieldKey as any)
-                            if (value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0)) return null
-                            
-                            let displayValue = Array.isArray(value) ? value.join(", ") : String(value)
+                        <div className="mt-4 pt-4 border-t space-y-3">
+                          <h4 className="font-semibold text-sm flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-purple-600" />
+                            Campos Técnicos
+                          </h4>
+                          <div className="bg-purple-50 rounded p-3 space-y-2 text-sm">
+                            {techFields.map((field: any) => {
+                              const fieldKey = `opportunity_tech_fields.${field.id}`
+                              const value = form.getValues(fieldKey as any)
+                              if (value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0)) return null
 
-                            return (
-                              <div key={field.id}>
-                                <span className="font-medium text-gray-700">{field.field_name}:</span>
-                                <span className="text-gray-900 ml-2">{displayValue}</span>
-                              </div>
-                            )
-                          })}
+                              let displayValue = Array.isArray(value) ? value.join(", ") : String(value)
+
+                              return (
+                                <div key={field.id}>
+                                  <span className="font-medium text-gray-700">{field.field_name}:</span>
+                                  <span className="text-gray-900 ml-2">{displayValue}</span>
+                                </div>
+                              )
+                            })}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
                   </div>
                 </div>
               )}
@@ -1414,20 +1414,19 @@ export default function OpportunityCreateForm() {
                     type="button"
                     disabled={loadingScaleUpManager}
                     onClick={async () => {
-                      // 1. Standard Validation
+                      // Definir campos a validar por paso
                       const fieldsToValidate: any[] = []
                       if (currentStep === 1) fieldsToValidate.push("title", "pipeline_stage_id")
                       if (currentStep === 2) {
                         fieldsToValidate.push("tech_company_id", "country")
                         if (isScaleUpUser) fieldsToValidate.push("assigned_to")
-                        if (form.watch("partner_id")) fieldsToValidate.push("partner_responsible_id")
                       }
-                      if (currentStep === 3 && !isScaleUpUser) fieldsToValidate.push("end_customer_id")
+                      if (currentStep === 3) fieldsToValidate.push("end_customer_id")
 
                       const isValid = fieldsToValidate.length > 0 ? await form.trigger(fieldsToValidate) : true
 
                       if (isValid) {
-                        // 2. CRITICAL: Manual Validation for Step 4 (Technical Fields)
+                        // SI ES EL PASO DE TECH FIELDS (Paso 4) -> Validar manualmente
                         if (currentStep === 4 && hasTechFields) {
                           let hasTechError = false
                           techFields.forEach((field: any) => {
@@ -1436,22 +1435,21 @@ export default function OpportunityCreateForm() {
                               if (!val || (Array.isArray(val) && val.length === 0)) {
                                 form.setError(`opportunity_tech_fields.${field.id}` as any, {
                                   type: "manual",
-                                  message: "Este campo es obligatorio"
+                                  message: "Obligatorio"
                                 })
                                 hasTechError = true
                               }
                             }
                           })
-                          if (hasTechError) {
-                            toast({ title: "Error", description: "Completa los campos técnicos obligatorios", variant: "destructive" })
-                            return
-                          }
+                          if (hasTechError) return
                         }
 
-                        // 3. Advance Step
-                        let newStep = currentStep + 1
-                        if (newStep === 4 && !hasTechFields) newStep = 5
-                        setCurrentStep(newStep)
+                        // SOLO AVANZAR EL PASO. No llamar a handleSubmit aquí.
+                        let nextStep = currentStep + 1
+                        // Si no hay campos técnicos, saltar del 3 directamente al 5 (Resumen)
+                        if (currentStep === 3 && !hasTechFields) nextStep = 5
+
+                        setCurrentStep(nextStep)
                       }
                     }}
                   >
