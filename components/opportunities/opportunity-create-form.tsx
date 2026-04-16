@@ -115,7 +115,6 @@ export default function OpportunityCreateForm() {
   const [filteredPartners, setFilteredPartners] = useState<Tables<"partners">[]>([])
   const [endCustomers, setEndCustomers] = useState<Tables<"end_customers">[]>([])
   const [techFields, setTechFields] = useState<any[]>([])
-  const [techFieldValues, setTechFieldValues] = useState<Record<string, any>>({}) // Estado para capturar valores de campos técnicos
   const [allCountries, setAllCountries] = useState<{ id: string; name: string; code: string }[]>([])
   const [partnerCountries, setPartnerCountries] = useState<{ id: string; name: string; code: string }[]>([])
   const [loadingStages, setLoadingStages] = useState(true)
@@ -215,14 +214,15 @@ export default function OpportunityCreateForm() {
     } else if (currentStep === 4 && hasTechFields) {
       // Validar que todos los campos técnicos obligatorios estén completos
       const requiredFields = techFields.filter((field: any) => field.is_required)
-      for (const field of requiredFields) {
-        const value = techFieldValues[field.id]
-        if (value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0)) {
-          toast({
-            title: "Campo Obligatorio",
-            description: `${field.field_name} es obligatorio`,
-            variant: "destructive",
-          })
+      
+      if (requiredFields.length > 0) {
+        // Preparar keys de campos obligatorios para validar con form.trigger()
+        const requiredFieldKeys = requiredFields.map((field: any) => `techField_${field.id}`)
+        
+        // Usar form.trigger() para validar solo los campos requeridos
+        const isValid = await form.trigger(requiredFieldKeys as any)
+        
+        if (!isValid) {
           return false
         }
       }
@@ -430,16 +430,9 @@ export default function OpportunityCreateForm() {
       try {
         const fields = await getOpportunityTechFields(watchTechCompany)
         setTechFields(fields || [])
-        // Inicializar los valores de campos técnicos
-        const initialValues: Record<string, any> = {}
-        fields?.forEach((field: any) => {
-          initialValues[field.id] = ""
-        })
-        setTechFieldValues(initialValues)
       } catch (error) {
         console.error("Error loading tech fields:", error)
         setTechFields([])
-        setTechFieldValues({})
       } finally {
         setLoadingTechFields(false)
       }
@@ -599,7 +592,7 @@ export default function OpportunityCreateForm() {
         created_by: user?.id,
       }
 
-      // Preparar tech values desde techFieldValues state
+      // Preparar tech values desde form.getValues() en lugar de techFieldValues state
       const techValuesToSave: Array<{
         opportunity_tech_field_id: string
         value_text?: string | null
@@ -609,13 +602,14 @@ export default function OpportunityCreateForm() {
         value_json?: any | null
       }> = []
 
-      // Iterar sobre los campos técnicos y preparar los valores según su tipo
+      // Iterar sobre los campos técnicos y extraer sus valores del form
       techFields.forEach((field: any) => {
-        const value = techFieldValues[field.id]
+        const fieldKey = `techField_${field.id}`
+        const value = form.getValues(fieldKey as any)
         
         console.log("[v0] Tech field:", field.field_name, "Type:", field.field_type, "Value:", value)
         
-        if (value !== undefined && value !== null && value !== "") {
+        if (value !== undefined && value !== null && value !== "" && !(Array.isArray(value) && value.length === 0)) {
           const techValue: any = {
             opportunity_tech_field_id: field.id,
           }
@@ -1140,143 +1134,157 @@ export default function OpportunityCreateForm() {
                     <p className="text-gray-500">No hay campos técnicos definidos para esta empresa</p>
                   ) : (
                     <div className="space-y-5">
-                      {techFields.map((field: any) => (
-                        <div key={field.id} className={`border rounded-lg p-4 space-y-2 ${field.is_required ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}>
-                          <label className="text-sm font-medium flex items-center gap-2">
-                            {field.field_name}
-                            {field.is_required && <span className="text-red-600 font-bold">*</span>}
-                          </label>
-                          <p className="text-xs text-gray-500">{field.field_type}</p>
+                      {techFields.map((field: any) => {
+                        const fieldKey = `techField_${field.id}`
+                        const { register, watch, formState: { errors } } = form
+                        const fieldValue = watch(fieldKey as any)
+                        const hasError = Boolean((errors as any)?.[fieldKey])
 
-                          {/* TEXT FIELD */}
-                          {field.field_type === "text" && (
-                            <Input
-                              placeholder={`Ingresa ${field.field_name.toLowerCase()}`}
-                              value={techFieldValues[field.id] || ""}
-                              onChange={(e) => setTechFieldValues({
-                                ...techFieldValues,
-                                [field.id]: e.target.value
-                              })}
-                            />
-                          )}
+                        return (
+                          <div key={field.id} className={`border rounded-lg p-4 space-y-2 ${field.is_required ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}>
+                            <label className="text-sm font-medium flex items-center gap-2">
+                              {field.field_name}
+                              {field.is_required && <span className="text-red-600 font-bold">*</span>}
+                            </label>
+                            <p className="text-xs text-gray-500">{field.field_type}</p>
 
-                          {/* NUMBER FIELD */}
-                          {field.field_type === "number" && (
-                            <Input
-                              type="number"
-                              placeholder={`Ingresa ${field.field_name.toLowerCase()}`}
-                              value={techFieldValues[field.id] || ""}
-                              onChange={(e) => setTechFieldValues({
-                                ...techFieldValues,
-                                [field.id]: e.target.value ? parseFloat(e.target.value) : null
-                              })}
-                            />
-                          )}
+                            {/* TEXT FIELD */}
+                            {field.field_type === "text" && (
+                              <>
+                                <Input
+                                  placeholder={`Ingresa ${field.field_name.toLowerCase()}`}
+                                  {...register(fieldKey as any, {
+                                    required: field.is_required ? `${field.field_name} es obligatorio` : false,
+                                  })}
+                                  className={hasError ? "border-red-500" : ""}
+                                />
+                                {hasError && <p className="text-xs text-red-600">{(errors as any)?.[fieldKey]?.message}</p>}
+                              </>
+                            )}
 
-                          {/* DATE FIELD */}
-                          {field.field_type === "date" && (
-                            <Input
-                              type="date"
-                              value={techFieldValues[field.id] || ""}
-                              onChange={(e) => setTechFieldValues({
-                                ...techFieldValues,
-                                [field.id]: e.target.value
-                              })}
-                            />
-                          )}
+                            {/* NUMBER FIELD */}
+                            {field.field_type === "number" && (
+                              <>
+                                <Input
+                                  type="number"
+                                  placeholder={`Ingresa ${field.field_name.toLowerCase()}`}
+                                  {...register(fieldKey as any, {
+                                    required: field.is_required ? `${field.field_name} es obligatorio` : false,
+                                    valueAsNumber: true,
+                                  })}
+                                  className={hasError ? "border-red-500" : ""}
+                                />
+                                {hasError && <p className="text-xs text-red-600">{(errors as any)?.[fieldKey]?.message}</p>}
+                              </>
+                            )}
 
-                          {/* BOOLEAN FIELD */}
-                          {field.field_type === "boolean" && (
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="checkbox"
-                                id={`field-${field.id}`}
-                                checked={techFieldValues[field.id] || false}
-                                onChange={(e) => setTechFieldValues({
-                                  ...techFieldValues,
-                                  [field.id]: e.target.checked
-                                })}
-                                className="w-4 h-4"
-                              />
-                              <label htmlFor={`field-${field.id}`} className="text-sm cursor-pointer">
-                                {field.field_name}
-                              </label>
-                            </div>
-                          )}
+                            {/* DATE FIELD */}
+                            {field.field_type === "date" && (
+                              <>
+                                <Input
+                                  type="date"
+                                  {...register(fieldKey as any, {
+                                    required: field.is_required ? `${field.field_name} es obligatorio` : false,
+                                  })}
+                                  className={hasError ? "border-red-500" : ""}
+                                />
+                                {hasError && <p className="text-xs text-red-600">{(errors as any)?.[fieldKey]?.message}</p>}
+                              </>
+                            )}
 
-                          {/* SELECT FIELD */}
-                          {field.field_type === "select" && field.options && (
-                            <Select value={techFieldValues[field.id] || ""} onValueChange={(value) => {
-                              setTechFieldValues({
-                                ...techFieldValues,
-                                [field.id]: value
-                              })
-                            }}>
-                              <SelectTrigger>
-                                <SelectValue placeholder={`Selecciona ${field.field_name.toLowerCase()}`} />
-                              </SelectTrigger>
-                              <SelectContent>
+                            {/* BOOLEAN FIELD */}
+                            {field.field_type === "boolean" && (
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="checkbox"
+                                  id={`field-${field.id}`}
+                                  {...register(fieldKey as any, {
+                                    required: false,
+                                  })}
+                                  className="w-4 h-4"
+                                />
+                                <label htmlFor={`field-${field.id}`} className="text-sm cursor-pointer">
+                                  {field.field_name}
+                                </label>
+                              </div>
+                            )}
+
+                            {/* SELECT FIELD */}
+                            {field.field_type === "select" && field.options && (
+                              <div className="space-y-2">
+                                <select
+                                  {...register(fieldKey as any, {
+                                    required: field.is_required ? `${field.field_name} es obligatorio` : false,
+                                  })}
+                                  className={`w-full px-3 py-2 border rounded-md text-sm ${hasError ? "border-red-500" : "border-gray-300"}`}
+                                >
+                                  <option value="">Selecciona {field.field_name.toLowerCase()}</option>
+                                  {field.options.map((option: any, idx: number) => {
+                                    const optionValue = typeof option === 'string' ? option : option.value
+                                    const optionLabel = typeof option === 'string' ? option : option.label
+                                    return (
+                                      <option key={`${field.id}-${idx}-${optionValue}`} value={optionValue}>
+                                        {optionLabel}
+                                      </option>
+                                    )
+                                  })}
+                                </select>
+                                {hasError && <p className="text-xs text-red-600">{(errors as any)?.[fieldKey]?.message}</p>}
+                              </div>
+                            )}
+
+                            {/* MULTISELECT FIELD */}
+                            {field.field_type === "multiselect" && field.options && (
+                              <div className="space-y-2">
                                 {field.options.map((option: any, idx: number) => {
                                   const optionValue = typeof option === 'string' ? option : option.value
                                   const optionLabel = typeof option === 'string' ? option : option.label
+                                  const isChecked = Array.isArray(fieldValue) ? fieldValue.includes(optionValue) : false
+
                                   return (
-                                    <SelectItem key={`${field.id}-${idx}-${optionValue}`} value={optionValue}>
-                                      {optionLabel}
-                                    </SelectItem>
+                                    <div key={`${field.id}-${idx}-${optionValue}`} className="flex items-center gap-2">
+                                      <input
+                                        type="checkbox"
+                                        id={`multiselect-${field.id}-${idx}`}
+                                        checked={isChecked}
+                                        onChange={(e) => {
+                                          const currentValues = Array.isArray(fieldValue) ? [...fieldValue] : []
+                                          if (e.target.checked) {
+                                            currentValues.push(optionValue)
+                                          } else {
+                                            const index = currentValues.indexOf(optionValue)
+                                            if (index > -1) currentValues.splice(index, 1)
+                                          }
+                                          form.setValue(fieldKey as any, currentValues)
+                                        }}
+                                        className="w-4 h-4"
+                                      />
+                                      <label htmlFor={`multiselect-${field.id}-${idx}`} className="text-sm cursor-pointer">
+                                        {optionLabel}
+                                      </label>
+                                    </div>
                                   )
                                 })}
-                              </SelectContent>
-                            </Select>
-                          )}
+                                {hasError && <p className="text-xs text-red-600">{(errors as any)?.[fieldKey]?.message}</p>}
+                              </div>
+                            )}
 
-                          {/* MULTISELECT FIELD */}
-                          {field.field_type === "multiselect" && field.options && (
-                            <div className="space-y-2">
-                              {field.options.map((option: any, idx: number) => {
-                                const optionValue = typeof option === 'string' ? option : option.value
-                                const optionLabel = typeof option === 'string' ? option : option.label
-                                return (
-                                  <div key={`${field.id}-${idx}-${optionValue}`} className="flex items-center gap-2">
-                                    <input
-                                      type="checkbox"
-                                      id={`multiselect-${field.id}-${idx}`}
-                                      checked={(techFieldValues[field.id] || []).includes(optionValue)}
-                                      onChange={(e) => {
-                                        const current = techFieldValues[field.id] || []
-                                        const updated = e.target.checked
-                                          ? [...current, optionValue]
-                                          : current.filter((v: string) => v !== optionValue)
-                                        setTechFieldValues({
-                                          ...techFieldValues,
-                                          [field.id]: updated
-                                        })
-                                      }}
-                                      className="w-4 h-4"
-                                    />
-                                    <label htmlFor={`multiselect-${field.id}-${idx}`} className="text-sm cursor-pointer">
-                                      {optionLabel}
-                                    </label>
-                                  </div>
-                                )
-                              })}
-                            </div>
-                          )}
-
-                          {/* FILE FIELD */}
-                          {field.field_type === "file" && (
-                            <Input
-                              type="file"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0]
-                                setTechFieldValues({
-                                  ...techFieldValues,
-                                  [field.id]: file
-                                })
-                              }}
-                            />
-                          )}
-                        </div>
-                      ))}
+                            {/* FILE FIELD */}
+                            {field.field_type === "file" && (
+                              <>
+                                <Input
+                                  type="file"
+                                  {...register(fieldKey as any, {
+                                    required: field.is_required ? `${field.field_name} es obligatorio` : false,
+                                  })}
+                                  className={hasError ? "border-red-500" : ""}
+                                />
+                                {hasError && <p className="text-xs text-red-600">{(errors as any)?.[fieldKey]?.message}</p>}
+                              </>
+                            )}
+                          </div>
+                        )
+                      })}
                     </div>
                   )}
                 </div>
@@ -1330,7 +1338,11 @@ export default function OpportunityCreateForm() {
                     )}
 
                     {/* Sección de Campos Técnicos (si existen valores) */}
-                    {hasTechFields && Object.keys(techFieldValues).some(key => techFieldValues[key] !== undefined && techFieldValues[key] !== null && techFieldValues[key] !== "") && (
+                    {hasTechFields && techFields.some((field: any) => {
+                      const fieldKey = `techField_${field.id}`
+                      const value = form.getValues(fieldKey as any)
+                      return value !== undefined && value !== null && value !== "" && !(Array.isArray(value) && value.length === 0)
+                    }) && (
                       <div className="mt-4 pt-4 border-t space-y-3">
                         <h4 className="font-semibold text-sm flex items-center gap-2">
                           <FileText className="h-4 w-4 text-purple-600" />
@@ -1338,8 +1350,9 @@ export default function OpportunityCreateForm() {
                         </h4>
                         <div className="bg-purple-50 rounded p-3 space-y-2 text-sm">
                           {techFields.map((field: any) => {
-                            const value = techFieldValues[field.id]
-                            if (value === undefined || value === null || value === "") return null
+                            const fieldKey = `techField_${field.id}`
+                            const value = form.getValues(fieldKey as any)
+                            if (value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0)) return null
                             
                             let displayValue = value
                             if (Array.isArray(value)) {
