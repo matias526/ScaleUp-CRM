@@ -1195,11 +1195,15 @@ export default function OpportunityCreateForm() {
                                 <SelectValue placeholder={`Selecciona ${field.field_name.toLowerCase()}`} />
                               </SelectTrigger>
                               <SelectContent>
-                                {field.options.map((option: any) => (
-                                  <SelectItem key={option} value={option}>
-                                    {option}
-                                  </SelectItem>
-                                ))}
+                                {field.options.map((option: any, idx: number) => {
+                                  const optionValue = typeof option === 'string' ? option : option.value
+                                  const optionLabel = typeof option === 'string' ? option : option.label
+                                  return (
+                                    <SelectItem key={`${field.id}-${idx}-${optionValue}`} value={optionValue}>
+                                      {optionLabel}
+                                    </SelectItem>
+                                  )
+                                })}
                               </SelectContent>
                             </Select>
                           )}
@@ -1207,29 +1211,33 @@ export default function OpportunityCreateForm() {
                           {/* MULTISELECT FIELD */}
                           {field.field_type === "multiselect" && field.options && (
                             <div className="space-y-2">
-                              {field.options.map((option: any) => (
-                                <div key={option} className="flex items-center gap-2">
-                                  <input
-                                    type="checkbox"
-                                    id={`multiselect-${field.id}-${option}`}
-                                    checked={(techFieldValues[field.id] || []).includes(option)}
-                                    onChange={(e) => {
-                                      const current = techFieldValues[field.id] || []
-                                      const updated = e.target.checked
-                                        ? [...current, option]
-                                        : current.filter((v: string) => v !== option)
-                                      setTechFieldValues({
-                                        ...techFieldValues,
-                                        [field.id]: updated
-                                      })
-                                    }}
-                                    className="w-4 h-4"
-                                  />
-                                  <label htmlFor={`multiselect-${field.id}-${option}`} className="text-sm cursor-pointer">
-                                    {option}
-                                  </label>
-                                </div>
-                              ))}
+                              {field.options.map((option: any, idx: number) => {
+                                const optionValue = typeof option === 'string' ? option : option.value
+                                const optionLabel = typeof option === 'string' ? option : option.label
+                                return (
+                                  <div key={`${field.id}-${idx}-${optionValue}`} className="flex items-center gap-2">
+                                    <input
+                                      type="checkbox"
+                                      id={`multiselect-${field.id}-${idx}`}
+                                      checked={(techFieldValues[field.id] || []).includes(optionValue)}
+                                      onChange={(e) => {
+                                        const current = techFieldValues[field.id] || []
+                                        const updated = e.target.checked
+                                          ? [...current, optionValue]
+                                          : current.filter((v: string) => v !== optionValue)
+                                        setTechFieldValues({
+                                          ...techFieldValues,
+                                          [field.id]: updated
+                                        })
+                                      }}
+                                      className="w-4 h-4"
+                                    />
+                                    <label htmlFor={`multiselect-${field.id}-${idx}`} className="text-sm cursor-pointer">
+                                      {optionLabel}
+                                    </label>
+                                  </div>
+                                )
+                              })}
                             </div>
                           )}
 
