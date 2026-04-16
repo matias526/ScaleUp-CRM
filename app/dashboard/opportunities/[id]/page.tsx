@@ -1,30 +1,34 @@
 import { notFound } from "next/navigation"
-//import { createClient } from "@/lib/supabase/server"
 import { createServerClient } from "@/lib/supabase/server"
 import { OpportunityDetail } from "@/components/opportunities/opportunity-detail"
 
+// 1. Definimos params como Promise
 interface OpportunityPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default async function OpportunityPage({ params }: OpportunityPageProps) {
-  if (!params.id) {
+  // 2. DESEMPAQUETAMOS el id con await
+  const resolvedParams = await params
+  const id = resolvedParams.id
+
+  if (!id) {
     console.error("ID de oportunidad no proporcionado")
     notFound()
   }
 
   try {
-    console.log("Intentando obtener oportunidad con ID:", params.id)
+    console.log("Intentando obtener oportunidad con ID:", id)
 
     const supabase = createServerClient()
 
-    // Primero, verificar si la oportunidad existe con una consulta simple
+    // 3. Verificamos existencia
     const { data: opportunityExists, error: existsError } = await supabase
       .from("opportunities")
       .select("id")
-      .eq("id", params.id)
+      .eq("id", id)
       .single()
 
     if (existsError || !opportunityExists) {
@@ -32,9 +36,7 @@ export default async function OpportunityPage({ params }: OpportunityPageProps) 
       notFound()
     }
 
-    console.log("La oportunidad existe, obteniendo detalles completos")
-
-    // Ahora obtener los detalles completos
+    // 4. Obtenemos detalles incluyendo PROSPECT_PARTNERS
     const { data: opportunity, error } = await supabase
       .from("opportunities")
       .select(`
@@ -42,10 +44,11 @@ export default async function OpportunityPage({ params }: OpportunityPageProps) 
         stage:pipeline_stages(*),
         tech_company:tech_companies(*),
         partner:partners(*),
+        prospect:prospect_partners(*),
         end_customer:end_customers(*),
         creator:users!created_by(*)
       `)
-      .eq("id", params.id)
+      .eq("id", id)
       .single()
 
     if (error) {
@@ -59,7 +62,9 @@ export default async function OpportunityPage({ params }: OpportunityPageProps) 
       )
     }
 
+    // 5. Se lo pasamos al componente de detalle
     return <OpportunityDetail opportunity={opportunity} />
+
   } catch (error) {
     console.error("Error inesperado:", error)
     return (

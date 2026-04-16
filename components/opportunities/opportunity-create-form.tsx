@@ -115,6 +115,7 @@ export default function OpportunityCreateForm() {
   const [filteredPartners, setFilteredPartners] = useState<Tables<"partners">[]>([])
   const [endCustomers, setEndCustomers] = useState<Tables<"end_customers">[]>([])
   const [techFields, setTechFields] = useState<any[]>([])
+  const [techFieldValues, setTechFieldValues] = useState<Record<string, any>>({}) // Estado para capturar valores de campos técnicos
   const [allCountries, setAllCountries] = useState<{ id: string; name: string; code: string }[]>([])
   const [partnerCountries, setPartnerCountries] = useState<{ id: string; name: string; code: string }[]>([])
   const [loadingStages, setLoadingStages] = useState(true)
@@ -244,7 +245,6 @@ export default function OpportunityCreateForm() {
     }).optional(),
     end_customer_id: z.string().optional().nullable(),
     estimated_value: z.coerce.number().optional().nullable(),
-    tech_field_ids: z.array(z.string()).optional(),
     estimated_close_date: z.string().optional().nullable(),
     country: z.string().optional(),
     assigned_to: z.string().optional().nullable(),
@@ -278,7 +278,6 @@ export default function OpportunityCreateForm() {
       },
       end_customer_id: null,
       estimated_value: null,
-      tech_field_ids: [],
       estimated_close_date: null,
       country: "",
       assigned_to: null,
@@ -402,6 +401,37 @@ export default function OpportunityCreateForm() {
     }
 
     loadPartners()
+  }, [watchTechCompany])
+
+  // ✅ Load tech fields when tech company changes
+  useEffect(() => {
+    if (!watchTechCompany) {
+      setTechFields([])
+      setTechFieldValues({}) // Reset valores cuando cambia tech company
+      return
+    }
+
+    const loadTechFields = async () => {
+      setLoadingTechFields(true)
+      try {
+        const fields = await getOpportunityTechFields(watchTechCompany)
+        setTechFields(fields || [])
+        // Inicializar los valores de campos técnicos
+        const initialValues: Record<string, any> = {}
+        fields?.forEach((field: any) => {
+          initialValues[field.id] = ""
+        })
+        setTechFieldValues(initialValues)
+      } catch (error) {
+        console.error("Error loading tech fields:", error)
+        setTechFields([])
+        setTechFieldValues({})
+      } finally {
+        setLoadingTechFields(false)
+      }
+    }
+
+    loadTechFields()
   }, [watchTechCompany])
 
   // ✅ FIXED: Load partner users when partner changes
@@ -555,15 +585,67 @@ export default function OpportunityCreateForm() {
         created_by: user?.id,
       }
 
-      // Preparar tech values si existen
-      const techValues: Array<{ opportunity_tech_field_id: string; value: any; valueType: string }> = []
+      // Preparar tech values desde techFieldValues state
+      const techValuesToSave: Array<{
+        opportunity_tech_field_id: string
+        value_text?: string | null
+        value_numeric?: number | null
+        value_boolean?: boolean | null
+        value_date?: string | null
+        value_json?: any | null
+      }> = []
 
-      if (data.tech_field_ids && data.tech_field_ids.length > 0) {
-        // Los valores técnicos se recopilarían aquí si hay UI para ello
-      }
+      // Iterar sobre los campos técnicos y preparar los valores según su tipo
+      techFields.forEach((field: any) => {
+        const value = techFieldValues[field.id]
+        
+        if (value !== undefined && value !== null && value !== "") {
+          const techValue: any = {
+            opportunity_tech_field_id: field.id,
+          }
+
+          // Mapear el valor según el tipo de campo
+          switch (field.field_type) {
+            case "text":
+              techValue.value_text = String(value)
+              break
+            case "number":
+              techValue.value_numeric = typeof value === "number" ? value : parseFloat(value)
+              break
+            case "date":
+              techValue.value_date = String(value)
+              break
+            case "boolean":
+              techValue.value_boolean = Boolean(value)
+              break
+            case "select":
+              techValue.value_text = String(value)
+              break
+            case "multiselect":
+              techValue.value_json = Array.isArray(value) ? value : [value]
+              break
+            case "file":
+              // Los archivos se manejarán de forma especial (subir a storage)
+              techValue.value_json = { fileName: value?.name || null }
+              break
+          }
+
+          techValuesToSave.push(techValue)
+        }
+      })
 
       // 3. INSERT into opportunities
-      const result = await createOpportunity(opportunityData, techValues, userRole)
+      const result = await createOpportunity(opportunityData, techValuesToSave, userRole)
+
+      // 4. INSERT into opportunity_tech_values (si hay valores técnicos)
+      if (techValuesToSave.length > 0) {
+        try {
+          await createOpportunityTechValues(result.id, techValuesToSave)
+        } catch (error) {
+          console.error("Error al guardar valores técnicos:", error)
+          // No fallar la creación de la oportunidad si hay error en tech values
+        }
+      }
 
       toast({
         title: "Éxito",
@@ -1029,11 +1111,144 @@ export default function OpportunityCreateForm() {
               {/* ===== PASO 4: CAMPOS TÉCNICOS ===== */}
               {currentStep === 4 && (
                 <div className="space-y-4">
-                  <div className="text-sm font-medium text-blue-600">Paso 4: Campos Técnicos</div>
-                  {techFields.length === 0 ? (
+                  <div className="text-sm font-medium text-blue-600">{t("opportunities.step.4")}</div>
+                  
+                  {loadingTechFields ? (
+                    <p className="text-gray-500">{t("opportunities.form.loading")}</p>
+                  ) : techFields.length === 0 ? (
                     <p className="text-gray-500">No hay campos técnicos definidos para esta empresa</p>
                   ) : (
-                    <p className="text-sm text-gray-600">Completa los campos técnicos específicos de la empresa seleccionada (se mostrarían aquí)</p>
+                    <div className="space-y-5">
+                      {techFields.map((field: any) => (
+                        <div key={field.id} className="border rounded-lg p-4 space-y-2">
+                          <label className="text-sm font-medium flex items-center gap-2">
+                            {field.field_name}
+                            {field.is_required && <span className="text-red-500">*</span>}
+                          </label>
+                          <p className="text-xs text-gray-500">{field.field_type}</p>
+
+                          {/* TEXT FIELD */}
+                          {field.field_type === "text" && (
+                            <Input
+                              placeholder={`Ingresa ${field.field_name.toLowerCase()}`}
+                              value={techFieldValues[field.id] || ""}
+                              onChange={(e) => setTechFieldValues({
+                                ...techFieldValues,
+                                [field.id]: e.target.value
+                              })}
+                            />
+                          )}
+
+                          {/* NUMBER FIELD */}
+                          {field.field_type === "number" && (
+                            <Input
+                              type="number"
+                              placeholder={`Ingresa ${field.field_name.toLowerCase()}`}
+                              value={techFieldValues[field.id] || ""}
+                              onChange={(e) => setTechFieldValues({
+                                ...techFieldValues,
+                                [field.id]: e.target.value ? parseFloat(e.target.value) : null
+                              })}
+                            />
+                          )}
+
+                          {/* DATE FIELD */}
+                          {field.field_type === "date" && (
+                            <Input
+                              type="date"
+                              value={techFieldValues[field.id] || ""}
+                              onChange={(e) => setTechFieldValues({
+                                ...techFieldValues,
+                                [field.id]: e.target.value
+                              })}
+                            />
+                          )}
+
+                          {/* BOOLEAN FIELD */}
+                          {field.field_type === "boolean" && (
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                id={`field-${field.id}`}
+                                checked={techFieldValues[field.id] || false}
+                                onChange={(e) => setTechFieldValues({
+                                  ...techFieldValues,
+                                  [field.id]: e.target.checked
+                                })}
+                                className="w-4 h-4"
+                              />
+                              <label htmlFor={`field-${field.id}`} className="text-sm cursor-pointer">
+                                {field.field_name}
+                              </label>
+                            </div>
+                          )}
+
+                          {/* SELECT FIELD */}
+                          {field.field_type === "select" && field.options && (
+                            <Select value={techFieldValues[field.id] || ""} onValueChange={(value) => {
+                              setTechFieldValues({
+                                ...techFieldValues,
+                                [field.id]: value
+                              })
+                            }}>
+                              <SelectTrigger>
+                                <SelectValue placeholder={`Selecciona ${field.field_name.toLowerCase()}`} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {field.options.map((option: any) => (
+                                  <SelectItem key={option} value={option}>
+                                    {option}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+
+                          {/* MULTISELECT FIELD */}
+                          {field.field_type === "multiselect" && field.options && (
+                            <div className="space-y-2">
+                              {field.options.map((option: any) => (
+                                <div key={option} className="flex items-center gap-2">
+                                  <input
+                                    type="checkbox"
+                                    id={`multiselect-${field.id}-${option}`}
+                                    checked={(techFieldValues[field.id] || []).includes(option)}
+                                    onChange={(e) => {
+                                      const current = techFieldValues[field.id] || []
+                                      const updated = e.target.checked
+                                        ? [...current, option]
+                                        : current.filter((v: string) => v !== option)
+                                      setTechFieldValues({
+                                        ...techFieldValues,
+                                        [field.id]: updated
+                                      })
+                                    }}
+                                    className="w-4 h-4"
+                                  />
+                                  <label htmlFor={`multiselect-${field.id}-${option}`} className="text-sm cursor-pointer">
+                                    {option}
+                                  </label>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* FILE FIELD */}
+                          {field.field_type === "file" && (
+                            <Input
+                              type="file"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0]
+                                setTechFieldValues({
+                                  ...techFieldValues,
+                                  [field.id]: file
+                                })
+                              }}
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
               )}
@@ -1081,6 +1296,38 @@ export default function OpportunityCreateForm() {
                             <div><span className="font-medium text-gray-700">Teléfono:</span> <span className="text-gray-900">{form.watch("prospect_contact_data")?.phone}</span></div>
                           )}
                           <div><span className="font-medium text-gray-700">Idioma:</span> <span className="text-gray-900">{form.watch("prospect_contact_data")?.preferred_language?.toUpperCase()}</span></div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Sección de Campos Técnicos (si existen valores) */}
+                    {hasTechFields && Object.keys(techFieldValues).some(key => techFieldValues[key] !== undefined && techFieldValues[key] !== null && techFieldValues[key] !== "") && (
+                      <div className="mt-4 pt-4 border-t space-y-3">
+                        <h4 className="font-semibold text-sm flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-purple-600" />
+                          Campos Técnicos
+                        </h4>
+                        <div className="bg-purple-50 rounded p-3 space-y-2 text-sm">
+                          {techFields.map((field: any) => {
+                            const value = techFieldValues[field.id]
+                            if (value === undefined || value === null || value === "") return null
+                            
+                            let displayValue = value
+                            if (Array.isArray(value)) {
+                              displayValue = value.join(", ")
+                            } else if (typeof value === "boolean") {
+                              displayValue = value ? "Sí" : "No"
+                            } else if (value instanceof File) {
+                              displayValue = value.name
+                            }
+
+                            return (
+                              <div key={field.id}>
+                                <span className="font-medium text-gray-700">{field.field_name}:</span>
+                                <span className="text-gray-900 ml-2">{displayValue}</span>
+                              </div>
+                            )
+                          })}
                         </div>
                       </div>
                     )}
