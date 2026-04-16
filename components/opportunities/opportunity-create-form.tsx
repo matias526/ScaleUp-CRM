@@ -930,10 +930,7 @@ export default function OpportunityCreateForm() {
                 {currentStep < totalSteps ? (
                   <Button
                     type="button"
-                    disabled={loadingScaleUpManager}
                     onClick={async () => {
-                      console.log("[v0] Botón Siguiente clickeado - currentStep:", currentStep)
-                      
                       // Validar campos del paso actual
                       const fieldsToValidate: (keyof FormValues)[] = []
                       
@@ -941,50 +938,29 @@ export default function OpportunityCreateForm() {
                         fieldsToValidate.push("title", "pipeline_stage_id", "tech_company_id")
                       } else if (currentStep === 2) {
                         fieldsToValidate.push("tech_company_id", "pipeline_stage_id")
-                        // Si hay partner, validar responsable
                         if (form.watch("partner_id")) {
                           fieldsToValidate.push("partner_responsible_id")
                         }
                       } else if (currentStep === 3) {
-                        // Validación de paso 3 (si es necesaria)
                         if (!isScaleUpUser) {
                           fieldsToValidate.push("end_customer_id")
                         }
                       }
                       
-                      console.log("[v0] Fields to validate:", fieldsToValidate)
-                      
                       // Ejecutar validación
                       if (fieldsToValidate.length > 0) {
                         const isValid = await form.trigger(fieldsToValidate)
-                        console.log("[v0] Step", currentStep, "validation result:", isValid)
-                        
                         if (!isValid) {
-                          console.log("[v0] Validación falló. No se permite avanzar.")
-                          toast({
-                            title: t("common.error") || "Error",
-                            description: t("common.completeRequired") || "Por favor completa los campos requeridos",
-                            variant: "destructive",
-                          })
                           return
                         }
                       }
                       
-                      console.log("[v0] Validación pasó. Avanzando al siguiente paso...")
-                      
-                      // Si validación pasó, avanzar al siguiente paso
+                      // Avanzar al siguiente paso
                       let newStep = currentStep + 1
-                      console.log("[v0] newStep antes de saltar paso 4:", newStep, "hasTechFields:", hasTechFields)
-                      
-                      // Saltar Paso 4 si no hay campos técnicos
                       if (newStep === 4 && !hasTechFields) {
-                        console.log("[v0] Saltando Paso 4 porque no hay campos técnicos")
                         newStep = 5
                       }
-                      
-                      console.log("[v0] Llamando setCurrentStep con:", newStep)
                       setCurrentStep(newStep)
-                      console.log("[v0] setCurrentStep completado")
                     }}
                   >
                     {t("common.next")}
