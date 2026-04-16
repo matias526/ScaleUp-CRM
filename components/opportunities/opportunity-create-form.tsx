@@ -400,8 +400,8 @@ export default function OpportunityCreateForm() {
         const countries = await getAllCountries()
         setAllCountries(countries)
 
-        // Load all end customers
-        const customers = await getEndCustomers()
+        // Load all end customers - filtrar por partner si es Partner user
+        const customers = isScaleUpUser ? await getEndCustomers() : await getEndCustomers(partnerId)
         setEndCustomers(customers)
 
         // Load industries for the modal
@@ -510,19 +510,10 @@ export default function OpportunityCreateForm() {
     loadCountries()
   }, [watchPartner, allCountries, isScaleUpUser, partnerId])
 
-  // ✅ Filter end customers for Partner users
+  // ✅ Filter end customers - Simply use endCustomers as filteredEndCustomers since it's already filtered
   useEffect(() => {
-    if (isScaleUpUser) {
-      // Para usuarios ScaleUp, mostrar todos los clientes
-      setFilteredEndCustomers(endCustomers)
-    } else if (partnerId) {
-      // Para Partner users, filtrar solo los clientes del partner
-      const partnerCustomers = endCustomers.filter((customer: any) => customer.partner_id === partnerId)
-      setFilteredEndCustomers(partnerCustomers)
-    } else {
-      setFilteredEndCustomers([])
-    }
-  }, [endCustomers, partnerId, isScaleUpUser])
+    setFilteredEndCustomers(endCustomers)
+  }, [endCustomers])
 
   // Handle form submission - Now only on Step 5 (Confirmation)
   const onSubmit = async (data: FormValues) => {
