@@ -952,24 +952,39 @@ export default function OpportunityCreateForm() {
                         }
                       }
                       
+                      console.log("[v0] Fields to validate:", fieldsToValidate)
+                      
                       // Ejecutar validación
                       if (fieldsToValidate.length > 0) {
                         const isValid = await form.trigger(fieldsToValidate)
-                        console.log("[v0] Step", currentStep, "validation result:", isValid, "Fields validated:", fieldsToValidate)
+                        console.log("[v0] Step", currentStep, "validation result:", isValid)
                         
                         if (!isValid) {
                           console.log("[v0] Validación falló. No se permite avanzar.")
+                          toast({
+                            title: t("common.error") || "Error",
+                            description: t("common.completeRequired") || "Por favor completa los campos requeridos",
+                            variant: "destructive",
+                          })
                           return
                         }
                       }
                       
+                      console.log("[v0] Validación pasó. Avanzando al siguiente paso...")
+                      
                       // Si validación pasó, avanzar al siguiente paso
                       let newStep = currentStep + 1
+                      console.log("[v0] newStep antes de saltar paso 4:", newStep, "hasTechFields:", hasTechFields)
+                      
                       // Saltar Paso 4 si no hay campos técnicos
                       if (newStep === 4 && !hasTechFields) {
+                        console.log("[v0] Saltando Paso 4 porque no hay campos técnicos")
                         newStep = 5
                       }
+                      
+                      console.log("[v0] Llamando setCurrentStep con:", newStep)
                       setCurrentStep(newStep)
+                      console.log("[v0] setCurrentStep completado")
                     }}
                   >
                     {t("common.next")}
