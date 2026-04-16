@@ -212,6 +212,20 @@ export default function OpportunityCreateForm() {
         form.setError("end_customer_id", { message: "El cliente final es obligatorio para usuarios Partner" })
         return false
       }
+    } else if (currentStep === 4 && hasTechFields) {
+      // Validar que todos los campos técnicos obligatorios estén completos
+      const requiredFields = techFields.filter((field: any) => field.is_required)
+      for (const field of requiredFields) {
+        const value = techFieldValues[field.id]
+        if (value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0)) {
+          toast({
+            title: "Campo Obligatorio",
+            description: `${field.field_name} es obligatorio`,
+            variant: "destructive",
+          })
+          return false
+        }
+      }
     }
 
     // Validate only the fields for this step
@@ -599,6 +613,8 @@ export default function OpportunityCreateForm() {
       techFields.forEach((field: any) => {
         const value = techFieldValues[field.id]
         
+        console.log("[v0] Tech field:", field.field_name, "Type:", field.field_type, "Value:", value)
+        
         if (value !== undefined && value !== null && value !== "") {
           const techValue: any = {
             opportunity_tech_field_id: field.id,
@@ -630,9 +646,12 @@ export default function OpportunityCreateForm() {
               break
           }
 
+          console.log("[v0] Tech value to save:", techValue)
           techValuesToSave.push(techValue)
         }
       })
+
+      console.log("[v0] All tech values to save:", techValuesToSave)
 
       // 3. INSERT into opportunities
       const result = await createOpportunity(opportunityData, techValuesToSave, userRole)
@@ -640,9 +659,11 @@ export default function OpportunityCreateForm() {
       // 4. INSERT into opportunity_tech_values (si hay valores técnicos)
       if (techValuesToSave.length > 0) {
         try {
+          console.log("[v0] Saving tech values for opportunity:", result.id)
           await createOpportunityTechValues(result.id, techValuesToSave)
+          console.log("[v0] Tech values saved successfully")
         } catch (error) {
-          console.error("Error al guardar valores técnicos:", error)
+          console.error("[v0] Error al guardar valores técnicos:", error)
           // No fallar la creación de la oportunidad si hay error en tech values
         }
       }
@@ -1120,10 +1141,10 @@ export default function OpportunityCreateForm() {
                   ) : (
                     <div className="space-y-5">
                       {techFields.map((field: any) => (
-                        <div key={field.id} className="border rounded-lg p-4 space-y-2">
+                        <div key={field.id} className={`border rounded-lg p-4 space-y-2 ${field.is_required ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}>
                           <label className="text-sm font-medium flex items-center gap-2">
                             {field.field_name}
-                            {field.is_required && <span className="text-red-500">*</span>}
+                            {field.is_required && <span className="text-red-600 font-bold">*</span>}
                           </label>
                           <p className="text-xs text-gray-500">{field.field_type}</p>
 
