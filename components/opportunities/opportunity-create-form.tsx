@@ -214,17 +214,21 @@ export default function OpportunityCreateForm() {
     } else if (currentStep === 4 && hasTechFields) {
       // Validar que todos los campos técnicos obligatorios estén completos
       const requiredFields = techFields.filter((field: any) => field.is_required)
+      let hasError = false
       
-      if (requiredFields.length > 0) {
-        // Preparar keys de campos obligatorios para validar con form.trigger()
-        const requiredFieldKeys = requiredFields.map((field: any) => `techField_${field.id}`)
-        
-        // Usar form.trigger() para validar solo los campos requeridos
-        const isValid = await form.trigger(requiredFieldKeys as any)
-        
-        if (!isValid) {
-          return false
+      requiredFields.forEach((field: any) => {
+        const value = form.getValues(`opportunity_tech_fields.${field.id}` as any)
+        if (!value || (Array.isArray(value) && value.length === 0)) {
+          form.setError(`opportunity_tech_fields.${field.id}` as any, {
+            type: "manual",
+            message: `${field.field_name} es obligatorio`
+          })
+          hasError = true
         }
+      })
+
+      if (hasError) {
+        return false
       }
     }
 
@@ -296,9 +300,22 @@ export default function OpportunityCreateForm() {
       country: "",
       assigned_to: null,
       partner_responsible_id: null,
-      is_prospect: false,
+      opportunity_tech_fields: {},
     },
   })
+
+  // ✅ Helper function to initialize tech field values in form state
+  const setTechFieldValues = (techFieldsConfig: any[]) => {
+    const currentValues = form.getValues('opportunity_tech_fields') || {}
+    const newValues = { ...currentValues }
+    // Initialize only missing fields to avoid overwriting user input
+    techFieldsConfig.forEach((field: any) => {
+      if (newValues[field.id] === undefined) {
+        newValues[field.id] = ""
+      }
+    })
+    form.setValue('opportunity_tech_fields', newValues)
+  }
 
   // ✅ FIXED: Use form.watch() instead of manual state
   const watchTechCompany = form.watch("tech_company_id")
@@ -438,6 +455,8 @@ export default function OpportunityCreateForm() {
     }
 
     loadTechFields()
+    // Initialize tech field values in form state after loading
+    setTechFieldValues(techFields)
   }, [watchTechCompany])
 
   // ✅ FIXED: Load partner users when partner changes
@@ -603,7 +622,7 @@ export default function OpportunityCreateForm() {
 
       // Iterar sobre los campos técnicos y extraer sus valores del form
       techFields.forEach((field: any) => {
-        const fieldKey = `techField_${field.id}`
+        const fieldKey = `opportunity_tech_fields.${field.id}`
         const value = form.getValues(fieldKey as any)
         
         console.log("[v0] Tech field:", field.field_name, "Type:", field.field_type, "Value:", value)
@@ -1134,10 +1153,10 @@ export default function OpportunityCreateForm() {
                   ) : (
                     <div className="space-y-5">
                       {techFields.map((field: any) => {
-                        const fieldKey = `techField_${field.id}`
+                        const fieldKey = `opportunity_tech_fields.${field.id}`
                         const { register, watch, formState: { errors } } = form
                         const fieldValue = watch(fieldKey as any)
-                        const hasError = Boolean((errors as any)?.[fieldKey])
+                        const hasError = Boolean((errors as any)?.opportunity_tech_fields?.[field.id])
 
                         return (
                           <div key={field.id} className={`border rounded-lg p-4 space-y-2 ${field.is_required ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}>
@@ -1157,7 +1176,7 @@ export default function OpportunityCreateForm() {
                                   })}
                                   className={hasError ? "border-red-500" : ""}
                                 />
-                                {hasError && <p className="text-xs text-red-600">{(errors as any)?.[fieldKey]?.message}</p>}
+                                {hasError && <p className="text-xs text-red-600">{(errors as any)?.opportunity_tech_fields?.[field.id]?.message}</p>}
                               </>
                             )}
 
@@ -1173,7 +1192,7 @@ export default function OpportunityCreateForm() {
                                   })}
                                   className={hasError ? "border-red-500" : ""}
                                 />
-                                {hasError && <p className="text-xs text-red-600">{(errors as any)?.[fieldKey]?.message}</p>}
+                                {hasError && <p className="text-xs text-red-600">{(errors as any)?.opportunity_tech_fields?.[field.id]?.message}</p>}
                               </>
                             )}
 
@@ -1187,7 +1206,7 @@ export default function OpportunityCreateForm() {
                                   })}
                                   className={hasError ? "border-red-500" : ""}
                                 />
-                                {hasError && <p className="text-xs text-red-600">{(errors as any)?.[fieldKey]?.message}</p>}
+                                {hasError && <p className="text-xs text-red-600">{(errors as any)?.opportunity_tech_fields?.[field.id]?.message}</p>}
                               </>
                             )}
 
@@ -1228,7 +1247,7 @@ export default function OpportunityCreateForm() {
                                     )
                                   })}
                                 </select>
-                                {hasError && <p className="text-xs text-red-600">{(errors as any)?.[fieldKey]?.message}</p>}
+                                {hasError && <p className="text-xs text-red-600">{(errors as any)?.opportunity_tech_fields?.[field.id]?.message}</p>}
                               </div>
                             )}
 
@@ -1264,7 +1283,7 @@ export default function OpportunityCreateForm() {
                                     </div>
                                   )
                                 })}
-                                {hasError && <p className="text-xs text-red-600">{(errors as any)?.[fieldKey]?.message}</p>}
+                                {hasError && <p className="text-xs text-red-600">{(errors as any)?.opportunity_tech_fields?.[field.id]?.message}</p>}
                               </div>
                             )}
 
@@ -1278,7 +1297,7 @@ export default function OpportunityCreateForm() {
                                   })}
                                   className={hasError ? "border-red-500" : ""}
                                 />
-                                {hasError && <p className="text-xs text-red-600">{(errors as any)?.[fieldKey]?.message}</p>}
+                                {hasError && <p className="text-xs text-red-600">{(errors as any)?.opportunity_tech_fields?.[field.id]?.message}</p>}
                               </>
                             )}
                           </div>
@@ -1338,7 +1357,7 @@ export default function OpportunityCreateForm() {
 
                     {/* Sección de Campos Técnicos (si existen valores) */}
                     {hasTechFields && techFields.some((field: any) => {
-                      const fieldKey = `techField_${field.id}`
+                      const fieldKey = `opportunity_tech_fields.${field.id}`
                       const value = form.getValues(fieldKey as any)
                       return value !== undefined && value !== null && value !== "" && !(Array.isArray(value) && value.length === 0)
                     }) && (
@@ -1349,7 +1368,7 @@ export default function OpportunityCreateForm() {
                         </h4>
                         <div className="bg-purple-50 rounded p-3 space-y-2 text-sm">
                           {techFields.map((field: any) => {
-                            const fieldKey = `techField_${field.id}`
+                            const fieldKey = `opportunity_tech_fields.${field.id}`
                             const value = form.getValues(fieldKey as any)
                             if (value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0)) return null
                             
