@@ -3,12 +3,18 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // En Next 16, 'eslint' ya no va acá, se ignora por defecto en dev
   images: {
     unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'fnwdqskdddohcotrowmd.supabase.co',
+        pathname: '/**',
+      },
+    ],
   },
-  // ESTA ES LA LÍNEA NUEVA:
-  allowedDevOrigins: ['vm-7ibsc4kgeje27p0twmr5w6fo.vusercontent.net'],
-
+  // La clave se movió de experimental a la raíz
   serverExternalPackages: ['unpdf', 'mammoth', 'xlsx'],
 
   experimental: {
@@ -16,6 +22,6 @@ const nextConfig = {
       bodySizeLimit: '50mb',
     },
   },
-}
+};
 
-export default nextConfig
+export default nextConfig;
