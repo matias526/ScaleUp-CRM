@@ -158,9 +158,10 @@ export default function OpportunityCreateForm() {
     preferred_language: "es" as "es" | "en" | "pt",
   })
 
-  // totalSteps es dinámico: 5 si hay campos técnicos, 4 si no
+  // totalSteps es siempre 5: Paso 1 (Info básica) -> Paso 2 (Empresas) -> Paso 3 (Cliente) -> Paso 4 (Técnico, opcional) -> Paso 5 (Confirmación)
+  // El Paso 4 se salta si no hay campos técnicos, pero Paso 5 siempre es el resumen
   const hasTechFields = techFields.length > 0
-  const totalSteps = hasTechFields ? 5 : 4
+  const totalSteps = 5 // Siempre 5 pasos: el último es siempre confirmación
 
   // Cuando se carga una tech company sin campos técnicos, saltar Paso 4
   useEffect(() => {
@@ -215,7 +216,6 @@ export default function OpportunityCreateForm() {
     // Validate only the fields for this step
     if (fieldsToValidate.length > 0) {
       const isValid = await form.trigger(fieldsToValidate)
-      console.log("[v0] Step", currentStep, "validation result:", isValid, "Fields validated:", fieldsToValidate)
       return isValid
     }
 
@@ -451,8 +451,6 @@ export default function OpportunityCreateForm() {
   // Handle form submission - Now only on Step 5 (Confirmation)
   const onSubmit = async (data: FormValues) => {
     try {
-      console.log("[v0] onSubmit triggered - currentStep:", currentStep, "totalSteps:", totalSteps)
-
       // Validate only the fields for the current step
       const isStepValid = await validateCurrentStep()
 
@@ -492,7 +490,6 @@ export default function OpportunityCreateForm() {
           }
 
           prospectPartnerId = prospectPartnerResult[0].id
-          console.log("[v0] Created prospect partner with ID:", prospectPartnerId)
 
           // 2. INSERT into contacts with prospect_id
           const { data: contactResult, error: contactError } = await supabase
@@ -514,7 +511,7 @@ export default function OpportunityCreateForm() {
           }
 
           prospectContactId = contactResult[0].id
-          console.log("[v0] Created prospect contact with ID:", prospectContactId)
+
         } catch (error) {
           console.error("[v0] Error in atomic insertion:", error)
           toast({
@@ -1152,13 +1149,8 @@ export default function OpportunityCreateForm() {
                         }
                       }
 
-                      console.log("[v0] Validación pasó. Avanzando al siguiente paso...")
-
-                      // Si validación pasó, avanzar al siguiente paso
+                      // Avanzar al siguiente paso
                       let newStep = currentStep + 1
-                      console.log("[v0] newStep antes de saltar paso 4:", newStep, "hasTechFields:", hasTechFields)
-
-                      // Saltar Paso 4 si no hay campos técnicos
                       if (newStep === 4 && !hasTechFields) {
                         console.log("[v0] Saltando Paso 4 porque no hay campos técnicos")
                         newStep = 5
