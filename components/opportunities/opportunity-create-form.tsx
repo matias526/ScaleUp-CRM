@@ -1446,11 +1446,23 @@ export default function OpportunityCreateForm() {
                         fieldsToValidate.push("tech_company_id", "country")
                         if (isScaleUpUser) fieldsToValidate.push("assigned_to")
                       }
-                      if (currentStep === 3) fieldsToValidate.push("end_customer_id")
+                      if (currentStep === 3 && isScaleUpUser) fieldsToValidate.push("end_customer_id")
 
                       const isValid = fieldsToValidate.length > 0 ? await form.trigger(fieldsToValidate) : true
 
                       if (isValid) {
+                        // ✅ MANUAL VALIDATION: End Customer obligatorio solo para Partner users en Paso 3
+                        if (currentStep === 3 && user?.partner_id) {
+                          const endCustomerId = form.getValues("end_customer_id")
+                          if (!endCustomerId) {
+                            form.setError("end_customer_id", {
+                              type: "manual",
+                              message: t("common.errors.required") || "Este campo es obligatorio"
+                            })
+                            return
+                          }
+                        }
+
                         // SI ES EL PASO DE TECH FIELDS (Paso 4) -> Validar manualmente
                         if (currentStep === 4 && hasTechFields) {
                           let hasTechError = false
