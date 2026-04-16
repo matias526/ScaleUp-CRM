@@ -50,16 +50,16 @@ import {
   UserCheck,
   Search,
 } from "lucide-react"
-//import { Badge } from "@/components/ui/badge"
-//import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-//import { Progress } from "@/components/ui/progress"
-//import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-//import { getOpportunityTechFieldsClient } from "@/lib/services/opportunity-tech-field-service-client"
-//import { FileUpload } from "@/components/file-upload"
-//import { Switch } from "@/components/ui/switch"
-//import { Label } from "@/components/ui/label"
-//import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-//import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Progress } from "@/components/ui/progress"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { getOpportunityTechFieldsClient } from "@/lib/services/opportunity-tech-field-service-client"
+import { FileUpload } from "@/components/file-upload"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
 import { getIndustries } from "@/lib/services/industry-service-client"
 
 const DEFAULT_ALLOWED_FILE_TYPES = [
