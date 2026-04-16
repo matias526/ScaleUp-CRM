@@ -386,7 +386,7 @@ export default function OpportunityCreateForm() {
               form.setValue("tech_company_id", techCompaniesData[0].id, { shouldValidate: false })
             }
           }
-          
+
           // Set partner_id automatically for Partner users
           if (partnerId) {
             form.setValue("partner_id", partnerId, { shouldValidate: false })
@@ -488,7 +488,7 @@ export default function OpportunityCreateForm() {
   useEffect(() => {
     // Para Partner users, siempre cargar los países del partner
     const partnerIdToUse = isScaleUpUser ? watchPartner : partnerId
-    
+
     if (!partnerIdToUse) {
       // Si no hay partner, mostrar todos los países
       setPartnerCountries(allCountries)
@@ -1452,7 +1452,7 @@ export default function OpportunityCreateForm() {
 
                       if (isValid) {
                         // ✅ MANUAL VALIDATION: End Customer obligatorio solo para Partner users en Paso 3
-                        if (currentStep === 3 && user?.partner_id) {
+                        if (currentStep === 3 && !isScaleUpUser) {
                           const endCustomerId = form.getValues("end_customer_id")
                           if (!endCustomerId) {
                             form.setError("end_customer_id", {
