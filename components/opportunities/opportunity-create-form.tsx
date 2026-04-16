@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { useTranslations } from "@/hooks/use-translations"
+import { useTranslations } from "@/hooks/use-translation"
 import { DICT_LANG_OPPORTUNITIES } from "@/lib/constants/dict-lang-opportunities" // <--- AGREGAR ESTA
 import {
   createOpportunity,
