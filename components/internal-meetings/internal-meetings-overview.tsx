@@ -7,7 +7,10 @@ import { Badge } from "@/components/ui/badge"
 import { Calendar, Users, Plus, Settings } from "lucide-react"
 import { useAuth } from "@/components/auth/auth-provider"
 import { format } from "date-fns"
-import { es, en, pt } from "date-fns/locale"
+//import { es, en, pt } from "date-fns/locale"
+import { es } from "date-fns/locale/es"
+import { enUS as en } from "date-fns/locale/en-US"
+import { pt } from "date-fns/locale/pt"
 import Link from "next/link"
 
 interface InternalMeeting {

@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap");
-
 body {
   font-family: "Montserrat", sans-serif;
 }
@@ -113,6 +111,7 @@ body {
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -197,21 +196,17 @@ body {
 
 /* Añadir clases de utilidad para los gradientes de ScaleUp */
 .bg-scaleup-gradient {
-  background: linear-gradient(
-    135deg,
-    var(--scaleup-blue-light),
-    var(--scaleup-blue-secondary),
-    var(--scaleup-blue-primary)
-  );
+  background: linear-gradient(135deg,
+      var(--scaleup-blue-light),
+      var(--scaleup-blue-secondary),
+      var(--scaleup-blue-primary));
 }
 
 .text-scaleup-gradient {
-  background: linear-gradient(
-    135deg,
-    var(--scaleup-blue-light),
-    var(--scaleup-blue-secondary),
-    var(--scaleup-blue-primary)
-  );
+  background: linear-gradient(135deg,
+      var(--scaleup-blue-light),
+      var(--scaleup-blue-secondary),
+      var(--scaleup-blue-primary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
