@@ -248,7 +248,7 @@ export default function OpportunityCreateForm() {
     country: z.string().optional(),
     assigned_to: z.string().optional().nullable(),
     partner_responsible_id: z.string().optional().nullable(),
-    is_new_partner: z.boolean().optional(),
+    is_prospect: z.boolean().optional(),
   })
 
   type FormValues = z.infer<typeof formSchema>
@@ -282,7 +282,7 @@ export default function OpportunityCreateForm() {
       country: "",
       assigned_to: null,
       partner_responsible_id: null,
-      is_new_partner: false,
+      is_prospect: false,
     },
   })
 
@@ -552,7 +552,7 @@ export default function OpportunityCreateForm() {
         estimated_value: data.estimated_value || null,
         estimated_close_date: data.estimated_close_date || null,
         country: data.country || null,
-        is_new_partner: data.is_new_partner || false,
+        is_new_partner: false,
         assigned_to: assignedToUserId,
         partner_responsible_id: data.partner_responsible_id || null,
         created_by: user?.id,
@@ -728,8 +728,8 @@ export default function OpportunityCreateForm() {
                     )}
                   />
 
-                  {/* Partner - Oculto si es new_partner */}
-                  {!form.watch("is_new_partner") && (
+                  {/* Partner - Oculto si es prospect */}
+                  {!form.watch("is_prospect") && (
                     <FormField
                       control={form.control}
                       name="partner_id"
