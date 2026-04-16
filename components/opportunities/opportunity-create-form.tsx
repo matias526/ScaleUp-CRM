@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useMemo } from "react"
+import { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -304,18 +304,17 @@ export default function OpportunityCreateForm() {
     },
   })
 
-  // ✅ Helper function to initialize tech field values in form state
-  const setTechFieldValues = (techFieldsConfig: any[]) => {
-    const currentValues = form.getValues('opportunity_tech_fields') || {}
+  // ✅ Helper function to initialize tech field values in form state (wrapped in useCallback)
+  const setTechFieldValues = useCallback((techFieldsConfig: any[]) => {
+    const currentValues = form.getValues('opportunity_tech_fields' as any) || {}
     const newValues = { ...currentValues }
-    // Initialize only missing fields to avoid overwriting user input
     techFieldsConfig.forEach((field: any) => {
       if (newValues[field.id] === undefined) {
-        newValues[field.id] = ""
+        newValues[field.id] = field.field_type === 'multiselect' ? [] : ""
       }
     })
-    form.setValue('opportunity_tech_fields', newValues)
-  }
+    form.setValue('opportunity_tech_fields' as any, newValues)
+  }, [form])
 
   // ✅ FIXED: Use form.watch() instead of manual state
   const watchTechCompany = form.watch("tech_company_id")
@@ -440,12 +439,13 @@ export default function OpportunityCreateForm() {
       setTechFields([])
       return
     }
-
     const loadTechFields = async () => {
       setLoadingTechFields(true)
       try {
         const fields = await getOpportunityTechFields(watchTechCompany)
         setTechFields(fields || [])
+        // Call it here AFTER setting fields
+        if (fields) setTechFieldValues(fields)
       } catch (error) {
         console.error("Error loading tech fields:", error)
         setTechFields([])
@@ -453,11 +453,8 @@ export default function OpportunityCreateForm() {
         setLoadingTechFields(false)
       }
     }
-
     loadTechFields()
-    // Initialize tech field values in form state after loading
-    setTechFieldValues(techFields)
-  }, [watchTechCompany])
+  }, [watchTechCompany, setTechFieldValues])
 
   // ✅ FIXED: Load partner users when partner changes
   useEffect(() => {
@@ -1372,14 +1369,7 @@ export default function OpportunityCreateForm() {
                             const value = form.getValues(fieldKey as any)
                             if (value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0)) return null
                             
-                            let displayValue = value
-                            if (Array.isArray(value)) {
-                              displayValue = value.join(", ")
-                            } else if (typeof value === "boolean") {
-                              displayValue = value ? "Sí" : "No"
-                            } else if (value instanceof File) {
-                              displayValue = value.name
-                            }
+                            let displayValue = Array.isArray(value) ? value.join(", ") : String(value)
 
                             return (
                               <div key={field.id}>
@@ -1424,48 +1414,45 @@ export default function OpportunityCreateForm() {
                     type="button"
                     disabled={loadingScaleUpManager}
                     onClick={async () => {
-                      // Validar campos del paso actual
-                      const fieldsToValidate: (keyof FormValues)[] = []
-
-                      if (currentStep === 1) {
-                        fieldsToValidate.push("title", "pipeline_stage_id")
-                      } else if (currentStep === 2) {
-                        fieldsToValidate.push("tech_company_id", "assigned_to", "country")
-                        // Si hay partner, validar responsable
-                        if (form.watch("partner_id")) {
-                          fieldsToValidate.push("partner_responsible_id")
-                        }
-                      } else if (currentStep === 3) {
-                        // Validación de paso 3 (si es necesaria)
-                        if (!isScaleUpUser) {
-                          fieldsToValidate.push("end_customer_id")
-                        }
+                      // 1. Standard Validation
+                      const fieldsToValidate: any[] = []
+                      if (currentStep === 1) fieldsToValidate.push("title", "pipeline_stage_id")
+                      if (currentStep === 2) {
+                        fieldsToValidate.push("tech_company_id", "country")
+                        if (isScaleUpUser) fieldsToValidate.push("assigned_to")
+                        if (form.watch("partner_id")) fieldsToValidate.push("partner_responsible_id")
                       }
+                      if (currentStep === 3 && !isScaleUpUser) fieldsToValidate.push("end_customer_id")
 
-                      // Ejecutar validación
-                      if (fieldsToValidate.length > 0) {
-                        const isValid = await form.trigger(fieldsToValidate)
+                      const isValid = fieldsToValidate.length > 0 ? await form.trigger(fieldsToValidate) : true
 
-                        if (!isValid) {
-                          toast({
-                            title: t("common.error") || "Error",
-                            description: t("common.completeRequired") || "Por favor completa los campos requeridos",
-                            variant: "destructive",
+                      if (isValid) {
+                        // 2. CRITICAL: Manual Validation for Step 4 (Technical Fields)
+                        if (currentStep === 4 && hasTechFields) {
+                          let hasTechError = false
+                          techFields.forEach((field: any) => {
+                            if (field.is_required) {
+                              const val = form.getValues(`opportunity_tech_fields.${field.id}` as any)
+                              if (!val || (Array.isArray(val) && val.length === 0)) {
+                                form.setError(`opportunity_tech_fields.${field.id}` as any, {
+                                  type: "manual",
+                                  message: "Este campo es obligatorio"
+                                })
+                                hasTechError = true
+                              }
+                            }
                           })
-                          return
+                          if (hasTechError) {
+                            toast({ title: "Error", description: "Completa los campos técnicos obligatorios", variant: "destructive" })
+                            return
+                          }
                         }
-                      }
 
-                      // Avanzar al siguiente paso
-                      let newStep = currentStep + 1
-                      if (newStep === 4 && !hasTechFields) {
-                        console.log("[v0] Saltando Paso 4 porque no hay campos técnicos")
-                        newStep = 5
+                        // 3. Advance Step
+                        let newStep = currentStep + 1
+                        if (newStep === 4 && !hasTechFields) newStep = 5
+                        setCurrentStep(newStep)
                       }
-
-                      console.log("[v0] Llamando setCurrentStep con:", newStep)
-                      setCurrentStep(newStep)
-                      console.log("[v0] setCurrentStep completado")
                     }}
                   >
                     {t("common.next")}
