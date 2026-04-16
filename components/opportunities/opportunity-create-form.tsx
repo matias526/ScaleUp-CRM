@@ -141,9 +141,10 @@ export default function OpportunityCreateForm() {
     tax_id: "",
     country_id: "",
   })
-  
+
   // Prospect Partner States
   const [prospectDialogOpen, setProspectDialogOpen] = useState(false)
+  const [prospectStep, setProspectStep] = useState(1) // 1: Company, 2: Contact
   const [prospectPartnerData, setProspectPartnerData] = useState({
     name: "",
     website: "",
@@ -192,14 +193,14 @@ export default function OpportunityCreateForm() {
       fieldsToValidate.push("title", "pipeline_stage_id", "tech_company_id")
     } else if (currentStep === 2) {
       fieldsToValidate.push("tech_company_id", "assigned_to", "country")
-      
+
       // Require partner_id only if NOT a prospect
       const isProspect = form.watch("is_prospect")
       if (!isProspect && !form.watch("partner_id")) {
         form.setError("partner_id", { message: "El partner es obligatorio" })
         return false
       }
-      
+
       // If there is a partner, validate responsible
       if (form.watch("partner_id")) {
         fieldsToValidate.push("partner_responsible_id")
@@ -552,7 +553,6 @@ export default function OpportunityCreateForm() {
         estimated_value: data.estimated_value || null,
         estimated_close_date: data.estimated_close_date || null,
         country: data.country || null,
-        is_new_partner: false,
         assigned_to: assignedToUserId,
         partner_responsible_id: data.partner_responsible_id || null,
         created_by: user?.id,
@@ -667,6 +667,50 @@ export default function OpportunityCreateForm() {
                         </FormItem>
                       )}
                     />
+                  )}
+
+                  {/* Resumen del Partner Prospecto */}
+                  {form.watch("is_prospect") && form.watch("prospect_partner_data")?.name && (
+                    <div className="rounded-lg bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 p-4 space-y-3">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Check className="h-5 w-5 text-green-600" />
+                        <span className="font-semibold text-gray-900">Datos del Prospecto Guardados</span>
+                      </div>
+                      
+                      {/* Grid con datos de empresa */}
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div className="bg-white rounded p-3">
+                          <p className="text-gray-600 font-medium text-xs">Empresa</p>
+                          <p className="text-gray-900 font-semibold">{form.watch("prospect_partner_data")?.name}</p>
+                        </div>
+                        <div className="bg-white rounded p-3">
+                          <p className="text-gray-600 font-medium text-xs">País</p>
+                          <p className="text-gray-900 font-semibold">
+                            {allCountries.find(c => c.id === form.watch("prospect_partner_data")?.main_country_id)?.name || "N/A"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Datos de contacto */}
+                      <div className="bg-white rounded p-3">
+                        <p className="text-gray-600 font-medium text-xs mb-1">Contacto Principal</p>
+                        <p className="text-gray-900">
+                          {form.watch("prospect_contact_data")?.first_name} {form.watch("prospect_contact_data")?.last_name}
+                        </p>
+                        <p className="text-gray-600 text-xs">{form.watch("prospect_contact_data")?.email}</p>
+                      </div>
+
+                      {/* Botón para editar */}
+                      <Button 
+                        type="button"
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full"
+                        onClick={() => setProspectDialogOpen(true)}
+                      >
+                        Editar Datos del Prospecto
+                      </Button>
+                    </div>
                   )}
 
                   {/* Etapa del Pipeline */}
@@ -1013,6 +1057,36 @@ export default function OpportunityCreateForm() {
                       <div><span className="font-medium">{t("opportunities.form.summary.value")}:</span> USD {form.watch("estimated_value") || "0"}</div>
                       <div><span className="font-medium">{t("opportunities.form.summary.closeDate")}:</span> {form.watch("estimated_close_date") || "N/A"}</div>
                     </div>
+
+                    {/* Sección de Partner Prospecto (si aplica) */}
+                    {form.watch("is_prospect") && form.watch("prospect_partner_data")?.name && (
+                      <div className="mt-4 pt-4 border-t space-y-3">
+                        <h4 className="font-semibold text-sm flex items-center gap-2">
+                          <Building2 className="h-4 w-4 text-blue-600" />
+                          {t("opportunities.prospect.title")}
+                        </h4>
+                        <div className="bg-blue-50 rounded p-3 space-y-2 text-sm">
+                          <div><span className="font-medium text-gray-700">Empresa:</span> <span className="text-gray-900">{form.watch("prospect_partner_data")?.name}</span></div>
+                          {form.watch("prospect_partner_data")?.website && (
+                            <div><span className="font-medium text-gray-700">Website:</span> <span className="text-gray-900">{form.watch("prospect_partner_data")?.website}</span></div>
+                          )}
+                          <div><span className="font-medium text-gray-700">País:</span> <span className="text-gray-900">{allCountries.find(c => c.id === form.watch("prospect_partner_data")?.main_country_id)?.name}</span></div>
+                        </div>
+
+                        <h4 className="font-semibold text-sm flex items-center gap-2 mt-3">
+                          <Users className="h-4 w-4 text-green-600" />
+                          {t("opportunities.prospect.contact_title")}
+                        </h4>
+                        <div className="bg-green-50 rounded p-3 space-y-2 text-sm">
+                          <div><span className="font-medium text-gray-700">Nombre:</span> <span className="text-gray-900">{form.watch("prospect_contact_data")?.first_name} {form.watch("prospect_contact_data")?.last_name}</span></div>
+                          <div><span className="font-medium text-gray-700">Email:</span> <span className="text-gray-900">{form.watch("prospect_contact_data")?.email}</span></div>
+                          {form.watch("prospect_contact_data")?.phone && (
+                            <div><span className="font-medium text-gray-700">Teléfono:</span> <span className="text-gray-900">{form.watch("prospect_contact_data")?.phone}</span></div>
+                          )}
+                          <div><span className="font-medium text-gray-700">Idioma:</span> <span className="text-gray-900">{form.watch("prospect_contact_data")?.preferred_language?.toUpperCase()}</span></div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -1046,8 +1120,6 @@ export default function OpportunityCreateForm() {
                     type="button"
                     disabled={loadingScaleUpManager}
                     onClick={async () => {
-                      console.log("[v0] Botón Siguiente clickeado - currentStep:", currentStep)
-
                       // Validar campos del paso actual
                       const fieldsToValidate: (keyof FormValues)[] = []
 
@@ -1066,15 +1138,11 @@ export default function OpportunityCreateForm() {
                         }
                       }
 
-                      console.log("[v0] Fields to validate:", fieldsToValidate)
-
                       // Ejecutar validación
                       if (fieldsToValidate.length > 0) {
                         const isValid = await form.trigger(fieldsToValidate)
-                        console.log("[v0] Step", currentStep, "validation result:", isValid)
 
                         if (!isValid) {
-                          console.log("[v0] Validación falló. No se permite avanzar.")
                           toast({
                             title: t("common.error") || "Error",
                             description: t("common.completeRequired") || "Por favor completa los campos requeridos",
@@ -1256,17 +1324,38 @@ export default function OpportunityCreateForm() {
         </DialogContent>
       </Dialog>
 
-      {/* Modal: Nuevo Partner Prospecto */}
-      <Dialog open={prospectDialogOpen} onOpenChange={setProspectDialogOpen}>
-        <DialogContent className="max-w-md">
+      {/* Modal: Nuevo Partner Prospecto - Improved UX/UI */}
+      <Dialog open={prospectDialogOpen} onOpenChange={(open) => {
+        setProspectDialogOpen(open)
+        if (!open) {
+          setProspectStep(1) // Reset step when closing
+        }
+      }}>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{t("opportunities.prospect.title")}</DialogTitle>
+            <DialogTitle className="text-2xl">{t("opportunities.prospect.title")}</DialogTitle>
+            <p className="text-sm text-gray-500 mt-1">{"Paso " + prospectStep + " de 2: " + (prospectStep === 1 ? "Información de la Empresa" : "Información de Contacto")}</p>
           </DialogHeader>
-          <div className="space-y-6">
-            {/* Partner Prospecto Info */}
-            <div className="space-y-4">
-              <h4 className="font-medium text-sm">{t("opportunities.prospect.name")}</h4>
-              
+
+          {/* Progress Indicator */}
+          <div className="flex gap-2 mb-6">
+            <div className={`flex-1 h-1 rounded-full transition-colors ${prospectStep >= 1 ? "bg-blue-600" : "bg-gray-200"}`} />
+            <div className={`flex-1 h-1 rounded-full transition-colors ${prospectStep >= 2 ? "bg-blue-600" : "bg-gray-200"}`} />
+          </div>
+
+          {/* Step 1: Company Info */}
+          {prospectStep === 1 && (
+            <div className="space-y-6">
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <div className="flex gap-3">
+                  <Building2 className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h3 className="font-semibold text-blue-900">{t("opportunities.prospect.name")}</h3>
+                    <p className="text-sm text-blue-700">{"Proporciona los detalles principales de la empresa prospecto"}</p>
+                  </div>
+                </div>
+              </div>
+
               {/* Nombre del Partner */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">{t("opportunities.prospect.name")} *</label>
@@ -1274,6 +1363,7 @@ export default function OpportunityCreateForm() {
                   placeholder="Nombre de la empresa"
                   value={prospectPartnerData.name}
                   onChange={(e) => setProspectPartnerData({ ...prospectPartnerData, name: e.target.value })}
+                  className="text-base"
                 />
               </div>
 
@@ -1284,6 +1374,7 @@ export default function OpportunityCreateForm() {
                   placeholder="https://ejemplo.com"
                   value={prospectPartnerData.website}
                   onChange={(e) => setProspectPartnerData({ ...prospectPartnerData, website: e.target.value })}
+                  className="text-base"
                 />
               </div>
 
@@ -1305,30 +1396,56 @@ export default function OpportunityCreateForm() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
 
-            {/* Contact Info */}
-            <div className="space-y-4 border-t pt-4">
-              <h4 className="font-medium text-sm">{t("opportunities.prospect.contact_title")}</h4>
-              
-              {/* Nombre del Contacto */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">{t("opportunities.prospect.first_name")} *</label>
-                <Input
-                  placeholder="Nombre"
-                  value={prospectContactData.first_name}
-                  onChange={(e) => setProspectContactData({ ...prospectContactData, first_name: e.target.value })}
-                />
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4">
+                <Button variant="outline" onClick={() => setProspectDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button
+                  disabled={!prospectPartnerData.name || !prospectPartnerData.main_country_id}
+                  onClick={() => setProspectStep(2)}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                >
+                  Siguiente <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 2: Contact Info */}
+          {prospectStep === 2 && (
+            <div className="space-y-6">
+              <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                <div className="flex gap-3">
+                  <Users className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h3 className="font-semibold text-green-900">{t("opportunities.prospect.contact_title")}</h3>
+                    <p className="text-sm text-green-700">{"Información de la persona de contacto principal"}</p>
+                  </div>
+                </div>
               </div>
 
-              {/* Apellido */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">{t("opportunities.prospect.last_name")} *</label>
-                <Input
-                  placeholder="Apellido"
-                  value={prospectContactData.last_name}
-                  onChange={(e) => setProspectContactData({ ...prospectContactData, last_name: e.target.value })}
-                />
+              {/* Nombre y Apellido en grid */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">{t("opportunities.prospect.first_name")} *</label>
+                  <Input
+                    placeholder="Nombre"
+                    value={prospectContactData.first_name}
+                    onChange={(e) => setProspectContactData({ ...prospectContactData, first_name: e.target.value })}
+                    className="text-base"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">{t("opportunities.prospect.last_name")} *</label>
+                  <Input
+                    placeholder="Apellido"
+                    value={prospectContactData.last_name}
+                    onChange={(e) => setProspectContactData({ ...prospectContactData, last_name: e.target.value })}
+                    className="text-base"
+                  />
+                </div>
               </div>
 
               {/* Email */}
@@ -1339,6 +1456,7 @@ export default function OpportunityCreateForm() {
                   type="email"
                   value={prospectContactData.email}
                   onChange={(e) => setProspectContactData({ ...prospectContactData, email: e.target.value })}
+                  className="text-base"
                 />
               </div>
 
@@ -1349,6 +1467,7 @@ export default function OpportunityCreateForm() {
                   placeholder="+1234567890"
                   value={prospectContactData.phone}
                   onChange={(e) => setProspectContactData({ ...prospectContactData, phone: e.target.value })}
+                  className="text-base"
                 />
               </div>
 
@@ -1368,33 +1487,37 @@ export default function OpportunityCreateForm() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
 
-            {/* Botón Guardar */}
-            <Button
-              className="w-full bg-green-600 hover:bg-green-700"
-              disabled={
-                !prospectPartnerData.name ||
-                !prospectPartnerData.main_country_id ||
-                !prospectContactData.first_name ||
-                !prospectContactData.last_name ||
-                !prospectContactData.email
-              }
-              onClick={() => {
-                // Guardar datos en el form state
-                form.setValue("prospect_partner_data", prospectPartnerData, { shouldValidate: false })
-                form.setValue("prospect_contact_data", prospectContactData, { shouldValidate: false })
-                setProspectDialogOpen(false)
-                toast({
-                  title: "Éxito",
-                  description: "Datos del prospecto guardados",
-                })
-              }}
-            >
-              <Check className="mr-2 h-4 w-4" />
-              {t("opportunities.prospect.save")}
-            </Button>
-          </div>
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4">
+                <Button variant="outline" onClick={() => setProspectStep(1)} className="flex-1">
+                  <ArrowLeft className="mr-2 h-4 w-4" /> Atrás
+                </Button>
+                <Button
+                  disabled={
+                    !prospectContactData.first_name ||
+                    !prospectContactData.last_name ||
+                    !prospectContactData.email
+                  }
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                  onClick={() => {
+                    // Guardar datos en el form state
+                    form.setValue("prospect_partner_data", prospectPartnerData, { shouldValidate: false })
+                    form.setValue("prospect_contact_data", prospectContactData, { shouldValidate: false })
+                    setProspectDialogOpen(false)
+                    setProspectStep(1)
+                    toast({
+                      title: "Éxito",
+                      description: "Datos del prospecto guardados correctamente",
+                    })
+                  }}
+                >
+                  <Check className="mr-2 h-4 w-4" />
+                  {t("opportunities.prospect.save")}
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
