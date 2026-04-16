@@ -53,7 +53,7 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   user: null,
   loading: true,
-  refreshUser: async () => {},
+  refreshUser: async () => { },
   userInfo: null,
 })
 
@@ -91,7 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           roleCode: userData.roles?.code, // Asegurarse de incluir el roleCode
           partnerId: userData.partner_id,
           techCompanyId: userData.tech_company_id,
-          language: userData.language_preference || "es",
+          language: userData.preferred_language || "es",
           isScaleUp: false, // Provide a default value or fetch from userData if available
           partnerName: null, // Provide a default value or fetch from userData if available
           techCompanyName: null, // Provide a default value or fetch from userData if available
@@ -196,7 +196,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           partnerCountries,
 
           // Imagen de perfil
-          profileImage: userData.profile_image || null,
+          profileImage: (userData as any).profile_image || null,
         }
 
         console.log("Información extendida del usuario cargada correctamente")

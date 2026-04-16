@@ -102,7 +102,7 @@ export default function OpportunityCreateForm() {
   const searchParams = useSearchParams()
   const preselectedStageId = searchParams.get("stage")
 
-  const { user, userInfo, isLoading } = useAuth()
+  const { user, userInfo, loading } = useAuth()
   const { toast } = useToast()
   const { t } = useTranslation(DICT_LANG_OPPORTUNITIES)
 
@@ -481,7 +481,7 @@ export default function OpportunityCreateForm() {
     }
   }
 
-  if (!isLoading) {
+  if (!loading) {
     return <div>Cargando...</div>
   }
 
