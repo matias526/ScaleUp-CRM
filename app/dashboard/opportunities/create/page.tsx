@@ -1,5 +1,5 @@
 import { Suspense } from "react"
-import { OpportunityCreateForm } from "@/components/opportunities/opportunity-create-form"
+import OpportunityCreateForm from "@/components/opportunities/opportunity-create-form"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export default function OpportunityCreatePage() {

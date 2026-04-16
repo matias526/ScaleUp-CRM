@@ -81,7 +81,7 @@ async function getPartnersByTechCompanyId(techCompanyId: string): Promise<Tables
 
     if (error || !data || data.length === 0) return []
 
-    const partnerIds = [...new Set(data.map((item) => item.partner_id))]
+    const partnerIds = [...new Set(data.map((item: any) => item.partner_id))]
 
     const { data: partnersData, error: partnersError } = await supabase
       .from("partners")
@@ -289,7 +289,7 @@ export default function OpportunityCreateForm() {
             .eq("partner_id", partnerId)
 
           if (relatedTechCompanies && relatedTechCompanies.length > 0) {
-            const techCompanyIds = relatedTechCompanies.map((item) => item.tech_company_id)
+            const techCompanyIds = relatedTechCompanies.map((item: any) => item.tech_company_id)
             const { data: techCompaniesData } = await supabase
               .from("tech_companies")
               .select("*")
@@ -480,11 +480,11 @@ export default function OpportunityCreateForm() {
       setLoadingScaleUpManager(false)
     }
   }
-
-  if (!loading) {
-    return <div>Cargando...</div>
-  }
-
+  /*
+    if (loading) {
+      return <div>Cargando...</div>
+    }
+  */
   return (
     <div className="space-y-6">
       <Card>
