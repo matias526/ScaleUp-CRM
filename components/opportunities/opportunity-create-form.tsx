@@ -715,6 +715,18 @@ export default function OpportunityCreateForm() {
     return <div>{t("opportunities.form.loading")}</div>
   }
 
+  // Calculate step description to avoid complex ternaries in JSX
+  const stepDescription = (() => {
+    const descriptions: { [key: number]: string } = {
+      1: t("opportunities.step.1_description") || "Información básica",
+      2: t("opportunities.step.2_description") || "Empresas involucradas",
+      3: t("opportunities.step.3_description") || "Cliente y detalles",
+      4: t("opportunities.step.4_description") || "Campos técnicos",
+      5: t("opportunities.step.5_description") || "Confirmación",
+    }
+    return descriptions[currentStep] || ""
+  })()
+
   return (
     <div className="space-y-6">
       <Card>
@@ -747,11 +759,7 @@ export default function OpportunityCreateForm() {
             </div>
           </div>
           <p className="mt-4 text-sm text-gray-600">
-            {currentStep === 1 ? t("opportunities.step.1_description") || "Información básica"
-              : currentStep === 2 ? t("opportunities.step.2_description") || "Empresas involucradas"
-                : currentStep === 3 ? t("opportunities.step.3_description") || "Cliente y detalles"
-                  : currentStep === 4 ? t("opportunities.step.4_description") || "Campos técnicos"
-                    : t("opportunities.step.5_description") || "Confirmación"}
+            {stepDescription}
           </p>
         </CardHeader>
 
@@ -1384,8 +1392,6 @@ export default function OpportunityCreateForm() {
                   transition={{ duration: 0.3 }}
                   className="space-y-6"
                 >
-                  <div className="rounded-lg border p-4 space-y-3">
-                    <h3 className="font-semibold">{t("opportunities.form.summaryTitle")}</h3>
                   <div className="rounded-lg border shadow-sm p-6 space-y-6">
                     <h3 className="text-lg font-semibold text-gray-900">{t("opportunities.form.summaryTitle")}</h3>
                     
