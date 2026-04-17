@@ -71,7 +71,8 @@ const PartnerContactsSection = dynamic(() => import("@/components/partners/partn
 })
 
 export default function PartnerDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params)
+  const resolvedParams = use(params)
+  const id = resolvedParams.id
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -126,8 +127,8 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
       }
 
       // Extrae el string del country name si es un objeto
-      const countryName = typeof data.countries?.name === 'string' 
-        ? data.countries.name 
+      const countryName = typeof data.countries?.name === 'string'
+        ? data.countries.name
         : (data.countries as any)?.name || 'No especificado'
 
       // Extrae strings de campos que pueden venir como objetos
@@ -254,24 +255,7 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
           </CardContent>
         </Card>
 
-        <div className="md:col-span-2 space-y-6">
-          {/* Componentes restaurados */}
-          <ErrorBoundary fallback={<ComponentErrorFallback title="Empresas Tecnológicas" />}>
-            <PartnerTechCompanies partnerId={partner?.id} />
-          </ErrorBoundary>
 
-          <ErrorBoundary fallback={<ComponentErrorFallback title="Usuarios" />}>
-            <PartnerUsers partnerId={partner?.id} partnerName={partner?.name} />
-          </ErrorBoundary>
-
-          <ErrorBoundary fallback={<ComponentErrorFallback title="Tareas" />}>
-            <PartnerTasks partnerId={partner?.id} partnerName={partner?.name} />
-          </ErrorBoundary>
-
-          <ErrorBoundary fallback={<ComponentErrorFallback title="Contactos" />}>
-            <PartnerContactsSection partnerId={partner?.id} />
-          </ErrorBoundary>
-        </div>
       </div>
     </div>
   )
