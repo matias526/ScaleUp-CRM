@@ -784,7 +784,8 @@ export default function OpportunityCreateForm() {
               className="space-y-6">
               
               {/* Centered Content Container */}
-              <div className="max-w-xl mx-auto px-4 w-full">
+              <div className="w-full max-w-sm mx-auto">
+
               {/* ===== PASO 1: INFORMACIÓN BÁSICA ===== */}
               {currentStep === 1 && (
                 <div className="space-y-6 mt-6">
