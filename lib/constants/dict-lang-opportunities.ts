@@ -373,4 +373,76 @@ export const DICT_LANG_OPPORTUNITIES = {
     en: "Error creating end customer",
     pt: "Erro ao criar cliente final",
   },
+
+  // Additional missing texts
+  "opportunities.prospect.markProspect": {
+    es: "Marca si este partner es prospecto",
+    en: "Mark if this partner is a prospect",
+    pt: "Marque se este partner é um prospecto",
+  },
+  "opportunities.form.titleRequired": {
+    es: "El título es obligatorio",
+    en: "Title is required",
+    pt: "O título é obrigatório",
+  },
+  "opportunities.form.techCompanyRequired": {
+    es: "La empresa tecnológica es obligatoria",
+    en: "Tech company is required",
+    pt: "A empresa tecnológica é obrigatória",
+  },
+  "opportunities.prospect.savedData": {
+    es: "Datos del Prospecto Guardados",
+    en: "Prospect Data Saved",
+    pt: "Dados do Prospecto Salvos",
+  },
+  "opportunities.prospect.editData": {
+    es: "Editar Datos del Prospecto",
+    en: "Edit Prospect Data",
+    pt: "Editar Dados do Prospecto",
+  },
+  "opportunities.prospect.step1": {
+    es: "Paso 1 de 2: Información de la Empresa",
+    en: "Step 1 of 2: Company Information",
+    pt: "Etapa 1 de 2: Informações da Empresa",
+  },
+  "opportunities.prospect.step1Description": {
+    es: "Proporciona los detalles principales de la empresa prospecto",
+    en: "Provide the main details of the prospect company",
+    pt: "Forneça os detalhes principais da empresa prospecto",
+  },
+  "opportunities.prospect.companyName": {
+    es: "Nombre de la Empresa",
+    en: "Company Name",
+    pt: "Nome da Empresa",
+  },
+  "opportunities.prospect.step2": {
+    es: "Paso 2 de 2: Información de Contacto",
+    en: "Step 2 of 2: Contact Information",
+    pt: "Etapa 2 de 2: Informações de Contato",
+  },
+  "opportunities.prospect.step2Description": {
+    es: "Proporciona los datos de contacto principal",
+    en: "Provide the main contact information",
+    pt: "Forneça as informações de contato principal",
+  },
+  "opportunities.prospect.back": {
+    es: "Atrás",
+    en: "Back",
+    pt: "Voltar",
+  },
+  "opportunities.prospect.next": {
+    es: "Siguiente",
+    en: "Next",
+    pt: "Próximo",
+  },
+  "opportunities.form.language": {
+    es: "idioma",
+    en: "language",
+    pt: "idioma",
+  },
+  "opportunities.form.email": {
+    es: "email",
+    en: "email",
+    pt: "email",
+  },
 }

@@ -246,10 +246,10 @@ export default function OpportunityCreateForm() {
 
   // ✅ SIMPLIFIED: Cleaner validation schema
   const formSchema = z.object({
-    title: z.string().min(1, "El título es obligatorio"),
+    title: z.string().min(1, t("opportunities.form.titleRequired")),
     description: z.string().optional(),
-    pipeline_stage_id: z.string().min(1, "La etapa es obligatoria"),
-    tech_company_id: z.string().min(1, "La empresa tecnológica es obligatoria"),
+    pipeline_stage_id: z.string().min(1, t("error.stageRequired")),
+    tech_company_id: z.string().min(1, t("opportunities.form.techCompanyRequired")),
     is_prospect: z.boolean().optional(),
     partner_id: z.string().optional().nullable(),
     prospect_partner_data: z.object({
@@ -783,7 +783,7 @@ export default function OpportunityCreateForm() {
                         <FormItem className="flex items-center justify-between rounded-lg border p-4">
                           <div className="space-y-0.5">
                             <FormLabel className="text-base cursor-pointer">{t("opportunities.prospect.is_prospect")}</FormLabel>
-                            <p className="text-sm text-gray-500">Marca si este partner es prospecto</p>
+                            <p className="text-sm text-gray-500">{t("opportunities.prospect.markProspect")}</p>
                           </div>
                           <FormControl>
                             <Switch
@@ -806,7 +806,7 @@ export default function OpportunityCreateForm() {
                     <div className="rounded-lg bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 p-4 space-y-3">
                       <div className="flex items-center gap-2 mb-3">
                         <Check className="h-5 w-5 text-green-600" />
-                        <span className="font-semibold text-gray-900">Datos del Prospecto Guardados</span>
+                        <span className="font-semibold text-gray-900">{t("opportunities.prospect.savedData")}</span>
                       </div>
 
                       {/* Grid con datos de empresa */}
@@ -840,7 +840,7 @@ export default function OpportunityCreateForm() {
                         className="w-full"
                         onClick={() => setProspectDialogOpen(true)}
                       >
-                        Editar Datos del Prospecto
+                        Editar {t("opportunities.prospect.savedData").toLowerCase()}
                       </Button>
                     </div>
                   )}
@@ -1355,11 +1355,11 @@ export default function OpportunityCreateForm() {
                           {t("opportunities.prospect.title")}
                         </h4>
                         <div className="bg-blue-50 rounded p-3 space-y-2 text-sm">
-                          <div><span className="font-medium text-gray-700">Empresa:</span> <span className="text-gray-900">{form.watch("prospect_partner_data")?.name}</span></div>
+                          <div><span className="font-medium text-gray-700">{t("opportunities.form.summary.techCompany")}:</span> <span className="text-gray-900">{form.watch("prospect_partner_data")?.name}</span></div>
                           {form.watch("prospect_partner_data")?.website && (
-                            <div><span className="font-medium text-gray-700">Website:</span> <span className="text-gray-900">{form.watch("prospect_partner_data")?.website}</span></div>
+                            <div><span className="font-medium text-gray-700">{t("opportunities.prospect.website")}:</span> <span className="text-gray-900">{form.watch("prospect_partner_data")?.website}</span></div>
                           )}
-                          <div><span className="font-medium text-gray-700">País:</span> <span className="text-gray-900">{allCountries.find(c => c.id === form.watch("prospect_partner_data")?.main_country_id)?.name}</span></div>
+                          <div><span className="font-medium text-gray-700">{t("opportunities.form.summary.country")}:</span> <span className="text-gray-900">{allCountries.find(c => c.id === form.watch("prospect_partner_data")?.main_country_id)?.name}</span></div>
                         </div>
 
                         <h4 className="font-semibold text-sm flex items-center gap-2 mt-3">
@@ -1367,12 +1367,12 @@ export default function OpportunityCreateForm() {
                           {t("opportunities.prospect.contact_title")}
                         </h4>
                         <div className="bg-green-50 rounded p-3 space-y-2 text-sm">
-                          <div><span className="font-medium text-gray-700">Nombre:</span> <span className="text-gray-900">{form.watch("prospect_contact_data")?.first_name} {form.watch("prospect_contact_data")?.last_name}</span></div>
-                          <div><span className="font-medium text-gray-700">Email:</span> <span className="text-gray-900">{form.watch("prospect_contact_data")?.email}</span></div>
+                          <div><span className="font-medium text-gray-700">{t("opportunities.prospect.first_name")}:</span> <span className="text-gray-900">{form.watch("prospect_contact_data")?.first_name} {form.watch("prospect_contact_data")?.last_name}</span></div>
+                          <div><span className="font-medium text-gray-700">{t("opportunities.prospect.email")}:</span> <span className="text-gray-900">{form.watch("prospect_contact_data")?.email}</span></div>
                           {form.watch("prospect_contact_data")?.phone && (
-                            <div><span className="font-medium text-gray-700">Teléfono:</span> <span className="text-gray-900">{form.watch("prospect_contact_data")?.phone}</span></div>
+                            <div><span className="font-medium text-gray-700">{t("opportunities.prospect.phone")}:</span> <span className="text-gray-900">{form.watch("prospect_contact_data")?.phone}</span></div>
                           )}
-                          <div><span className="font-medium text-gray-700">Idioma:</span> <span className="text-gray-900">{form.watch("prospect_contact_data")?.preferred_language?.toUpperCase()}</span></div>
+                          <div><span className="font-medium text-gray-700">{t("opportunities.prospect.preferred_language")}:</span> <span className="text-gray-900">{form.watch("prospect_contact_data")?.preferred_language?.toUpperCase()}</span></div>
                         </div>
                       </div>
                     )}
@@ -1384,9 +1384,9 @@ export default function OpportunityCreateForm() {
                       return value !== undefined && value !== null && value !== "" && !(Array.isArray(value) && value.length === 0)
                     }) && (
                         <div className="mt-4 pt-4 border-t space-y-3">
-                          <h4 className="font-semibold text-sm flex items-center gap-2">
-                            <FileText className="h-4 w-4 text-purple-600" />
-                            Campos Técnicos
+                        <h4 className="font-semibold text-sm flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-purple-600" />
+                          {t("opportunities.form.tech_fields")}
                           </h4>
                           <div className="bg-purple-50 rounded p-3 space-y-2 text-sm">
                             {techFields.map((field: any) => {
@@ -1656,7 +1656,9 @@ export default function OpportunityCreateForm() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="text-2xl">{t("opportunities.prospect.title")}</DialogTitle>
-            <p className="text-sm text-gray-500 mt-1">{"Paso " + prospectStep + " de 2: " + (prospectStep === 1 ? "Información de la Empresa" : "Información de Contacto")}</p>
+              <p className="text-sm text-gray-500 mt-1">
+                {t(prospectStep === 1 ? "opportunities.prospect.step1" : "opportunities.prospect.step2")}
+              </p>
           </DialogHeader>
 
           {/* Progress Indicator */}
@@ -1673,7 +1675,7 @@ export default function OpportunityCreateForm() {
                   <Building2 className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
                   <div>
                     <h3 className="font-semibold text-blue-900">{t("opportunities.prospect.name")}</h3>
-                    <p className="text-sm text-blue-700">{"Proporciona los detalles principales de la empresa prospecto"}</p>
+                    <p className="text-sm text-blue-700">{t("opportunities.prospect.step1Description")}</p>
                   </div>
                 </div>
               </div>
@@ -1721,15 +1723,15 @@ export default function OpportunityCreateForm() {
 
               {/* Action Buttons */}
               <div className="flex gap-3 pt-4">
-                <Button variant="outline" onClick={() => setProspectDialogOpen(false)}>
-                  Cancelar
-                </Button>
+                  <Button variant="outline" onClick={() => setProspectDialogOpen(false)}>
+                    {t("common.cancel")}
+                  </Button>
                 <Button
                   disabled={!prospectPartnerData.name || !prospectPartnerData.main_country_id}
                   onClick={() => setProspectStep(2)}
                   className="flex-1 bg-blue-600 hover:bg-blue-700"
                 >
-                  Siguiente <ArrowRight className="ml-2 h-4 w-4" />
+                  {t("common.next")} <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -1813,7 +1815,7 @@ export default function OpportunityCreateForm() {
               {/* Action Buttons */}
               <div className="flex gap-3 pt-4">
                 <Button variant="outline" onClick={() => setProspectStep(1)} className="flex-1">
-                  <ArrowLeft className="mr-2 h-4 w-4" /> Atrás
+                  <ArrowLeft className="mr-2 h-4 w-4" /> {t("opportunities.prospect.back")}
                 </Button>
                 <Button
                   disabled={
