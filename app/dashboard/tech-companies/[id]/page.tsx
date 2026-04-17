@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -15,7 +15,9 @@ import { TechCompanyUsers } from "@/components/tech-companies/tech-company-users
 import { TechCompanyTasks } from "@/components/tech-companies/tech-company-tasks"
 import { TechCompanyContactsSection } from "@/components/tech-companies/tech-company-contacts-section"
 
-export default function TechCompanyDetailsPage({ params }: { params: { id: string } }) {
+export default function TechCompanyDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params)
+  const id = resolvedParams.id
   const router = useRouter()
   const { t } = useTranslations()
   const [company, setCompany] = useState<any>(null)
@@ -24,10 +26,11 @@ export default function TechCompanyDetailsPage({ params }: { params: { id: strin
 
   useEffect(() => {
     const loadCompany = async () => {
+      if (!id || id === "undefined") return
       setIsLoading(true)
       setError(null)
       try {
-        const data = await TechCompanyService.getTechCompanyById(params.id)
+        const data = await TechCompanyService.getTechCompanyById(id)
         if (!data) {
           throw new Error("Empresa no encontrada")
         }
@@ -41,7 +44,7 @@ export default function TechCompanyDetailsPage({ params }: { params: { id: strin
     }
 
     loadCompany()
-  }, [params.id])
+  }, [id])
 
   if (isLoading) {
     return (
@@ -91,10 +94,10 @@ export default function TechCompanyDetailsPage({ params }: { params: { id: strin
   }
 
   // Asegurarse de que los valores sean strings o valores primitivos
-  const companyName = typeof company.name === "string" ? company.name : "Sin nombre"
-  const logoAlt = typeof company.name === "string" ? `Logo de ${company.name}` : "Logo de la empresa"
+  const companyName = typeof company.name === "string" ? company.name : (company.name?.name || "Sin nombre")
+  const logoAlt = `Logo de ${companyName}`
   const logoUrl = typeof company.logo_url === "string" ? company.logo_url : "/placeholder.svg"
-  const companyCode = typeof company.code === "string" ? company.code : "Sin código"
+  const companyCode = typeof company.code === "string" ? company.code : (company.code?.name || company.code || "Sin código")
   const companyWebsite = typeof company.website === "string" ? company.website : ""
   const creationDate = company.created_at ? new Date(company.created_at).toLocaleDateString() : "Desconocida"
   const updateDate = company.updated_at ? new Date(company.updated_at).toLocaleDateString() : "Desconocida"
@@ -122,7 +125,8 @@ export default function TechCompanyDetailsPage({ params }: { params: { id: strin
         <CardHeader>
           <CardTitle>{t("tech_company_details") || "Detalles de la empresa tecnológica"}</CardTitle>
           <CardDescription>
-            {t("complete_info_about", { name: companyName }) || `Información completa sobre ${companyName}`}
+            {/* Solución: Usamos el nombre limpio directamente en el fallback */}
+            {t("complete_info_about") || `Información completa sobre ${companyName}`}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
