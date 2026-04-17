@@ -784,7 +784,7 @@ export default function OpportunityCreateForm() {
               className="space-y-6">
               
               {/* Centered Content Container */}
-              <div className="max-w-2xl mx-auto px-4 w-full">
+              <div className="max-w-xl mx-auto px-4 w-full">
               {/* ===== PASO 1: INFORMACIÓN BÁSICA ===== */}
               {currentStep === 1 && (
                 <div className="space-y-6 mt-6">
@@ -926,7 +926,7 @@ export default function OpportunityCreateForm() {
 
                   {/* Section Title: Company Data */}
                   <div className="border-b pb-3">
-                    <h3 className="text-sm font-semibold text-gray-700">Datos de la Empresa</h3>
+                    <h3 className="text-xs uppercase tracking-wider font-semibold text-slate-500">Datos de la Empresa</h3>
                   </div>
 
                   {/* Empresa Tecnológica */}
@@ -1033,7 +1033,7 @@ export default function OpportunityCreateForm() {
                   {/* Section Title: Assignment */}
                   {(isScaleUpUser || form.watch("partner_id")) && (
                     <div className="border-b pb-3">
-                      <h3 className="text-sm font-semibold text-gray-700">Asignación y Responsables</h3>
+                      <h3 className="text-xs uppercase tracking-wider font-semibold text-slate-500">Asignación y Responsables</h3>
                     </div>
                   )}
 
