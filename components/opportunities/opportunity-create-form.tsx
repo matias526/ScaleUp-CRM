@@ -52,6 +52,10 @@ import {
   Search,
   Lock,
   Pencil,
+  Layout,
+  Layers,
+  Globe,
+  User,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -1389,79 +1393,192 @@ export default function OpportunityCreateForm() {
               {/* ===== PASO 5: CONFIRMACIÓN ===== */}
               {currentStep === 5 && (
                 <div className="space-y-6 mt-6">
-                  <div className="rounded-lg border p-4 space-y-3">
-                    <h3 className="font-semibold">{t("opportunities.form.summaryTitle")}</h3>
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div><span className="font-medium">{t("opportunities.form.summary.title")}:</span> {form.watch("title") || "N/A"}</div>
-                      <div><span className="font-medium">{t("opportunities.form.summary.stage")}:</span> {stages.find(s => s.id === form.watch("pipeline_stage_id"))?.code || "N/A"}</div>
-                      <div><span className="font-medium">{t("opportunities.form.summary.techCompany")}:</span> {techCompanies.find(c => c.id === form.watch("tech_company_id"))?.name || "N/A"}</div>
-                      <div><span className="font-medium">{t("opportunities.form.summary.partner")}:</span> {form.watch("partner_id") ? (filteredPartners.find(p => p.id === form.watch("partner_id"))?.name || "N/A") : "N/A"}</div>
-                      <div><span className="font-medium">{t("opportunities.form.summary.country")}:</span> {form.watch("country") || "N/A"}</div>
-                      <div><span className="font-medium">{t("opportunities.form.summary.customer")}:</span> {form.watch("end_customer_id") ? (filteredEndCustomers.find(c => c.id === form.watch("end_customer_id"))?.name || "N/A") : "N/A"}</div>
-                      <div><span className="font-medium">{t("opportunities.form.summary.value")}:</span> USD {form.watch("estimated_value") || "0"}</div>
-                      <div><span className="font-medium">{t("opportunities.form.summary.closeDate")}:</span> {form.watch("estimated_close_date") || "N/A"}</div>
-                    </div>
+                  {/* Summary Title */}
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">{t("opportunities.form.summaryTitle")}</h3>
+                    <p className="text-sm text-gray-500 mt-1">Revisa los datos antes de crear la oportunidad</p>
+                  </div>
 
-                    {/* Sección de Partner Prospecto (si aplica) */}
-                    {form.watch("is_prospect") && form.watch("prospect_partner_data")?.name && (
-                      <div className="mt-4 pt-4 border-t space-y-3">
-                        <h4 className="font-semibold text-sm flex items-center gap-2">
-                          <Building2 className="h-4 w-4 text-blue-600" />
-                          {t("opportunities.prospect.title")}
-                        </h4>
-                        <div className="bg-blue-50 rounded p-3 space-y-2 text-sm">
-                          <div><span className="font-medium text-gray-700">{t("opportunities.form.summary.techCompany")}:</span> <span className="text-gray-900">{form.watch("prospect_partner_data")?.name}</span></div>
-                          {form.watch("prospect_partner_data")?.website && (
-                            <div><span className="font-medium text-gray-700">{t("opportunities.prospect.website")}:</span> <span className="text-gray-900">{form.watch("prospect_partner_data")?.website}</span></div>
-                          )}
-                          <div><span className="font-medium text-gray-700">{t("opportunities.form.summary.country")}:</span> <span className="text-gray-900">{allCountries.find(c => c.id === form.watch("prospect_partner_data")?.main_country_id)?.name}</span></div>
-                        </div>
-
-                        <h4 className="font-semibold text-sm flex items-center gap-2 mt-3">
-                          <Users className="h-4 w-4 text-green-600" />
-                          {t("opportunities.prospect.contact_title")}
-                        </h4>
-                        <div className="bg-green-50 rounded p-3 space-y-2 text-sm">
-                          <div><span className="font-medium text-gray-700">{t("opportunities.prospect.first_name")}:</span> <span className="text-gray-900">{form.watch("prospect_contact_data")?.first_name} {form.watch("prospect_contact_data")?.last_name}</span></div>
-                          <div><span className="font-medium text-gray-700">{t("opportunities.prospect.email")}:</span> <span className="text-gray-900">{form.watch("prospect_contact_data")?.email}</span></div>
-                          {form.watch("prospect_contact_data")?.phone && (
-                            <div><span className="font-medium text-gray-700">{t("opportunities.prospect.phone")}:</span> <span className="text-gray-900">{form.watch("prospect_contact_data")?.phone}</span></div>
-                          )}
-                          <div><span className="font-medium text-gray-700">{t("opportunities.prospect.preferred_language")}:</span> <span className="text-gray-900">{form.watch("prospect_contact_data")?.preferred_language?.toUpperCase()}</span></div>
+                  {/* Main Data Cards Grid */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Card: Title */}
+                    <div className="bg-white border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-start gap-2 mb-3">
+                        <Layout className="h-4 w-4 text-gray-400 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">{t("opportunities.form.summary.title")}</p>
+                          <p className="text-sm font-medium text-slate-800 mt-1">{form.watch("title") || <span className="text-gray-400">N/A</span>}</p>
                         </div>
                       </div>
-                    )}
+                    </div>
 
-                    {/* Sección de Campos Técnicos (si existen valores) */}
-                    {hasTechFields && techFields.some((field: any) => {
-                      const fieldKey = `opportunity_tech_fields.${field.id}`
-                      const value = form.getValues(fieldKey as any)
-                      return value !== undefined && value !== null && value !== "" && !(Array.isArray(value) && value.length === 0)
-                    }) && (
-                        <div className="mt-4 pt-4 border-t space-y-3">
-                        <h4 className="font-semibold text-sm flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-purple-600" />
-                          {t("opportunities.form.tech_fields")}
-                          </h4>
-                          <div className="bg-purple-50 rounded p-3 space-y-2 text-sm">
-                            {techFields.map((field: any) => {
-                              const fieldKey = `opportunity_tech_fields.${field.id}`
-                              const value = form.getValues(fieldKey as any)
-                              if (value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0)) return null
+                    {/* Card: Stage */}
+                    <div className="bg-white border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-start gap-2 mb-3">
+                        <Layers className="h-4 w-4 text-gray-400 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">{t("opportunities.form.summary.stage")}</p>
+                          <p className="text-sm font-medium text-slate-800 mt-1">{stages.find(s => s.id === form.watch("pipeline_stage_id"))?.code || <span className="text-gray-400">N/A</span>}</p>
+                        </div>
+                      </div>
+                    </div>
 
-                              let displayValue = Array.isArray(value) ? value.join(", ") : String(value)
+                    {/* Card: Tech Company */}
+                    <div className="bg-white border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-start gap-2 mb-3">
+                        <Building2 className="h-4 w-4 text-gray-400 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">{t("opportunities.form.summary.techCompany")}</p>
+                          <p className="text-sm font-medium text-slate-800 mt-1">{techCompanies.find(c => c.id === form.watch("tech_company_id"))?.name || <span className="text-gray-400">N/A</span>}</p>
+                        </div>
+                      </div>
+                    </div>
 
-                              return (
-                                <div key={field.id}>
-                                  <span className="font-medium text-gray-700">{field.field_name}:</span>
-                                  <span className="text-gray-900 ml-2">{displayValue}</span>
-                                </div>
-                              )
-                            })}
+                    {/* Card: Partner */}
+                    <div className="bg-white border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-start gap-2 mb-3">
+                        <Users className="h-4 w-4 text-gray-400 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">{t("opportunities.form.summary.partner")}</p>
+                          <p className="text-sm font-medium text-slate-800 mt-1">{form.watch("partner_id") ? (filteredPartners.find(p => p.id === form.watch("partner_id"))?.name || <span className="text-gray-400">N/A</span>) : <span className="text-gray-400">N/A</span>}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card: Country */}
+                    <div className="bg-white border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-start gap-2 mb-3">
+                        <Globe className="h-4 w-4 text-gray-400 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">{t("opportunities.form.summary.country")}</p>
+                          <p className="text-sm font-medium text-slate-800 mt-1">{form.watch("country") || <span className="text-gray-400">N/A</span>}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card: Customer */}
+                    <div className="bg-white border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-start gap-2 mb-3">
+                        <User className="h-4 w-4 text-gray-400 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">{t("opportunities.form.summary.customer")}</p>
+                          <p className="text-sm font-medium text-slate-800 mt-1">{form.watch("end_customer_id") ? (filteredEndCustomers.find(c => c.id === form.watch("end_customer_id"))?.name || <span className="text-gray-400">N/A</span>) : <span className="text-gray-400">N/A</span>}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Highlighted Value Card - Full Width */}
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <DollarSign className="h-5 w-5 text-emerald-600 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-[10px] uppercase tracking-widest text-emerald-700 font-semibold">{t("opportunities.form.summary.value")}</p>
+                        <p className="text-xl font-bold text-emerald-900 mt-2">USD {form.watch("estimated_value") || "0"}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Close Date Card */}
+                  <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-start gap-2">
+                      <Calendar className="h-4 w-4 text-gray-400 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">{t("opportunities.form.summary.closeDate")}</p>
+                        <p className="text-sm font-medium text-slate-800 mt-1">{form.watch("estimated_close_date") || <span className="text-gray-400">N/A</span>}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Prospect Section - if applicable */}
+                  {form.watch("is_prospect") && form.watch("prospect_partner_data")?.name && (
+                    <div className="border-l-4 border-blue-500 bg-blue-50 rounded-lg p-4 space-y-4">
+                      <h4 className="font-semibold text-sm flex items-center gap-2 text-blue-900">
+                        <Building2 className="h-4 w-4" />
+                        {t("opportunities.prospect.title")}
+                      </h4>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        {/* Prospect Company */}
+                        <div className="bg-white rounded p-3">
+                          <p className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Nombre</p>
+                          <p className="text-sm font-medium text-slate-800 mt-1">{form.watch("prospect_partner_data")?.name}</p>
+                        </div>
+
+                        {/* Prospect Website */}
+                        {form.watch("prospect_partner_data")?.website && (
+                          <div className="bg-white rounded p-3">
+                            <p className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Website</p>
+                            <p className="text-sm font-medium text-slate-800 mt-1 truncate">{form.watch("prospect_partner_data")?.website}</p>
+                          </div>
+                        )}
+
+                        {/* Prospect Country */}
+                        <div className="bg-white rounded p-3">
+                          <p className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">País</p>
+                          <p className="text-sm font-medium text-slate-800 mt-1">{allCountries.find(c => c.id === form.watch("prospect_partner_data")?.main_country_id)?.name || "N/A"}</p>
+                        </div>
+                      </div>
+
+                      {/* Prospect Contact */}
+                      <div className="border-t border-blue-200 pt-4">
+                        <h5 className="font-semibold text-sm flex items-center gap-2 text-blue-900 mb-3">
+                          <Users className="h-4 w-4" />
+                          {t("opportunities.prospect.contact_title")}
+                        </h5>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="bg-white rounded p-3">
+                            <p className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Nombre</p>
+                            <p className="text-sm font-medium text-slate-800 mt-1">{form.watch("prospect_contact_data")?.first_name} {form.watch("prospect_contact_data")?.last_name}</p>
+                          </div>
+                          <div className="bg-white rounded p-3">
+                            <p className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Email</p>
+                            <p className="text-sm font-medium text-slate-800 mt-1 truncate">{form.watch("prospect_contact_data")?.email}</p>
+                          </div>
+                          {form.watch("prospect_contact_data")?.phone && (
+                            <div className="bg-white rounded p-3">
+                              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Teléfono</p>
+                              <p className="text-sm font-medium text-slate-800 mt-1">{form.watch("prospect_contact_data")?.phone}</p>
+                            </div>
+                          )}
+                          <div className="bg-white rounded p-3">
+                            <p className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Idioma</p>
+                            <p className="text-sm font-medium text-slate-800 mt-1">{form.watch("prospect_contact_data")?.preferred_language?.toUpperCase()}</p>
                           </div>
                         </div>
-                      )}
-                  </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tech Fields Section - if applicable */}
+                  {hasTechFields && techFields.some((field: any) => {
+                    const fieldKey = `opportunity_tech_fields.${field.id}`
+                    const value = form.getValues(fieldKey as any)
+                    return value !== undefined && value !== null && value !== "" && !(Array.isArray(value) && value.length === 0)
+                  }) && (
+                    <div className="border-l-4 border-purple-500 bg-purple-50 rounded-lg p-4">
+                      <h4 className="font-semibold text-sm flex items-center gap-2 text-purple-900 mb-3">
+                        <FileText className="h-4 w-4" />
+                        {t("opportunities.form.tech_fields")}
+                      </h4>
+                      <div className="space-y-2">
+                        {techFields.map((field: any) => {
+                          const fieldKey = `opportunity_tech_fields.${field.id}`
+                          const value = form.getValues(fieldKey as any)
+                          if (value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0)) return null
+
+                          let displayValue = Array.isArray(value) ? value.join(", ") : String(value)
+
+                          return (
+                            <div key={field.id} className="bg-white rounded p-3 flex justify-between items-start">
+                              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">{field.field_name}</p>
+                              <p className="text-sm font-medium text-slate-800 text-right">{displayValue}</p>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
               </div>
