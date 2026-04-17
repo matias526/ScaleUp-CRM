@@ -719,7 +719,7 @@ export default function OpportunityCreateForm() {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader className="pb-6 bg-cyan-50">
+        <CardHeader className="pb-6 bg-blue-50">
           {/* Header Title and Description */}
           <div className="mb-6">
             <CardTitle className="text-2xl mb-2 text-gray-900">{t("opportunities.header.title") || "Crear nueva oportunidad"}</CardTitle>
@@ -731,13 +731,13 @@ export default function OpportunityCreateForm() {
             {/* Progress bar with percentage */}
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-medium text-gray-700">{t("opportunities.header.progress") || "Progreso"}</span>
-              <span className="text-sm font-semibold text-cyan-600">{Math.round((currentStep / totalSteps) * 100)}%</span>
+              <span className="text-sm font-semibold text-blue-600">{Math.round((currentStep / totalSteps) * 100)}%</span>
             </div>
             
             {/* Linear Progress Bar */}
             <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
               <div 
-                className="h-full bg-cyan-500 transition-all duration-300"
+                className="h-full bg-blue-600 transition-all duration-300"
                 style={{ width: `${(currentStep / totalSteps) * 100}%` }}
               />
             </div>
@@ -747,7 +747,7 @@ export default function OpportunityCreateForm() {
           <div className="flex items-center justify-between">
             {/* Step Title with Circle Number */}
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-500 text-white font-semibold text-sm">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white font-semibold text-sm">
                 {currentStep}
               </div>
               <span className="text-base font-semibold text-gray-900">
@@ -765,7 +765,7 @@ export default function OpportunityCreateForm() {
                 <div
                   key={index}
                   className={`h-2 w-2 rounded-full transition-all ${
-                    index + 1 <= currentStep ? "bg-cyan-500" : "bg-gray-300"
+                    index + 1 <= currentStep ? "bg-blue-600" : "bg-gray-300"
                   }`}
                 />
               ))}
@@ -785,7 +785,6 @@ export default function OpportunityCreateForm() {
               {/* ===== PASO 1: INFORMACIÓN BÁSICA ===== */}
               {currentStep === 1 && (
                 <div className="space-y-4">
-                  <div className="text-sm font-medium text-blue-600">{t("opportunities.step.1")}</div>
 
                   {/* Título */}
                   <FormField
@@ -921,7 +920,6 @@ export default function OpportunityCreateForm() {
               {/* ===== PASO 2: EMPRESAS INVOLUCRADAS ===== */}
               {currentStep === 2 && (
                 <div className="space-y-4">
-                  <div className="text-sm font-medium text-blue-600">{t("opportunities.step.2")}</div>
 
                   {/* Empresa Tecnológica */}
                   <FormField
@@ -1096,7 +1094,6 @@ export default function OpportunityCreateForm() {
               {/* ===== PASO 3: CLIENTE Y DETALLES FINANCIEROS ===== */}
               {currentStep === 3 && (
                 <div className="space-y-4">
-                  <div className="text-sm font-medium text-blue-600">{t("opportunities.step.3")}</div>
 
                   {/* End Customer - AUTOCOMPLETE CON BÚSQUEDA */}
                   <FormField
@@ -1209,7 +1206,6 @@ export default function OpportunityCreateForm() {
               {/* ===== PASO 4: CAMPOS TÉCNICOS ===== */}
               {currentStep === 4 && (
                 <div className="space-y-4">
-                  <div className="text-sm font-medium text-blue-600">{t("opportunities.step.4")}</div>
 
                   {loadingTechFields ? (
                     <p className="text-gray-500">{t("opportunities.form.loading")}</p>
@@ -1376,7 +1372,6 @@ export default function OpportunityCreateForm() {
               {/* ===== PASO 5: CONFIRMACIÓN ===== */}
               {currentStep === 5 && (
                 <div className="space-y-4">
-                  <div className="text-sm font-medium text-green-600">{t("opportunities.form.stepConfirmation")}</div>
                   <div className="rounded-lg border p-4 space-y-3">
                     <h3 className="font-semibold">{t("opportunities.form.summaryTitle")}</h3>
                     <div className="grid grid-cols-2 gap-3 text-sm">
