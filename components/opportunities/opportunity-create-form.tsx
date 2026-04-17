@@ -687,6 +687,31 @@ export default function OpportunityCreateForm() {
       // 3. INSERT into opportunities
       const result = await createOpportunity(opportunityData, techValuesToSave, userRole)
 
+      // 3.5 CREATE OPPORTUNITY_CONTACTS if prospect contact was created
+      if (data.is_prospect && prospectContactId && result?.id) {
+        try {
+          const { error: contactsError } = await supabase
+            .from("opportunity_contacts")
+            .insert([
+              {
+                opportunity_id: result.id,
+                contact_id: prospectContactId,
+                is_primary: true,
+              },
+            ])
+
+          if (contactsError) {
+            console.error("[v0] Error creando opportunity_contacts:", contactsError)
+            // No fallar la creación de la oportunidad si hay error en this
+          } else {
+            console.log("[v0] opportunity_contacts creado exitosamente")
+          }
+        } catch (error) {
+          console.error("[v0] Error inesperado al crear opportunity_contacts:", error)
+          // No fallar la creación de la oportunidad
+        }
+      }
+
       // 4. INSERT into opportunity_tech_values (si hay valores técnicos)
       if (techValuesToSave.length > 0) {
         try {
