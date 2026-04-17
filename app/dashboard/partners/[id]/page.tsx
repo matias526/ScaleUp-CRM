@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
+import { use } from "react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -69,11 +70,31 @@ const PartnerContactsSection = dynamic(() => import("@/components/partners/partn
   ),
 })
 
-export default function PartnerDetailPage({ params }: { params: { id: string } }) {
+export default function PartnerDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [partner, setPartner] = useState<any | null>(null)
+
+  // Validación de ID
+  if (!id || id === 'undefined') {
+    return (
+      <div className="container mx-auto py-6">
+        <Card className="border-red-500">
+          <CardHeader className="bg-red-50">
+            <CardTitle className="text-red-700">Error</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-red-600">ID de partner inválido</p>
+            <Button className="mt-4" onClick={() => router.back()}>
+              Volver
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   // Función para obtener el partner
   const fetchPartner = async () => {
@@ -90,7 +111,7 @@ export default function PartnerDetailPage({ params }: { params: { id: string } }
           created_at, updated_at,
           countries:main_country_id (name)
         `)
-        .eq("id", params.id)
+        .eq("id", id)
         .single()
 
       if (error) {
@@ -104,10 +125,29 @@ export default function PartnerDetailPage({ params }: { params: { id: string } }
         return
       }
 
+      // Extrae el string del country name si es un objeto
+      const countryName = typeof data.countries?.name === 'string' 
+        ? data.countries.name 
+        : (data.countries as any)?.name || 'No especificado'
+
+      // Extrae strings de campos que pueden venir como objetos
+      const name = typeof data.name === 'string' ? data.name : 'Sin nombre'
+      const website = typeof data.website === 'string' ? data.website : null
+      const address = typeof data.address === 'string' ? data.address : null
+      const city = typeof data.city === 'string' ? data.city : null
+      const postalCode = typeof data.postal_code === 'string' ? data.postal_code : null
+      const logoUrl = typeof data.logo_url === 'string' ? data.logo_url : null
+
       // Formatear los datos para incluir el nombre del país
       const partnerData = {
         ...data,
-        main_country_name: data.countries?.name || null,
+        name,
+        website,
+        address,
+        city,
+        postal_code: postalCode,
+        logo_url: logoUrl,
+        main_country_name: countryName,
       }
 
       // Eliminar el objeto countries anidado
@@ -125,7 +165,7 @@ export default function PartnerDetailPage({ params }: { params: { id: string } }
   // Cargar el partner al montar el componente
   useEffect(() => {
     fetchPartner()
-  }, [params.id])
+  }, [id])
 
   // Mostrar estado de carga
   if (loading) {
@@ -234,42 +274,5 @@ export default function PartnerDetailPage({ params }: { params: { id: string } }
         </div>
       </div>
     </div>
-  )
-}
-
-// Componente para manejar errores en los componentes
-function ErrorBoundary({ children, fallback }: { children: React.ReactNode; fallback: React.ReactNode }) {
-  const [hasError, setHasError] = useState(false)
-
-  useEffect(() => {
-    const errorHandler = (error: ErrorEvent) => {
-      console.error("Error capturado por ErrorBoundary:", error)
-      setHasError(true)
-    }
-
-    window.addEventListener("error", errorHandler)
-    return () => window.removeEventListener("error", errorHandler)
-  }, [])
-
-  if (hasError) {
-    return <>{fallback}</>
-  }
-
-  return <>{children}</>
-}
-
-// Componente para mostrar cuando un componente falla
-function ComponentErrorFallback({ title }: { title: string }) {
-  return (
-    <Card className="border-amber-300">
-      <CardHeader className="bg-amber-50">
-        <CardTitle className="text-amber-700">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-amber-600">
-          No se pudieron cargar los datos para esta sección. Por favor, intenta recargar la página.
-        </p>
-      </CardContent>
-    </Card>
   )
 }
