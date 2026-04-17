@@ -719,10 +719,10 @@ export default function OpportunityCreateForm() {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader className="pb-6">
+        <CardHeader className="pb-6 bg-cyan-50">
           {/* Header Title and Description */}
           <div className="mb-6">
-            <CardTitle className="text-2xl mb-2">{t("opportunities.header.title") || "Crear nueva oportunidad"}</CardTitle>
+            <CardTitle className="text-2xl mb-2 text-gray-900">{t("opportunities.header.title") || "Crear nueva oportunidad"}</CardTitle>
             <p className="text-gray-600 text-sm">{t("opportunities.header.description") || "Completa el formulario para crear una nueva oportunidad de negocio"}</p>
           </div>
 
@@ -730,14 +730,14 @@ export default function OpportunityCreateForm() {
           <div className="mb-6">
             {/* Progress bar with percentage */}
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-medium text-gray-600">Progreso</span>
-              <span className="text-sm font-semibold text-blue-600">{Math.round((currentStep / totalSteps) * 100)}%</span>
+              <span className="text-xs font-medium text-gray-700">{t("opportunities.header.progress") || "Progreso"}</span>
+              <span className="text-sm font-semibold text-cyan-600">{Math.round((currentStep / totalSteps) * 100)}%</span>
             </div>
             
             {/* Linear Progress Bar */}
             <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
               <div 
-                className="h-full bg-blue-600 transition-all duration-300"
+                className="h-full bg-cyan-500 transition-all duration-300"
                 style={{ width: `${(currentStep / totalSteps) * 100}%` }}
               />
             </div>
@@ -747,15 +747,15 @@ export default function OpportunityCreateForm() {
           <div className="flex items-center justify-between">
             {/* Step Title with Circle Number */}
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white font-semibold text-sm">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-500 text-white font-semibold text-sm">
                 {currentStep}
               </div>
               <span className="text-base font-semibold text-gray-900">
-                {currentStep === 1 ? "Información básica"
-                  : currentStep === 2 ? "Empresas involucradas"
-                    : currentStep === 3 ? "Cliente y detalles financieros"
-                      : currentStep === 4 ? "Campos técnicos"
-                        : "Confirmación"}
+                {currentStep === 1 ? t("opportunities.step.1_name") || "Información básica"
+                  : currentStep === 2 ? t("opportunities.step.2_name") || "Empresas involucradas"
+                    : currentStep === 3 ? t("opportunities.step.3_name") || "Cliente y detalles financieros"
+                      : currentStep === 4 ? t("opportunities.step.4_name") || "Campos técnicos"
+                        : t("opportunities.step.5_name") || "Confirmación"}
               </span>
             </div>
 
@@ -765,7 +765,7 @@ export default function OpportunityCreateForm() {
                 <div
                   key={index}
                   className={`h-2 w-2 rounded-full transition-all ${
-                    index + 1 <= currentStep ? "bg-blue-600" : "bg-gray-300"
+                    index + 1 <= currentStep ? "bg-cyan-500" : "bg-gray-300"
                   }`}
                 />
               ))}

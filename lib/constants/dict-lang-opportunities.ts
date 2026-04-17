@@ -494,6 +494,36 @@ export const DICT_LANG_OPPORTUNITIES = {
     en: "Complete the form to create a new business opportunity",
     pt: "Preencha o formulário para criar uma nova oportunidade de negócio",
   },
+  "opportunities.header.progress": {
+    es: "Progreso",
+    en: "Progress",
+    pt: "Progresso",
+  },
+  "opportunities.step.1_name": {
+    es: "Información básica",
+    en: "General information",
+    pt: "Informações gerais",
+  },
+  "opportunities.step.2_name": {
+    es: "Empresas involucradas",
+    en: "Companies involved",
+    pt: "Empresas envolvidas",
+  },
+  "opportunities.step.3_name": {
+    es: "Cliente y detalles financieros",
+    en: "Customer and financial details",
+    pt: "Cliente e detalhes financeiros",
+  },
+  "opportunities.step.4_name": {
+    es: "Campos técnicos",
+    en: "Technical fields",
+    pt: "Campos técnicos",
+  },
+  "opportunities.step.5_name": {
+    es: "Confirmación",
+    en: "Review and confirm",
+    pt: "Revisão e confirmação",
+  },
   "opportunities.step.current": {
     es: "Paso",
     en: "Step",
