@@ -50,6 +50,8 @@ import {
   AlertCircle,
   UserCheck,
   Search,
+  Lock,
+  Pencil,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -719,15 +721,69 @@ export default function OpportunityCreateForm() {
       <Card>
         <CardHeader>
           <CardTitle>{t("opportunities.form.title") || "Crear Oportunidad"}</CardTitle>
-          <CardDescription>
-            Paso {currentStep} de {totalSteps} - {
+          
+          {/* Modern Stepper with Icons */}
+          <div className="mt-8 flex items-center justify-between gap-2">
+            {[
+              { step: 1, icon: currentStep > 1 ? Check : currentStep === 1 ? Pencil : Lock, label: "General" },
+              { step: 2, icon: currentStep > 2 ? Check : currentStep === 2 ? Pencil : Lock, label: "Empresa" },
+              { step: 3, icon: currentStep > 3 ? Check : currentStep === 3 ? Pencil : Lock, label: "Cliente" },
+              { step: 4, icon: currentStep > 4 ? Check : currentStep === 4 ? Pencil : Lock, label: "Técnico" },
+              { step: 5, icon: currentStep > 5 ? Check : currentStep === 5 ? Pencil : Lock, label: "Resumen" },
+            ].map((item, index) => {
+              const IconComponent = item.icon
+              const isCompleted = currentStep > item.step
+              const isActive = currentStep === item.step
+              const isPending = currentStep < item.step
+              
+              return (
+                <div key={item.step} className="flex flex-1 flex-col items-center gap-2">
+                  {/* Step Circle with Icon */}
+                  <div className={`flex h-12 w-12 items-center justify-center rounded-full transition-all ${
+                    isCompleted 
+                      ? "bg-green-500 text-white shadow-md" 
+                      : isActive 
+                        ? "bg-blue-600 text-white shadow-lg ring-2 ring-blue-300" 
+                        : "bg-gray-200 text-gray-600"
+                  }`}>
+                    <IconComponent className="h-6 w-6" />
+                  </div>
+                  
+                  {/* Step Label - Hidden on mobile */}
+                  <span className={`hidden sm:block text-xs font-medium text-center transition-colors ${
+                    isActive 
+                      ? "text-blue-600 font-semibold" 
+                      : isCompleted
+                        ? "text-green-600"
+                        : "text-gray-500"
+                  }`}>
+                    {item.label}
+                  </span>
+                  
+                  {/* Connector Line */}
+                  {index < 4 && (
+                    <div className={`absolute left-[50%] w-[calc(100%/5)] h-1 transition-colors ${
+                      isCompleted ? "bg-green-500" : "bg-gray-300"
+                    }`} style={{
+                      left: `calc(${(index + 1) * 20}% + 28px)`,
+                      top: "68px"
+                    }} />
+                  )}
+                </div>
+              )
+            })}
+          </div>
+          
+          {/* Progress Description */}
+          <div className="mt-8 text-sm text-gray-600">
+            <span className="font-semibold text-gray-900">Paso {currentStep} de {totalSteps}</span> — {
               currentStep === 1 ? "Información básica"
                 : currentStep === 2 ? "Empresas involucradas"
                   : currentStep === 3 ? "Cliente y detalles financieros"
                     : currentStep === 4 ? "Campos técnicos"
                       : "Confirmación"
             }
-          </CardDescription>
+          </div>
         </CardHeader>
         <CardContent>
           <Form {...form}>
