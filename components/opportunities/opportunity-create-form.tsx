@@ -782,9 +782,12 @@ export default function OpportunityCreateForm() {
               }
             }}
               className="space-y-6">
+              
+              {/* Centered Content Container */}
+              <div className="max-w-2xl mx-auto px-4 w-full">
               {/* ===== PASO 1: INFORMACIÓN BÁSICA ===== */}
               {currentStep === 1 && (
-                <div className="space-y-4 mt-6">
+                <div className="space-y-6 mt-6">
 
                   {/* Título */}
                   <FormField
@@ -792,9 +795,9 @@ export default function OpportunityCreateForm() {
                     name="title"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t("opportunities.form.title")} *</FormLabel>
+                        <FormLabel className="text-sm font-medium">{t("opportunities.form.title")} *</FormLabel>
                         <FormControl>
-                          <Input placeholder={t("opportunities.form.title")} {...field} />
+                          <Input placeholder={t("opportunities.form.title")} className="border-gray-200 rounded-xl bg-white hover:border-gray-300 transition-colors" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -807,9 +810,9 @@ export default function OpportunityCreateForm() {
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t("opportunities.form.description")}</FormLabel>
+                        <FormLabel className="text-sm font-medium">{t("opportunities.form.description")}</FormLabel>
                         <FormControl>
-                          <Textarea placeholder={t("opportunities.form.description")} className="min-h-24" {...field} />
+                          <Textarea placeholder={t("opportunities.form.description")} className="min-h-24 border-gray-200 rounded-xl bg-white hover:border-gray-300 transition-colors" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -822,9 +825,9 @@ export default function OpportunityCreateForm() {
                       control={form.control}
                       name="is_prospect"
                       render={({ field }) => (
-                        <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                        <FormItem className="flex items-center justify-between rounded-xl border border-gray-200 p-4 bg-white hover:border-gray-300 transition-colors">
                           <div className="space-y-0.5">
-                            <FormLabel className="text-base cursor-pointer">{t("opportunities.prospect.is_prospect")}</FormLabel>
+                            <FormLabel className="text-base cursor-pointer font-medium">{t("opportunities.prospect.is_prospect")}</FormLabel>
                             <p className="text-sm text-gray-500">{t("opportunities.prospect.markProspect")}</p>
                           </div>
                           <FormControl>
@@ -919,7 +922,12 @@ export default function OpportunityCreateForm() {
 
               {/* ===== PASO 2: EMPRESAS INVOLUCRADAS ===== */}
               {currentStep === 2 && (
-                <div className="space-y-4 mt-6">
+                <div className="space-y-6 mt-6">
+
+                  {/* Section Title: Company Data */}
+                  <div className="border-b pb-3">
+                    <h3 className="text-sm font-semibold text-gray-700">Datos de la Empresa</h3>
+                  </div>
 
                   {/* Empresa Tecnológica */}
                   <FormField
@@ -1022,6 +1030,13 @@ export default function OpportunityCreateForm() {
                     )}
                   />
 
+                  {/* Section Title: Assignment */}
+                  {(isScaleUpUser || form.watch("partner_id")) && (
+                    <div className="border-b pb-3">
+                      <h3 className="text-sm font-semibold text-gray-700">Asignación y Responsables</h3>
+                    </div>
+                  )}
+
                   {/* Manager de ScaleUp - Solo si es usuario ScaleUp */}
                   {isScaleUpUser && (
                     <FormField
@@ -1093,7 +1108,7 @@ export default function OpportunityCreateForm() {
 
               {/* ===== PASO 3: CLIENTE Y DETALLES FINANCIEROS ===== */}
               {currentStep === 3 && (
-                <div className="space-y-4 mt-6">
+                <div className="space-y-6 mt-6">
 
                   {/* End Customer - AUTOCOMPLETE CON BÚSQUEDA */}
                   <FormField
@@ -1205,7 +1220,7 @@ export default function OpportunityCreateForm() {
 
               {/* ===== PASO 4: CAMPOS TÉCNICOS ===== */}
               {currentStep === 4 && (
-                <div className="space-y-4 mt-6">
+                <div className="space-y-6 mt-6">
 
                   {loadingTechFields ? (
                     <p className="text-gray-500">{t("opportunities.form.loading")}</p>
@@ -1371,7 +1386,7 @@ export default function OpportunityCreateForm() {
 
               {/* ===== PASO 5: CONFIRMACIÓN ===== */}
               {currentStep === 5 && (
-                <div className="space-y-4 mt-6">
+                <div className="space-y-6 mt-6">
                   <div className="rounded-lg border p-4 space-y-3">
                     <h3 className="font-semibold">{t("opportunities.form.summaryTitle")}</h3>
                     <div className="grid grid-cols-2 gap-3 text-sm">
@@ -1447,6 +1462,8 @@ export default function OpportunityCreateForm() {
                   </div>
                 </div>
               )}
+              </div>
+              {/* End Centered Content Container */}
 
               {/* Navigation Buttons */}
               <div className="flex justify-between gap-4">
