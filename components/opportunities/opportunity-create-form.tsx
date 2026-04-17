@@ -718,7 +718,9 @@ export default function OpportunityCreateForm() {
 
   return (
     <div className="space-y-6">
-      <Card>
+      {/* Narrow Container for Entire Form */}
+      <div className="max-w-2xl mx-auto w-full">
+        <Card>
         <CardHeader className="pb-6 bg-blue-50">
           {/* Header Title and Description */}
           <div className="mb-6">
@@ -1562,6 +1564,8 @@ export default function OpportunityCreateForm() {
           </Form>
         </CardContent>
       </Card>
+      </div>
+      {/* End Narrow Container */}
 
       {/* Modal: Crear Nuevo Cliente Final */}
       <Dialog open={newEndCustomerDialogOpen} onOpenChange={setNewEndCustomerDialogOpen}>
