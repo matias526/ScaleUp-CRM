@@ -206,33 +206,6 @@ export const DICT_LANG_OPPORTUNITIES = {
     pt: "Etapa 5: Revisão",
   },
 
-  // Step short labels for stepper
-  "opportunities.steps.general": {
-    es: "General",
-    en: "General",
-    pt: "Geral",
-  },
-  "opportunities.steps.company": {
-    es: "Empresa",
-    en: "Company",
-    pt: "Empresa",
-  },
-  "opportunities.steps.customer": {
-    es: "Cliente",
-    en: "Customer",
-    pt: "Cliente",
-  },
-  "opportunities.steps.technical": {
-    es: "Técnico",
-    en: "Technical",
-    pt: "Técnico",
-  },
-  "opportunities.steps.summary": {
-    es: "Resumen",
-    en: "Summary",
-    pt: "Resumo",
-  },
-
   // Button labels
   "common.previous": {
     es: "Anterior",
