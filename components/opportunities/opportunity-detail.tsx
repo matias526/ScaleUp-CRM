@@ -1863,6 +1863,22 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
 
           {/* Contactos relacionados */}
           <div className="mt-6">
+            {/* Prospect Partner Identity - if applicable */}
+            {opportunity?.prospect?.name && (
+              <div className="mb-4 pb-4 border-b border-gray-100">
+                <div className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <p className="text-sm text-slate-600">
+                      <span className="font-semibold">Empresa (Prospecto):</span>
+                      <span className="font-bold text-slate-900 ml-2">{opportunity.prospect.name}</span>
+                    </p>
+                  </div>
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                    Prospect Partner
+                  </Badge>
+                </div>
+              </div>
+            )}
             <OpportunityContactsSection opportunityId={opportunity?.id} />
           </div>
         </div>
