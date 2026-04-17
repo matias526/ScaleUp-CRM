@@ -1396,7 +1396,7 @@ export default function OpportunityCreateForm() {
                   {/* Summary Title */}
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900">{t("opportunities.form.summaryTitle")}</h3>
-                    <p className="text-sm text-gray-500 mt-1">Revisa los datos antes de crear la oportunidad</p>
+                    <p className="text-sm text-gray-500 mt-1">{t("opportunities.form.summaryDescription")}</p>
                   </div>
 
                   {/* Main Data Grid - Clean List Style: 3 Columns */}
@@ -1493,17 +1493,17 @@ export default function OpportunityCreateForm() {
                       
                       <div className="grid grid-cols-2 gap-6">
                         <div className="space-y-1">
-                          <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Nombre</p>
+                          <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.prospect.company_name")}</p>
                           <p className="text-sm font-medium text-gray-900">{form.watch("prospect_partner_data")?.name}</p>
                         </div>
                         {form.watch("prospect_partner_data")?.website && (
                           <div className="space-y-1">
-                            <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Website</p>
+                            <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.prospect.website")}</p>
                             <p className="text-sm font-medium text-gray-900 truncate">{form.watch("prospect_partner_data")?.website}</p>
                           </div>
                         )}
                         <div className="space-y-1">
-                          <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">País</p>
+                          <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.prospect.country")}</p>
                           <p className="text-sm font-medium text-gray-900">{allCountries.find(c => c.id === form.watch("prospect_partner_data")?.main_country_id)?.name || "N/A"}</p>
                         </div>
                       </div>
@@ -1512,25 +1512,25 @@ export default function OpportunityCreateForm() {
                       <div className="pt-4 border-t border-gray-100">
                         <h5 className="font-semibold text-sm flex items-center gap-2 text-gray-900 mb-4">
                           <Users className="h-4 w-4 text-blue-600" />
-                          Información de Contacto
+                          {t("opportunities.prospect.contact_info")}
                         </h5>
                         <div className="grid grid-cols-2 gap-6">
                           <div className="space-y-1">
-                            <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Nombre</p>
+                            <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.prospect.first_name")}</p>
                             <p className="text-sm font-medium text-gray-900">{form.watch("prospect_contact_data")?.first_name} {form.watch("prospect_contact_data")?.last_name}</p>
                           </div>
                           <div className="space-y-1">
-                            <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Email</p>
+                            <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.prospect.email")}</p>
                             <p className="text-sm font-medium text-gray-900 truncate">{form.watch("prospect_contact_data")?.email}</p>
                           </div>
                           {form.watch("prospect_contact_data")?.phone && (
                             <div className="space-y-1">
-                              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Teléfono</p>
+                              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.prospect.phone")}</p>
                               <p className="text-sm font-medium text-gray-900">{form.watch("prospect_contact_data")?.phone}</p>
                             </div>
                           )}
                           <div className="space-y-1">
-                            <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Idioma</p>
+                            <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.prospect.preferred_language")}</p>
                             <p className="text-sm font-medium text-gray-900">{form.watch("prospect_contact_data")?.preferred_language?.toUpperCase()}</p>
                           </div>
                         </div>
