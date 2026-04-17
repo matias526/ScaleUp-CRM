@@ -1745,7 +1745,7 @@ export default function OpportunityCreateForm() {
                   <Users className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
                   <div>
                     <h3 className="font-semibold text-green-900">{t("opportunities.prospect.contact_title")}</h3>
-                    <p className="text-sm text-green-700">{"Información de la persona de contacto principal"}</p>
+                    <p className="text-sm text-green-700">{t("opportunities.prospect.contact_info_description")}</p>
                   </div>
                 </div>
               </div>
@@ -1755,7 +1755,7 @@ export default function OpportunityCreateForm() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium">{t("opportunities.prospect.first_name")} *</label>
                   <Input
-                    placeholder="Nombre"
+                    placeholder={t("opportunities.prospect.first_name_placeholder")}
                     value={prospectContactData.first_name}
                     onChange={(e) => setProspectContactData({ ...prospectContactData, first_name: e.target.value })}
                     className="text-base"
@@ -1764,7 +1764,7 @@ export default function OpportunityCreateForm() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium">{t("opportunities.prospect.last_name")} *</label>
                   <Input
-                    placeholder="Apellido"
+                    placeholder={t("opportunities.prospect.last_name_placeholder")}
                     value={prospectContactData.last_name}
                     onChange={(e) => setProspectContactData({ ...prospectContactData, last_name: e.target.value })}
                     className="text-base"
@@ -1776,7 +1776,7 @@ export default function OpportunityCreateForm() {
               <div className="space-y-2">
                 <label className="text-sm font-medium">{t("opportunities.prospect.email")} *</label>
                 <Input
-                  placeholder="correo@ejemplo.com"
+                  placeholder={t("opportunities.prospect.email_placeholder")}
                   type="email"
                   value={prospectContactData.email}
                   onChange={(e) => setProspectContactData({ ...prospectContactData, email: e.target.value })}
@@ -1788,7 +1788,7 @@ export default function OpportunityCreateForm() {
               <div className="space-y-2">
                 <label className="text-sm font-medium">{t("opportunities.prospect.phone")}</label>
                 <Input
-                  placeholder="+1234567890"
+                  placeholder={t("opportunities.prospect.phone_placeholder")}
                   value={prospectContactData.phone}
                   onChange={(e) => setProspectContactData({ ...prospectContactData, phone: e.target.value })}
                   className="text-base"
@@ -1831,8 +1831,8 @@ export default function OpportunityCreateForm() {
                     setProspectDialogOpen(false)
                     setProspectStep(1)
                     toast({
-                      title: "Éxito",
-                      description: "Datos del prospecto guardados correctamente",
+                      title: t("opportunities.prospect.success_title"),
+                      description: t("opportunities.prospect.success_message"),
                     })
                   }}
                 >

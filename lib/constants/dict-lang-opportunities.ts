@@ -445,4 +445,41 @@ export const DICT_LANG_OPPORTUNITIES = {
     en: "email",
     pt: "email",
   },
+
+  // Prospect contact information placeholders and messages
+  "opportunities.prospect.contact_info_description": {
+    es: "Información de la persona de contacto principal",
+    en: "Main contact person information",
+    pt: "Informações da pessoa de contato principal",
+  },
+  "opportunities.prospect.first_name_placeholder": {
+    es: "Nombre",
+    en: "First Name",
+    pt: "Nome",
+  },
+  "opportunities.prospect.last_name_placeholder": {
+    es: "Apellido",
+    en: "Last Name",
+    pt: "Sobrenome",
+  },
+  "opportunities.prospect.email_placeholder": {
+    es: "correo@ejemplo.com",
+    en: "email@example.com",
+    pt: "email@exemplo.com",
+  },
+  "opportunities.prospect.phone_placeholder": {
+    es: "+1234567890",
+    en: "+1234567890",
+    pt: "+55 11 91234-5678",
+  },
+  "opportunities.prospect.success_title": {
+    es: "Éxito",
+    en: "Success",
+    pt: "Sucesso",
+  },
+  "opportunities.prospect.success_message": {
+    es: "Datos del prospecto guardados correctamente",
+    en: "Prospect data saved successfully",
+    pt: "Dados do prospecto salvos com sucesso",
+  },
 }
