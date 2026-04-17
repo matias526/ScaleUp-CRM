@@ -784,7 +784,7 @@ export default function OpportunityCreateForm() {
               className="space-y-6">
               {/* ===== PASO 1: INFORMACIÓN BÁSICA ===== */}
               {currentStep === 1 && (
-                <div className="space-y-4">
+                <div className="space-y-4 mt-6">
 
                   {/* Título */}
                   <FormField
@@ -919,7 +919,7 @@ export default function OpportunityCreateForm() {
 
               {/* ===== PASO 2: EMPRESAS INVOLUCRADAS ===== */}
               {currentStep === 2 && (
-                <div className="space-y-4">
+                <div className="space-y-4 mt-6">
 
                   {/* Empresa Tecnológica */}
                   <FormField
@@ -1093,7 +1093,7 @@ export default function OpportunityCreateForm() {
 
               {/* ===== PASO 3: CLIENTE Y DETALLES FINANCIEROS ===== */}
               {currentStep === 3 && (
-                <div className="space-y-4">
+                <div className="space-y-4 mt-6">
 
                   {/* End Customer - AUTOCOMPLETE CON BÚSQUEDA */}
                   <FormField
@@ -1205,7 +1205,7 @@ export default function OpportunityCreateForm() {
 
               {/* ===== PASO 4: CAMPOS TÉCNICOS ===== */}
               {currentStep === 4 && (
-                <div className="space-y-4">
+                <div className="space-y-4 mt-6">
 
                   {loadingTechFields ? (
                     <p className="text-gray-500">{t("opportunities.form.loading")}</p>
@@ -1371,7 +1371,7 @@ export default function OpportunityCreateForm() {
 
               {/* ===== PASO 5: CONFIRMACIÓN ===== */}
               {currentStep === 5 && (
-                <div className="space-y-4">
+                <div className="space-y-4 mt-6">
                   <div className="rounded-lg border p-4 space-y-3">
                     <h3 className="font-semibold">{t("opportunities.form.summaryTitle")}</h3>
                     <div className="grid grid-cols-2 gap-3 text-sm">
