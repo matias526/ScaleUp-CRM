@@ -1849,18 +1849,6 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
             </CardContent>
           </Card>
 
-          {/* Tareas relacionadas */}
-          <div className="mt-6">
-            <RelatedTasksList
-              opportunityId={opportunity?.id}
-              title={t("opportunities.related_tasks", "Tareas relacionadas")}
-              description={t(
-                "opportunities.related_tasks_description",
-                "Gestiona las tareas relacionadas a esta oportunidad",
-              )}
-            />
-          </div>
-
           {/* Contactos relacionados */}
           <div className="mt-6">
             {/* Prospect Partner Header - Professional Container */}
@@ -1883,6 +1871,18 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
               </div>
             )}
             <OpportunityContactsSection opportunityId={opportunity?.id} />
+          </div>
+
+          {/* Tareas relacionadas */}
+          <div className="mt-6">
+            <RelatedTasksList
+              opportunityId={opportunity?.id}
+              title={t("opportunities.related_tasks", "Tareas relacionadas")}
+              description={t(
+                "opportunities.related_tasks_description",
+                "Gestiona las tareas relacionadas a esta oportunidad",
+              )}
+            />
           </div>
         </div>
 
