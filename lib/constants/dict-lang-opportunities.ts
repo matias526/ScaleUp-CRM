@@ -482,4 +482,21 @@ export const DICT_LANG_OPPORTUNITIES = {
     en: "Prospect data saved successfully",
     pt: "Dados do prospecto salvos com sucesso",
   },
+
+  // Header and Form UI Translations
+  "opportunities.header.title": {
+    es: "Crear nueva oportunidad",
+    en: "Create new opportunity",
+    pt: "Criar nova oportunidade",
+  },
+  "opportunities.header.description": {
+    es: "Completa el formulario para crear una nueva oportunidad de negocio",
+    en: "Complete the form to create a new business opportunity",
+    pt: "Preencha o formulário para criar uma nova oportunidade de negócio",
+  },
+  "opportunities.step.current": {
+    es: "Paso",
+    en: "Step",
+    pt: "Etapa",
+  },
 }

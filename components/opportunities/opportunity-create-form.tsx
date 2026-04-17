@@ -719,70 +719,57 @@ export default function OpportunityCreateForm() {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle>{t("opportunities.form.title") || "Crear Oportunidad"}</CardTitle>
-          
-          {/* Modern Stepper with Icons */}
-          <div className="mt-8 flex items-center justify-between gap-2">
-            {[
-              { step: 1, icon: currentStep > 1 ? Check : currentStep === 1 ? Pencil : Lock, label: "General" },
-              { step: 2, icon: currentStep > 2 ? Check : currentStep === 2 ? Pencil : Lock, label: "Empresa" },
-              { step: 3, icon: currentStep > 3 ? Check : currentStep === 3 ? Pencil : Lock, label: "Cliente" },
-              { step: 4, icon: currentStep > 4 ? Check : currentStep === 4 ? Pencil : Lock, label: "Técnico" },
-              { step: 5, icon: currentStep > 5 ? Check : currentStep === 5 ? Pencil : Lock, label: "Resumen" },
-            ].map((item, index) => {
-              const IconComponent = item.icon
-              const isCompleted = currentStep > item.step
-              const isActive = currentStep === item.step
-              const isPending = currentStep < item.step
-              
-              return (
-                <div key={item.step} className="flex flex-1 flex-col items-center gap-2">
-                  {/* Step Circle with Icon */}
-                  <div className={`flex h-12 w-12 items-center justify-center rounded-full transition-all ${
-                    isCompleted 
-                      ? "bg-green-500 text-white shadow-md" 
-                      : isActive 
-                        ? "bg-blue-600 text-white shadow-lg ring-2 ring-blue-300" 
-                        : "bg-gray-200 text-gray-600"
-                  }`}>
-                    <IconComponent className="h-6 w-6" />
-                  </div>
-                  
-                  {/* Step Label - Hidden on mobile */}
-                  <span className={`hidden sm:block text-xs font-medium text-center transition-colors ${
-                    isActive 
-                      ? "text-blue-600 font-semibold" 
-                      : isCompleted
-                        ? "text-green-600"
-                        : "text-gray-500"
-                  }`}>
-                    {item.label}
-                  </span>
-                  
-                  {/* Connector Line */}
-                  {index < 4 && (
-                    <div className={`absolute left-[50%] w-[calc(100%/5)] h-1 transition-colors ${
-                      isCompleted ? "bg-green-500" : "bg-gray-300"
-                    }`} style={{
-                      left: `calc(${(index + 1) * 20}% + 28px)`,
-                      top: "68px"
-                    }} />
-                  )}
-                </div>
-              )
-            })}
+        <CardHeader className="pb-6">
+          {/* Header Title and Description */}
+          <div className="mb-6">
+            <CardTitle className="text-2xl mb-2">{t("opportunities.header.title") || "Crear nueva oportunidad"}</CardTitle>
+            <p className="text-gray-600 text-sm">{t("opportunities.header.description") || "Completa el formulario para crear una nueva oportunidad de negocio"}</p>
           </div>
-          
-          {/* Progress Description */}
-          <div className="mt-8 text-sm text-gray-600">
-            <span className="font-semibold text-gray-900">Paso {currentStep} de {totalSteps}</span> — {
-              currentStep === 1 ? "Información básica"
-                : currentStep === 2 ? "Empresas involucradas"
-                  : currentStep === 3 ? "Cliente y detalles financieros"
-                    : currentStep === 4 ? "Campos técnicos"
-                      : "Confirmación"
-            }
+
+          {/* Progress Bar Section */}
+          <div className="mb-6">
+            {/* Progress bar with percentage */}
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-medium text-gray-600">Progreso</span>
+              <span className="text-sm font-semibold text-blue-600">{Math.round((currentStep / totalSteps) * 100)}%</span>
+            </div>
+            
+            {/* Linear Progress Bar */}
+            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-blue-600 transition-all duration-300"
+                style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Current Step Title and Dots Indicator */}
+          <div className="flex items-center justify-between">
+            {/* Step Title with Circle Number */}
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white font-semibold text-sm">
+                {currentStep}
+              </div>
+              <span className="text-base font-semibold text-gray-900">
+                {currentStep === 1 ? "Información básica"
+                  : currentStep === 2 ? "Empresas involucradas"
+                    : currentStep === 3 ? "Cliente y detalles financieros"
+                      : currentStep === 4 ? "Campos técnicos"
+                        : "Confirmación"}
+              </span>
+            </div>
+
+            {/* Dots Indicator for Total Steps */}
+            <div className="flex items-center gap-1.5">
+              {Array.from({ length: totalSteps }).map((_, index) => (
+                <div
+                  key={index}
+                  className={`h-2 w-2 rounded-full transition-all ${
+                    index + 1 <= currentStep ? "bg-blue-600" : "bg-gray-300"
+                  }`}
+                />
+              ))}
+            </div>
           </div>
         </CardHeader>
         <CardContent>
