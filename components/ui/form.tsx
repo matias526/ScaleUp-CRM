@@ -11,7 +11,6 @@ import {
   FormProvider,
   useFormContext,
 } from 'react-hook-form'
-import { AlertCircle } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { Label } from '@/components/ui/label'
@@ -120,7 +119,6 @@ const FormControl = React.forwardRef<
           : `${formDescriptionId} ${formMessageId}`
       }
       aria-invalid={!!error}
-      className={error ? "ring-red-100 border-red-400" : ""}
       {...props}
     />
   )
@@ -156,19 +154,14 @@ const FormMessage = React.forwardRef<
   }
 
   return (
-    <div
-      className="flex items-center gap-1.5 mt-1.5"
+    <p
+      ref={ref}
+      id={formMessageId}
+      className={cn('text-sm font-medium text-destructive', className)}
+      {...props}
     >
-      <AlertCircle className="h-3.5 w-3.5 text-red-500 flex-shrink-0" />
-      <p
-        ref={ref}
-        id={formMessageId}
-        className={cn('text-[11px] font-medium text-red-600', className)}
-        {...props}
-      >
-        {body}
-      </p>
-    </div>
+      {body}
+    </p>
   )
 })
 FormMessage.displayName = 'FormMessage'

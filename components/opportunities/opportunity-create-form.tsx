@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { motion, AnimatePresence } from "framer-motion"
 import { useTranslation } from "@/hooks/use-translations"
 import { DICT_LANG_OPPORTUNITIES } from "@/lib/constants/dict-lang-opportunities" // <--- AGREGAR ESTA
 import {
@@ -119,7 +118,6 @@ export default function OpportunityCreateForm() {
   const hasInitialized = useRef(false)
 
   const [currentStep, setCurrentStep] = useState(1)
-  const [nextButtonShake, setNextButtonShake] = useState(false)
   const [stages, setStages] = useState<Tables<"pipeline_stages">[]>([])
   const [techCompanies, setTechCompanies] = useState<Tables<"tech_companies">[]>([])
   const [filteredPartners, setFilteredPartners] = useState<Tables<"partners">[]>([])
@@ -793,17 +791,9 @@ export default function OpportunityCreateForm() {
               
               {/* Centered Content Container */}
               <div className="max-w-2xl mx-auto px-4 w-full">
-              
-              <AnimatePresence mode="wait">
               {/* ===== PASO 1: INFORMACIÓN BÁSICA ===== */}
               {currentStep === 1 && (
-                <motion.div 
-                  key="step-1"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="space-y-6 mt-6">
+                <div className="space-y-6 mt-6">
 
                   {/* Título */}
                   <FormField
@@ -938,13 +928,7 @@ export default function OpportunityCreateForm() {
 
               {/* ===== PASO 2: EMPRESAS INVOLUCRADAS ===== */}
               {currentStep === 2 && (
-                <motion.div 
-                  key="step-2"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="space-y-6 mt-6">
+                <div className="space-y-6 mt-6">
 
                   {/* Section Title: Company Data */}
                   <div className="border-b pb-3">
@@ -1130,13 +1114,7 @@ export default function OpportunityCreateForm() {
 
               {/* ===== PASO 3: CLIENTE Y DETALLES FINANCIEROS ===== */}
               {currentStep === 3 && (
-                <motion.div 
-                  key="step-3"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="space-y-6 mt-6">
+                <div className="space-y-6 mt-6">
 
                   {/* End Customer - AUTOCOMPLETE CON BÚSQUEDA */}
                   <FormField
@@ -1248,13 +1226,7 @@ export default function OpportunityCreateForm() {
 
               {/* ===== PASO 4: CAMPOS TÉCNICOS ===== */}
               {currentStep === 4 && (
-                <motion.div 
-                  key="step-4"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="space-y-6 mt-6">
+                <div className="space-y-6 mt-6">
 
                   {loadingTechFields ? (
                     <p className="text-gray-500">{t("opportunities.form.loading")}</p>
@@ -1420,13 +1392,7 @@ export default function OpportunityCreateForm() {
 
               {/* ===== PASO 5: CONFIRMACIÓN ===== */}
               {currentStep === 5 && (
-                <motion.div 
-                  key="step-5"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="space-y-6 mt-6">
+                <div className="space-y-6 mt-6">
                   {/* Summary Title */}
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900">{t("opportunities.form.summaryTitle")}</h3>
@@ -1605,7 +1571,6 @@ export default function OpportunityCreateForm() {
               )}
               </div>
               {/* End Centered Content Container */}
-              </AnimatePresence>
 
               {/* Navigation Buttons */}
               <div className="flex justify-between gap-4">
@@ -1632,46 +1597,33 @@ export default function OpportunityCreateForm() {
                   {t("common.cancel")}
                 </Button>
                 {currentStep < totalSteps ? (
-                  <motion.button
-                    asChild
-                    animate={nextButtonShake ? { x: [0, -5, 5, -5, 0] } : { x: 0 }}
-                    transition={{ duration: 0.4, type: "spring", stiffness: 500 }}
-                    onAnimationComplete={() => setNextButtonShake(false)}
-                  >
-                    <Button
-                      type="button"
-                      disabled={loadingScaleUpManager}
-                      onClick={async () => {
-                        // Definir campos a validar por paso
-                        const fieldsToValidate: any[] = []
-                        if (currentStep === 1) fieldsToValidate.push("title", "pipeline_stage_id")
-                        if (currentStep === 2) {
-                          fieldsToValidate.push("tech_company_id", "country")
-                          if (isScaleUpUser) fieldsToValidate.push("assigned_to")
-                        }
-                        if (currentStep === 3 && isScaleUpUser) fieldsToValidate.push("end_customer_id")
+                  <Button
+                    type="button"
+                    disabled={loadingScaleUpManager}
+                    onClick={async () => {
+                      // Definir campos a validar por paso
+                      const fieldsToValidate: any[] = []
+                      if (currentStep === 1) fieldsToValidate.push("title", "pipeline_stage_id")
+                      if (currentStep === 2) {
+                        fieldsToValidate.push("tech_company_id", "country")
+                        if (isScaleUpUser) fieldsToValidate.push("assigned_to")
+                      }
+                      if (currentStep === 3 && isScaleUpUser) fieldsToValidate.push("end_customer_id")
 
-                        const isValid = fieldsToValidate.length > 0 ? await form.trigger(fieldsToValidate) : true
+                      const isValid = fieldsToValidate.length > 0 ? await form.trigger(fieldsToValidate) : true
 
-                        if (!isValid) {
-                          // Trigger shake animation on validation error
-                          setNextButtonShake(true)
-                          return
-                        }
-
-                        if (isValid) {
-                          // ✅ MANUAL VALIDATION: End Customer obligatorio solo para Partner users en Paso 3
-                          if (currentStep === 3 && !isScaleUpUser) {
-                            const endCustomerId = form.getValues("end_customer_id")
-                            if (!endCustomerId) {
-                              form.setError("end_customer_id", {
-                                type: "manual",
-                                message: t("common.errors.required") || "Este campo es obligatorio"
-                              })
-                              setNextButtonShake(true)
-                              return
-                            }
+                      if (isValid) {
+                        // ✅ MANUAL VALIDATION: End Customer obligatorio solo para Partner users en Paso 3
+                        if (currentStep === 3 && !isScaleUpUser) {
+                          const endCustomerId = form.getValues("end_customer_id")
+                          if (!endCustomerId) {
+                            form.setError("end_customer_id", {
+                              type: "manual",
+                              message: t("common.errors.required") || "Este campo es obligatorio"
+                            })
+                            return
                           }
+                        }
 
                         // SI ES EL PASO DE TECH FIELDS (Paso 4) -> Validar manualmente
                         if (currentStep === 4 && hasTechFields) {
@@ -1702,7 +1654,6 @@ export default function OpportunityCreateForm() {
                   >
                     {t("common.next")}
                   </Button>
-                  </motion.button>
                 ) : (
                   <Button
                     type="submit"
