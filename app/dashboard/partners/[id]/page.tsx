@@ -207,56 +207,88 @@ export default function PartnerDetailPage({ params }: { params: Promise<{ id: st
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">{partner?.name}</h1>
+        <h1 className="text-2xl font-bold">
+          {typeof partner?.name === 'string'
+            ? partner.name
+            : (partner?.name?.name || "Detalle del Partner")}
+        </h1>
         <Button variant="outline" onClick={() => router.back()}>
           Volver
         </Button>
       </div>
 
+      {/* RECUERDA: Este es el Grid que envuelve las dos columnas */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="md:col-span-1">
-          <CardHeader>
-            <CardTitle>Detalles del Partner</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col items-center mb-4">
-              <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100 mb-4">
-                <ImageWithFallback
-                  src={partner?.logo_url || ""}
-                  fallbackSrc="/diverse-business-team.png"
-                  alt={partner?.name}
-                  width={128}
-                  height={128}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <h2 className="text-xl font-semibold">{partner?.name}</h2>
-              <p className="text-gray-500">{partner?.website || "Sin sitio web"}</p>
-            </div>
 
-            <Separator className="my-4" />
+        {/* COLUMNA IZQUIERDA: La que se había perdido */}
+        <div className="md:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle>Detalles del Partner</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col items-center mb-4">
+                <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100 mb-4">
+                  <ImageWithFallback
+                    src={partner?.logo_url || ""}
+                    fallback="/diverse-business-team.png"
+                    alt={typeof partner?.name === 'string' ? partner.name : "Logo"}
+                    width={128}
+                    height={128}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <h2 className="text-xl font-semibold">
+                  {typeof partner?.name === 'string' ? partner.name : (partner?.name?.name || "Partner")}
+                </h2>
+                <p className="text-gray-500">{partner?.website || "Sin sitio web"}</p>
+              </div>
 
-            <div className="space-y-2">
-              <div>
-                <span className="font-medium">País:</span>{" "}
-                <span>{partner?.main_country_name || "No especificado"}</span>
-              </div>
-              <div>
-                <span className="font-medium">Dirección:</span> <span>{partner?.address || "No especificada"}</span>
-              </div>
-              <div>
-                <span className="font-medium">Ciudad:</span> <span>{partner?.city || "No especificada"}</span>
-              </div>
-              <div>
-                <span className="font-medium">Código Postal:</span>{" "}
-                <span>{partner?.postal_code || "No especificado"}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              <Separator className="my-4" />
 
+              <div className="space-y-2 text-sm">
+                <div>
+                  <span className="font-medium">País:</span>{" "}
+                  <span>{partner?.main_country_name || "No especificado"}</span>
+                </div>
+                <div>
+                  <span className="font-medium">Ciudad:</span>{" "}
+                  <span>{partner?.city || "No especificada"}</span>
+                </div>
+                <div>
+                  <span className="font-medium">Dirección:</span>{" "}
+                  <span>{partner?.address || "No especificada"}</span>
+                </div>
+                <div>
+                  <span className="font-medium">Código Postal:</span>{" "}
+                  <span>{partner?.postal_code || "N/A"}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-      </div>
+        {/* COLUMNA DERECHA: La que tenías pero le faltaba el diseño */}
+        <div className="md:col-span-2 space-y-6">
+          {id && (
+            <>
+              <PartnerTechCompanies partnerId={id} />
+
+              <PartnerUsers
+                partnerId={id}
+                partnerName={typeof partner?.name === 'string' ? partner.name : "Partner"}
+              />
+
+              <PartnerTasks
+                partnerId={id}
+                partnerName={typeof partner?.name === 'string' ? partner.name : "Partner"}
+              />
+
+              <PartnerContactsSection partnerId={id} />
+            </>
+          )}
+        </div>
+      </div> {/* Cierre del Grid */}
     </div>
-  )
+  );
 }
