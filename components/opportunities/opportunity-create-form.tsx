@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react"
+import { motion } from "framer-motion"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -716,20 +717,55 @@ export default function OpportunityCreateForm() {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
+      <Card className="shadow-sm border-gray-200">
+        <CardHeader className="pb-4">
           <CardTitle>{t("opportunities.form.title") || "Crear Oportunidad"}</CardTitle>
-          <CardDescription>
-            Paso {currentStep} de {totalSteps} - {
-              currentStep === 1 ? "Información básica"
-                : currentStep === 2 ? "Empresas involucradas"
-                  : currentStep === 3 ? "Cliente y detalles financieros"
-                    : currentStep === 4 ? "Campos técnicos"
-                      : "Confirmación"
-            }
-          </CardDescription>
+          
+          {/* Visual Stepper - Progress Indicator */}
+          <div className="mt-6 flex items-center justify-between gap-2 md:gap-4">
+            {[
+              { step: 1, label: t("opportunities.steps.general") || "General", icon: "●" },
+              { step: 2, label: t("opportunities.steps.company") || "Empresa", icon: "●" },
+              { step: 3, label: t("opportunities.steps.customer") || "Cliente", icon: "●" },
+              { step: 4, label: t("opportunities.steps.technical") || "Técnico", icon: "●" },
+              { step: 5, label: t("opportunities.steps.summary") || "Resumen", icon: "●" },
+            ].map((item, index) => (
+              <div key={item.step} className="flex flex-1 flex-col items-center gap-2">
+                {/* Step Circle */}
+                <motion.div
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: currentStep === item.step ? 1.15 : currentStep > item.step ? 1 : 0.9 }}
+                  className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold transition-all ${
+                    currentStep > item.step
+                      ? "bg-green-500 text-white"
+                      : currentStep === item.step
+                        ? "bg-blue-600 text-white shadow-lg"
+                        : "bg-gray-200 text-gray-600"
+                  }`}
+                >
+                  {currentStep > item.step ? "✓" : item.step}
+                </motion.div>
+                
+                {/* Step Label - Hidden on mobile for space */}
+                <span className={`hidden sm:block text-xs font-medium text-center ${
+                  currentStep >= item.step ? "text-gray-900" : "text-gray-500"
+                }`}>
+                  {item.label}
+                </span>
+                
+                {/* Connector Line */}
+                {index < 4 && (
+                  <div className="absolute left-0 right-0 top-[18px] h-1 bg-gray-200 -z-10 md:relative md:flex-1 md:top-0" 
+                    style={{
+                      backgroundColor: currentStep > item.step ? "#10b981" : "#e5e7eb"
+                    }}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <Form {...form}>
             <form onSubmit={(e) => {
               e.preventDefault(); // Evita el envío automático del navegador
@@ -741,7 +777,12 @@ export default function OpportunityCreateForm() {
               className="space-y-6">
               {/* ===== PASO 1: INFORMACIÓN BÁSICA ===== */}
               {currentStep === 1 && (
-                <div className="space-y-4">
+                <motion.div 
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-4">
                   <div className="text-sm font-medium text-blue-600">{t("opportunities.step.1")}</div>
 
                   {/* Título */}
@@ -872,12 +913,17 @@ export default function OpportunityCreateForm() {
                       )}
                     />
                   )}
-                </div>
+                </motion.div>
               )}
 
               {/* ===== PASO 2: EMPRESAS INVOLUCRADAS ===== */}
               {currentStep === 2 && (
-                <div className="space-y-4">
+                <motion.div 
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-4">
                   <div className="text-sm font-medium text-blue-600">{t("opportunities.step.2")}</div>
 
                   {/* Empresa Tecnológica */}
@@ -1047,12 +1093,17 @@ export default function OpportunityCreateForm() {
                       )}
                     />
                   )}
-                </div>
+                </motion.div>
               )}
 
               {/* ===== PASO 3: CLIENTE Y DETALLES FINANCIEROS ===== */}
               {currentStep === 3 && (
-                <div className="space-y-4">
+                <motion.div 
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-4">
                   <div className="text-sm font-medium text-blue-600">{t("opportunities.step.3")}</div>
 
                   {/* End Customer - AUTOCOMPLETE CON BÚSQUEDA */}
@@ -1160,12 +1211,17 @@ export default function OpportunityCreateForm() {
                       </FormItem>
                     )}
                   />
-                </div>
+                </motion.div>
               )}
 
               {/* ===== PASO 4: CAMPOS TÉCNICOS ===== */}
               {currentStep === 4 && (
-                <div className="space-y-4">
+                <motion.div 
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-4">
                   <div className="text-sm font-medium text-blue-600">{t("opportunities.step.4")}</div>
 
                   {loadingTechFields ? (
@@ -1327,24 +1383,72 @@ export default function OpportunityCreateForm() {
                       })}
                     </div>
                   )}
-                </div>
+                </motion.div>
               )}
 
               {/* ===== PASO 5: CONFIRMACIÓN ===== */}
               {currentStep === 5 && (
-                <div className="space-y-4">
+                <motion.div 
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-4">
                   <div className="text-sm font-medium text-green-600">{t("opportunities.form.stepConfirmation")}</div>
-                  <div className="rounded-lg border p-4 space-y-3">
-                    <h3 className="font-semibold">{t("opportunities.form.summaryTitle")}</h3>
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div><span className="font-medium">{t("opportunities.form.summary.title")}:</span> {form.watch("title") || "N/A"}</div>
-                      <div><span className="font-medium">{t("opportunities.form.summary.stage")}:</span> {stages.find(s => s.id === form.watch("pipeline_stage_id"))?.code || "N/A"}</div>
-                      <div><span className="font-medium">{t("opportunities.form.summary.techCompany")}:</span> {techCompanies.find(c => c.id === form.watch("tech_company_id"))?.name || "N/A"}</div>
-                      <div><span className="font-medium">{t("opportunities.form.summary.partner")}:</span> {form.watch("partner_id") ? (filteredPartners.find(p => p.id === form.watch("partner_id"))?.name || "N/A") : "N/A"}</div>
-                      <div><span className="font-medium">{t("opportunities.form.summary.country")}:</span> {form.watch("country") || "N/A"}</div>
-                      <div><span className="font-medium">{t("opportunities.form.summary.customer")}:</span> {form.watch("end_customer_id") ? (filteredEndCustomers.find(c => c.id === form.watch("end_customer_id"))?.name || "N/A") : "N/A"}</div>
-                      <div><span className="font-medium">{t("opportunities.form.summary.value")}:</span> USD {form.watch("estimated_value") || "0"}</div>
-                      <div><span className="font-medium">{t("opportunities.form.summary.closeDate")}:</span> {form.watch("estimated_close_date") || "N/A"}</div>
+                  
+                  {/* Redesigned Summary Section with Info Boxes */}
+                  <div className="rounded-lg border border-gray-200 shadow-sm p-6 space-y-6 bg-white">
+                    <h3 className="text-lg font-semibold text-gray-900">{t("opportunities.form.summaryTitle")}</h3>
+                    
+                    {/* General Information */}
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-medium text-gray-700">Información General</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <motion.div whileHover={{ scale: 1.02 }} className="bg-blue-50 border-l-4 border-blue-500 rounded p-4">
+                          <p className="text-xs text-gray-600 font-medium">{t("opportunities.form.summary.title")}</p>
+                          <p className="text-sm font-semibold text-gray-900 mt-1">{form.watch("title") || "N/A"}</p>
+                        </motion.div>
+                        <motion.div whileHover={{ scale: 1.02 }} className="bg-indigo-50 border-l-4 border-indigo-500 rounded p-4">
+                          <p className="text-xs text-gray-600 font-medium">{t("opportunities.form.summary.stage")}</p>
+                          <p className="text-sm font-semibold text-gray-900 mt-1">{stages.find(s => s.id === form.watch("pipeline_stage_id"))?.code || "N/A"}</p>
+                        </motion.div>
+                        <motion.div whileHover={{ scale: 1.02 }} className="bg-emerald-50 border-l-4 border-emerald-500 rounded p-4">
+                          <p className="text-xs text-gray-600 font-medium">{t("opportunities.form.summary.value")}</p>
+                          <p className="text-sm font-semibold text-gray-900 mt-1">USD {form.watch("estimated_value") || "0"}</p>
+                        </motion.div>
+                        <motion.div whileHover={{ scale: 1.02 }} className="bg-amber-50 border-l-4 border-amber-500 rounded p-4">
+                          <p className="text-xs text-gray-600 font-medium">{t("opportunities.form.summary.closeDate")}</p>
+                          <p className="text-sm font-semibold text-gray-900 mt-1">{form.watch("estimated_close_date") || "N/A"}</p>
+                        </motion.div>
+                      </div>
+                    </div>
+
+                    {/* Companies */}
+                    <div className="space-y-3 pt-4 border-t">
+                      <h4 className="text-sm font-medium text-gray-700">Empresas Involucradas</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <motion.div whileHover={{ scale: 1.02 }} className="bg-purple-50 border-l-4 border-purple-500 rounded p-4">
+                          <p className="text-xs text-gray-600 font-medium">{t("opportunities.form.summary.techCompany")}</p>
+                          <p className="text-sm font-semibold text-gray-900 mt-1">{techCompanies.find(c => c.id === form.watch("tech_company_id"))?.name || "N/A"}</p>
+                        </motion.div>
+                        <motion.div whileHover={{ scale: 1.02 }} className="bg-rose-50 border-l-4 border-rose-500 rounded p-4">
+                          <p className="text-xs text-gray-600 font-medium">{t("opportunities.form.summary.partner")}</p>
+                          <p className="text-sm font-semibold text-gray-900 mt-1">{form.watch("partner_id") ? (filteredPartners.find(p => p.id === form.watch("partner_id"))?.name || "N/A") : "N/A"}</p>
+                        </motion.div>
+                        <motion.div whileHover={{ scale: 1.02 }} className="bg-cyan-50 border-l-4 border-cyan-500 rounded p-4">
+                          <p className="text-xs text-gray-600 font-medium">{t("opportunities.form.summary.country")}</p>
+                          <p className="text-sm font-semibold text-gray-900 mt-1">{form.watch("country") || "N/A"}</p>
+                        </motion.div>
+                      </div>
+                    </div>
+
+                    {/* Customer */}
+                    <div className="space-y-3 pt-4 border-t">
+                      <h4 className="text-sm font-medium text-gray-700">Cliente Final</h4>
+                      <motion.div whileHover={{ scale: 1.02 }} className="bg-orange-50 border-l-4 border-orange-500 rounded p-4">
+                        <p className="text-xs text-gray-600 font-medium">{t("opportunities.form.summary.customer")}</p>
+                        <p className="text-sm font-semibold text-gray-900 mt-1">{form.watch("end_customer_id") ? (filteredEndCustomers.find(c => c.id === form.watch("end_customer_id"))?.name || "N/A") : "N/A"}</p>
+                      </motion.div>
                     </div>
 
                     {/* Sección de Partner Prospecto (si aplica) */}
@@ -1373,9 +1477,10 @@ export default function OpportunityCreateForm() {
                             <div><span className="font-medium text-gray-700">{t("opportunities.prospect.phone")}:</span> <span className="text-gray-900">{form.watch("prospect_contact_data")?.phone}</span></div>
                           )}
                           <div><span className="font-medium text-gray-700">{t("opportunities.prospect.preferred_language")}:</span> <span className="text-gray-900">{form.watch("prospect_contact_data")?.preferred_language?.toUpperCase()}</span></div>
-                        </div>
-                      </div>
-                    )}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
 
                     {/* Sección de Campos Técnicos (si existen valores) */}
                     {hasTechFields && techFields.some((field: any) => {
