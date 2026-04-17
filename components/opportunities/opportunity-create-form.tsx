@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react"
+import { motion } from "framer-motion"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -719,60 +720,47 @@ export default function OpportunityCreateForm() {
       <Card>
         <CardHeader>
           <CardTitle>{t("opportunities.form.title") || "Crear Oportunidad"}</CardTitle>
-          <CardDescription>
-            Paso {currentStep} de {totalSteps} - {
-              currentStep === 1 ? "Información básica"
-                : currentStep === 2 ? "Empresas involucradas"
-                  : currentStep === 3 ? "Cliente y detalles financieros"
-                    : currentStep === 4 ? "Campos técnicos"
-                      : "Confirmación"
-            }
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={(e) => {
-              e.preventDefault(); // Evita el envío automático del navegador
-              if (currentStep === 5 && isConfirming) {
-                form.handleSubmit(onSubmit)(e);
-                setIsConfirming(false); // Lo reseteamos por seguridad
-              }
-            }}
-              className="space-y-6">
-              {/* ===== PASO 1: INFORMACIÓN BÁSICA ===== */}
-              {currentStep === 1 && (
-                <div className="space-y-4">
-                  <div className="text-sm font-medium text-blue-600">{t("opportunities.step.1")}</div>
+          {/* Visual Stepper */}
+          <div className="mt-6 flex items-center justify-between gap-2">
+            {[1, 2, 3, 4, 5].map((step) => (
+              <div key={step} className="flex flex-1 items-center gap-2">
+                <motion.div
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: currentStep === step ? 1.1 : 1 }}
+                  className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold transition-all ${
+                    currentStep >= step
+                      ? "bg-blue-600 text-white shadow-md"
+                      : "bg-gray-200 text-gray-600"
+                  }`}
+                >
+                  {step}
+                </motion.div>
+                {step < 5 && (
+                  <div
+                    className={`h-1 flex-1 rounded-full transition-colors ${
+                      currentStep > step ? "bg-blue-600" : "bg-gray-200"
+                    }`}
+                    />
+                  )}
+                </motion.div>
+              )}
+                    />
 
-                  {/* Título */}
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("opportunities.form.title")} *</FormLabel>
-                        <FormControl>
-                          <Input placeholder={t("opportunities.form.title")} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Descripción */}
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("opportunities.form.description")}</FormLabel>
-                        <FormControl>
-                          <Textarea placeholder={t("opportunities.form.description")} className="min-h-24" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    {/* Descripción */}
+                    <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("opportunities.form.description")}</FormLabel>
+                          <FormControl>
+                            <Textarea placeholder={t("opportunities.form.description")} className="min-h-24" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
                   {/* Es Partner Prospecto (Solo para ScaleUp) */}
                   {isScaleUpUser && (
@@ -877,42 +865,48 @@ export default function OpportunityCreateForm() {
 
               {/* ===== PASO 2: EMPRESAS INVOLUCRADAS ===== */}
               {currentStep === 2 && (
-                <div className="space-y-4">
-                  <div className="text-sm font-medium text-blue-600">{t("opportunities.step.2")}</div>
-
-                  {/* Empresa Tecnológica */}
-                  <FormField
-                    control={form.control}
-                    name="tech_company_id"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("opportunities.form.tech_company")} *</FormLabel>
-                        <Select value={field.value} onValueChange={field.onChange}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={t("opportunities.form.select_placeholder")} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {techCompanies.map((company) => (
-                              <SelectItem key={company.id} value={company.id}>
-                                {company.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Partner - Oculto si es prospect o si es usuario Partner */}
-                  {!form.watch("is_prospect") && isScaleUpUser && (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-6"
+                >
+                  {/* Two-column grid layout */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Empresa Tecnológica - Full width on mobile */}
                     <FormField
                       control={form.control}
-                      name="partner_id"
+                      name="tech_company_id"
                       render={({ field }) => (
-                        <FormItem>
+                        <FormItem className="md:col-span-2">
+                          <FormLabel>{t("opportunities.form.tech_company")} *</FormLabel>
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder={t("opportunities.form.select_placeholder")} />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {techCompanies.map((company) => (
+                                <SelectItem key={company.id} value={company.id}>
+                                  {company.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Partner - Oculto si es prospect o si es usuario Partner */}
+                    {!form.watch("is_prospect") && isScaleUpUser && (
+                      <FormField
+                        control={form.control}
+                        name="partner_id"
+                        render={({ field }) => (
+                          <FormItem>
                           <FormLabel>{t("opportunities.form.partner")} ({t("common.optional")})</FormLabel>
                           <Select value={field.value || "null"} onValueChange={(value) => {
                             if (value === "null") {
@@ -1047,13 +1041,19 @@ export default function OpportunityCreateForm() {
                       )}
                     />
                   )}
-                </div>
+                  </div>
+                </motion.div>
               )}
 
               {/* ===== PASO 3: CLIENTE Y DETALLES FINANCIEROS ===== */}
               {currentStep === 3 && (
-                <div className="space-y-4">
-                  <div className="text-sm font-medium text-blue-600">{t("opportunities.step.3")}</div>
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-6"
+                >
 
                   {/* End Customer - AUTOCOMPLETE CON BÚSQUEDA */}
                   <FormField
@@ -1160,13 +1160,18 @@ export default function OpportunityCreateForm() {
                       </FormItem>
                     )}
                   />
-                </div>
+                </motion.div>
               )}
 
               {/* ===== PASO 4: CAMPOS TÉCNICOS ===== */}
               {currentStep === 4 && (
-                <div className="space-y-4">
-                  <div className="text-sm font-medium text-blue-600">{t("opportunities.step.4")}</div>
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-6"
+                >
 
                   {loadingTechFields ? (
                     <p className="text-gray-500">{t("opportunities.form.loading")}</p>
@@ -1328,23 +1333,74 @@ export default function OpportunityCreateForm() {
                     </div>
                   )}
                 </div>
+              </motion.div>
               )}
 
               {/* ===== PASO 5: CONFIRMACIÓN ===== */}
               {currentStep === 5 && (
-                <div className="space-y-4">
-                  <div className="text-sm font-medium text-green-600">{t("opportunities.form.stepConfirmation")}</div>
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-6"
+                >
                   <div className="rounded-lg border p-4 space-y-3">
                     <h3 className="font-semibold">{t("opportunities.form.summaryTitle")}</h3>
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div><span className="font-medium">{t("opportunities.form.summary.title")}:</span> {form.watch("title") || "N/A"}</div>
-                      <div><span className="font-medium">{t("opportunities.form.summary.stage")}:</span> {stages.find(s => s.id === form.watch("pipeline_stage_id"))?.code || "N/A"}</div>
-                      <div><span className="font-medium">{t("opportunities.form.summary.techCompany")}:</span> {techCompanies.find(c => c.id === form.watch("tech_company_id"))?.name || "N/A"}</div>
-                      <div><span className="font-medium">{t("opportunities.form.summary.partner")}:</span> {form.watch("partner_id") ? (filteredPartners.find(p => p.id === form.watch("partner_id"))?.name || "N/A") : "N/A"}</div>
-                      <div><span className="font-medium">{t("opportunities.form.summary.country")}:</span> {form.watch("country") || "N/A"}</div>
-                      <div><span className="font-medium">{t("opportunities.form.summary.customer")}:</span> {form.watch("end_customer_id") ? (filteredEndCustomers.find(c => c.id === form.watch("end_customer_id"))?.name || "N/A") : "N/A"}</div>
-                      <div><span className="font-medium">{t("opportunities.form.summary.value")}:</span> USD {form.watch("estimated_value") || "0"}</div>
-                      <div><span className="font-medium">{t("opportunities.form.summary.closeDate")}:</span> {form.watch("estimated_close_date") || "N/A"}</div>
+                  <div className="rounded-lg border shadow-sm p-6 space-y-6">
+                    <h3 className="text-lg font-semibold text-gray-900">{t("opportunities.form.summaryTitle")}</h3>
+                    
+                    {/* Oportunidad - Main Info Grid */}
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-medium text-gray-600">Información de la Oportunidad</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <motion.div whileHover={{ scale: 1.02 }} className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
+                          <p className="text-xs text-gray-600 font-medium mb-1">{t("opportunities.form.summary.title")}</p>
+                          <p className="text-sm font-semibold text-gray-900">{form.watch("title") || "N/A"}</p>
+                        </motion.div>
+                        <motion.div whileHover={{ scale: 1.02 }} className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg p-4 border border-indigo-200">
+                          <p className="text-xs text-gray-600 font-medium mb-1">{t("opportunities.form.summary.stage")}</p>
+                          <p className="text-sm font-semibold text-gray-900">{stages.find(s => s.id === form.watch("pipeline_stage_id"))?.code || "N/A"}</p>
+                        </motion.div>
+                        <motion.div whileHover={{ scale: 1.02 }} className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg p-4 border border-emerald-200">
+                          <p className="text-xs text-gray-600 font-medium mb-1">{t("opportunities.form.summary.value")}</p>
+                          <p className="text-sm font-semibold text-gray-900">USD {form.watch("estimated_value") || "0"}</p>
+                        </motion.div>
+                        <motion.div whileHover={{ scale: 1.02 }} className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-4 border border-amber-200">
+                          <p className="text-xs text-gray-600 font-medium mb-1">{t("opportunities.form.summary.closeDate")}</p>
+                          <p className="text-sm font-semibold text-gray-900">{form.watch("estimated_close_date") || "N/A"}</p>
+                        </motion.div>
+                      </div>
+                    </div>
+
+                    {/* Empresas Involucradas */}
+                    <div className="space-y-4 pt-4 border-t">
+                      <h4 className="text-sm font-medium text-gray-600">Empresas Involucradas</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <motion.div whileHover={{ scale: 1.02 }} className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
+                          <p className="text-xs text-gray-600 font-medium mb-1">{t("opportunities.form.summary.techCompany")}</p>
+                          <p className="text-sm font-semibold text-gray-900">{techCompanies.find(c => c.id === form.watch("tech_company_id"))?.name || "N/A"}</p>
+                        </motion.div>
+                        <motion.div whileHover={{ scale: 1.02 }} className="bg-gradient-to-br from-rose-50 to-rose-100 rounded-lg p-4 border border-rose-200">
+                          <p className="text-xs text-gray-600 font-medium mb-1">{t("opportunities.form.summary.partner")}</p>
+                          <p className="text-sm font-semibold text-gray-900">{form.watch("partner_id") ? (filteredPartners.find(p => p.id === form.watch("partner_id"))?.name || "N/A") : "N/A"}</p>
+                        </motion.div>
+                      </div>
+                    </div>
+
+                    {/* Ubicación y Cliente */}
+                    <div className="space-y-4 pt-4 border-t">
+                      <h4 className="text-sm font-medium text-gray-600">Ubicación y Cliente</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <motion.div whileHover={{ scale: 1.02 }} className="bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-lg p-4 border border-cyan-200">
+                          <p className="text-xs text-gray-600 font-medium mb-1">{t("opportunities.form.summary.country")}</p>
+                          <p className="text-sm font-semibold text-gray-900">{form.watch("country") || "N/A"}</p>
+                        </motion.div>
+                        <motion.div whileHover={{ scale: 1.02 }} className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-4 border border-orange-200">
+                          <p className="text-xs text-gray-600 font-medium mb-1">{t("opportunities.form.summary.customer")}</p>
+                          <p className="text-sm font-semibold text-gray-900">{form.watch("end_customer_id") ? (filteredEndCustomers.find(c => c.id === form.watch("end_customer_id"))?.name || "N/A") : "N/A"}</p>
+                        </motion.div>
+                      </div>
                     </div>
 
                     {/* Sección de Partner Prospecto (si aplica) */}
@@ -1407,33 +1463,35 @@ export default function OpportunityCreateForm() {
                         </div>
                       )}
                   </div>
-                </div>
+                </motion.div>
               )}
 
-              {/* Navigation Buttons */}
-              <div className="flex justify-between gap-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    let newStep = Math.max(1, currentStep - 1)
-                    // Saltar Paso 4 si no hay campos técnicos
-                    if (newStep === 4 && !hasTechFields) {
-                      newStep = 3
-                    }
-                    setCurrentStep(newStep)
-                  }}
-                  disabled={currentStep === 1}
-                >
-                  {t("common.previous")}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => router.back()}
-                >
-                  {t("common.cancel")}
-                </Button>
+              {/* Navigation Buttons - Improved Layout */}
+              <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 pt-6 border-t">
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => router.back()}
+                  >
+                    {t("common.cancel")}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      let newStep = Math.max(1, currentStep - 1)
+                      // Saltar Paso 4 si no hay campos técnicos
+                      if (newStep === 4 && !hasTechFields) {
+                        newStep = 3
+                      }
+                      setCurrentStep(newStep)
+                    }}
+                    disabled={currentStep === 1}
+                  >
+                    {t("common.previous")}
+                  </Button>
+                </div>
                 {currentStep < totalSteps ? (
                   <Button
                     type="button"
