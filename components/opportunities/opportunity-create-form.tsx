@@ -742,8 +742,46 @@ export default function OpportunityCreateForm() {
                     }`}
                     />
                   )}
-                </motion.div>
-              )}
+                </div>
+              ))}
+            </div>
+          </div>
+          <p className="mt-4 text-sm text-gray-600">
+            {currentStep === 1 ? t("opportunities.step.1_description") || "Información básica"
+              : currentStep === 2 ? t("opportunities.step.2_description") || "Empresas involucradas"
+                : currentStep === 3 ? t("opportunities.step.3_description") || "Cliente y detalles"
+                  : currentStep === 4 ? t("opportunities.step.4_description") || "Campos técnicos"
+                    : t("opportunities.step.5_description") || "Confirmación"}
+          </p>
+        </CardHeader>
+
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              {/* ===== PASO 1: INFORMACIÓN BÁSICA ===== */}
+              {currentStep === 1 && (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-6"
+                >
+                  {/* Título y Descripción - Full Width */}
+                  <div className="space-y-4">
+                    {/* Título */}
+                    <FormField
+                      control={form.control}
+                      name="title"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("opportunities.form.title")} *</FormLabel>
+                          <FormControl>
+                            <Input placeholder={t("opportunities.form.title")} {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
 
                     {/* Descripción */}
@@ -860,7 +898,8 @@ export default function OpportunityCreateForm() {
                       )}
                     />
                   )}
-                </div>
+                  )}
+                </motion.div>
               )}
 
               {/* ===== PASO 2: EMPRESAS INVOLUCRADAS ===== */}
