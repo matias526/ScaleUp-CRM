@@ -202,6 +202,12 @@ export default function InternalMeetingExecution() {
   const currentStageData = MEETING_STAGES.find((s) => s.id === currentStage)
   const currentNews = newsItems && newsItems.length > 0 ? newsItems[currentNewsIndex] : null
 
+  console.log("DEBUG PASO 6 - Enviando a Summary:", {
+    meetingId,
+    date: meeting.meeting_date,
+    topic: meeting.weekly_topic
+  });
+
   return (
     <div className={`bg-gray-50 ${isFullscreen ? "fixed inset-0 z-50 flex flex-col" : "min-h-screen flex flex-col"}`}>
       {/* HEADER */}

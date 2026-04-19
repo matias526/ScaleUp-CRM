@@ -53,8 +53,9 @@ export default function InternalMeetingSummary({ meetingId, meetingDate, weeklyT
   const [emailError, setEmailError] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
   const { toast } = useToast()
-
+  console.log("DEBUG COMPONENTE HIJO - Recibí meetingId:", meetingId);
   useEffect(() => {
+    console.log("DEBUG USEEFFECT - Cargando data para:", meetingId);
     loadSummaryData()
   }, [meetingId])
 

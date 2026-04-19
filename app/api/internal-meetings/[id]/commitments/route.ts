@@ -2,6 +2,8 @@ import { type NextRequest, NextResponse } from "next/server"
 //import { createClient } from "@/lib/supabase/server"
 import { createServerClient } from "@/lib/supabase/server"
 
+console.log("!!! EL ARCHIVO DE COMMITMENTS ROUTE FUE LEÍDO POR EL NAVEGADOR !!!");
+
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const supabase = createServerClient()
