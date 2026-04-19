@@ -53,9 +53,7 @@ export default function InternalMeetingSummary({ meetingId, meetingDate, weeklyT
   const [emailError, setEmailError] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
   const { toast } = useToast()
-  console.log("DEBUG COMPONENTE HIJO - Recibí meetingId:", meetingId);
   useEffect(() => {
-    console.log("DEBUG USEEFFECT - Cargando data para:", meetingId);
     loadSummaryData()
   }, [meetingId])
 
@@ -72,7 +70,8 @@ export default function InternalMeetingSummary({ meetingId, meetingDate, weeklyT
       }
 
       // Cargar compromisos
-      const commitmentsResponse = await fetch(`/api/internal-meetings/${meetingId}/commitments`)
+      const commitmentsResponse = await fetch(`/api/internal-meetings/${meetingId}/commitments?t=${Date.now()}`)
+      //const commitmentsResponse = await fetch(`/api/internal-meetings/${meetingId}/commitments`)
       if (commitmentsResponse.ok) {
         const commitmentsResult = await commitmentsResponse.json()
         if (commitmentsResult.success) {
