@@ -274,6 +274,7 @@ export default function TechCompanyDashboard({ meetingId }: TechCompanyDashboard
   }
 
   if (!Array.isArray(companies) || companies.length === 0) {
+    console.log("--- LLEGO ACA ---")
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center">

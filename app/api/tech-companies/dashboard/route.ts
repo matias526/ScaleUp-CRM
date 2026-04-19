@@ -1,19 +1,22 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createServerClient } from "@supabase/ssr"
-import { cookies } from "next/headers"
-
+import { createServerClient } from "@/lib/supabase/server"
+console.log("--- ENTROOOOO ---")
 export const dynamic = "force-dynamic"
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = cookies()
-    const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
-    })
+    const supabase = createServerClient()
+
+    console.log("--- DEBUG CONEXIÓN ---")
+    console.log("¿URL presente?:", !!process.env.NEXT_PUBLIC_SUPABASE_URL)
+    console.log("¿Key presente?:", !!process.env.SUPABASE_SERVICE_ROLE_KEY)
+
+    const { count, error: testError } = await supabase
+      .from("tech_companies")
+      .select('*', { count: 'exact', head: true })
+
+    console.log("Conteo de empresas:", count)
+    console.log("Error de prueba:", testError)
 
     const { searchParams } = new URL(request.url)
     const newPartnerFilter = searchParams.get("newPartnerFilter") || "all"
@@ -76,11 +79,7 @@ export async function GET(request: NextRequest) {
             .not("pipeline_stages.code", "in", "(Won,Lost,Freeze)")
 
           if (potentialPartnersError) {
-            console.error(
-              "Error fetching potential partner opportunities for company:",
-              company.id,
-              potentialPartnersError,
-            )
+            console.error("Error fetching potential partner opportunities for company:", company.id, potentialPartnersError)
           }
 
           const { data: involvedUsers, error: usersError } = await supabase
@@ -94,11 +93,6 @@ export async function GET(request: NextRequest) {
             `)
             .eq("roles.code", "BDD")
             .eq("is_active", true)
-
-          if (usersError) {
-            console.error("Error fetching involved users for company:", company.id, usersError)
-            // Continue with empty users array
-          }
 
           const { data: partnerRelations, error: partnersError } = await supabase
             .from("partner_tech_companies")
@@ -119,125 +113,97 @@ export async function GET(request: NextRequest) {
             .eq("tech_company_id", company.id)
             .eq("partners.is_active", true)
 
-          if (partnersError) {
-            console.error("Error fetching partner relations for company:", company.id, partnersError)
-            // Continue with empty partners array
-          }
-
           const { data: tasks, error: tasksError } = await supabase
             .from("tasks")
             .select("*")
             .eq("tech_company_id", company.id)
             .in("status", ["pending", "in_progress"])
 
-          if (tasksError) {
-            console.error("Error fetching tasks for company:", company.id, tasksError)
-            // Continue with empty tasks array
+          // Helper para extraer el código del stage de forma segura (maneja array u objeto)
+          const getStageCode = (stages: any) => {
+            if (Array.isArray(stages)) return stages[0]?.code
+            return stages?.code
           }
 
           // Calculate funnel data
-          const funnelData = opportunities?.reduce(
+          const funnelData = (opportunities || []).reduce(
             (acc, opp) => {
-              const stage = opp.pipeline_stages.code
-              if (!acc[stage]) {
-                acc[stage] = { count: 0, value: 0 }
+              const stage = getStageCode(opp.pipeline_stages)
+              if (stage) {
+                if (!acc[stage]) {
+                  acc[stage] = { count: 0, value: 0 }
+                }
+                acc[stage].count += 1
+                acc[stage].value += Number.parseFloat(opp.estimated_value || "0")
               }
-              acc[stage].count += 1
-              acc[stage].value += Number.parseFloat(opp.estimated_value || "0")
               return acc
             },
             {} as Record<string, { count: number; value: number }>,
           )
 
-          // Calculate metrics for "Lo Bueno" (Good things)
           const oneWeekAgo = new Date()
           oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
 
+          // Metrics for "Lo Bueno"
           const goodMetrics = {
             newOpportunities: opportunities?.filter((opp) => new Date(opp.created_at) >= oneWeekAgo).length || 0,
             wonOpportunities:
-              opportunities?.filter(
-                (opp) => opp.pipeline_stages.code === "Won" && new Date(opp.updated_at) >= oneWeekAgo,
-              ).length || 0,
+              opportunities?.filter((opp: any) => {
+                return getStageCode(opp.pipeline_stages) === "Won" && new Date(opp.updated_at) >= oneWeekAgo
+              }).length || 0,
             movedOpportunities:
-              opportunities?.filter(
-                (opp) =>
-                  new Date(opp.updated_at) >= oneWeekAgo &&
-                  opp.pipeline_stages.code !== "Won" &&
-                  opp.pipeline_stages.code !== "Lost",
-              ).length || 0,
+              opportunities?.filter((opp: any) => {
+                const stage = getStageCode(opp.pipeline_stages)
+                return new Date(opp.updated_at) >= oneWeekAgo && stage !== "Won" && stage !== "Lost"
+              }).length || 0,
           }
 
-          // Calculate metrics for "Lo Malo" (Bad things)
           const thirtyDaysAgo = new Date()
           thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
+          // Metrics for "Lo Malo"
           const badMetrics = {
             stagnantOpportunities:
-              opportunities?.filter(
-                (opp) =>
-                  new Date(opp.updated_at) < thirtyDaysAgo &&
-                  opp.pipeline_stages.code !== "Won" &&
-                  opp.pipeline_stages.code !== "Lost",
-              ).length || 0,
+              opportunities?.filter((opp: any) => {
+                const stage = getStageCode(opp.pipeline_stages)
+                return new Date(opp.updated_at) < thirtyDaysAgo && stage !== "Won" && stage !== "Lost"
+              }).length || 0,
             oldOpportunities:
-              opportunities?.filter(
-                (opp) =>
-                  new Date(opp.created_at) < thirtyDaysAgo &&
-                  opp.pipeline_stages.code !== "Won" &&
-                  opp.pipeline_stages.code !== "Lost",
-              ).length || 0,
+              opportunities?.filter((opp: any) => {
+                const stage = getStageCode(opp.pipeline_stages)
+                return new Date(opp.created_at) < thirtyDaysAgo && stage !== "Won" && stage !== "Lost"
+              }).length || 0,
             opportunitiesWithoutValue:
-              opportunities?.filter(
-                (opp) =>
-                  !opp.estimated_value && opp.pipeline_stages.code !== "Won" && opp.pipeline_stages.code !== "Lost",
-              ).length || 0,
+              opportunities?.filter((opp: any) => {
+                const stage = getStageCode(opp.pipeline_stages)
+                return !opp.estimated_value && stage !== "Won" && stage !== "Lost"
+              }).length || 0,
             opportunitiesWithoutCloseDate:
-              opportunities?.filter(
-                (opp) =>
-                  !opp.estimated_close_date &&
-                  opp.pipeline_stages.code !== "Won" &&
-                  opp.pipeline_stages.code !== "Lost",
-              ).length || 0,
+              opportunities?.filter((opp: any) => {
+                const stage = getStageCode(opp.pipeline_stages)
+                return !opp.estimated_close_date && stage !== "Won" && stage !== "Lost"
+              }).length || 0,
             lostOpportunities:
-              opportunities?.filter(
-                (opp) => opp.pipeline_stages.code === "Lost" && new Date(opp.updated_at) >= oneWeekAgo,
-              ).length || 0,
+              opportunities?.filter((opp: any) => {
+                return getStageCode(opp.pipeline_stages) === "Lost" && new Date(opp.updated_at) >= oneWeekAgo
+              }).length || 0,
           }
 
           const involvedUsersWithMetrics = await Promise.all(
             (involvedUsers || []).map(async (user) => {
               let userOpportunitiesQuery = supabase
                 .from("opportunities")
-                .select(`
-                  id, 
-                  pipeline_stages!inner(code)
-                `)
+                .select("id, pipeline_stages!inner(code)")
                 .eq("tech_company_id", company.id)
                 .eq("assigned_to", user.id)
                 .not("pipeline_stages.code", "in", "(Lost,Freeze)")
 
-              if (newPartnerFilter === "true") {
-                userOpportunitiesQuery = userOpportunitiesQuery.eq("is_new_partner", true)
-              } else if (newPartnerFilter === "false") {
-                userOpportunitiesQuery = userOpportunitiesQuery.eq("is_new_partner", false)
-              }
+              if (newPartnerFilter === "true") userOpportunitiesQuery = userOpportunitiesQuery.eq("is_new_partner", true)
+              else if (newPartnerFilter === "false") userOpportunitiesQuery = userOpportunitiesQuery.eq("is_new_partner", false)
 
               const { data: userOpportunities } = await userOpportunitiesQuery
-
-              const { data: userTasks } = await supabase
-                .from("tasks")
-                .select("id")
-                .eq("tech_company_id", company.id)
-                .eq("assigned_to", user.id)
-                .in("status", ["pending", "in_progress"])
-
-              // Count unique partners from partner_tech_companies where this user is the scaleup_manager
-              const { data: userPartnerRelations } = await supabase
-                .from("partner_tech_companies")
-                .select("partner_id")
-                .eq("tech_company_id", company.id)
-                .eq("scaleup_manager_id", user.id)
+              const { data: userTasks } = await supabase.from("tasks").select("id").eq("tech_company_id", company.id).eq("assigned_to", user.id).in("status", ["pending", "in_progress"])
+              const { data: userPartnerRelations } = await supabase.from("partner_tech_companies").select("partner_id").eq("tech_company_id", company.id).eq("scaleup_manager_id", user.id)
 
               return {
                 ...user,
@@ -250,35 +216,20 @@ export async function GET(request: NextRequest) {
 
           const partnersWithActivity = await Promise.all(
             (partnerRelations || []).map(async (relation) => {
-              const partner = relation.partners
-
+              const partner: any = relation.partners
               let partnerOpportunitiesQuery = supabase
                 .from("opportunities")
-                .select(`
-                  id, 
-                  updated_at,
-                  pipeline_stages!inner(code)
-                `)
+                .select("id, updated_at, pipeline_stages!inner(code)")
                 .eq("tech_company_id", company.id)
                 .eq("partner_id", partner.id)
                 .not("pipeline_stages.code", "in", "(Lost,Freeze)")
 
-              if (newPartnerFilter === "true") {
-                partnerOpportunitiesQuery = partnerOpportunitiesQuery.eq("is_new_partner", true)
-              } else if (newPartnerFilter === "false") {
-                partnerOpportunitiesQuery = partnerOpportunitiesQuery.eq("is_new_partner", false)
-              }
+              if (newPartnerFilter === "true") partnerOpportunitiesQuery = partnerOpportunitiesQuery.eq("is_new_partner", true)
+              else if (newPartnerFilter === "false") partnerOpportunitiesQuery = partnerOpportunitiesQuery.eq("is_new_partner", false)
 
               const { data: partnerOpportunities } = await partnerOpportunitiesQuery
+              const { data: partnerTasks } = await supabase.from("tasks").select("id, updated_at").eq("tech_company_id", company.id).eq("partner_id", partner.id).in("status", ["pending", "in_progress"])
 
-              const { data: partnerTasks } = await supabase
-                .from("tasks")
-                .select("id, updated_at")
-                .eq("tech_company_id", company.id)
-                .eq("partner_id", partner.id)
-                .in("status", ["pending", "in_progress"])
-
-              // Find last activity date
               const allActivities = [
                 ...(partnerOpportunities || []).map((opp) => opp.updated_at),
                 ...(partnerTasks || []).map((task) => task.updated_at),
@@ -295,82 +246,46 @@ export async function GET(request: NextRequest) {
                 opportunityCount: partnerOpportunities?.length || 0,
                 taskCount: partnerTasks?.length || 0,
                 lastActivity,
-                manager: relation.scaleup_manager_id
-                  ? involvedUsers?.find((u) => u.id === relation.scaleup_manager_id)
-                  : null,
+                manager: relation.scaleup_manager_id ? involvedUsers?.find((u) => u.id === relation.scaleup_manager_id) : null,
               }
             }),
           )
 
           partnersWithActivity.sort((a, b) => (b.opportunityCount || 0) - (a.opportunityCount || 0))
 
-          // Added potential partners metrics calculation
           const potentialPartnersMetrics = {
-            lead:
-              potentialPartnerOpportunities?.filter(
-                (opp) => opp.pipeline_stages.code === "Pre-Lead" || opp.pipeline_stages.code === "Lead",
-              ).length || 0,
-            initialCommunication:
-              potentialPartnerOpportunities?.filter((opp) => opp.pipeline_stages.code === "Initial Communication")
-                .length || 0,
-            engagement:
-              potentialPartnerOpportunities?.filter((opp) => opp.pipeline_stages.code === "Engagement").length || 0,
-            quotation:
-              potentialPartnerOpportunities?.filter((opp) => opp.pipeline_stages.code === "Quotation").length || 0,
+            lead: potentialPartnerOpportunities?.filter((opp: any) => {
+              const code = getStageCode(opp.pipeline_stages)
+              return code === "Pre-Lead" || code === "Lead"
+            }).length || 0,
+            initialCommunication: potentialPartnerOpportunities?.filter((opp: any) => getStageCode(opp.pipeline_stages) === "Initial Communication").length || 0,
+            engagement: potentialPartnerOpportunities?.filter((opp: any) => getStageCode(opp.pipeline_stages) === "Engagement").length || 0,
+            quotation: potentialPartnerOpportunities?.filter((opp: any) => getStageCode(opp.pipeline_stages) === "Quotation").length || 0,
           }
 
           return {
             company,
             funnel: funnelData || {},
             totalOpportunities: opportunities?.length || 0,
-            totalValue:
-              opportunities?.reduce((sum, opp) => sum + Number.parseFloat(opp.estimated_value || "0"), 0) || 0,
+            totalValue: opportunities?.reduce((sum, opp) => sum + Number.parseFloat(opp.estimated_value || "0"), 0) || 0,
             involvedUsers: involvedUsersWithMetrics || [],
             partners: partnersWithActivity || [],
             partnerCount: partnersWithActivity?.length || 0,
             taskCount: tasks?.length || 0,
             goodMetrics,
             badMetrics,
-            // Added potential partners metrics to return data
             potentialPartnersMetrics,
           }
         } catch (companyError) {
           console.error("Error processing company:", company.id, companyError)
-          return {
-            company,
-            funnel: {},
-            totalOpportunities: 0,
-            totalValue: 0,
-            involvedUsers: [],
-            partners: [],
-            partnerCount: 0,
-            taskCount: 0,
-            goodMetrics: {
-              newOpportunities: 0,
-              wonOpportunities: 0,
-              movedOpportunities: 0,
-            },
-            badMetrics: {
-              stagnantOpportunities: 0,
-              oldOpportunities: 0,
-              opportunitiesWithoutValue: 0,
-              opportunitiesWithoutCloseDate: 0,
-              lostOpportunities: 0,
-            },
-            potentialPartnersMetrics: {
-              lead: 0,
-              initialCommunication: 0,
-              engagement: 0,
-              quotation: 0,
-            },
-          }
+          return null
         }
       }),
     )
 
     return NextResponse.json({
       success: true,
-      data: dashboardData,
+      companies: dashboardData.filter(Boolean),
     })
   } catch (error) {
     console.error("Error in tech companies dashboard API:", error)
