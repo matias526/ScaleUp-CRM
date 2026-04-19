@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useSearchParams } from "next/navigation"
+import { useParams, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -53,8 +53,9 @@ const MEETING_STAGES: MeetingStage[] = [
 ]
 
 export default function InternalMeetingExecution() {
+  const params = useParams() // Agregamos esto
   const searchParams = useSearchParams()
-  const meetingId = searchParams.get("id")
+  const meetingId = params?.id as string
   const { userInfo } = useAuth()
 
   const [meeting, setMeeting] = useState<InternalMeeting | null>(null)
@@ -296,18 +297,16 @@ export default function InternalMeetingExecution() {
               {MEETING_STAGES.map((stage) => (
                 <div
                   key={stage.id}
-                  className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
-                    currentStage === stage.id ? "bg-blue-100 border border-blue-200" : "hover:bg-gray-50"
-                  }`}
+                  className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${currentStage === stage.id ? "bg-blue-100 border border-blue-200" : "hover:bg-gray-50"
+                    }`}
                 >
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                      currentStage === stage.id
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentStage === stage.id
                         ? "bg-blue-600 text-white"
                         : currentStage > stage.id
                           ? "bg-green-100 text-green-600"
                           : "bg-gray-100 text-gray-600"
-                    }`}
+                      }`}
                   >
                     {stage.id}
                   </div>
@@ -368,9 +367,8 @@ export default function InternalMeetingExecution() {
                             {newsItems.map((_, index) => (
                               <div
                                 key={index}
-                                className={`w-2 h-2 rounded-full ${
-                                  index === currentNewsIndex ? "bg-blue-600" : "bg-gray-300"
-                                }`}
+                                className={`w-2 h-2 rounded-full ${index === currentNewsIndex ? "bg-blue-600" : "bg-gray-300"
+                                  }`}
                               />
                             ))}
                           </div>
@@ -469,9 +467,8 @@ export default function InternalMeetingExecution() {
             {MEETING_STAGES.map((stage, index) => (
               <div
                 key={stage.id}
-                className={`w-3 h-3 rounded-full ${
-                  currentStage === stage.id ? "bg-blue-600" : currentStage > stage.id ? "bg-green-500" : "bg-gray-300"
-                }`}
+                className={`w-3 h-3 rounded-full ${currentStage === stage.id ? "bg-blue-600" : currentStage > stage.id ? "bg-green-500" : "bg-gray-300"
+                  }`}
               />
             ))}
             <span className="text-sm text-gray-600 ml-2">
