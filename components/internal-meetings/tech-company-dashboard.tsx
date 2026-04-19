@@ -103,61 +103,36 @@ export default function TechCompanyDashboard({ meetingId }: TechCompanyDashboard
   const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null)
 
   useEffect(() => {
-    const loadDashboardData = async () => {
+    async function loadDashboardData() {
       try {
         setLoading(true)
-        // Llamamos a la API que me pasaste (la que devuelve el array simple)
-        const response = await fetch("/api/tech-companies?active=true")
 
-        if (response.ok) {
-          const data = await response.json()
+        // 1. Obtenemos el ID de la reunión de la URL (fundamental)
+        const pathParts = window.location.pathname.split('/')
+        const meetingId = pathParts[pathParts.length - 1]
 
-          if (Array.isArray(data) && data.length > 0) {
-            // Mapeamos los datos simples al formato complejo TechCompanyData
-            const formattedCompanies: TechCompanyData[] = data.map((item: any) => ({
-              company: {
-                id: item.id,
-                name: item.name,
-                code: item.code || "", // Si no viene code, ponemos vacío
-                logo_url: item.logo_url
-              },
-              // Inicializamos todo lo demás vacío para que el tipo coincida
-              funnel: {},
-              totalOpportunities: 0,
-              totalValue: 0,
-              involvedUsers: [],
-              partners: [],
-              partnerCount: 0,
-              taskCount: 0,
-              goodMetrics: {
-                newOpportunities: 0,
-                wonOpportunities: 0,
-                movedOpportunities: 0
-              },
-              badMetrics: {
-                stagnantOpportunities: 0,
-                oldOpportunities: 0,
-                opportunitiesWithoutValue: 0,
-                opportunitiesWithoutCloseDate: 0,
-                lostOpportunities: 0
-              }
-            }))
+        console.log("Llamando a la API para la reunión:", meetingId)
 
-            setCompanies(formattedCompanies)
+        // 2. Le pasamos el meetingId a la API para que sepa qué buscar
+        // Agregamos el meetingId como parámetro
+        const response = await fetch(`/api/tech-companies/dashboard?meetingId=${meetingId}`)
+        const result = await response.json()
 
-            // Opcional: Si querés que la IA analice apenas carga
-            // generateAIAnalysis(formattedCompanies)
-          }
+        if (result.success) {
+          setCompanies(result.companies)
+        } else {
+          // Si entra acá, es que la API devolvió el error que viste
+          console.error("La API devolvió un error:", result.error)
         }
       } catch (error) {
-        console.error("[v0] Error loading dashboard data:", error)
+        console.error("Error de red o de código:", error)
       } finally {
         setLoading(false)
       }
     }
 
     loadDashboardData()
-  }, []) // Se ejecuta una sola vez al montar
+  }, [])
 
   const generateAIAnalysis = async (companiesData: TechCompanyData[]) => {
     console.log("[v0] Generating AI analysis for", companiesData.length, "companies")
