@@ -105,20 +105,48 @@ export default function TechCompanyDashboard({ meetingId }: TechCompanyDashboard
   useEffect(() => {
     const loadDashboardData = async () => {
       try {
-        const response = await fetch(`/api/tech-companies/dashboard?newPartnerFilter=${newPartnerFilter}`)
+        setLoading(true)
+        // Llamamos a la API que me pasaste (la que devuelve el array simple)
+        const response = await fetch("/api/tech-companies?active=true")
 
         if (response.ok) {
-          const result = await response.json()
+          const data = await response.json()
 
-          if (result.success && Array.isArray(result.data) && result.data.length > 0) {
-            const validCompanies = result.data.filter(
-              (company: any) => company && company.company && company.company.id && company.company.name,
-            )
+          if (Array.isArray(data) && data.length > 0) {
+            // Mapeamos los datos simples al formato complejo TechCompanyData
+            const formattedCompanies: TechCompanyData[] = data.map((item: any) => ({
+              company: {
+                id: item.id,
+                name: item.name,
+                code: item.code || "", // Si no viene code, ponemos vacío
+                logo_url: item.logo_url
+              },
+              // Inicializamos todo lo demás vacío para que el tipo coincida
+              funnel: {},
+              totalOpportunities: 0,
+              totalValue: 0,
+              involvedUsers: [],
+              partners: [],
+              partnerCount: 0,
+              taskCount: 0,
+              goodMetrics: {
+                newOpportunities: 0,
+                wonOpportunities: 0,
+                movedOpportunities: 0
+              },
+              badMetrics: {
+                stagnantOpportunities: 0,
+                oldOpportunities: 0,
+                opportunitiesWithoutValue: 0,
+                opportunitiesWithoutCloseDate: 0,
+                lostOpportunities: 0
+              }
+            }))
 
-            if (validCompanies.length > 0) {
-              setCompanies(validCompanies)
-              generateAIAnalysis(validCompanies)
-            }
+            setCompanies(formattedCompanies)
+
+            // Opcional: Si querés que la IA analice apenas carga
+            // generateAIAnalysis(formattedCompanies)
           }
         }
       } catch (error) {
@@ -129,7 +157,7 @@ export default function TechCompanyDashboard({ meetingId }: TechCompanyDashboard
     }
 
     loadDashboardData()
-  }, [newPartnerFilter])
+  }, []) // Se ejecuta una sola vez al montar
 
   const generateAIAnalysis = async (companiesData: TechCompanyData[]) => {
     console.log("[v0] Generating AI analysis for", companiesData.length, "companies")
@@ -504,10 +532,10 @@ export default function TechCompanyDashboard({ meetingId }: TechCompanyDashboard
             </CardHeader>
             <CardContent className="pt-4">
               {currentCompany.potentialPartnersMetrics &&
-              (currentCompany.potentialPartnersMetrics.lead > 0 ||
-                currentCompany.potentialPartnersMetrics.initialCommunication > 0 ||
-                currentCompany.potentialPartnersMetrics.engagement > 0 ||
-                currentCompany.potentialPartnersMetrics.quotation > 0) ? (
+                (currentCompany.potentialPartnersMetrics.lead > 0 ||
+                  currentCompany.potentialPartnersMetrics.initialCommunication > 0 ||
+                  currentCompany.potentialPartnersMetrics.engagement > 0 ||
+                  currentCompany.potentialPartnersMetrics.quotation > 0) ? (
                 <div className="space-y-3">
                   {currentCompany.potentialPartnersMetrics.lead > 0 && (
                     <button
@@ -813,9 +841,8 @@ export default function TechCompanyDashboard({ meetingId }: TechCompanyDashboard
           {companies.map((_, index) => (
             <div
               key={index}
-              className={`w-3 h-3 rounded-full transition-all ${
-                index === currentCompanyIndex ? "bg-blue-600 scale-125" : "bg-gray-300"
-              }`}
+              className={`w-3 h-3 rounded-full transition-all ${index === currentCompanyIndex ? "bg-blue-600 scale-125" : "bg-gray-300"
+                }`}
             />
           ))}
         </div>
