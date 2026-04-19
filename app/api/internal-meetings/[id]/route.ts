@@ -1,23 +1,20 @@
 import { type NextRequest, NextResponse } from "next/server"
-//import { createClient } from "@/lib/supabase/server"
 import { createServerClient } from "@/lib/supabase/server"
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest,
+  { params }: { params: Promise<{ id: string }> } // 1. Definir como Promise
+) {
   try {
     const supabase = createServerClient()
+    const { id: meetingId } = await params // 2. OBLIGATORIO: await para obtener el ID
 
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      console.error("Error de autenticación:", authError)
       return NextResponse.json({ success: false, error: "No autorizado" }, { status: 401 })
     }
 
-    const meetingId = params.id
-    console.log("[v0] Fetching meeting:", meetingId, "for user:", user.id)
+    console.log("[v0] Fetching meeting:", meetingId)
 
     // Get meeting details
     const { data: meeting, error: meetingError } = await supabase
@@ -53,22 +50,16 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest,
+  { params }: { params: Promise<{ id: string }> } // 1. También aquí
+) {
   try {
     const supabase = createServerClient()
-    
+    const { id: meetingId } = await params // 2. Y aquí también
 
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) return NextResponse.json({ success: false }, { status: 401 })
 
-    if (authError || !user) {
-      console.error("Error de autenticación:", authError)
-      return NextResponse.json({ success: false, error: "No autorizado" }, { status: 401 })
-    }
-
-    const meetingId = params.id
     const body = await request.json()
     const { meeting_date, weekly_topic, status, news_items } = body
 
