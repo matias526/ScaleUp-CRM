@@ -132,7 +132,9 @@ export default function InternalMeetingExecution() {
 
   const handleParticipantToggle = async (participantId: string) => {
     const pathParts = window.location.pathname.split('/')
-    const meetingId = pathParts[pathParts.length - 1]
+    const searchParams = new URLSearchParams(window.location.search);
+    const meetingId = searchParams.get('id');
+    // ------------------------------------
     const isCurrentlyPresent = presentParticipants.includes(participantId)
     const newAttendedStatus = !isCurrentlyPresent
 
