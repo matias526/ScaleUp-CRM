@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react" // 1. Importar 'use'
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
@@ -10,7 +10,12 @@ import { Loader2 } from "lucide-react"
 import { UserService } from "@/lib/services/user-service"
 import { UserForm } from "@/components/users/user-form"
 
-export default function EditUserPage({ params }: { params: { id: string } }) {
+// 2. Tipar params como Promise
+export default function EditUserPage({ params }: { params: Promise<{ id: string }> }) {
+  // 3. Desenvolver los params
+  const resolvedParams = use(params)
+  const id = resolvedParams.id
+
   const router = useRouter()
   const [user, setUser] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -21,7 +26,8 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
     const loadUser = async () => {
       try {
         setIsLoading(true)
-        const data = await UserService.getUserById(params.id)
+        // 4. Usar el id ya resuelto
+        const data = await UserService.getUserById(id)
         if (!data) {
           throw new Error("No se pudo cargar el usuario")
         }
@@ -34,7 +40,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
     }
 
     loadUser()
-  }, [params.id])
+  }, [id]) // Dependencia actualizada a 'id'
 
   if (isLoading) {
     return (
@@ -87,7 +93,8 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
         </Button>
         <h1 className="text-3xl font-bold">Editar Usuario</h1>
       </div>
-      <UserForm userId={params.id} initialData={user} />
+      {/* 5. Pasar el id resuelto al formulario */}
+      <UserForm userId={id} initialData={user} />
     </div>
   )
 }

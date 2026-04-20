@@ -1,12 +1,24 @@
 "use client"
 
+import { use } from "react" // 1. Importamos el hook 'use'
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { TechCompanyEditForm } from "@/components/tech-companies/tech-company-edit-form"
 
-export default function EditTechCompanyPage({ params }: { params: { id: string } }) {
+// 2. Definimos que params es una Promesa
+interface EditTechCompanyPageProps {
+  params: Promise<{
+    id: string
+  }>
+}
+
+export default function EditTechCompanyPage({ params }: EditTechCompanyPageProps) {
   const router = useRouter()
+
+  // 3. Resolvemos la promesa de los params
+  const resolvedParams = use(params)
+  const id = resolvedParams.id
 
   return (
     <div className="space-y-6">
@@ -17,7 +29,8 @@ export default function EditTechCompanyPage({ params }: { params: { id: string }
         <h1 className="text-3xl font-bold">Editar Empresa Tecnológica</h1>
       </div>
 
-      <TechCompanyEditForm companyId={params.id} />
+      {/* 4. Pasamos el id ya resuelto al formulario */}
+      <TechCompanyEditForm companyId={id} />
     </div>
   )
 }
