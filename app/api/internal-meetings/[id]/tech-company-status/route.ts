@@ -187,7 +187,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
         aiAnalysis = parsedAnalysis
       }
     } catch (error) {
-      console.error("Error generating AI analysis:", error)
+      console.error("[v0] Error generating AI analysis:", error)
     }
 
     return NextResponse.json({

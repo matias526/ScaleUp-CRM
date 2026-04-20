@@ -34,22 +34,17 @@ Respond ONLY with valid JSON in this exact format:
 
     console.log("[v0] Prompt enviado a Groq:", prompt)
 
-    const response = await generateText({
-      model: groq("mixtral-8x7b-32768"),
+    const { text } = await generateText({
+      model: groq("llama-3.3-70b-versatile"),
       prompt,
       temperature: 0.3,
     })
 
-    console.log("[v0] Respuesta de Groq completa:", response)
-
-    // En AI SDK 6, generateText retorna un objeto con 'text'
-    const text = response.text || ""
+    console.log("[v0] Respuesta de Groq:", text)
 
     if (!text) {
       throw new Error("Respuesta vacía de Groq")
     }
-
-    console.log("[v0] Texto extraído:", text)
 
     // Parsear la respuesta JSON
     const jsonMatch = text.match(/\{[\s\S]*\}/)
@@ -66,14 +61,9 @@ Respond ONLY with valid JSON in this exact format:
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : JSON.stringify(error)
     console.error("[v0] Error en traducción:", errorMessage)
-    
+
     return Response.json(
       {
-        translations: {
-          display_name: "",
-          subject: "",
-          body_content: "",
-        },
         error: errorMessage,
       },
       { status: 500 },
@@ -81,5 +71,5 @@ Respond ONLY with valid JSON in this exact format:
   }
 }
 
-// Force rebuild - Last updated: 2026-04-20T14:45:00Z
-// This ensures the compiler detects changes and doesn't use cached versions
+// Last updated: 2026-04-20T15:20:00Z
+// Updated to AI SDK v5/v6 standard syntax
