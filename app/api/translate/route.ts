@@ -9,11 +9,16 @@ export async function POST(req: Request) {
   try {
     const { texts, targetLanguage } = await req.json()
 
-    console.log("[v0] Traduciendo a", targetLanguage)
+    console.log("[v0] Iniciando traducción a:", targetLanguage)
     console.log("[v0] Textos a traducir:", texts)
 
+    // Validar que el API key esté configurado
+    if (!process.env.GROQ_API_KEY) {
+      throw new Error("GROQ_API_KEY no está configurado en las variables de entorno")
+    }
+
     const prompt = `Translate the following content to ${targetLanguage}. 
-Keep ONLY the structure and placeholders intact - do not modify anything inside __VAR_* or __FORMAT_* markers.
+Keep ONLY the structure and placeholders intact - do not modify anything inside __PULSEVAR_* or __PULSEFMT_* markers.
 
 Content:
 - display_name: "${texts.display_name}"
@@ -27,28 +32,41 @@ Respond ONLY with valid JSON in this exact format:
   "body_content": "translated body content"
 }`
 
-    const { text } = await generateText({
+    console.log("[v0] Prompt enviado a Groq:", prompt)
+
+    const response = await generateText({
       model: groq("mixtral-8x7b-32768"),
       prompt,
       temperature: 0.3,
     })
 
-    console.log("[v0] Respuesta de Groq:", text)
+    console.log("[v0] Respuesta de Groq completa:", response)
+
+    // En AI SDK 6, generateText retorna un objeto con 'text'
+    const text = response.text || ""
+
+    if (!text) {
+      throw new Error("Respuesta vacía de Groq")
+    }
+
+    console.log("[v0] Texto extraído:", text)
 
     // Parsear la respuesta JSON
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
-      throw new Error("Invalid JSON response from Groq")
+      throw new Error(`Invalid JSON response from Groq. Response: ${text}`)
     }
 
     const translations = JSON.parse(jsonMatch[0])
+    console.log("[v0] Traducciones parseadas:", translations)
 
     return Response.json({
       translations,
     })
   } catch (error) {
-    console.error("[v0] Error en traducción:", error)
-    // Retornar JSON válido incluso en error para que el frontend no se quede colgado
+    const errorMessage = error instanceof Error ? error.message : JSON.stringify(error)
+    console.error("[v0] Error en traducción:", errorMessage)
+    
     return Response.json(
       {
         translations: {
@@ -56,12 +74,12 @@ Respond ONLY with valid JSON in this exact format:
           subject: "",
           body_content: "",
         },
-        error: error instanceof Error ? error.message : "Translation error",
+        error: errorMessage,
       },
       { status: 500 },
     )
   }
 }
 
-// Force rebuild - Last updated: 2026-04-20T14:35:00Z
+// Force rebuild - Last updated: 2026-04-20T14:45:00Z
 // This ensures the compiler detects changes and doesn't use cached versions
