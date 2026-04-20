@@ -9,11 +9,12 @@ import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Loader2, Upload, X } from "lucide-react"
+import { Loader2, Upload, X, Copy, Mail } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import SafeEditor from "./safe-editor"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DICT_LANG_PULSE } from "@/lib/constants/dict-lang-pulse"
+import { PULSE_TEMPLATE_VARIABLES } from "@/lib/constants/pulse-variables"
 import { getActiveTechCompaniesClient } from "@/lib/services/tech-company-service-client"
 
 // Convertir [BR] a saltos de línea reales para edición
@@ -150,8 +151,67 @@ const renderFormattedLine = (line: string, baseKey: number): React.ReactNode[] =
   return parts.length > 0 ? parts : [" "]
 }
 
+// Componente helper para copiar variable al portapapeles
+const copyVariableToClipboard = (variable: string) => {
+  const tag = `{{${variable}}}`
+  navigator.clipboard.writeText(tag)
+}
 
-// Función para procesar y validar archivos adjuntos (cualquier tipo)
+// Renderizar Subject con soporte para variables (línea simple, sin saltos)
+const renderSubjectPreview = (subject: string): React.ReactNode[] => {
+  const parts: React.ReactNode[] = []
+  let lastIndex = 0
+  let componentCounter = 0
+
+  // Regex para capturar [B], [I], [U], {{variables}}
+  const regex = /\[B\](.*?)\[\/B\]|\[I\](.*?)\[\/I\]|\[U\](.*?)\[\/U\]|\{\{([^}]*)\}\}/g
+  let match
+
+  while ((match = regex.exec(subject)) !== null) {
+    if (match.index > lastIndex) {
+      const plainText = subject.substring(lastIndex, match.index)
+      if (plainText) parts.push(plainText)
+    }
+
+    const key = `subject-elem-${componentCounter++}`
+
+    if (match[1] !== undefined) {
+      parts.push(
+        <strong key={key} className="font-bold">
+          {match[1]}
+        </strong>
+      )
+    } else if (match[2] !== undefined) {
+      parts.push(
+        <em key={key} className="italic">
+          {match[2]}
+        </em>
+      )
+    } else if (match[3] !== undefined) {
+      parts.push(
+        <u key={key} className="underline">
+          {match[3]}
+        </u>
+      )
+    } else if (match[4] !== undefined) {
+      const variableName = match[4]
+      parts.push(
+        <span key={key} className="bg-blue-100 text-blue-700 px-1 rounded font-mono text-sm whitespace-nowrap">
+          {`{{${variableName}}}`}
+        </span>
+      )
+    }
+
+    lastIndex = regex.lastIndex
+  }
+
+  if (lastIndex < subject.length) {
+    const remaining = subject.substring(lastIndex)
+    if (remaining) parts.push(remaining)
+  }
+
+  return parts.length > 0 ? parts : [subject || "—"]
+}
 const processAttachmentFile = async (file: File): Promise<{
   id: string
   file: File
@@ -859,9 +919,31 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Asunto</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Ej: Nueva Oportunidad {{opportunity_name}}" {...field} disabled={loading} />
-                    </FormControl>
+                    <FormDescription className="text-xs mb-2">Soporta variables: {{contact_name}}, {{opportunity_name}}, {{company_name}}</FormDescription>
+                    <div className="space-y-2">
+                      <FormControl>
+                        <Input placeholder="Ej: Nueva Oportunidad {{opportunity_name}}" {...field} disabled={loading} />
+                      </FormControl>
+                      <div className="flex gap-1 flex-wrap">
+                        {PULSE_TEMPLATE_VARIABLES.slice(0, 3).map((v) => (
+                          <Button
+                            key={v.name}
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="text-xs h-7"
+                            onClick={() => {
+                              copyVariableToClipboard(v.name)
+                              // Agregar variable al final del input
+                              field.onChange(field.value + ` {{${v.name}}}`)
+                            }}
+                          >
+                            <Copy className="h-3 w-3 mr-1" />
+                            {v.name}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -912,9 +994,30 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Subject</FormLabel>
-                    <FormControl>
-                      <Input placeholder="E.g.: New Opportunity {{opportunity_name}}" {...field} disabled={loading} />
-                    </FormControl>
+                    <FormDescription className="text-xs mb-2">Supports variables: {{contact_name}}, {{opportunity_name}}, {{company_name}}</FormDescription>
+                    <div className="space-y-2">
+                      <FormControl>
+                        <Input placeholder="E.g.: New Opportunity {{opportunity_name}}" {...field} disabled={loading} />
+                      </FormControl>
+                      <div className="flex gap-1 flex-wrap">
+                        {PULSE_TEMPLATE_VARIABLES.slice(0, 3).map((v) => (
+                          <Button
+                            key={v.name}
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="text-xs h-7"
+                            onClick={() => {
+                              copyVariableToClipboard(v.name)
+                              field.onChange(field.value + ` {{${v.name}}}`)
+                            }}
+                          >
+                            <Copy className="h-3 w-3 mr-1" />
+                            {v.name}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -965,9 +1068,30 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Assunto</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Ex.: Nova Oportunidade {{opportunity_name}}" {...field} disabled={loading} />
-                    </FormControl>
+                    <FormDescription className="text-xs mb-2">Suporta variáveis: {{contact_name}}, {{opportunity_name}}, {{company_name}}</FormDescription>
+                    <div className="space-y-2">
+                      <FormControl>
+                        <Input placeholder="Ex.: Nova Oportunidade {{opportunity_name}}" {...field} disabled={loading} />
+                      </FormControl>
+                      <div className="flex gap-1 flex-wrap">
+                        {PULSE_TEMPLATE_VARIABLES.slice(0, 3).map((v) => (
+                          <Button
+                            key={v.name}
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="text-xs h-7"
+                            onClick={() => {
+                              copyVariableToClipboard(v.name)
+                              field.onChange(field.value + ` {{${v.name}}}`)
+                            }}
+                          >
+                            <Copy className="h-3 w-3 mr-1" />
+                            {v.name}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -1119,52 +1243,53 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
 
         {/* COLUMNA DERECHA - PREVIEW (1 columna, sticky) */}
         <div className="hidden lg:block sticky top-4 h-fit">
-          <div className="bg-gradient-to-b from-gray-50 to-gray-100 rounded-lg border border-gray-200 shadow-lg overflow-hidden">
-            {/* Email Preview Container */}
-            <div className="bg-white">
+          <div className="bg-slate-100 rounded-lg border border-slate-300 shadow-lg overflow-hidden">
+            {/* Email Client Mockup */}
+            <div className="bg-white rounded">
               {/* Email Header */}
-              <div className="bg-gray-900 text-white p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide">Preview del Mensaje</p>
-                <p className="text-sm text-gray-300">{DICT_LANG_PULSE[currentTab as keyof typeof DICT_LANG_PULSE]}</p>
+              <div className="bg-slate-900 text-white px-4 py-3 flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                <p className="text-sm font-semibold">Email Preview</p>
               </div>
 
               {/* Email Content */}
-              <div className="p-4 space-y-3 max-h-[600px] overflow-y-auto">
-                {/* Display Name */}
-                <div className="border-b pb-2">
-                  <p className="text-xs font-semibold text-gray-600 mb-1">Nombre a mostrar:</p>
-                  <p className="text-sm font-semibold text-gray-900">{form.getValues(`display_name_${currentTab}`) || "—"}</p>
+              <div className="p-4 space-y-4 max-h-[650px] overflow-y-auto bg-slate-50">
+                {/* From Line */}
+                <div className="text-sm border-b border-slate-200 pb-2">
+                  <p className="text-xs font-semibold text-slate-600">Para:</p>
+                  <p className="text-slate-700">{form.getValues(`display_name_${currentTab}`) || "Cliente"} &lt;contact@example.com&gt;</p>
                 </div>
 
-                {/* Subject */}
-                <div className="border-b pb-2">
-                  <p className="text-xs font-semibold text-gray-600 mb-1">Asunto:</p>
-                  <p className="text-sm text-gray-700 font-medium">{form.getValues(`subject_${currentTab}`) || "—"}</p>
+                {/* Subject Line */}
+                <div className="border-b border-slate-200 pb-3">
+                  <p className="text-xs font-semibold text-slate-600 mb-1">Asunto:</p>
+                  <p className="text-sm font-semibold text-slate-900 break-words leading-snug">
+                    {form.getValues(`subject_${currentTab}`) 
+                      ? renderSubjectPreview(form.getValues(`subject_${currentTab}`))
+                      : "—"}
+                  </p>
                 </div>
 
                 {/* Body Content */}
-                <div>
-                  <p className="text-xs font-semibold text-gray-600 mb-2">Cuerpo del Mensaje:</p>
-                  <div className="bg-white border rounded p-3 text-sm whitespace-pre-wrap break-words leading-relaxed text-gray-800">
-                    {form.getValues(`body_content_${currentTab}`) 
-                      ? renderPreview(form.getValues(`body_content_${currentTab}`))
-                      : "—"}
-                  </div>
+                <div className="bg-white rounded p-4 text-sm whitespace-pre-wrap break-words leading-relaxed text-slate-800 border border-slate-200">
+                  {form.getValues(`body_content_${currentTab}`) 
+                    ? renderPreview(form.getValues(`body_content_${currentTab}`))
+                    : <span className="text-slate-400">El contenido aparecerá aquí...</span>}
                 </div>
 
-                {/* Attachments Info */}
+                {/* Attachments Badge */}
                 {(existingAttachments.length > 0 || pendingAttachments.length > 0) && (
-                  <div className="border-t pt-2 mt-2">
-                    <p className="text-xs font-semibold text-gray-600 mb-1">
-                      📎 {existingAttachments.length + pendingAttachments.length} Adjuntos
+                  <div className="bg-blue-50 border border-blue-200 rounded p-2">
+                    <p className="text-xs font-semibold text-blue-700">
+                      📎 {existingAttachments.length + pendingAttachments.length} {existingAttachments.length + pendingAttachments.length === 1 ? "Adjunto" : "Adjuntos"}
                     </p>
                   </div>
                 )}
               </div>
 
-              {/* Footer */}
-              <div className="bg-gray-50 px-4 py-2 border-t text-center text-xs text-gray-600">
-                Así verá el usuario este mensaje
+              {/* Footer Info */}
+              <div className="bg-slate-100 px-4 py-2 border-t border-slate-200 text-center">
+                <p className="text-xs text-slate-600 font-medium">Así verá el usuario el mensaje</p>
               </div>
             </div>
           </div>
