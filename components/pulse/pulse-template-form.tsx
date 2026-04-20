@@ -83,15 +83,15 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
     internal_code: template?.internal_code || "",
     category: template?.category || "metodologia",
     tech_company_id: template?.tech_company_id || null,
-    display_name_es: template?.translations.find((tr) => tr.language_code === "es")?.display_name || "",
-    subject_es: template?.translations.find((tr) => tr.language_code === "es")?.subject || "",
-    body_content_es: template?.translations.find((tr) => tr.language_code === "es")?.body_content || "",
-    display_name_en: template?.translations.find((tr) => tr.language_code === "en")?.display_name || "",
-    subject_en: template?.translations.find((tr) => tr.language_code === "en")?.subject || "",
-    body_content_en: template?.translations.find((tr) => tr.language_code === "en")?.body_content || "",
-    display_name_pt: template?.translations.find((tr) => tr.language_code === "pt")?.display_name || "",
-    subject_pt: template?.translations.find((tr) => tr.language_code === "pt")?.subject || "",
-    body_content_pt: template?.translations.find((tr) => tr.language_code === "pt")?.body_content || "",
+    display_name_es: brToNewlines(template?.translations.find((tr) => tr.language_code === "es")?.display_name || ""),
+    subject_es: brToNewlines(template?.translations.find((tr) => tr.language_code === "es")?.subject || ""),
+    body_content_es: brToNewlines(template?.translations.find((tr) => tr.language_code === "es")?.body_content || ""),
+    display_name_en: brToNewlines(template?.translations.find((tr) => tr.language_code === "en")?.display_name || ""),
+    subject_en: brToNewlines(template?.translations.find((tr) => tr.language_code === "en")?.subject || ""),
+    body_content_en: brToNewlines(template?.translations.find((tr) => tr.language_code === "en")?.body_content || ""),
+    display_name_pt: brToNewlines(template?.translations.find((tr) => tr.language_code === "pt")?.display_name || ""),
+    subject_pt: brToNewlines(template?.translations.find((tr) => tr.language_code === "pt")?.subject || ""),
+    body_content_pt: brToNewlines(template?.translations.find((tr) => tr.language_code === "pt")?.body_content || ""),
   }
 
   const form = useForm<PulseTemplateFormData>({
@@ -122,8 +122,16 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
     const map = new Map<string, string>()
     let counter = 0
 
+    // Proteger saltos de línea [BR]
+    let protected_text = text.replace(/\[BR\]/g, (match) => {
+      const placeholder = `__PULSEBR_${counter}__`
+      map.set(placeholder, match)
+      counter++
+      return placeholder
+    })
+
     // Proteger variables {{variable_name}}
-    let protected_text = text.replace(/\{\{[^}]+\}\}/g, (match) => {
+    protected_text = protected_text.replace(/\{\{[^}]+\}\}/g, (match) => {
       const placeholder = `__PULSEVAR_${counter}__`
       map.set(placeholder, match)
       counter++
@@ -149,6 +157,16 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
       restored = restored.replace(new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"), original)
     })
     return restored
+  }
+
+  // Convertir [BR] a saltos de línea reales para edición
+  const brToNewlines = (text: string): string => {
+    return text.replaceAll("[BR]", "\n")
+  }
+
+  // Convertir saltos de línea reales a [BR] para almacenamiento
+  const newlinesToBr = (text: string): string => {
+    return text.replaceAll("\n", "[BR]")
   }
 
   // Auto-traducción usando Groq - traduce DESDE el idioma actual a los otros dos
@@ -229,9 +247,11 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
             {} as Record<string, string>,
           )
 
-          // Actualizar campos del formulario
+          // Actualizar campos del formulario - convertir [BR] a saltos de línea reales
           Object.entries(restoredTranslations).forEach(([fieldName, value]) => {
-            form.setValue(fieldName, value)
+            // Convertir [BR] a \n para que se vea como saltos de línea en la interfaz
+            const displayValue = brToNewlines(value as string)
+            form.setValue(fieldName, displayValue)
           })
 
           console.log(`[v0] Traducción a ${targetLang.code} completada`)
@@ -271,17 +291,17 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
         const translations = [
           {
             language_code: "es",
-            display_name: data.display_name_es,
-            subject: data.subject_es,
-            body_content: data.body_content_es,
+            display_name: newlinesToBr(data.display_name_es),
+            subject: newlinesToBr(data.subject_es),
+            body_content: newlinesToBr(data.body_content_es),
           },
           ...(hasEN
             ? [
                 {
                   language_code: "en",
-                  display_name: data.display_name_en,
-                  subject: data.subject_en,
-                  body_content: data.body_content_en,
+                  display_name: newlinesToBr(data.display_name_en),
+                  subject: newlinesToBr(data.subject_en),
+                  body_content: newlinesToBr(data.body_content_en),
                 },
               ]
             : []),
@@ -289,9 +309,9 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
             ? [
                 {
                   language_code: "pt",
-                  display_name: data.display_name_pt,
-                  subject: data.subject_pt,
-                  body_content: data.body_content_pt,
+                  display_name: newlinesToBr(data.display_name_pt),
+                  subject: newlinesToBr(data.subject_pt),
+                  body_content: newlinesToBr(data.body_content_pt),
                 },
               ]
             : []),
@@ -333,18 +353,18 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
           {
             template_id: templateId,
             language_code: "es",
-            display_name: data.display_name_es,
-            subject: data.subject_es,
-            body_content: data.body_content_es,
+            display_name: newlinesToBr(data.display_name_es),
+            subject: newlinesToBr(data.subject_es),
+            body_content: newlinesToBr(data.body_content_es),
           },
           ...(hasEN
             ? [
                 {
                   template_id: templateId,
                   language_code: "en",
-                  display_name: data.display_name_en,
-                  subject: data.subject_en,
-                  body_content: data.body_content_en,
+                  display_name: newlinesToBr(data.display_name_en),
+                  subject: newlinesToBr(data.subject_en),
+                  body_content: newlinesToBr(data.body_content_en),
                 },
               ]
             : []),
@@ -353,9 +373,9 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                 {
                   template_id: templateId,
                   language_code: "pt",
-                  display_name: data.display_name_pt,
-                  subject: data.subject_pt,
-                  body_content: data.body_content_pt,
+                  display_name: newlinesToBr(data.display_name_pt),
+                  subject: newlinesToBr(data.subject_pt),
+                  body_content: newlinesToBr(data.body_content_pt),
                 },
               ]
             : []),

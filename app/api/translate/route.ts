@@ -21,9 +21,9 @@ export async function POST(req: Request) {
 
 CRITICAL RULES:
 - Keep ONLY the structure and placeholders intact
-- Do NOT modify anything inside __PULSEVAR_* or __PULSEFMT_* markers
+- Do NOT modify anything inside __PULSEVAR_*, __PULSEFMT_*, or __PULSEBR_* markers
+- Use [BR] to represent line breaks (NOT real newlines - always use literal [BR])
 - Respond STRICTLY with valid JSON, no additional text
-- Ensure all newlines within strings are replaced with spaces
 - Escape all special characters properly
 
 Content to translate:
