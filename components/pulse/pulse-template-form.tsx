@@ -27,47 +27,64 @@ const newlinesToBr = (text: string): string => {
 }
 
 
-// Función para renderizar preview del contenido
-const renderPreview = (content: string): React.ReactNode[] => {
-  const lines = content.split(/\[BR\]/)
-  return lines.map((line, idx) => (
-    <div key={idx} className="mb-2 last:mb-0">
-      {renderLine(line)}
-    </div>
-  ))
+// Función para renderizar preview del contenido - interpreta [BR], [B], [I], [U], [IMG]
+const renderPreview = (content: string): React.ReactNode => {
+  // Primero, dividir por [BR] para crear párrafos/líneas
+  const brParts = content.split(/(\[BR\])/g)
+  
+  const parts: React.ReactNode[] = []
+  let componentKey = 0
+
+  for (const part of brParts) {
+    if (part === "[BR]") {
+      parts.push(<br key={`br-${componentKey++}`} />)
+    } else if (part.trim()) {
+      // Procesar etiquetas de formato dentro de cada línea
+      const formattedLine = renderFormattedText(part, componentKey)
+      parts.push(<span key={`line-${componentKey++}`}>{formattedLine}</span>)
+    }
+  }
+
+  return parts
 }
 
-// Renderizar una línea procesando tags
-const renderLine = (line: string): React.ReactNode[] => {
+// Renderizar texto con etiquetas de formato: [B], [I], [U], [IMG]
+const renderFormattedText = (text: string, baseKey: number): React.ReactNode[] => {
   const parts: React.ReactNode[] = []
   let lastIndex = 0
+  let componentCounter = 0
+  
+  // Regex que captura: [B]...[/B], [I]...[/I], [U]...[/U], [IMG]...[/IMG], {{variables}}
   const regex = /\[B\](.*?)\[\/B\]|\[I\](.*?)\[\/I\]|\[U\](.*?)\[\/U\]|\[IMG\](.*?)\[\/IMG\]|\{\{[^}]+\}\}/g
   let match
 
-  while ((match = regex.exec(line)) !== null) {
-    // Agregar texto antes del match
+  while ((match = regex.exec(text)) !== null) {
+    // Agregar texto plano antes del match
     if (match.index > lastIndex) {
-      parts.push(line.substring(lastIndex, match.index))
+      const plainText = text.substring(lastIndex, match.index)
+      parts.push(plainText)
     }
+
+    const key = `${baseKey}-format-${componentCounter++}`
 
     if (match[1] !== undefined) {
       // [B]...[/B]
       parts.push(
-        <strong key={`b-${match.index}`} className="font-bold">
+        <strong key={key} className="font-bold">
           {match[1]}
         </strong>
       )
     } else if (match[2] !== undefined) {
       // [I]...[/I]
       parts.push(
-        <em key={`i-${match.index}`} className="italic">
+        <em key={key} className="italic">
           {match[2]}
         </em>
       )
     } else if (match[3] !== undefined) {
       // [U]...[/U]
       parts.push(
-        <u key={`u-${match.index}`} className="underline">
+        <u key={key} className="underline">
           {match[3]}
         </u>
       )
@@ -75,16 +92,16 @@ const renderLine = (line: string): React.ReactNode[] => {
       // [IMG]...[/IMG]
       parts.push(
         <img
-          key={`img-${match.index}`}
+          key={key}
           src={match[4]}
           alt="Imagen del template"
-          className="max-w-full max-h-48 rounded my-2"
+          className="max-w-full max-h-48 rounded my-2 block"
         />
       )
     } else if (match[0].startsWith("{{")) {
       // {{variable}}
       parts.push(
-        <span key={`var-${match.index}`} className="bg-yellow-100 px-1 rounded font-mono text-sm">
+        <span key={key} className="bg-yellow-100 px-1 rounded font-mono text-sm">
           {match[0]}
         </span>
       )
@@ -93,12 +110,12 @@ const renderLine = (line: string): React.ReactNode[] => {
     lastIndex = regex.lastIndex
   }
 
-  // Agregar texto restante
-  if (lastIndex < line.length) {
-    parts.push(line.substring(lastIndex))
+  // Agregar texto plano restante
+  if (lastIndex < text.length) {
+    parts.push(text.substring(lastIndex))
   }
 
-  return parts.length > 0 ? parts : [line]
+  return parts.length > 0 ? parts : [text]
 }
 
 
@@ -961,7 +978,9 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                 </div>
                 <div>
                   <p className="text-xs text-gray-600 font-medium mb-1">Body Content:</p>
-                  <div className="bg-white p-2 rounded space-y-1">{renderPreview(form.getValues(`body_content_${currentTab}`))}</div>
+                  <div className="bg-white p-2 rounded space-y-1 whitespace-pre-wrap break-words">
+                    {renderPreview(form.getValues(`body_content_${currentTab}`))}
+                  </div>
                 </div>
               </div>
             </div>
