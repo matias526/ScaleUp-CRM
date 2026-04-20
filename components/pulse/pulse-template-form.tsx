@@ -1234,8 +1234,11 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
           )}
         </div>
 
-        {/* Actions */}
-        <div className="col-span-full flex gap-2 justify-end pt-4 border-t mt-6"></div>
+        {/* Actions - Asegúrate de que este div NO tenga un div de cierre encima que lo separe del form */}
+        <div className="col-span-full flex gap-2 justify-end pt-6 border-t mt-8 bg-white p-4 sticky bottom-0 z-10">
+          <Button type="button" variant="outline" onClick={onCancel}>Cancelar</Button>
+          <Button type="submit">Guardar Template</Button>
+        </div>
       </form>
     </Form>
   )
