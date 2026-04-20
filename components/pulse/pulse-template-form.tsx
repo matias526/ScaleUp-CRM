@@ -151,12 +151,6 @@ const renderFormattedLine = (line: string, baseKey: number): React.ReactNode[] =
   return parts.length > 0 ? parts : [" "]
 }
 
-// Componente helper para copiar variable al portapapeles
-const copyVariableToClipboard = (variable: string) => {
-  const tag = `{{${variable}}}`
-  navigator.clipboard.writeText(tag)
-}
-
 // Renderizar Subject con soporte para variables (línea simple, sin saltos)
 const renderSubjectPreview = (subject: string): React.ReactNode[] => {
   const parts: React.ReactNode[] = []
@@ -925,21 +919,22 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                         <Input placeholder="Ej: Nueva Oportunidad {{opportunity_name}}" {...field} disabled={loading} />
                       </FormControl>
                       <div className="flex gap-1 flex-wrap">
-                        {PULSE_TEMPLATE_VARIABLES.slice(0, 3).map((v) => (
+                        {PULSE_TEMPLATE_VARIABLES.slice(0, 3).map((variable) => (
                           <Button
-                            key={v.name}
+                            key={variable.name}
                             type="button"
                             variant="outline"
                             size="sm"
                             className="text-xs h-7"
                             onClick={() => {
-                              copyVariableToClipboard(v.name)
+                              const tag = `{{${variable.name}}}`
+                              navigator.clipboard.writeText(tag)
                               // Agregar variable al final del input
-                              field.onChange(field.value + ` {{${v.name}}}`)
+                              field.onChange(field.value + ` ${tag}`)
                             }}
                           >
                             <Copy className="h-3 w-3 mr-1" />
-                            {v.name}
+                            {variable.name}
                           </Button>
                         ))}
                       </div>
@@ -1000,20 +995,21 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                         <Input placeholder="E.g.: New Opportunity {{opportunity_name}}" {...field} disabled={loading} />
                       </FormControl>
                       <div className="flex gap-1 flex-wrap">
-                        {PULSE_TEMPLATE_VARIABLES.slice(0, 3).map((v) => (
+                        {PULSE_TEMPLATE_VARIABLES.slice(0, 3).map((variable) => (
                           <Button
-                            key={v.name}
+                            key={variable.name}
                             type="button"
                             variant="outline"
                             size="sm"
                             className="text-xs h-7"
                             onClick={() => {
-                              copyVariableToClipboard(v.name)
-                              field.onChange(field.value + ` {{${v.name}}}`)
+                              const tag = `{{${variable.name}}}`
+                              navigator.clipboard.writeText(tag)
+                              field.onChange(field.value + ` ${tag}`)
                             }}
                           >
                             <Copy className="h-3 w-3 mr-1" />
-                            {v.name}
+                            {variable.name}
                           </Button>
                         ))}
                       </div>
@@ -1074,20 +1070,21 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                         <Input placeholder="Ex.: Nova Oportunidade {{opportunity_name}}" {...field} disabled={loading} />
                       </FormControl>
                       <div className="flex gap-1 flex-wrap">
-                        {PULSE_TEMPLATE_VARIABLES.slice(0, 3).map((v) => (
+                        {PULSE_TEMPLATE_VARIABLES.slice(0, 3).map((variable) => (
                           <Button
-                            key={v.name}
+                            key={variable.name}
                             type="button"
                             variant="outline"
                             size="sm"
                             className="text-xs h-7"
                             onClick={() => {
-                              copyVariableToClipboard(v.name)
-                              field.onChange(field.value + ` {{${v.name}}}`)
+                              const tag = `{{${variable.name}}}`
+                              navigator.clipboard.writeText(tag)
+                              field.onChange(field.value + ` ${tag}`)
                             }}
                           >
                             <Copy className="h-3 w-3 mr-1" />
-                            {v.name}
+                            {variable.name}
                           </Button>
                         ))}
                       </div>
