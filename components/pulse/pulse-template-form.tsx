@@ -9,7 +9,7 @@ import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Loader2, Upload, X } from "lucide-react"
+import { Loader2, Upload, X, Mail, MessageCircle } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import SafeEditor from "./safe-editor"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -122,7 +122,7 @@ const renderFormattedLine = (line: string, baseKey: number): React.ReactNode[] =
         </u>
       )
     } else if (match[5] !== undefined) {
-      // {{variable}} - SIEMPRE MOSTRAR CON RESALTADO
+      // {{variable}} - SIEMPRE MOSTRAR CON RESALTADO - SIN BACKTICKS
       const variableName = match[5]
       parts.push(
         <span
@@ -130,7 +130,7 @@ const renderFormattedLine = (line: string, baseKey: number): React.ReactNode[] =
           className="bg-blue-100 text-blue-700 px-1 rounded font-mono text-sm whitespace-nowrap"
           title="Campo dinámico que se reemplazará al enviar"
         >
-          {`{{${variableName}}}`}
+          {"{{" + variableName + "}}"}
         </span>
       )
     }
@@ -228,6 +228,7 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
   const [loading, setLoading] = useState(false)
   const [currentTab, setCurrentTab] = useState("es")
   const [translating, setTranslating] = useState(false)
+  const [previewMode, setPreviewMode] = useState<"email" | "whatsapp">("email")
   const [techCompanies, setTechCompanies] = useState<Array<{ id: string; name: string }>>([])
   const [loadingCompanies, setLoadingCompanies] = useState(true)
 
@@ -715,9 +716,9 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSave)} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* COLUMNA IZQUIERDA - FORMULARIO (2 columnas) */}
-        <div className="lg:col-span-2 space-y-6">
+      <form onSubmit={form.handleSubmit(handleSave)} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* COLUMNA IZQUIERDA - FORMULARIO (7 columnas) */}
+        <div className="lg:col-span-7 space-y-6">
           {/* Internal Code, Category y Empresa Tecnológica */}
           <div className="grid grid-cols-3 gap-4">
           <FormField
@@ -834,7 +835,7 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
               </TabsTrigger>
             </TabsList>
             
-            <div className="text-xs text-gray-600 mt-3 p-2 bg-blue-50 rounded border border-blue-200 mb-4">
+            <div className="text-xs text-slate-600 mt-3 p-2 bg-blue-50 rounded border border-blue-200 mb-4">
               💡 Cada idioma es <strong>completamente independiente</strong>. Las imágenes se copian en la traducción inicial, pero después puedes cambiarlas/eliminarlas por separado en cada idioma.
             </div>
 
@@ -1006,7 +1007,7 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
           <div className="space-y-3">
             {/* Adjuntos Existentes */}
             {loadingAttachments ? (
-              <div className="flex items-center gap-2 text-sm text-gray-600">
+              <div className="flex items-center gap-2 text-sm text-slate-600">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Cargando adjuntos...
               </div>
@@ -1024,7 +1025,7 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                       >
                         {attachment.file_name}
                       </a>
-                      <p className="text-xs text-gray-600">{(attachment.file_size / 1024 / 1024).toFixed(2)} MB</p>
+                      <p className="text-xs text-slate-600">{(attachment.file_size / 1024 / 1024).toFixed(2)} MB</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-xs bg-blue-100 px-2 py-1 rounded text-blue-700">
@@ -1036,7 +1037,6 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                         size="sm"
                         onClick={() => {
                           setExistingAttachments((prev) => prev.filter((att) => att.id !== attachment.id))
-                          // Registrar eliminación para procesar al guardar
                         }}
                         className="ml-2"
                         disabled={loading}
@@ -1057,7 +1057,7 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                   <div key={attachment.id} className="flex items-center justify-between bg-white p-2 rounded border border-green-100">
                     <div className="flex-1">
                       <p className="text-sm font-medium">{attachment.name}</p>
-                      <p className="text-xs text-gray-600">{(attachment.size / 1024 / 1024).toFixed(2)} MB</p>
+                      <p className="text-xs text-slate-600">{(attachment.size / 1024 / 1024).toFixed(2)} MB</p>
                     </div>
                     <Select
                       value={attachment.language}
@@ -1091,7 +1091,7 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
               </div>
             )}
 
-            <label className="flex items-center gap-2 px-4 py-3 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 transition">
+            <label className="flex items-center gap-2 px-4 py-3 border-2 border-dashed rounded-lg cursor-pointer hover:bg-slate-50 transition">
               <Upload className="h-4 w-4" />
               <span className="text-sm font-medium">Cargar Adjunto</span>
               <input
@@ -1116,63 +1116,127 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
             {uploadingFile && <Loader2 className="h-4 w-4 animate-spin inline" />}
           </div>
         </div>
+        </div>
 
-        {/* COLUMNA DERECHA - PREVIEW (1 columna, sticky) */}
-        <div className="hidden lg:block sticky top-4 h-fit">
-          <div className="bg-gradient-to-b from-gray-50 to-gray-100 rounded-lg border border-gray-200 shadow-lg overflow-hidden">
-            {/* Email Preview Container */}
-            <div className="bg-white">
-              {/* Email Header */}
-              <div className="bg-gray-900 text-white p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide">Preview del Mensaje</p>
-                <p className="text-sm text-gray-300">{DICT_LANG_PULSE[currentTab as keyof typeof DICT_LANG_PULSE]}</p>
-              </div>
+        {/* COLUMNA DERECHA - PREVIEW (5 columnas, sticky) */}
+        <div className="hidden lg:block lg:col-span-5 sticky top-6 h-fit">
+          {/* Selector de Modo Email/WhatsApp */}
+          <div className="flex gap-2 mb-4">
+            <Button
+              type="button"
+              variant={previewMode === "email" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setPreviewMode("email")}
+              className="gap-2 flex-1"
+            >
+              <Mail className="h-4 w-4" />
+              Email
+            </Button>
+            <Button
+              type="button"
+              variant={previewMode === "whatsapp" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setPreviewMode("whatsapp")}
+              className="gap-2 flex-1"
+            >
+              <MessageCircle className="h-4 w-4" />
+              WhatsApp
+            </Button>
+          </div>
 
-              {/* Email Content */}
-              <div className="p-4 space-y-3 max-h-[600px] overflow-y-auto">
-                {/* Display Name */}
-                <div className="border-b pb-2">
-                  <p className="text-xs font-semibold text-gray-600 mb-1">Nombre a mostrar:</p>
-                  <p className="text-sm font-semibold text-gray-900">{form.getValues(`display_name_${currentTab}`) || "—"}</p>
+          {/* Preview Container */}
+          {previewMode === "email" ? (
+            <div className="bg-slate-50/50 rounded-lg border border-slate-300 shadow-lg overflow-hidden">
+              {/* Email Client Mockup */}
+              <div className="bg-white rounded">
+                {/* Email Header */}
+                <div className="bg-slate-900 text-white px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide">Email Preview</p>
                 </div>
 
-                {/* Subject */}
-                <div className="border-b pb-2">
-                  <p className="text-xs font-semibold text-gray-600 mb-1">Asunto:</p>
-                  <p className="text-sm text-gray-700 font-medium">{form.getValues(`subject_${currentTab}`) || "—"}</p>
-                </div>
-
-                {/* Body Content */}
-                <div>
-                  <p className="text-xs font-semibold text-gray-600 mb-2">Cuerpo del Mensaje:</p>
-                  <div className="bg-white border rounded p-3 text-sm whitespace-pre-wrap break-words leading-relaxed text-gray-800">
-                    {form.getValues(`body_content_${currentTab}`) 
-                      ? renderPreview(form.getValues(`body_content_${currentTab}`))
-                      : "—"}
-                  </div>
-                </div>
-
-                {/* Attachments Info */}
-                {(existingAttachments.length > 0 || pendingAttachments.length > 0) && (
-                  <div className="border-t pt-2 mt-2">
-                    <p className="text-xs font-semibold text-gray-600 mb-1">
-                      📎 {existingAttachments.length + pendingAttachments.length} Adjuntos
+                {/* Email Content */}
+                <div className="p-4 space-y-3 max-h-[600px] overflow-y-auto">
+                  {/* Display Name */}
+                  <div className="border-b pb-2">
+                    <p className="text-xs font-semibold text-slate-600 mb-1">De:</p>
+                    <p className="text-sm font-semibold text-slate-900">
+                      {form.getValues(`display_name_${currentTab}`) || "—"}
                     </p>
                   </div>
-                )}
-              </div>
 
-              {/* Footer */}
-              <div className="bg-gray-50 px-4 py-2 border-t text-center text-xs text-gray-600">
-                Así verá el usuario este mensaje
+                  {/* Subject */}
+                  <div className="border-b pb-3">
+                    <p className="text-xs font-semibold text-slate-600 mb-1">Asunto:</p>
+                    <p className="text-sm font-semibold text-slate-900 break-words">
+                      {form.getValues(`subject_${currentTab}`) || "—"}
+                    </p>
+                  </div>
+
+                  {/* Body Content */}
+                  <div className="bg-white rounded p-4 text-sm whitespace-pre-wrap break-words leading-relaxed text-slate-800 border border-slate-200">
+                    {form.getValues(`body_content_${currentTab}`) 
+                      ? renderPreview(form.getValues(`body_content_${currentTab}`))
+                      : <span className="text-slate-400">El contenido aparecerá aquí...</span>}
+                  </div>
+
+                  {/* Attachments Badge */}
+                  {(existingAttachments.length > 0 || pendingAttachments.length > 0) && (
+                    <div className="bg-blue-50 border border-blue-200 rounded p-2">
+                      <p className="text-xs font-semibold text-blue-700">
+                        📎 {existingAttachments.length + pendingAttachments.length} {existingAttachments.length + pendingAttachments.length === 1 ? "Adjunto" : "Adjuntos"}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer */}
+                <div className="bg-slate-100 px-4 py-2 border-t border-slate-200 text-center">
+                  <p className="text-xs text-slate-600 font-medium">Así verá el usuario el email</p>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="bg-slate-50/50 rounded-lg border border-slate-300 shadow-lg p-4">
+              {/* WhatsApp Chat Mockup */}
+              <div className="bg-gradient-to-b from-slate-100 to-slate-50 rounded h-[650px] flex flex-col">
+                {/* Chat Header */}
+                <div className="bg-teal-600 text-white px-4 py-3 rounded-t">
+                  <p className="text-sm font-semibold">{form.getValues(`display_name_${currentTab}`) || "Contacto"}</p>
+                </div>
+
+                {/* Messages */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                  {/* Subject as first message */}
+                  <div className="flex justify-end">
+                    <div className="bg-teal-100 text-slate-900 rounded-lg rounded-tr-none px-3 py-2 max-w-xs">
+                      <p className="text-sm font-semibold break-words">
+                        {form.getValues(`subject_${currentTab}`) || "—"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Body Content as messages */}
+                  <div className="flex justify-end">
+                    <div className="bg-teal-100 text-slate-900 rounded-lg rounded-tr-none px-3 py-2 max-w-xs text-sm whitespace-pre-wrap break-words">
+                      {form.getValues(`body_content_${currentTab}`) 
+                        ? renderPreview(form.getValues(`body_content_${currentTab}`))
+                        : <span className="text-slate-400">El contenido aparecerá aquí...</span>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="bg-slate-200 px-4 py-2 text-center border-t">
+                  <p className="text-xs text-slate-600 font-medium">Así verá el usuario el mensaje WhatsApp</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
         {/* Actions */}
-        <div className="lg:col-span-2 flex gap-2 justify-end pt-4 border-t">
+        <div className="lg:col-span-7 flex gap-2 justify-end pt-4 border-t">
           <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
             Cancelar
           </Button>
