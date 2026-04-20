@@ -27,82 +27,98 @@ const newlinesToBr = (text: string): string => {
 }
 
 
-// Función para renderizar preview del contenido - interpreta [BR], [B], [I], [U], [IMG]
+// Función para renderizar preview del contenido
+// Soporta tanto \n como [BR], y procesa [B], [I], [U], [IMG], {{variables}}
 const renderPreview = (content: string): React.ReactNode => {
-  // Primero, dividir por [BR] para crear párrafos/líneas
-  const brParts = content.split(/(\[BR\])/g)
-  
-  const parts: React.ReactNode[] = []
-  let componentKey = 0
+  // Normalizar: convertir \n a [BR] si existen, luego split
+  const normalized = content.replaceAll("\n", "[BR]")
+  const lines = normalized.split("[BR]")
 
-  for (const part of brParts) {
-    if (part === "[BR]") {
-      parts.push(<br key={`br-${componentKey++}`} />)
-    } else if (part.trim()) {
-      // Procesar etiquetas de formato dentro de cada línea
-      const formattedLine = renderFormattedText(part, componentKey)
-      parts.push(<span key={`line-${componentKey++}`}>{formattedLine}</span>)
+  const result: React.ReactNode[] = []
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    
+    // Renderizar la línea con formato
+    if (line || i === 0) {
+      // Incluso líneas vacías pueden contener imágenes
+      const formattedLine = renderFormattedLine(line, i)
+      result.push(
+        <div key={`line-${i}`} className="whitespace-pre-wrap break-words">
+          {formattedLine}
+        </div>
+      )
+    }
+
+    // Agregar <br /> después de cada línea (excepto la última)
+    if (i < lines.length - 1) {
+      result.push(<br key={`br-${i}`} />)
     }
   }
 
-  return parts
+  return result
 }
 
-// Renderizar texto con etiquetas de formato: [B], [I], [U], [IMG]
-const renderFormattedText = (text: string, baseKey: number): React.ReactNode[] => {
+// Renderizar una línea individual procesando etiquetas
+const renderFormattedLine = (line: string, baseKey: number): React.ReactNode[] => {
   const parts: React.ReactNode[] = []
   let lastIndex = 0
   let componentCounter = 0
-  
+
   // Regex que captura: [B]...[/B], [I]...[/I], [U]...[/U], [IMG]...[/IMG], {{variables}}
-  const regex = /\[B\](.*?)\[\/B\]|\[I\](.*?)\[\/I\]|\[U\](.*?)\[\/U\]|\[IMG\](.*?)\[\/IMG\]|\{\{[^}]+\}\}/g
+  // IMPORTANTE: [IMG] se captura primero para no romper URLs que contengan otros tags
+  const regex = /\[IMG\](.*?)\[\/IMG\]|\[B\](.*?)\[\/B\]|\[I\](.*?)\[\/I\]|\[U\](.*?)\[\/U\]|\{\{[^}]+\}\}/g
   let match
 
-  while ((match = regex.exec(text)) !== null) {
+  while ((match = regex.exec(line)) !== null) {
     // Agregar texto plano antes del match
     if (match.index > lastIndex) {
-      const plainText = text.substring(lastIndex, match.index)
+      const plainText = line.substring(lastIndex, match.index)
       parts.push(plainText)
     }
 
-    const key = `${baseKey}-format-${componentCounter++}`
+    const key = `line-${baseKey}-elem-${componentCounter++}`
 
     if (match[1] !== undefined) {
-      // [B]...[/B]
-      parts.push(
-        <strong key={key} className="font-bold">
-          {match[1]}
-        </strong>
-      )
-    } else if (match[2] !== undefined) {
-      // [I]...[/I]
-      parts.push(
-        <em key={key} className="italic">
-          {match[2]}
-        </em>
-      )
-    } else if (match[3] !== undefined) {
-      // [U]...[/U]
-      parts.push(
-        <u key={key} className="underline">
-          {match[3]}
-        </u>
-      )
-    } else if (match[4] !== undefined) {
-      // [IMG]...[/IMG]
+      // [IMG]url[/IMG] - renderizar imagen
+      const imgUrl = match[1]
       parts.push(
         <img
           key={key}
-          src={match[4]}
-          alt="Imagen del template"
-          className="max-w-full max-h-48 rounded my-2 block"
+          src={imgUrl}
+          alt="Imagen del mensaje"
+          className="max-w-full max-h-80 rounded my-2 block"
+          onError={(e) => {
+            console.warn("[v0] Error cargando imagen:", imgUrl)
+          }}
         />
       )
-    } else if (match[0].startsWith("{{")) {
+    } else if (match[2] !== undefined) {
+      // [B]text[/B]
+      parts.push(
+        <strong key={key} className="font-bold">
+          {match[2]}
+        </strong>
+      )
+    } else if (match[3] !== undefined) {
+      // [I]text[/I]
+      parts.push(
+        <em key={key} className="italic">
+          {match[3]}
+        </em>
+      )
+    } else if (match[4] !== undefined) {
+      // [U]text[/U]
+      parts.push(
+        <u key={key} className="underline">
+          {match[4]}
+        </u>
+      )
+    } else if (match[5] !== undefined) {
       // {{variable}}
       parts.push(
         <span key={key} className="bg-yellow-100 px-1 rounded font-mono text-sm">
-          {match[0]}
+          {match[5]}
         </span>
       )
     }
@@ -111,11 +127,11 @@ const renderFormattedText = (text: string, baseKey: number): React.ReactNode[] =
   }
 
   // Agregar texto plano restante
-  if (lastIndex < text.length) {
-    parts.push(text.substring(lastIndex))
+  if (lastIndex < line.length) {
+    parts.push(line.substring(lastIndex))
   }
 
-  return parts.length > 0 ? parts : [text]
+  return parts.length > 0 ? parts : [line || " "]
 }
 
 
@@ -198,7 +214,6 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
   const [translating, setTranslating] = useState(false)
   const [techCompanies, setTechCompanies] = useState<Array<{ id: string; name: string }>>([])
   const [loadingCompanies, setLoadingCompanies] = useState(true)
-  const [previewMode, setPreviewMode] = useState(false)
 
   // Adjuntos del template (documentos con selector de idioma)
   const [pendingAttachments, setPendingAttachments] = useState<Array<{
@@ -676,9 +691,11 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSave)} className="space-y-6">
-        {/* Internal Code, Category y Empresa Tecnológica */}
-        <div className="grid grid-cols-3 gap-4">
+      <form onSubmit={form.handleSubmit(handleSave)} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* COLUMNA IZQUIERDA - FORMULARIO (2 columnas) */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Internal Code, Category y Empresa Tecnológica */}
+          <div className="grid grid-cols-3 gap-4">
           <FormField
             control={form.control}
             name="internal_code"
@@ -953,40 +970,6 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
           </Tabs>
         </div>
 
-        {/* Preview Section */}
-        <div className="border-t pt-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setPreviewMode(!previewMode)}
-            className="gap-2"
-          >
-            {previewMode ? "Ocultar" : "Ver"} Preview
-          </Button>
-
-          {previewMode && (
-            <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
-              <h4 className="font-semibold mb-2 text-sm">Preview - {currentTab === "es" ? "Español" : currentTab === "en" ? "Inglés" : "Portugués"}</h4>
-              <div className="space-y-3 text-sm">
-                <div>
-                  <p className="text-xs text-gray-600 font-medium mb-1">Display Name:</p>
-                  <p className="bg-white p-2 rounded">{form.getValues(`display_name_${currentTab}`)}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 font-medium mb-1">Subject:</p>
-                  <p className="bg-white p-2 rounded">{form.getValues(`subject_${currentTab}`)}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 font-medium mb-1">Body Content:</p>
-                  <div className="bg-white p-2 rounded space-y-1 whitespace-pre-wrap break-words">
-                    {renderPreview(form.getValues(`body_content_${currentTab}`))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
         {/* Attachments Management */}
         <div className="border-t pt-4 space-y-4">
           <h3 className="font-semibold">Gestión de Adjuntos</h3>
@@ -1106,8 +1089,62 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
           </div>
         </div>
 
+        {/* COLUMNA DERECHA - PREVIEW (1 columna, sticky) */}
+        <div className="hidden lg:block sticky top-4 h-fit">
+          <div className="bg-gradient-to-b from-gray-50 to-gray-100 rounded-lg border border-gray-200 shadow-lg overflow-hidden">
+            {/* Email Preview Container */}
+            <div className="bg-white">
+              {/* Email Header */}
+              <div className="bg-gray-900 text-white p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide">Preview del Mensaje</p>
+                <p className="text-sm text-gray-300">{DICT_LANG_PULSE[currentTab as keyof typeof DICT_LANG_PULSE]}</p>
+              </div>
+
+              {/* Email Content */}
+              <div className="p-4 space-y-3 max-h-[600px] overflow-y-auto">
+                {/* Display Name */}
+                <div className="border-b pb-2">
+                  <p className="text-xs font-semibold text-gray-600 mb-1">Nombre a mostrar:</p>
+                  <p className="text-sm font-semibold text-gray-900">{form.getValues(`display_name_${currentTab}`) || "—"}</p>
+                </div>
+
+                {/* Subject */}
+                <div className="border-b pb-2">
+                  <p className="text-xs font-semibold text-gray-600 mb-1">Asunto:</p>
+                  <p className="text-sm text-gray-700 font-medium">{form.getValues(`subject_${currentTab}`) || "—"}</p>
+                </div>
+
+                {/* Body Content */}
+                <div>
+                  <p className="text-xs font-semibold text-gray-600 mb-2">Cuerpo del Mensaje:</p>
+                  <div className="bg-white border rounded p-3 text-sm whitespace-pre-wrap break-words leading-relaxed text-gray-800">
+                    {form.getValues(`body_content_${currentTab}`) 
+                      ? renderPreview(form.getValues(`body_content_${currentTab}`))
+                      : "—"}
+                  </div>
+                </div>
+
+                {/* Attachments Info */}
+                {(existingAttachments.length > 0 || pendingAttachments.length > 0) && (
+                  <div className="border-t pt-2 mt-2">
+                    <p className="text-xs font-semibold text-gray-600 mb-1">
+                      📎 {existingAttachments.length + pendingAttachments.length} Adjuntos
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="bg-gray-50 px-4 py-2 border-t text-center text-xs text-gray-600">
+                Así verá el usuario este mensaje
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
         {/* Actions */}
-        <div className="flex gap-2 justify-end pt-4 border-t">
+        <div className="lg:col-span-2 flex gap-2 justify-end pt-4 border-t">
           <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
             Cancelar
           </Button>
