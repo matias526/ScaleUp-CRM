@@ -1483,32 +1483,49 @@ export default function OpportunityCreateForm() {
                     </div>
                   </div>
 
-                  {/* Value and Close Date - Elegant Franja */}
-                  <div className="grid grid-cols-2 gap-6 py-6 border-t border-b border-gray-100">
-                    {/* Estimated Value - Green Badge */}
-                    <div className="flex items-center gap-4">
-                      <div className="flex-shrink-0">
-                        <div className="flex items-center justify-center h-12 w-12 rounded-lg bg-emerald-100">
-                          <DollarSign className="h-6 w-6 text-emerald-600" />
+                  {/* Value and Close Date - Elegant Franja - Only for ScaleUp users */}
+                  {isScaleUpUser && (
+                    <div className="grid grid-cols-2 gap-6 py-6 border-t border-b border-gray-100">
+                      {/* Estimated Value - Green Badge */}
+                      <div className="flex items-center gap-4">
+                        <div className="flex-shrink-0">
+                          <div className="flex items-center justify-center h-12 w-12 rounded-lg bg-emerald-100">
+                            <DollarSign className="h-6 w-6 text-emerald-600" />
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.form.summary.value")}</p>
+                          <p className="text-xl font-bold text-emerald-600 mt-1">USD {form.watch("estimated_value") || "0"}</p>
                         </div>
                       </div>
-                      <div>
-                        <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.form.summary.value")}</p>
-                        <p className="text-xl font-bold text-emerald-600 mt-1">USD {form.watch("estimated_value") || "0"}</p>
-                      </div>
-                    </div>
 
-                    {/* Close Date */}
-                    <div className="flex items-center gap-4">
-                      <div className="flex-shrink-0">
-                        <Calendar className="h-4 w-4 text-gray-400" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.form.summary.closeDate")}</p>
-                        <p className="text-sm font-semibold text-gray-900 mt-1">{form.watch("estimated_close_date") || <span className="text-gray-400">N/A</span>}</p>
+                      {/* Close Date */}
+                      <div className="flex items-center gap-4">
+                        <div className="flex-shrink-0">
+                          <Calendar className="h-4 w-4 text-gray-400" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.form.summary.closeDate")}</p>
+                          <p className="text-sm font-semibold text-gray-900 mt-1">{form.watch("estimated_close_date") || <span className="text-gray-400">N/A</span>}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
+
+                  {/* Close Date Only - For Partner users */}
+                  {!isScaleUpUser && (
+                    <div className="py-6 border-t border-b border-gray-100">
+                      <div className="flex items-center gap-4">
+                        <div className="flex-shrink-0">
+                          <Calendar className="h-4 w-4 text-gray-400" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.form.summary.closeDate")}</p>
+                          <p className="text-sm font-semibold text-gray-900 mt-1">{form.watch("estimated_close_date") || <span className="text-gray-400">N/A</span>}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Prospect Section - Card Blanca with Border */}
                   {form.watch("is_prospect") && form.watch("prospect_partner_data")?.name && (

@@ -1503,33 +1503,37 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                     )}
                   </div>
 
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-1 flex items-center">
-                      <DollarSign className="h-4 w-4 mr-1" />
-                      Valor estimado
-                    </h3>
-                    {editMode.estimated_value ? (
-                      <InlineEdit
-                        value={opportunity?.estimated_value}
-                        onSave={(value) => updateField("estimated_value", value)}
-                        isEditing={true}
-                        onEdit={() => {}}
-                        onCancel={() => cancelEditing("estimated_value")}
-                        type="number"
-                        placeholder="Valor estimado"
-                      />
-                    ) : (
-                      <InlineEdit
-                        value={opportunity?.estimated_value}
-                        onSave={(value) => updateField("estimated_value", value)}
-                        isEditing={false}
-                        onEdit={() => startEditing("estimated_value")}
-                        onCancel={() => {}}
-                        type="number"
-                        placeholder="No especificado"
-                      />
-                    )}
-                  </div>
+                  {/* Estimated Value - Only for ScaleUp users */}
+                  {(currentUser?.role_id === "3ddc89f1-1478-46b4-8a3f-8e42033a0b83" ||
+                    currentUser?.role_id === "ff536fc8-8786-4be5-acf2-aee27b3d9924") && (
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 mb-1 flex items-center">
+                        <DollarSign className="h-4 w-4 mr-1" />
+                        Valor estimado
+                      </h3>
+                      {editMode.estimated_value ? (
+                        <InlineEdit
+                          value={opportunity?.estimated_value}
+                          onSave={(value) => updateField("estimated_value", value)}
+                          isEditing={true}
+                          onEdit={() => {}}
+                          onCancel={() => cancelEditing("estimated_value")}
+                          type="number"
+                          placeholder="Valor estimado"
+                        />
+                      ) : (
+                        <InlineEdit
+                          value={opportunity?.estimated_value}
+                          onSave={(value) => updateField("estimated_value", value)}
+                          isEditing={false}
+                          onEdit={() => startEditing("estimated_value")}
+                          onCancel={() => {}}
+                          type="number"
+                          placeholder="No especificado"
+                        />
+                      )}
+                    </div>
+                  )}
 
                   <div>
                     <h3 className="text-sm font-medium text-gray-500 mb-1 flex items-center">
