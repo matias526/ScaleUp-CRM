@@ -17,43 +17,61 @@ export async function POST(req: Request) {
       throw new Error("GROQ_API_KEY no está configurado en las variables de entorno")
     }
 
-    const prompt = `Translate the following content to ${targetLanguage}. 
-Keep ONLY the structure and placeholders intact - do not modify anything inside __PULSEVAR_* or __PULSEFMT_* markers.
+    const prompt = `You are a translation expert. Translate the following content to ${targetLanguage}.
 
-Content:
+CRITICAL RULES:
+- Keep ONLY the structure and placeholders intact
+- Do NOT modify anything inside __PULSEVAR_* or __PULSEFMT_* markers
+- Respond STRICTLY with valid JSON, no additional text
+- Ensure all newlines within strings are replaced with spaces
+- Escape all special characters properly
+
+Content to translate:
 - display_name: "${texts.display_name}"
 - subject: "${texts.subject}"
 - body_content: "${texts.body_content}"
 
-Respond ONLY with valid JSON in this exact format:
-{
-  "display_name": "translated display name",
-  "subject": "translated subject",
-  "body_content": "translated body content"
-}`
+Respond with ONLY this JSON structure (no markdown, no extra text):
+{"display_name":"translated name","subject":"translated subject","body_content":"translated content"}`
 
-    console.log("[v0] Prompt enviado a Groq:", prompt)
+    console.log("[v0] Prompt enviado a Groq")
 
     const { text } = await generateText({
       model: groq("llama-3.3-70b-versatile"),
       prompt,
-      temperature: 0.3,
+      temperature: 0.2,
     })
-
-    console.log("[v0] Respuesta de Groq:", text)
 
     if (!text) {
       throw new Error("Respuesta vacía de Groq")
     }
 
-    // Parsear la respuesta JSON
-    const jsonMatch = text.match(/\{[\s\S]*\}/)
+    console.log("[v0] Respuesta bruta de Groq:", text.substring(0, 200))
+
+    // Limpiar y trimear la respuesta
+    let cleanedText = text.trim()
+
+    // Remover markdown code blocks si existen
+    cleanedText = cleanedText.replace(/```json\n?/g, "").replace(/```\n?/g, "")
+
+    // Extraer el JSON (por si hay texto adicional)
+    const jsonMatch = cleanedText.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
-      throw new Error(`Invalid JSON response from Groq. Response: ${text}`)
+      throw new Error(`No valid JSON found in response: ${cleanedText.substring(0, 300)}`)
     }
 
-    const translations = JSON.parse(jsonMatch[0])
-    console.log("[v0] Traducciones parseadas:", translations)
+    const jsonString = jsonMatch[0].trim()
+
+    // Parsear el JSON
+    let translations
+    try {
+      translations = JSON.parse(jsonString)
+    } catch (parseError) {
+      console.error("[v0] Error parseando JSON:", jsonString)
+      throw new Error(`Invalid JSON format: ${parseError instanceof Error ? parseError.message : "Unknown error"}`)
+    }
+
+    console.log("[v0] Traducciones parseadas exitosamente")
 
     return Response.json({
       translations,
