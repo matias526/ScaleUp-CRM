@@ -1,7 +1,7 @@
-import { createGroqClient } from "@ai-sdk/groq"
+import { createGroq } from "@ai-sdk/groq"
 import { generateText } from "ai"
 
-const groq = createGroqClient({
+const groq = createGroq({
   apiKey: process.env.GROQ_API_KEY,
 })
 
@@ -48,8 +48,14 @@ Respond ONLY with valid JSON in this exact format:
     })
   } catch (error) {
     console.error("[v0] Error en traducción:", error)
+    // Retornar JSON válido incluso en error para que el frontend no se quede colgado
     return Response.json(
       {
+        translations: {
+          display_name: "",
+          subject: "",
+          body_content: "",
+        },
         error: error instanceof Error ? error.message : "Translation error",
       },
       { status: 500 },

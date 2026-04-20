@@ -13,6 +13,7 @@ import { Loader2 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import SafeEditor from "./safe-editor"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { DICT_LANG_PULSE } from "@/lib/constants/dict-lang-pulse"
 
 // Validación más flexible: solo requiere español, el resto puede estar vacío inicialmente
 const pulseTemplateSchema = z.object({
@@ -60,10 +61,19 @@ interface PulseTemplateFormProps {
 }
 
 export default function PulseTemplateForm({ template, onSubmit, onCancel }: PulseTemplateFormProps) {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const [loading, setLoading] = useState(false)
   const [currentTab, setCurrentTab] = useState("es")
   const [translating, setTranslating] = useState(false)
+
+  // Helper para traducción local usando diccionario
+  const tPulse = (key: string, defaultValue: string = ""): string => {
+    const dict = DICT_LANG_PULSE[key as keyof typeof DICT_LANG_PULSE]
+    if (dict) {
+      return dict[currentLanguage as keyof typeof dict] || dict.es || defaultValue
+    }
+    return defaultValue
+  }
 
   const defaultValues = {
     internal_code: template?.internal_code || "",
