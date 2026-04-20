@@ -21,6 +21,7 @@ interface PulseTemplate {
   id: string
   internal_code: string
   category: string
+  tech_company_id: string | null
   is_active: boolean
   created_at: string
   updated_at: string
@@ -57,6 +58,7 @@ export default function PulseTemplateManager() {
           id,
           internal_code,
           category,
+          tech_company_id,
           is_active,
           created_at,
           updated_at,

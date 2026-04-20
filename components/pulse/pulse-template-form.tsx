@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useTranslation } from "@/hooks/use-translations"
 import { supabase } from "@/lib/supabase/client"
 import { useForm } from "react-hook-form"
@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import SafeEditor from "./safe-editor"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DICT_LANG_PULSE } from "@/lib/constants/dict-lang-pulse"
+import { getActiveTechCompaniesClient } from "@/lib/services/tech-company-service-client"
 
 // Validación más flexible: solo requiere español, el resto puede estar vacío inicialmente
 const pulseTemplateSchema = z.object({
@@ -23,6 +24,7 @@ const pulseTemplateSchema = z.object({
     .min(3, "Mínimo 3 caracteres")
     .regex(/^[A-Z0-9_]+$/, "Solo mayúsculas, números y guiones bajos"),
   category: z.string().min(1, "La categoría es requerida"),
+  tech_company_id: z.string().optional().nullable(),
   display_name_es: z.string().min(1, "El nombre en español es requerido"),
   subject_es: z.string().min(1, "El asunto en español es requerido"),
   body_content_es: z.string().min(1, "El contenido en español es requerido"),
@@ -48,6 +50,7 @@ interface PulseTemplateFormProps {
     id: string
     internal_code: string
     category: string
+    tech_company_id: string | null
     translations: {
       language_code: string
       display_name: string
@@ -64,6 +67,8 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
   const [loading, setLoading] = useState(false)
   const [currentTab, setCurrentTab] = useState("es")
   const [translating, setTranslating] = useState(false)
+  const [techCompanies, setTechCompanies] = useState<Array<{ id: string; name: string }>>([])
+  const [loadingCompanies, setLoadingCompanies] = useState(true)
 
   // Helper para traducción local usando diccionario
   const tPulse = (key: string, defaultValue: string = ""): string => {
@@ -76,7 +81,8 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
 
   const defaultValues = {
     internal_code: template?.internal_code || "",
-    category: template?.category || "opportunities",
+    category: template?.category || "metodologia",
+    tech_company_id: template?.tech_company_id || null,
     display_name_es: template?.translations.find((tr) => tr.language_code === "es")?.display_name || "",
     subject_es: template?.translations.find((tr) => tr.language_code === "es")?.subject || "",
     body_content_es: template?.translations.find((tr) => tr.language_code === "es")?.body_content || "",
@@ -93,6 +99,23 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
     defaultValues,
     mode: "onChange",
   })
+
+  // Cargar tech_companies activas al montar el componente
+  useEffect(() => {
+    const fetchTechCompanies = async () => {
+      try {
+        setLoadingCompanies(true)
+        const companies = await getActiveTechCompaniesClient()
+        setTechCompanies(companies)
+      } catch (error) {
+        console.error("[v0] Error al cargar tech_companies:", error)
+      } finally {
+        setLoadingCompanies(false)
+      }
+    }
+
+    fetchTechCompanies()
+  }, [])
 
   // Función mejorada para proteger variables y formato
   const protectContent = (text: string) => {
@@ -295,6 +318,7 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
             {
               internal_code: data.internal_code,
               category: data.category,
+              tech_company_id: data.tech_company_id || null,
               is_active: true,
             },
           ])
@@ -358,8 +382,8 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSave)} className="space-y-6">
-        {/* Internal Code y Category */}
-        <div className="grid grid-cols-2 gap-4">
+        {/* Internal Code, Category y Empresa Tecnológica */}
+        <div className="grid grid-cols-3 gap-4">
           <FormField
             control={form.control}
             name="internal_code"
@@ -400,6 +424,37 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                     ))}
                   </SelectContent>
                 </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="tech_company_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Empresa Tecnológica (opcional)</FormLabel>
+                <Select
+                  value={field.value || "none"}
+                  onValueChange={(value) => field.onChange(value === "none" ? null : value)}
+                  disabled={loading || loadingCompanies}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona una empresa" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="none">Sin empresa</SelectItem>
+                    {techCompanies.map((company) => (
+                      <SelectItem key={company.id} value={company.id}>
+                        {company.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormDescription>Aplica este template solo a una empresa específica</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
