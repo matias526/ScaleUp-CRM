@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useTranslation } from "@/hooks/use-translations"
 import { supabase } from "@/lib/supabase/client"
 import { useForm } from "react-hook-form"
@@ -10,13 +10,15 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Loader2, X } from "lucide-react"
+import { Loader2 } from "lucide-react"
+import MultiLanguageEditor from "./multi-language-editor"
 
 const pulseTemplateSchema = z.object({
   name: z.string().min(1, "El nombre es requerido").min(3, "El nombre debe tener al menos 3 caracteres"),
   description: z.string().optional().nullable(),
-  content: z.string().min(1, "El contenido es requerido").min(5, "El contenido debe tener al menos 5 caracteres"),
-  variables: z.array(z.string()).optional().nullable(),
+  content_es: z.string().min(1, "El contenido en español es requerido"),
+  content_en: z.string().min(1, "El contenido en inglés es requerido"),
+  content_pt: z.string().min(1, "El contenido en portugués es requerido"),
 })
 
 type PulseTemplateFormData = z.infer<typeof pulseTemplateSchema>
@@ -26,8 +28,9 @@ interface PulseTemplateFormProps {
     id: string
     name: string
     description: string | null
-    content: string
-    variables: string[] | null
+    content_es: string
+    content_en: string
+    content_pt: string
   } | null
   onSubmit: () => void
   onCancel: () => void
@@ -36,52 +39,52 @@ interface PulseTemplateFormProps {
 export default function PulseTemplateForm({ template, onSubmit, onCancel }: PulseTemplateFormProps) {
   const { t } = useTranslation()
   const [loading, setLoading] = useState(false)
-  const [newVariable, setNewVariable] = useState("")
-  const [variables, setVariables] = useState<string[]>(template?.variables || [])
+  const [multiLangContent, setMultiLangContent] = useState({
+    es: template?.content_es || "",
+    en: template?.content_en || "",
+    pt: template?.content_pt || "",
+  })
 
   const form = useForm<PulseTemplateFormData>({
     resolver: zodResolver(pulseTemplateSchema),
     defaultValues: {
       name: template?.name || "",
       description: template?.description || "",
-      content: template?.content || "",
-      variables: template?.variables || [],
+      content_es: template?.content_es || "",
+      content_en: template?.content_en || "",
+      content_pt: template?.content_pt || "",
     },
   })
-
-  const handleAddVariable = () => {
-    if (newVariable.trim() && !variables.includes(newVariable)) {
-      setVariables([...variables, newVariable])
-      form.setValue("variables", [...variables, newVariable])
-      setNewVariable("")
-    }
-  }
-
-  const handleRemoveVariable = (varToRemove: string) => {
-    const updated = variables.filter((v) => v !== varToRemove)
-    setVariables(updated)
-    form.setValue("variables", updated)
-  }
 
   const handleSave = async (data: PulseTemplateFormData) => {
     try {
       setLoading(true)
+
       const payload = {
-        ...data,
-        variables: variables.length > 0 ? variables : null,
+        name: data.name,
+        description: data.description || null,
+        content_es: multiLangContent.es,
+        content_en: multiLangContent.en,
+        content_pt: multiLangContent.pt,
       }
+
+      console.log("[v0] Guardando template:", payload)
 
       if (template?.id) {
         // Update existing
         const { error } = await supabase
-          .from("pulse_templates")
+          .from("pulse_message_templates")
           .update(payload)
           .eq("id", template.id)
         if (error) throw error
+        console.log("[v0] Template actualizado")
       } else {
         // Create new
-        const { error } = await supabase.from("pulse_templates").insert([payload])
+        const { error } = await supabase
+          .from("pulse_message_templates")
+          .insert([payload])
         if (error) throw error
+        console.log("[v0] Template creado")
       }
 
       onSubmit()
@@ -94,7 +97,7 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSave)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSave)} className="space-y-6">
         {/* Name */}
         <FormField
           control={form.control}
@@ -103,8 +106,11 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
             <FormItem>
               <FormLabel>{t("pulse.template_name", "Nombre del Template")}</FormLabel>
               <FormControl>
-                <Input placeholder="Mi Template Pulse" {...field} />
+                <Input placeholder="Ej: Bienvenida Oportunidad Tech" {...field} />
               </FormControl>
+              <FormDescription>
+                {t("pulse.name_hint", "Un nombre descriptivo para identificar rápidamente el template")}
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -118,78 +124,40 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
             <FormItem>
               <FormLabel>{t("pulse.template_description", "Descripción (opcional)")}</FormLabel>
               <FormControl>
-                <Textarea placeholder="Descripción del template..." {...field} value={field.value || ""} />
-              </FormControl>
-              <FormDescription>{t("pulse.description_hint", "Describe qué hace este template")}</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Content */}
-        <FormField
-          control={form.control}
-          name="content"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t("pulse.template_content", "Contenido del Template")}</FormLabel>
-              <FormControl>
                 <Textarea 
-                  placeholder="Contenido del template con {{variables}}" 
+                  placeholder="Describe cuándo y cómo se usa este template..." 
                   {...field} 
-                  className="font-mono"
-                  rows={8}
+                  value={field.value || ""} 
+                  className="resize-none"
+                  rows={2}
                 />
               </FormControl>
               <FormDescription>
-                {t("pulse.content_hint", "Usa {{variable}} para reemplazos dinámicos")}
+                {t("pulse.description_hint", "Proporciona contexto para otros usuarios")}
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        {/* Variables */}
-        <FormItem>
-          <FormLabel>{t("pulse.variables", "Variables disponibles")}</FormLabel>
-          <div className="flex gap-2 mb-2">
-            <Input
-              placeholder="{{nombre_variable}}"
-              value={newVariable}
-              onChange={(e) => setNewVariable(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleAddVariable()}
-            />
-            <Button type="button" onClick={handleAddVariable} variant="outline">
-              {t("common.add", "Agregar")}
-            </Button>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {variables.map((variable) => (
-              <span
-                key={variable}
-                className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm flex items-center gap-2"
-              >
-                {variable}
-                <button
-                  type="button"
-                  onClick={() => handleRemoveVariable(variable)}
-                  className="hover:text-blue-900"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </span>
-            ))}
-          </div>
-        </FormItem>
+        {/* Multi-Language Content Editor */}
+        <div>
+          <FormLabel className="block mb-4">{t("pulse.template_content", "Contenido del Template")}</FormLabel>
+          <MultiLanguageEditor
+            content={multiLangContent}
+            onChange={setMultiLangContent}
+            disabled={loading}
+          />
+        </div>
 
         {/* Actions */}
-        <div className="flex gap-2 justify-end pt-4">
+        <div className="flex gap-2 justify-end pt-4 border-t">
           <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
             {t("common.cancel", "Cancelar")}
           </Button>
           <Button type="submit" disabled={loading}>
             {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            {template ? t("common.save", "Guardar") : t("common.create", "Crear")}
+            {template ? t("common.save", "Guardar Cambios") : t("common.create", "Crear Template")}
           </Button>
         </div>
       </form>
