@@ -280,6 +280,12 @@ export function Sidebar() {
       icon: Zap,
       labelKey: "sidebar.pulse",
       adminOrMarketing: true,
+      settingsSubItems: [
+        {
+          href: "/dashboard/settings/pulse-templates",
+          labelKey: "sidebar.pulse_templates",
+        },
+      ],
     },
     {
       href: "/dashboard/settings",
