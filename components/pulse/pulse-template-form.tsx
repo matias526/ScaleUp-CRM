@@ -9,55 +9,114 @@ import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Loader2, Upload, X, Image as ImageIcon } from "lucide-react"
+import { Loader2, Upload, X } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import SafeEditor from "./safe-editor"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DICT_LANG_PULSE } from "@/lib/constants/dict-lang-pulse"
 import { getActiveTechCompaniesClient } from "@/lib/services/tech-company-service-client"
-import { Checkbox } from "@/components/ui/checkbox"
 
-  // Convertir [BR] a saltos de línea reales para edición
-const brToNewlines = (text: string): string => {
-  return text.replaceAll("[BR]", "\n")
-}
+  // Función para renderizar preview del contenido
+  const renderPreview = (content: string): React.ReactNode[] => {
+    const lines = content.split(/\[BR\]/)
+    return lines.map((line, idx) => (
+      <div key={idx} className="mb-2 last:mb-0">
+        {renderLine(line)}
+      </div>
+    ))
+  }
+
+  // Renderizar una línea procesando tags
+  const renderLine = (line: string): React.ReactNode[] => {
+    const parts: React.ReactNode[] = []
+    let lastIndex = 0
+    const regex = /\[B\](.*?)\[\/B\]|\[I\](.*?)\[\/I\]|\[U\](.*?)\[\/U\]|\[IMG\](.*?)\[\/IMG\]|\{\{[^}]+\}\}/g
+    let match
+
+    while ((match = regex.exec(line)) !== null) {
+      // Agregar texto antes del match
+      if (match.index > lastIndex) {
+        parts.push(line.substring(lastIndex, match.index))
+      }
+
+      if (match[1] !== undefined) {
+        // [B]...[/B]
+        parts.push(
+          <strong key={`b-${match.index}`} className="font-bold">
+            {match[1]}
+          </strong>
+        )
+      } else if (match[2] !== undefined) {
+        // [I]...[/I]
+        parts.push(
+          <em key={`i-${match.index}`} className="italic">
+            {match[2]}
+          </em>
+        )
+      } else if (match[3] !== undefined) {
+        // [U]...[/U]
+        parts.push(
+          <u key={`u-${match.index}`} className="underline">
+            {match[3]}
+          </u>
+        )
+      } else if (match[4] !== undefined) {
+        // [IMG]...[/IMG]
+        parts.push(
+          <img
+            key={`img-${match.index}`}
+            src={match[4]}
+            alt="Imagen del template"
+            className="max-w-full max-h-48 rounded my-2"
+          />
+        )
+      } else if (match[0].startsWith("{{")) {
+        // {{variable}}
+        parts.push(
+          <span key={`var-${match.index}`} className="bg-yellow-100 px-1 rounded font-mono text-sm">
+            {match[0]}
+          </span>
+        )
+      }
+
+      lastIndex = regex.lastIndex
+    }
+
+    // Agregar texto restante
+    if (lastIndex < line.length) {
+      parts.push(line.substring(lastIndex))
+    }
+
+    return parts.length > 0 ? parts : [line]
+  }
 
 // Convertir saltos de línea reales a [BR] para almacenamiento
 const newlinesToBr = (text: string): string => {
   return text.replaceAll("\n", "[BR]")
 }
 
-// Función para procesar y validar imágenes (sin subir)
-const processImageFile = async (file: File): Promise<{ 
+// Función para procesar y validar archivos adjuntos (cualquier tipo)
+const processAttachmentFile = async (file: File): Promise<{ 
   id: string
   file: File
-  blobUrl: string
   name: string
   size: number
 } | null> => {
   try {
-    if (!file.type.startsWith("image/")) {
-      alert("Solo se permiten archivos de imagen")
+    // Validar tamaño máximo 50MB para documentos
+    if (file.size > 50 * 1024 * 1024) {
+      alert("El archivo no debe superar 50MB")
       return null
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      alert("El archivo no debe superar 5MB")
-      return null
-    }
-
-    // Crear blob URL temporal para preview (no se sube hasta guardar)
-    const blobUrl = URL.createObjectURL(file)
-    
     return {
       id: crypto.randomUUID(),
       file,
-      blobUrl,
       name: file.name,
       size: file.size,
     }
   } catch (error) {
-    console.error("[v0] Error procesando imagen:", error)
+    console.error("[v0] Error procesando archivo:", error)
     return null
   }
 }
@@ -71,7 +130,6 @@ const pulseTemplateSchema = z.object({
     .regex(/^[A-Z0-9_]+$/, "Solo mayúsculas, números y guiones bajos"),
   category: z.string().min(1, "La categoría es requerida"),
   tech_company_id: z.string().optional().nullable(),
-  attachments_enabled: z.boolean().default(false),
   display_name_es: z.string().min(1, "El nombre en español es requerido"),
   subject_es: z.string().min(1, "El asunto en español es requerido"),
   body_content_es: z.string().min(1, "El contenido en español es requerido"),
@@ -116,15 +174,15 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
   const [translating, setTranslating] = useState(false)
   const [techCompanies, setTechCompanies] = useState<Array<{ id: string; name: string }>>([])
   const [loadingCompanies, setLoadingCompanies] = useState(true)
+  const [previewMode, setPreviewMode] = useState(false)
   
-  // Estado para adjuntos (subida diferida)
-  // Almacena archivos pendientes de guardar localmente
+  // Adjuntos del template (documentos con selector de idioma)
   const [pendingAttachments, setPendingAttachments] = useState<Array<{ 
     id: string
     file: File
-    blobUrl: string
     name: string
     size: number
+    language: "global" | "es" | "en" | "pt"
   }>>([])
   const [uploadingFile, setUploadingFile] = useState(false)
   const [previewImage, setPreviewImage] = useState<{ id: string; url: string; name: string } | null>(null)
@@ -142,7 +200,6 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
     internal_code: template?.internal_code || "",
     category: template?.category || "metodologia",
     tech_company_id: template?.tech_company_id || null,
-    attachments_enabled: false,
     display_name_es: brToNewlines(template?.translations.find((tr) => tr.language_code === "es")?.display_name || ""),
     subject_es: brToNewlines(template?.translations.find((tr) => tr.language_code === "es")?.subject || ""),
     body_content_es: brToNewlines(template?.translations.find((tr) => tr.language_code === "es")?.body_content || ""),
@@ -321,7 +378,7 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
     }
   }
 
-  // Función para subir archivos pendientes de forma transaccional
+  // Función para subir archivos adjuntos de forma transaccional
   const uploadPendingAttachments = async (templateId: string): Promise<void> => {
     if (pendingAttachments.length === 0) {
       console.log("[v0] No hay adjuntos pendientes")
@@ -337,17 +394,17 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
         const fileName = `${templateId}/${attachment.id}.${fileExt}`
         
         const { error: uploadError } = await supabase.storage
-          .from("pulse-attachments")
-          .upload(fileName, attachment.file)
+          .from("pulse-assets")
+          .upload(`attachments/${fileName}`, attachment.file)
 
         if (uploadError) {
           throw new Error(`Error subiendo archivo ${attachment.name}: ${uploadError.message}`)
         }
 
-        console.log(`[v0] Archivo subido: ${fileName}`)
+        console.log(`[v0] Archivo subido: attachments/${fileName}`)
 
         // Obtener URL pública
-        const { data } = supabase.storage.from("pulse-attachments").getPublicUrl(fileName)
+        const { data } = supabase.storage.from("pulse-assets").getPublicUrl(`attachments/${fileName}`)
         const publicUrl = data.publicUrl
 
         // Crear registro en pulse_message_attachments
@@ -356,9 +413,10 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
           .insert([
             {
               file_name: attachment.name,
-              file_path: fileName,
+              file_path: `attachments/${fileName}`,
               file_size: attachment.size,
               public_url: publicUrl,
+              language_code: attachment.language,
             },
           ])
           .select()
@@ -620,97 +678,6 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
           />
         </div>
 
-        {/* Attachments Section */}
-        <div className="border rounded-lg p-4 space-y-3 bg-gray-50">
-          <FormField
-            control={form.control}
-            name="attachments_enabled"
-            render={({ field }) => (
-              <FormItem className="flex items-center space-x-2">
-                <FormControl>
-                  <Checkbox checked={field.value} onCheckedChange={field.onChange} disabled={loading} />
-                </FormControl>
-                <FormLabel className="mb-0 font-medium cursor-pointer">
-                  Habilitar adjuntos de imagen
-                </FormLabel>
-              </FormItem>
-            )}
-          />
-
-          {form.watch("attachments_enabled") && (
-            <div className="space-y-3">
-              <FormDescription>Carga imágenes que se incluirán con el mensaje (máx. 5MB por archivo)</FormDescription>
-              
-              <div className="flex items-center gap-2">
-                <label className="flex items-center gap-2 px-4 py-2 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-100 transition">
-                  <Upload className="h-4 w-4" />
-                  <span className="text-sm font-medium">Cargar Imagen</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={async (e) => {
-                      if (e.target.files) {
-                        setUploadingFile(true)
-                        for (const file of e.target.files) {
-                          const processed = await processImageFile(file)
-                          if (processed) {
-                            setPendingAttachments((prev) => [...prev, processed])
-                          }
-                        }
-                        setUploadingFile(false)
-                      }
-                    }}
-                    disabled={uploadingFile || loading}
-                    className="hidden"
-                  />
-                </label>
-                {uploadingFile && <Loader2 className="h-4 w-4 animate-spin" />}
-              </div>
-
-              {pendingAttachments.length > 0 && (
-                <div className="grid grid-cols-2 gap-3">
-                  {pendingAttachments.map((file) => (
-                    <div key={file.id} className="relative group border rounded-lg overflow-hidden bg-white">
-                      <img
-                        src={file.blobUrl}
-                        alt={file.name}
-                        className="w-full h-32 object-cover cursor-pointer"
-                        onClick={() => setPreviewImage({ id: file.id, url: file.blobUrl, name: file.name })}
-                      />
-                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition flex items-center justify-center">
-                        <button
-                          type="button"
-                          onClick={() => setPendingAttachments((prev) => prev.filter((f) => f.id !== file.id))}
-                          className="opacity-0 group-hover:opacity-100 transition"
-                        >
-                          <X className="h-4 w-4 text-white" />
-                        </button>
-                      </div>
-                      <p className="text-xs p-1 truncate text-gray-600">{file.name}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Image Preview Modal */}
-        {previewImage && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setPreviewImage(null)}>
-            <div className="bg-white rounded-lg p-4 max-w-2xl max-h-96 flex flex-col" onClick={(e) => e.stopPropagation()}>
-              <div className="flex justify-between items-center mb-3">
-                <p className="font-semibold text-sm">{previewImage.name}</p>
-                <button onClick={() => setPreviewImage(null)}>
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-              <img src={previewImage.url} alt={previewImage.name} className="w-full h-auto object-cover rounded" />
-            </div>
-          </div>
-        )}
-
         {/* Multi-Language Editor Tabs */}
         <div className="space-y-3">
           <div className="flex justify-between items-center">
@@ -788,6 +755,10 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                         onChange={field.onChange}
                         placeholder="Contenido del mensaje en español..."
                         disabled={loading}
+                        onAddImage={(imageUrl) => {
+                          const tag = `[IMG]${imageUrl}[/IMG]`
+                          field.onChange(field.value + "\n" + tag)
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -837,6 +808,10 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                         onChange={field.onChange}
                         placeholder="Message content in English..."
                         disabled={loading}
+                        onAddImage={(imageUrl) => {
+                          const tag = `[IMG]${imageUrl}[/IMG]`
+                          field.onChange(field.value + "\n" + tag)
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -886,6 +861,10 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                         onChange={field.onChange}
                         placeholder="Conteúdo da mensagem em português..."
                         disabled={loading}
+                        onAddImage={(imageUrl) => {
+                          const tag = `[IMG]${imageUrl}[/IMG]`
+                          field.onChange(field.value + "\n" + tag)
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -894,6 +873,110 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
               />
             </TabsContent>
           </Tabs>
+        </div>
+
+        {/* Preview Section */}
+        <div className="border-t pt-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setPreviewMode(!previewMode)}
+            className="gap-2"
+          >
+            {previewMode ? "Ocultar" : "Ver"} Preview
+          </Button>
+
+          {previewMode && (
+            <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
+              <h4 className="font-semibold mb-2 text-sm">Preview - {currentTab === "es" ? "Español" : currentTab === "en" ? "Inglés" : "Portugués"}</h4>
+              <div className="space-y-3 text-sm">
+                <div>
+                  <p className="text-xs text-gray-600 font-medium mb-1">Display Name:</p>
+                  <p className="bg-white p-2 rounded">{form.getValues(`display_name_${currentTab}`)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 font-medium mb-1">Subject:</p>
+                  <p className="bg-white p-2 rounded">{form.getValues(`subject_${currentTab}`)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 font-medium mb-1">Body Content:</p>
+                  <div className="bg-white p-2 rounded space-y-1">{renderPreview(form.getValues(`body_content_${currentTab}`))}</div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Attachments Management */}
+        <div className="border-t pt-4 space-y-4">
+          <h3 className="font-semibold">Gestión de Adjuntos</h3>
+          <FormDescription>Carga documentos (PDF, DOC, etc.) que se enviarán con el mensaje. Especifica el idioma para cada adjunto.</FormDescription>
+
+          <div className="space-y-3">
+            {pendingAttachments.length > 0 && (
+              <div className="space-y-2 mb-4">
+                {pendingAttachments.map((attachment) => (
+                  <div key={attachment.id} className="flex items-center justify-between bg-gray-50 p-3 rounded border">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{attachment.name}</p>
+                      <p className="text-xs text-gray-600">{(attachment.size / 1024 / 1024).toFixed(2)} MB</p>
+                    </div>
+                    <Select
+                      value={attachment.language}
+                      onValueChange={(lang) => {
+                        setPendingAttachments((prev) =>
+                          prev.map((att) => (att.id === attachment.id ? { ...att, language: lang as any } : att))
+                        )
+                      }}
+                    >
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="global">Global</SelectItem>
+                        <SelectItem value="es">Español</SelectItem>
+                        <SelectItem value="en">Inglés</SelectItem>
+                        <SelectItem value="pt">Portugués</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setPendingAttachments((prev) => prev.filter((att) => att.id !== attachment.id))}
+                      className="ml-2"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <label className="flex items-center gap-2 px-4 py-3 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 transition">
+              <Upload className="h-4 w-4" />
+              <span className="text-sm font-medium">Cargar Adjunto</span>
+              <input
+                type="file"
+                multiple
+                onChange={async (e) => {
+                  if (e.target.files) {
+                    setUploadingFile(true)
+                    for (const file of e.target.files) {
+                      const processed = await processAttachmentFile(file)
+                      if (processed) {
+                        setPendingAttachments((prev) => [...prev, { ...processed, language: "global" }])
+                      }
+                    }
+                    setUploadingFile(false)
+                  }
+                }}
+                disabled={uploadingFile || loading}
+                className="hidden"
+              />
+            </label>
+            {uploadingFile && <Loader2 className="h-4 w-4 animate-spin inline" />}
+          </div>
         </div>
 
         {/* Actions */}

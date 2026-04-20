@@ -11,19 +11,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu"
-import { Bold, Italic, Underline, Variable } from "lucide-react"
+import { Bold, Italic, Underline, Variable, Image as ImageIcon } from "lucide-react"
 
 interface SafeEditorProps {
   value: string
   onChange: (value: string) => void
   placeholder?: string
   disabled?: boolean
+  onAddImage?: (imageUrl: string) => void
 }
 
-export default function SafeEditor({ value, onChange, placeholder, disabled }: SafeEditorProps) {
+export default function SafeEditor({ value, onChange, placeholder, disabled, onAddImage }: SafeEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [selectionStart, setSelectionStart] = useState(0)
   const [selectionEnd, setSelectionEnd] = useState(0)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Actualizar la selección cuando el usuario hace clic o usa el teclado
   const handleSelection = () => {
@@ -81,6 +83,60 @@ export default function SafeEditor({ value, onChange, placeholder, disabled }: S
     onChange(newValue)
   }
 
+  // Manejar carga de imagen
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !onAddImage) return
+
+    try {
+      if (!file.type.startsWith("image/")) {
+        alert("Solo se permiten archivos de imagen")
+        return
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        alert("La imagen no debe superar 5MB")
+        return
+      }
+
+      // Optimizar imagen a máximo 1000px
+      const img = new Image()
+      const url = URL.createObjectURL(file)
+      
+      img.onload = async () => {
+        const canvas = document.createElement("canvas")
+        const maxDim = 1000
+        let { width, height } = img
+        
+        if (width > maxDim || height > maxDim) {
+          const ratio = Math.min(maxDim / width, maxDim / height)
+          width = Math.round(width * ratio)
+          height = Math.round(height * ratio)
+        }
+        
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext("2d")
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height)
+          
+          // Convertir a blob y simular subida
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const optimizedUrl = URL.createObjectURL(blob)
+              onAddImage(optimizedUrl)
+            }
+            URL.revokeObjectURL(url)
+          }, "image/jpeg", 0.85)
+        }
+      }
+      
+      img.src = url
+    } catch (error) {
+      console.error("[v0] Error procesando imagen:", error)
+    }
+  }
+
   return (
     <div className="space-y-3">
       {/* Toolbar */}
@@ -117,6 +173,27 @@ export default function SafeEditor({ value, onChange, placeholder, disabled }: S
           >
             <Underline className="h-4 w-4" />
           </Button>
+          {onAddImage && (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={disabled}
+                title="Insertar Imagen"
+                className="h-8 w-8 p-0"
+              >
+                <ImageIcon className="h-4 w-4" />
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+            </>
+          )}
         </div>
 
         {/* Variables Dropdown */}
