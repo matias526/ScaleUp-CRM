@@ -1,14 +1,19 @@
 import { type NextRequest, NextResponse } from "next/server"
-//import { createClient } from "@/lib/supabase/server"
 import { createServerClient } from "@/lib/supabase/server"
 import { sendInternalMeetingSummary } from "@/lib/services/internal-meeting-summary-service"
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> } // CORREGIDO: Ahora es Promise
+) {
   try {
-    console.log("[v0] send-summary API called for meeting:", params.id)
+    // CORREGIDO: Desenrollamos los params antes de cualquier otra cosa
+    const resolvedParams = await params;
+    const meetingId = resolvedParams.id;
+
+    console.log("[v0] send-summary API called for meeting:", meetingId)
 
     const supabase = createServerClient()
-    const meetingId = params.id
 
     const {
       data: { user },
@@ -148,8 +153,8 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     console.log("[v0] Email service result:", result)
 
     return NextResponse.json(result)
-  } catch (error) {
+  } catch (error: any) {
     console.error("[v0] Error sending summary:", error)
-    return NextResponse.json({ success: false, error: "Error interno del servidor" }, { status: 500 })
+    return NextResponse.json({ success: false, error: error.message || "Error interno del servidor" }, { status: 500 })
   }
 }
