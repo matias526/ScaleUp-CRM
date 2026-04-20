@@ -1235,7 +1235,7 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
         </div>
 
         {/* Actions */}
-        <div className="col-span-full flex gap-2 justify-end pt-4 border-t mt-6">
+        <div className="col-span-full flex gap-2 justify-end pt-4 border-t mt-6"></div>
       </form>
     </Form>
   )
