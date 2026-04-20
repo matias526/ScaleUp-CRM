@@ -37,11 +37,10 @@ const pulseTemplateSchema = z.object({
 type PulseTemplateFormData = z.infer<typeof pulseTemplateSchema>
 
 const CATEGORIES = [
-  { value: "opportunities", label: "Oportunidades" },
-  { value: "partners", label: "Socios" },
-  { value: "contacts", label: "Contactos" },
-  { value: "tech_companies", label: "Empresas Tech" },
-  { value: "end_customers", label: "Clientes Finales" },
+  { value: "metodologia", label: "Metodologia" },
+  { value: "posteos_redes", label: "Posteos en Redes" },
+  { value: "campanas", label: "Campañas" },
+  { value: "noticias", label: "Noticias" },
 ]
 
 interface PulseTemplateFormProps {
