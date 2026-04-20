@@ -5,8 +5,10 @@ import { useTranslation } from "@/hooks/use-translations"
 import { supabase } from "@/lib/supabase/client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Plus, Trash2, Edit2, Copy, Loader2, Globe } from "lucide-react"
+import { Plus, Trash2, Edit2, Copy, Loader2, Globe, X } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import PulseTemplateForm from "./pulse-template-form"
+import { getActiveTechCompaniesClient } from "@/lib/services/tech-company-service-client"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,6 +35,13 @@ interface PulseTemplate {
   }[]
 }
 
+const CATEGORIES = [
+  { value: "metodologia", label: "Metodologia" },
+  { value: "posteos_redes", label: "Posteos en Redes" },
+  { value: "campanas", label: "Campañas" },
+  { value: "noticias", label: "Noticias" },
+]
+
 export default function PulseTemplateManager() {
   const { t } = useTranslation()
   const [templates, setTemplates] = useState<PulseTemplate[]>([])
@@ -41,10 +50,29 @@ export default function PulseTemplateManager() {
   const [editingTemplate, setEditingTemplate] = useState<PulseTemplate | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [copying, setCopying] = useState<string | null>(null)
+  
+  // Filtros
+  const [filterCategory, setFilterCategory] = useState<string>("all")
+  const [filterTechCompany, setFilterTechCompany] = useState<string>("all")
+  const [techCompanies, setTechCompanies] = useState<Array<{ id: string; name: string }>>([])
+  const [loadingCompanies, setLoadingCompanies] = useState(true)
 
   useEffect(() => {
     fetchTemplates()
+    fetchTechCompanies()
   }, [])
+
+  const fetchTechCompanies = async () => {
+    try {
+      setLoadingCompanies(true)
+      const companies = await getActiveTechCompaniesClient()
+      setTechCompanies(companies)
+    } catch (error) {
+      console.error("[v0] Error al cargar tech_companies:", error)
+    } finally {
+      setLoadingCompanies(false)
+    }
+  }
 
   const fetchTemplates = async () => {
     try {
@@ -159,6 +187,13 @@ export default function PulseTemplateManager() {
     await fetchTemplates()
   }
 
+  // Filtrar templates basado en categoría y tech_company
+  const filteredTemplates = templates.filter((template) => {
+    const categoryMatch = filterCategory === "all" || template.category === filterCategory
+    const companyMatch = filterTechCompany === "all" || template.tech_company_id === filterTechCompany
+    return categoryMatch && companyMatch
+  })
+
   return (
     <div className="space-y-6">
       {/* Header with Create Button */}
@@ -173,6 +208,59 @@ export default function PulseTemplateManager() {
           <Plus className="h-4 w-4 mr-2" />
           {t("pulse.create_template", "Crear Template")}
         </Button>
+      </div>
+
+      {/* Filtros */}
+      <div className="flex gap-3 items-end">
+        <div className="flex-1">
+          <label className="text-sm font-medium block mb-2">Categoría</label>
+          <Select value={filterCategory} onValueChange={setFilterCategory}>
+            <SelectTrigger>
+              <SelectValue placeholder="Todas las categorías" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las categorías</SelectItem>
+              {CATEGORIES.map((cat) => (
+                <SelectItem key={cat.value} value={cat.value}>
+                  {cat.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex-1">
+          <label className="text-sm font-medium block mb-2">Empresa Tecnológica</label>
+          <Select value={filterTechCompany} onValueChange={setFilterTechCompany} disabled={loadingCompanies}>
+            <SelectTrigger>
+              <SelectValue placeholder="Todas las empresas" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las empresas</SelectItem>
+              <SelectItem value="null">Sin empresa asignada</SelectItem>
+              {techCompanies.map((company) => (
+                <SelectItem key={company.id} value={company.id}>
+                  {company.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {(filterCategory !== "all" || filterTechCompany !== "all") && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setFilterCategory("all")
+              setFilterTechCompany("all")
+            }}
+            className="gap-2"
+          >
+            <X className="h-4 w-4" />
+            Limpiar
+          </Button>
+        )}
       </div>
 
       {/* Template Form Modal */}
@@ -228,19 +316,25 @@ export default function PulseTemplateManager() {
             <Loader2 className="h-8 w-8 animate-spin" />
           </CardContent>
         </Card>
-      ) : templates.length === 0 ? (
+      ) : filteredTemplates.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
             <Globe className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">{t("pulse.no_templates", "No hay templates creados todavía")}</p>
+            <p className="text-gray-500">
+              {templates.length === 0
+                ? t("pulse.no_templates", "No hay templates creados todavía")
+                : t("pulse.no_results", "No hay templates que coincidan con los filtros")}
+            </p>
             <p className="text-sm text-gray-400 mt-2">
-              {t("pulse.create_first_template", "Crea tu primer template para comenzar")}
+              {templates.length === 0
+                ? t("pulse.create_first_template", "Crea tu primer template para comenzar")
+                : t("pulse.adjust_filters", "Ajusta los filtros e intenta de nuevo")}
             </p>
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4">
-          {templates.map((template) => {
+          {filteredTemplates.map((template) => {
             const esTranslation = template.translations.find((tr) => tr.language_code === "es")
 
             return (
