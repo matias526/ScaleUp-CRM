@@ -193,11 +193,11 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
 
       console.log(`[v0] Traduciendo desde ${sourceLanguage} a:`, targetLanguages.map((t) => t.code))
 
-      // Obtener textos del idioma fuente
+      // Obtener textos del idioma fuente y convertir \n a [BR] antes de enviar
       const sourceTexts = {
-        display_name: form.getValues(`display_name_${sourceLanguage}`),
-        subject: form.getValues(`subject_${sourceLanguage}`),
-        body_content: form.getValues(`body_content_${sourceLanguage}`),
+        display_name: form.getValues(`display_name_${sourceLanguage}`).replace(/\n/g, "[BR]"),
+        subject: form.getValues(`subject_${sourceLanguage}`).replace(/\n/g, "[BR]"),
+        body_content: form.getValues(`body_content_${sourceLanguage}`).replace(/\n/g, "[BR]"),
       }
 
       console.log("[v0] Textos fuente:", sourceTexts)
