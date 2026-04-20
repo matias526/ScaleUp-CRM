@@ -28,10 +28,10 @@ const newlinesToBr = (text: string): string => {
 }
 
 
-// Función para renderizar preview del contenido
-// Soporta tanto \n como [BR], y procesa [B], [I], [U], [IMG], {{variables}}
+// Función para renderizar preview del contenido - SIN EVAL ni backticks
+// Usa .split() para dividir en texto plano y etiquetas, todo como strings
 const renderPreview = (content: string): React.ReactNode => {
-  // Normalizar: convertir \n a [BR] si existen, luego split
+  // Normalizar: convertir \n a [BR]
   const normalized = content.replaceAll("\n", "[BR]")
   const lines = normalized.split("[BR]")
 
@@ -41,15 +41,135 @@ const renderPreview = (content: string): React.ReactNode => {
     const line = lines[i]
     
     // Renderizar la línea con formato
-    if (line || i === 0) {
-      // Incluso líneas vacías pueden contener imágenes
-      const formattedLine = renderFormattedLine(line, i)
-      result.push(
-        <div key={`line-${i}`} className="whitespace-pre-wrap break-words">
-          {formattedLine}
-        </div>
-      )
+    const formattedLine = renderFormattedLine(line, i)
+    result.push(
+      <div key={`line-${i}`} className="whitespace-pre-wrap break-words">
+        {formattedLine}
+      </div>
+    )
+
+    // Agregar <br /> después de cada línea (excepto la última)
+    if (i < lines.length - 1) {
+      result.push(<br key={`br-${i}`} />)
     }
+  }
+
+  return result
+}
+
+// Renderizar una línea individual - SOLO STRINGS, SIN EVAL
+const renderFormattedLine = (line: string, baseKey: number): React.ReactNode[] => {
+  const parts: React.ReactNode[] = []
+  
+  // Paso 1: Separar por [IMG]...[/IMG]
+  const imgParts = line.split(/(\[IMG\][^\[]*\[\/IMG\])/g)
+  
+  for (let i = 0; i < imgParts.length; i++) {
+    const imgPart = imgParts[i]
+    
+    // Si es una imagen, renderizar como <img>
+    if (imgPart.startsWith("[IMG]")) {
+      const imgUrl = imgPart.replace(/\[IMG\](.*?)\[\/IMG\]/g, "$1")
+      parts.push(
+        <img
+          key={`img-${baseKey}-${i}`}
+          src={imgUrl}
+          alt="Imagen del mensaje"
+          className="max-w-full max-h-80 rounded my-2 block"
+          onError={() => {
+            console.warn("[v0] Error cargando imagen:", imgUrl)
+          }}
+        />
+      )
+    } else {
+      // No es imagen, procesar formato [B], [I], [U], {{variables}}
+      const textParts = renderFormattedText(imgPart, baseKey, i)
+      parts.push(...textParts)
+    }
+  }
+
+  return parts.length > 0 ? parts : [" "]
+}
+
+// Renderizar texto con formato [B], [I], [U] y {{variables}} - TODO COMO STRINGS
+const renderFormattedText = (text: string, baseKey: number, lineIndex: number): React.ReactNode[] => {
+  const parts: React.ReactNode[] = []
+  let counter = 0
+
+  // Paso 1: Procesar [B]...[/B]
+  let tempText = text
+  tempText = processTag(tempText, "B", (content) => (
+    <strong key={`b-${baseKey}-${lineIndex}-${counter++}`} className="font-bold">
+      {content}
+    </strong>
+  ), parts)
+
+  // Paso 2: Procesar [I]...[/I]
+  tempText = processTag(tempText, "I", (content) => (
+    <em key={`i-${baseKey}-${lineIndex}-${counter++}`} className="italic">
+      {content}
+    </em>
+  ), parts)
+
+  // Paso 3: Procesar [U]...[/U]
+  tempText = processTag(tempText, "U", (content) => (
+    <u key={`u-${baseKey}-${lineIndex}-${counter++}`} className="underline">
+      {content}
+    </u>
+  ), parts)
+
+  // Paso 4: Procesar {{variables}} - COMO STRINGS, SIN EVAL
+  const varParts = tempText.split(/({{[^}]*}})/g)
+  for (const part of varParts) {
+    if (part.startsWith("{{") && part.endsWith("}}")) {
+      // Es una variable - renderizar con span azul
+      parts.push(
+        <span
+          key={`var-${baseKey}-${lineIndex}-${counter++}`}
+          className="bg-blue-100 text-blue-700 px-1 rounded font-mono text-sm whitespace-nowrap"
+          title="Campo dinámico que se reemplazará al enviar"
+        >
+          {part}
+        </span>
+      )
+    } else if (part) {
+      // Texto plano
+      parts.push(part)
+    }
+  }
+
+  return parts.length > 0 ? parts : [text || " "]
+}
+
+// Helper para procesar tags [TAG]content[/TAG]
+const processTag = (
+  text: string,
+  tag: string,
+  renderer: (content: string) => React.ReactNode,
+  parts: React.ReactNode[]
+): string => {
+  const regex = new RegExp(`\\[${tag}\\](.*?)\\[/${tag}\\]`, "g")
+  let lastIndex = 0
+  let match
+  let result = ""
+
+  while ((match = regex.exec(text)) !== null) {
+    // Agregar texto antes del match
+    result += text.substring(lastIndex, match.index)
+    
+    // Agregar elemento renderizado (como placeholder)
+    const key = `__PLACEHOLDER_${parts.length}__`
+    parts.push(renderer(match[1]))
+    result += key
+    
+    lastIndex = regex.lastIndex
+  }
+
+  // Agregar texto restante
+  result += text.substring(lastIndex)
+  
+  return result
+}
 
     // Agregar <br /> después de cada línea (excepto la última)
     if (i < lines.length - 1) {
@@ -152,56 +272,51 @@ const renderFormattedLine = (line: string, baseKey: number): React.ReactNode[] =
 }
 
 // Renderizar Subject con soporte para variables (línea simple, sin saltos)
+
+// Renderizar Subject - SIN BACKTICKS, TODO COMO STRINGS
 const renderSubjectPreview = (subject: string): React.ReactNode[] => {
   const parts: React.ReactNode[] = []
-  let lastIndex = 0
-  let componentCounter = 0
+  let counter = 0
 
-  // Regex para capturar [B], [I], [U], {{variables}}
-  const regex = /\[B\](.*?)\[\/B\]|\[I\](.*?)\[\/I\]|\[U\](.*?)\[\/U\]|\{\{([^}]*)\}\}/g
-  let match
+  // Procesar [B]...[/B]
+  let tempSubject = subject
+  tempSubject = processTag(tempSubject, "B", (content) => (
+    <strong key={`subj-b-${counter++}`} className="font-bold">
+      {content}
+    </strong>
+  ), parts)
 
-  while ((match = regex.exec(subject)) !== null) {
-    if (match.index > lastIndex) {
-      const plainText = subject.substring(lastIndex, match.index)
-      if (plainText) parts.push(plainText)
-    }
+  // Procesar [I]...[/I]
+  tempSubject = processTag(tempSubject, "I", (content) => (
+    <em key={`subj-i-${counter++}`} className="italic">
+      {content}
+    </em>
+  ), parts)
 
-    const key = `subject-elem-${componentCounter++}`
+  // Procesar [U]...[/U]
+  tempSubject = processTag(tempSubject, "U", (content) => (
+    <u key={`subj-u-${counter++}`} className="underline">
+      {content}
+    </u>
+  ), parts)
 
-    if (match[1] !== undefined) {
+  // Procesar {{variables}} - SOLO COMO STRINGS
+  const varParts = tempSubject.split(/({{[^}]*}})/g)
+  for (const part of varParts) {
+    if (part.startsWith("{{") && part.endsWith("}}")) {
+      // Variable - SIN backticks, renderizar el string tal cual
       parts.push(
-        <strong key={key} className="font-bold">
-          {match[1]}
-        </strong>
-      )
-    } else if (match[2] !== undefined) {
-      parts.push(
-        <em key={key} className="italic">
-          {match[2]}
-        </em>
-      )
-    } else if (match[3] !== undefined) {
-      parts.push(
-        <u key={key} className="underline">
-          {match[3]}
-        </u>
-      )
-    } else if (match[4] !== undefined) {
-      const variableName = match[4]
-      parts.push(
-        <span key={key} className="bg-blue-100 text-blue-700 px-1 rounded font-mono text-sm whitespace-nowrap">
-          {`{{${variableName}}}`}
+        <span
+          key={`subj-var-${counter++}`}
+          className="bg-blue-100 text-blue-700 px-1 rounded font-mono text-sm whitespace-nowrap"
+          title="Campo dinámico que se reemplazará al enviar"
+        >
+          {part}
         </span>
       )
+    } else if (part) {
+      parts.push(part)
     }
-
-    lastIndex = regex.lastIndex
-  }
-
-  if (lastIndex < subject.length) {
-    const remaining = subject.substring(lastIndex)
-    if (remaining) parts.push(remaining)
   }
 
   return parts.length > 0 ? parts : [subject || "—"]
