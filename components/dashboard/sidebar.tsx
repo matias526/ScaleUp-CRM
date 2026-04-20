@@ -17,6 +17,7 @@ import {
   BookOpen,
   Sparkles,
   UserCheck,
+  Zap,
 } from "lucide-react"
 import { useTranslations } from "@/hooks/use-translations"
 import { useState, useEffect, useRef } from "react"
@@ -36,18 +37,19 @@ const sidebarTranslations = {
     "sidebar.follow_up_meetings": "Follow-up Meetings",
     "sidebar.internal_meetings": "Internal Meetings",
     "sidebar.end_customers": "End Customers",
+    "sidebar.pulse": "Pulse",
+    "sidebar.pulse_templates": "Message Templates",
     "sidebar.settings": "Settings",
     "sidebar.settings.general": "General",
     "sidebar.settings.custom_fields": "Custom Fields",
     "sidebar.settings.translations": "Translations",
     "sidebar.settings.supabase": "Supabase Setup",
-    "sidebar.settings.pulse_templates": "Pulse Templates",
     "sidebar.knowledge_base": "Knowledge Base",
     "sidebar.ai_knowledge_base": "AI Knowledge Base",
     "sidebar.ai_knowledge_base.chat": "Chat with Mika",
     "sidebar.ai_knowledge_base.documents": "Documents",
     "sidebar.ai_knowledge_base.feedback": "Feedback",
-    "sidebar.mika_chat": "Chat with Mika", // Nueva traducción para ítem directo
+    "sidebar.mika_chat": "Chat with Mika",
   },
   es: {
     "sidebar.dashboard": "Dashboard",
@@ -60,18 +62,19 @@ const sidebarTranslations = {
     "sidebar.follow_up_meetings": "Reunión de Seguimiento",
     "sidebar.internal_meetings": "Reuniones Internas",
     "sidebar.end_customers": "Clientes Finales",
+    "sidebar.pulse": "Pulse",
+    "sidebar.pulse_templates": "Plantillas de Mensaje",
     "sidebar.settings": "Configuración",
-    "sidebar.settings.general": "Geral",
+    "sidebar.settings.general": "General",
     "sidebar.settings.custom_fields": "Campos Personalizados",
     "sidebar.settings.translations": "Traducciones",
     "sidebar.settings.supabase": "Configuración Supabase",
-    "sidebar.settings.pulse_templates": "Pulse Templates",
     "sidebar.knowledge_base": "Base de Conocimiento",
     "sidebar.ai_knowledge_base": "Base de Conocimiento IA",
     "sidebar.ai_knowledge_base.chat": "Chat con Mika",
     "sidebar.ai_knowledge_base.documents": "Documentos",
     "sidebar.ai_knowledge_base.feedback": "Feedback",
-    "sidebar.mika_chat": "Chat with Mika", // Nueva traducción para ítem directo
+    "sidebar.mika_chat": "Chat con Mika",
   },
   pt: {
     "sidebar.dashboard": "Dashboard",
@@ -84,18 +87,19 @@ const sidebarTranslations = {
     "sidebar.follow_up_meetings": "Reunião de Acompanhamento",
     "sidebar.internal_meetings": "Reuniões Internas",
     "sidebar.end_customers": "Clientes Finales",
+    "sidebar.pulse": "Pulse",
+    "sidebar.pulse_templates": "Modelos de Mensagem",
     "sidebar.settings": "Configurações",
     "sidebar.settings.general": "Geral",
     "sidebar.settings.custom_fields": "Campos Personalizados",
     "sidebar.settings.translations": "Traduções",
     "sidebar.settings.supabase": "Configuração Supabase",
-    "sidebar.settings.pulse_templates": "Pulse Templates",
     "sidebar.knowledge_base": "Base de Conhecimento",
-    "sidebar.ai_knowledge_base": "Base de Conocimiento IA",
+    "sidebar.ai_knowledge_base": "Base de Conhecimiento IA",
     "sidebar.ai_knowledge_base.chat": "Chat com Mika",
     "sidebar.ai_knowledge_base.documents": "Documentos",
     "sidebar.ai_knowledge_base.feedback": "Feedback",
-    "sidebar.mika_chat": "Chat with Mika", // Nueva traducción para ítem directo
+    "sidebar.mika_chat": "Chat com Mika",
   },
 }
 
@@ -128,6 +132,7 @@ type SidebarItemType = {
   adminOnly?: boolean
   bddOnly?: boolean
   adminOrBdd?: boolean // Nuevo flag para elementos visibles por Admin O BDD
+  adminOrMarketing?: boolean // Nuevo flag para elementos visibles por Admin O Marketing
   settingsSubItems?: { href: string; labelKey: string }[]
 }
 
@@ -137,6 +142,7 @@ export function Sidebar() {
   const { userInfo } = useAuth()
   const isAdmin = userInfo?.isAdmin || false
   const isBDD = userInfo?.roleCode?.toLowerCase() === "bdd" || false
+  const isMarketing = userInfo?.roleCode?.toLowerCase() === "marketing" || false
 
   console.log("[v0] Sidebar - User Info:", {
     roleCode: userInfo?.roleCode, // Mostrar roleCode en lugar de role
@@ -270,6 +276,12 @@ export function Sidebar() {
       ],
     },
     {
+      href: "/dashboard/settings/pulse-templates",
+      icon: Zap,
+      labelKey: "sidebar.pulse",
+      adminOrMarketing: true,
+    },
+    {
       href: "/dashboard/settings",
       icon: Settings,
       labelKey: "sidebar.settings",
@@ -291,10 +303,6 @@ export function Sidebar() {
           href: "/dashboard/settings/supabase-setup",
           labelKey: "sidebar.settings.supabase",
         },
-        {
-          href: "/dashboard/settings/pulse-templates",
-          labelKey: "sidebar.settings.pulse_templates",
-        },
       ],
     },
   ]
@@ -302,6 +310,10 @@ export function Sidebar() {
   // Filtrar los elementos del sidebar según el rol del usuario
   const filteredSidebarItems = sidebarItems.filter((item) => {
     const shouldShow = (() => {
+      // Si el elemento es para admin O Marketing, mostrar si el usuario es cualquiera de los dos
+      if (item.adminOrMarketing) {
+        return isAdmin || isMarketing
+      }
       // Si el elemento es para admin O BDD, mostrar si el usuario es cualquiera de los dos
       if (item.adminOrBdd) {
         return isAdmin || isBDD
@@ -319,12 +331,14 @@ export function Sidebar() {
 
     console.log("[v0] Sidebar - Item filter:", {
       labelKey: item.labelKey,
+      adminOrMarketing: item.adminOrMarketing,
       adminOrBdd: item.adminOrBdd,
       adminOnly: item.adminOnly,
       bddOnly: item.bddOnly,
       shouldShow,
       isAdmin,
       isBDD,
+      isMarketing,
     })
 
     return shouldShow
