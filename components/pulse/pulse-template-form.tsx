@@ -16,87 +16,94 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DICT_LANG_PULSE } from "@/lib/constants/dict-lang-pulse"
 import { getActiveTechCompaniesClient } from "@/lib/services/tech-company-service-client"
 
-  // Función para renderizar preview del contenido
-  const renderPreview = (content: string): React.ReactNode[] => {
-    const lines = content.split(/\[BR\]/)
-    return lines.map((line, idx) => (
-      <div key={idx} className="mb-2 last:mb-0">
-        {renderLine(line)}
-      </div>
-    ))
-  }
-
-  // Renderizar una línea procesando tags
-  const renderLine = (line: string): React.ReactNode[] => {
-    const parts: React.ReactNode[] = []
-    let lastIndex = 0
-    const regex = /\[B\](.*?)\[\/B\]|\[I\](.*?)\[\/I\]|\[U\](.*?)\[\/U\]|\[IMG\](.*?)\[\/IMG\]|\{\{[^}]+\}\}/g
-    let match
-
-    while ((match = regex.exec(line)) !== null) {
-      // Agregar texto antes del match
-      if (match.index > lastIndex) {
-        parts.push(line.substring(lastIndex, match.index))
-      }
-
-      if (match[1] !== undefined) {
-        // [B]...[/B]
-        parts.push(
-          <strong key={`b-${match.index}`} className="font-bold">
-            {match[1]}
-          </strong>
-        )
-      } else if (match[2] !== undefined) {
-        // [I]...[/I]
-        parts.push(
-          <em key={`i-${match.index}`} className="italic">
-            {match[2]}
-          </em>
-        )
-      } else if (match[3] !== undefined) {
-        // [U]...[/U]
-        parts.push(
-          <u key={`u-${match.index}`} className="underline">
-            {match[3]}
-          </u>
-        )
-      } else if (match[4] !== undefined) {
-        // [IMG]...[/IMG]
-        parts.push(
-          <img
-            key={`img-${match.index}`}
-            src={match[4]}
-            alt="Imagen del template"
-            className="max-w-full max-h-48 rounded my-2"
-          />
-        )
-      } else if (match[0].startsWith("{{")) {
-        // {{variable}}
-        parts.push(
-          <span key={`var-${match.index}`} className="bg-yellow-100 px-1 rounded font-mono text-sm">
-            {match[0]}
-          </span>
-        )
-      }
-
-      lastIndex = regex.lastIndex
-    }
-
-    // Agregar texto restante
-    if (lastIndex < line.length) {
-      parts.push(line.substring(lastIndex))
-    }
-
-    return parts.length > 0 ? parts : [line]
-  }
+// Convertir [BR] a saltos de línea reales para edición
+const brToNewlines = (text: string): string => {
+  return text.replaceAll("[BR]", "\n")
+}
 
 // Convertir saltos de línea reales a [BR] para almacenamiento
 const newlinesToBr = (text: string): string => {
   return text.replaceAll("\n", "[BR]")
 }
 
+
+// Función para renderizar preview del contenido
+const renderPreview = (content: string): React.ReactNode[] => {
+  const lines = content.split(/\[BR\]/)
+  return lines.map((line, idx) => (
+    <div key={idx} className="mb-2 last:mb-0">
+      {renderLine(line)}
+    </div>
+  ))
+}
+
+// Renderizar una línea procesando tags
+const renderLine = (line: string): React.ReactNode[] => {
+  const parts: React.ReactNode[] = []
+  let lastIndex = 0
+  const regex = /\[B\](.*?)\[\/B\]|\[I\](.*?)\[\/I\]|\[U\](.*?)\[\/U\]|\[IMG\](.*?)\[\/IMG\]|\{\{[^}]+\}\}/g
+  let match
+
+  while ((match = regex.exec(line)) !== null) {
+    // Agregar texto antes del match
+    if (match.index > lastIndex) {
+      parts.push(line.substring(lastIndex, match.index))
+    }
+
+    if (match[1] !== undefined) {
+      // [B]...[/B]
+      parts.push(
+        <strong key={`b-${match.index}`} className="font-bold">
+          {match[1]}
+        </strong>
+      )
+    } else if (match[2] !== undefined) {
+      // [I]...[/I]
+      parts.push(
+        <em key={`i-${match.index}`} className="italic">
+          {match[2]}
+        </em>
+      )
+    } else if (match[3] !== undefined) {
+      // [U]...[/U]
+      parts.push(
+        <u key={`u-${match.index}`} className="underline">
+          {match[3]}
+        </u>
+      )
+    } else if (match[4] !== undefined) {
+      // [IMG]...[/IMG]
+      parts.push(
+        <img
+          key={`img-${match.index}`}
+          src={match[4]}
+          alt="Imagen del template"
+          className="max-w-full max-h-48 rounded my-2"
+        />
+      )
+    } else if (match[0].startsWith("{{")) {
+      // {{variable}}
+      parts.push(
+        <span key={`var-${match.index}`} className="bg-yellow-100 px-1 rounded font-mono text-sm">
+          {match[0]}
+        </span>
+      )
+    }
+
+    lastIndex = regex.lastIndex
+  }
+
+  // Agregar texto restante
+  if (lastIndex < line.length) {
+    parts.push(line.substring(lastIndex))
+  }
+
+  return parts.length > 0 ? parts : [line]
+}
+
+
 // Función para procesar y validar archivos adjuntos (cualquier tipo)
-const processAttachmentFile = async (file: File): Promise<{ 
+const processAttachmentFile = async (file: File): Promise<{
   id: string
   file: File
   name: string
@@ -175,9 +182,9 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
   const [techCompanies, setTechCompanies] = useState<Array<{ id: string; name: string }>>([])
   const [loadingCompanies, setLoadingCompanies] = useState(true)
   const [previewMode, setPreviewMode] = useState(false)
-  
+
   // Adjuntos del template (documentos con selector de idioma)
-  const [pendingAttachments, setPendingAttachments] = useState<Array<{ 
+  const [pendingAttachments, setPendingAttachments] = useState<Array<{
     id: string
     file: File
     name: string
@@ -392,7 +399,7 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
         // Subir archivo a Supabase Storage
         const fileExt = attachment.file.name.split(".").pop()
         const fileName = `${templateId}/${attachment.id}.${fileExt}`
-        
+
         const { error: uploadError } = await supabase.storage
           .from("pulse-assets")
           .upload(`attachments/${fileName}`, attachment.file)
