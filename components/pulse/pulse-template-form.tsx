@@ -95,24 +95,28 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
     mode: "onChange",
   })
 
-  // Función para traducir contenido protegiendo variables y formato
+  // Función mejorada para proteger variables y formato
   const protectContent = (text: string) => {
     const map = new Map<string, string>()
     let counter = 0
 
+    // Proteger variables {{variable_name}}
     let protected_text = text.replace(/\{\{[^}]+\}\}/g, (match) => {
-      const placeholder = `__VAR_${counter}__`
+      const placeholder = `__PULSEVAR_${counter}__`
       map.set(placeholder, match)
       counter++
       return placeholder
     })
 
+    // Proteger tags de formato [B], [I], [U], [/B], [/I], [/U]
     protected_text = protected_text.replace(/\[[BIU]\]|\[\/[BIU]\]/g, (match) => {
-      const placeholder = `__FORMAT_${counter}__`
+      const placeholder = `__PULSEFMT_${counter}__`
       map.set(placeholder, match)
       counter++
       return placeholder
     })
+
+    console.log("[v0] Contenido protegido:", { original: text, protected: protected_text, map: Array.from(map.entries()) })
 
     return { protected: protected_text, map }
   }
@@ -120,22 +124,43 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
   const restoreContent = (text: string, map: Map<string, string>) => {
     let restored = text
     map.forEach((original, placeholder) => {
-      restored = restored.replace(new RegExp(placeholder, "g"), original)
+      restored = restored.replace(new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"), original)
     })
     return restored
   }
 
-  // Auto-traducción usando Groq
+  // Auto-traducción usando Groq - traduce DESDE el idioma actual a los otros dos
   const handleAutoTranslate = async () => {
     try {
       setTranslating(true)
-      console.log("[v0] Iniciando auto-traducción desde español...")
 
+      // Determinar idioma fuente y idiomas destino
+      const sourceLanguage = currentTab
+      const targetLanguages = {
+        es: [
+          { code: "en", name: "English" },
+          { code: "pt", name: "Portuguese (Brazil)" },
+        ],
+        en: [
+          { code: "es", name: "Spanish" },
+          { code: "pt", name: "Portuguese (Brazil)" },
+        ],
+        pt: [
+          { code: "es", name: "Spanish" },
+          { code: "en", name: "English" },
+        ],
+      }[sourceLanguage] || []
+
+      console.log(`[v0] Traduciendo desde ${sourceLanguage} a:`, targetLanguages.map((t) => t.code))
+
+      // Obtener textos del idioma fuente
       const sourceTexts = {
-        display_name: form.getValues("display_name_es"),
-        subject: form.getValues("subject_es"),
-        body_content: form.getValues("body_content_es"),
+        display_name: form.getValues(`display_name_${sourceLanguage}`),
+        subject: form.getValues(`subject_${sourceLanguage}`),
+        body_content: form.getValues(`body_content_${sourceLanguage}`),
       }
+
+      console.log("[v0] Textos fuente:", sourceTexts)
 
       // Proteger contenido
       const protectedTexts = Object.entries(sourceTexts).reduce(
@@ -146,16 +171,11 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
         {} as Record<string, ReturnType<typeof protectContent>>,
       )
 
-      console.log("[v0] Contenido protegido:", Object.keys(protectedTexts))
-
-      // Llamar a Groq para traducir cada idioma
-      const languagePairs = [
-        { target: "en", targetName: "English" },
-        { target: "pt", targetName: "Portuguese (Brazil)" },
-      ]
-
-      for (const pair of languagePairs) {
+      // Traducir a cada idioma destino
+      for (const targetLang of targetLanguages) {
         try {
+          console.log(`[v0] Iniciando traducción a ${targetLang.code}...`)
+
           const response = await fetch("/api/translate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -167,30 +187,35 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                 },
                 {} as Record<string, string>,
               ),
-              targetLanguage: pair.targetName,
+              targetLanguage: targetLang.name,
             }),
           })
 
-          if (!response.ok) throw new Error(`Error translating to ${pair.target}`)
+          if (!response.ok) throw new Error(`Error translating to ${targetLang.code}`)
 
           const { translations } = await response.json()
-          console.log(`[v0] Traducción a ${pair.target}:`, translations)
+          console.log(`[v0] Traducción a ${targetLang.code} recibida:`, translations)
 
           // Restaurar contenido protegido
           const restoredTranslations = Object.entries(translations).reduce(
             (acc, [key, text]) => {
-              acc[`${key}_${pair.target}`] = restoreContent(text as string, protectedTexts[key].map)
+              const restored = restoreContent(text as string, protectedTexts[key].map)
+              acc[`${key}_${targetLang.code}`] = restored
+              console.log(`[v0] ${key}_${targetLang.code} restaurado:`, restored)
               return acc
             },
             {} as Record<string, string>,
           )
 
-          // Actualizar los campos del formulario
-          form.setValue(`display_name_${pair.target}`, restoredTranslations[`display_name_${pair.target}`])
-          form.setValue(`subject_${pair.target}`, restoredTranslations[`subject_${pair.target}`])
-          form.setValue(`body_content_${pair.target}`, restoredTranslations[`body_content_${pair.target}`])
+          // Actualizar campos del formulario
+          Object.entries(restoredTranslations).forEach(([fieldName, value]) => {
+            form.setValue(fieldName, value)
+          })
+
+          console.log(`[v0] Traducción a ${targetLang.code} completada`)
         } catch (err) {
-          console.error(`[v0] Error traduciendo a ${pair.target}:`, err)
+          console.error(`[v0] Error traduciendo a ${targetLang.code}:`, err)
+          alert(`Error al traducir a ${targetLang.name}: ${err instanceof Error ? err.message : "Error desconocido"}`)
         }
       }
 
@@ -389,13 +414,20 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
             <Button
               type="button"
               onClick={handleAutoTranslate}
-              disabled={translating || loading || !form.getValues("body_content_es")}
+              disabled={
+                translating ||
+                loading ||
+                !form.getValues(`body_content_${currentTab}`) ||
+                !form.getValues(`display_name_${currentTab}`) ||
+                !form.getValues(`subject_${currentTab}`)
+              }
               size="sm"
               variant="outline"
               className="gap-2"
             >
               {translating && <Loader2 className="h-4 w-4 animate-spin" />}
-              Auto-Traducir desde Español
+              Auto-Traducir desde{" "}
+              {currentTab === "es" ? "Español" : currentTab === "en" ? "Inglés" : "Portugués"}
             </Button>
           </div>
 
