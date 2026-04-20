@@ -189,10 +189,19 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
     file: File
     name: string
     size: number
-    language: "global" | "es" | "en" | "pt"
+    language: "all" | "es" | "en" | "pt"
+  }>>([])
+  const [existingAttachments, setExistingAttachments] = useState<Array<{
+    id: string
+    file_name: string
+    file_url: string
+    file_type: string
+    file_size: number
+    language_code: "all" | "es" | "en" | "pt"
   }>>([])
   const [uploadingFile, setUploadingFile] = useState(false)
   const [previewImage, setPreviewImage] = useState<{ id: string; url: string; name: string } | null>(null)
+  const [loadingAttachments, setLoadingAttachments] = useState(false)
 
   // Helper para traducción local usando diccionario
   const tPulse = (key: string, defaultValue: string = ""): string => {
@@ -240,6 +249,46 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
 
     fetchTechCompanies()
   }, [])
+
+  // Cargar adjuntos existentes cuando se abre un template para editar
+  useEffect(() => {
+    if (!template?.id) return
+
+    const fetchAttachments = async () => {
+      try {
+        setLoadingAttachments(true)
+        console.log("[v0] Cargando adjuntos para template:", template.id)
+
+        // Obtener adjuntos relacionados con este template
+        const { data, error } = await supabase
+          .from("pulse_template_attachments_join")
+          .select("attachment_id, language_code, pulse_message_attachments(*)")
+          .eq("template_id", template.id)
+
+        if (error) throw error
+
+        console.log("[v0] Adjuntos encontrados:", data)
+
+        // Mapear los datos a nuestro formato
+        const attachments = data?.map((row: any) => ({
+          id: row.pulse_message_attachments.id,
+          file_name: row.pulse_message_attachments.file_name,
+          file_url: row.pulse_message_attachments.file_url,
+          file_type: row.pulse_message_attachments.file_type,
+          file_size: row.pulse_message_attachments.file_size,
+          language_code: row.language_code,
+        })) || []
+
+        setExistingAttachments(attachments)
+      } catch (error) {
+        console.error("[v0] Error al cargar adjuntos:", error)
+      } finally {
+        setLoadingAttachments(false)
+      }
+    }
+
+    fetchAttachments()
+  }, [template?.id])
 
   // Función mejorada para proteger variables y formato
   const protectContent = (text: string) => {
@@ -925,10 +974,57 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
           <FormDescription>Carga documentos (PDF, DOC, etc.) que se enviarán con el mensaje. Especifica el idioma para cada adjunto.</FormDescription>
 
           <div className="space-y-3">
+            {/* Adjuntos Existentes */}
+            {loadingAttachments ? (
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Cargando adjuntos...
+              </div>
+            ) : existingAttachments.length > 0 ? (
+              <div className="space-y-2 mb-4 p-3 bg-blue-50 rounded border border-blue-200">
+                <p className="text-sm font-medium text-blue-900 mb-2">Adjuntos Existentes</p>
+                {existingAttachments.map((attachment) => (
+                  <div key={attachment.id} className="flex items-center justify-between bg-white p-2 rounded border border-blue-100">
+                    <div className="flex-1 min-w-0">
+                      <a
+                        href={attachment.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm font-medium text-blue-600 hover:underline truncate"
+                      >
+                        {attachment.file_name}
+                      </a>
+                      <p className="text-xs text-gray-600">{(attachment.file_size / 1024 / 1024).toFixed(2)} MB</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs bg-blue-100 px-2 py-1 rounded text-blue-700">
+                        {attachment.language_code === "all" ? "Global" : attachment.language_code.toUpperCase()}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setExistingAttachments((prev) => prev.filter((att) => att.id !== attachment.id))
+                          // Registrar eliminación para procesar al guardar
+                        }}
+                        className="ml-2"
+                        disabled={loading}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
+            {/* Adjuntos Pendientes */}
             {pendingAttachments.length > 0 && (
-              <div className="space-y-2 mb-4">
+              <div className="space-y-2 mb-4 p-3 bg-green-50 rounded border border-green-200">
+                <p className="text-sm font-medium text-green-900 mb-2">Nuevos Adjuntos</p>
                 {pendingAttachments.map((attachment) => (
-                  <div key={attachment.id} className="flex items-center justify-between bg-gray-50 p-3 rounded border">
+                  <div key={attachment.id} className="flex items-center justify-between bg-white p-2 rounded border border-green-100">
                     <div className="flex-1">
                       <p className="text-sm font-medium">{attachment.name}</p>
                       <p className="text-xs text-gray-600">{(attachment.size / 1024 / 1024).toFixed(2)} MB</p>
