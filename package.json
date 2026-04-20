@@ -9,6 +9,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@ai-sdk/groq": "^3.0.35",
     "@auth/core": "latest",
     "@dnd-kit/core": "latest",
     "@dnd-kit/sortable": "latest",
