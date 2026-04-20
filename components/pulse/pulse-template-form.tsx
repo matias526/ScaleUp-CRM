@@ -9,14 +9,15 @@ import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Loader2 } from "lucide-react"
+import { Loader2, Upload, X, Image as ImageIcon } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import SafeEditor from "./safe-editor"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DICT_LANG_PULSE } from "@/lib/constants/dict-lang-pulse"
 import { getActiveTechCompaniesClient } from "@/lib/services/tech-company-service-client"
+import { Checkbox } from "@/components/ui/checkbox"
 
-// Convertir [BR] a saltos de línea reales para edición
+  // Convertir [BR] a saltos de línea reales para edición
 const brToNewlines = (text: string): string => {
   return text.replaceAll("[BR]", "\n")
 }
@@ -24,6 +25,34 @@ const brToNewlines = (text: string): string => {
 // Convertir saltos de línea reales a [BR] para almacenamiento
 const newlinesToBr = (text: string): string => {
   return text.replaceAll("\n", "[BR]")
+}
+
+// Función para procesar y validar imágenes
+const processImageFile = async (file: File): Promise<{ id: string; name: string; size: number; url: string } | null> => {
+  try {
+    if (!file.type.startsWith("image/")) {
+      alert("Solo se permiten archivos de imagen")
+      return null
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("El archivo no debe superar 5MB")
+      return null
+    }
+
+    // Crear URL temporal para preview
+    const url = URL.createObjectURL(file)
+    
+    return {
+      id: crypto.randomUUID(),
+      name: file.name,
+      size: file.size,
+      url,
+    }
+  } catch (error) {
+    console.error("[v0] Error procesando imagen:", error)
+    return null
+  }
 }
 
 // Validación más flexible: solo requiere español, el resto puede estar vacío inicialmente
@@ -35,6 +64,7 @@ const pulseTemplateSchema = z.object({
     .regex(/^[A-Z0-9_]+$/, "Solo mayúsculas, números y guiones bajos"),
   category: z.string().min(1, "La categoría es requerida"),
   tech_company_id: z.string().optional().nullable(),
+  attachments_enabled: z.boolean().default(false),
   display_name_es: z.string().min(1, "El nombre en español es requerido"),
   subject_es: z.string().min(1, "El asunto en español es requerido"),
   body_content_es: z.string().min(1, "El contenido en español es requerido"),
@@ -79,6 +109,11 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
   const [translating, setTranslating] = useState(false)
   const [techCompanies, setTechCompanies] = useState<Array<{ id: string; name: string }>>([])
   const [loadingCompanies, setLoadingCompanies] = useState(true)
+  
+  // Estado para adjuntos
+  const [uploadedFiles, setUploadedFiles] = useState<Array<{ id: string; name: string; size: number; url?: string }>>([])
+  const [uploadingFile, setUploadingFile] = useState(false)
+  const [previewImage, setPreviewImage] = useState<{ id: string; url: string; name: string } | null>(null)
 
   // Helper para traducción local usando diccionario
   const tPulse = (key: string, defaultValue: string = ""): string => {
@@ -93,6 +128,7 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
     internal_code: template?.internal_code || "",
     category: template?.category || "metodologia",
     tech_company_id: template?.tech_company_id || null,
+    attachments_enabled: false,
     display_name_es: brToNewlines(template?.translations.find((tr) => tr.language_code === "es")?.display_name || ""),
     subject_es: brToNewlines(template?.translations.find((tr) => tr.language_code === "es")?.subject || ""),
     body_content_es: brToNewlines(template?.translations.find((tr) => tr.language_code === "es")?.body_content || ""),
@@ -481,6 +517,97 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
             )}
           />
         </div>
+
+        {/* Attachments Section */}
+        <div className="border rounded-lg p-4 space-y-3 bg-gray-50">
+          <FormField
+            control={form.control}
+            name="attachments_enabled"
+            render={({ field }) => (
+              <FormItem className="flex items-center space-x-2">
+                <FormControl>
+                  <Checkbox checked={field.value} onCheckedChange={field.onChange} disabled={loading} />
+                </FormControl>
+                <FormLabel className="mb-0 font-medium cursor-pointer">
+                  Habilitar adjuntos de imagen
+                </FormLabel>
+              </FormItem>
+            )}
+          />
+
+          {form.watch("attachments_enabled") && (
+            <div className="space-y-3">
+              <FormDescription>Carga imágenes que se incluirán con el mensaje (máx. 5MB por archivo)</FormDescription>
+              
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-2 px-4 py-2 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-100 transition">
+                  <Upload className="h-4 w-4" />
+                  <span className="text-sm font-medium">Cargar Imagen</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={async (e) => {
+                      if (e.target.files) {
+                        setUploadingFile(true)
+                        for (const file of e.target.files) {
+                          const processed = await processImageFile(file)
+                          if (processed) {
+                            setUploadedFiles((prev) => [...prev, processed])
+                          }
+                        }
+                        setUploadingFile(false)
+                      }
+                    }}
+                    disabled={uploadingFile || loading}
+                    className="hidden"
+                  />
+                </label>
+                {uploadingFile && <Loader2 className="h-4 w-4 animate-spin" />}
+              </div>
+
+              {uploadedFiles.length > 0 && (
+                <div className="grid grid-cols-2 gap-3">
+                  {uploadedFiles.map((file) => (
+                    <div key={file.id} className="relative group border rounded-lg overflow-hidden bg-white">
+                      <img
+                        src={file.url}
+                        alt={file.name}
+                        className="w-full h-32 object-cover cursor-pointer"
+                        onClick={() => setPreviewImage({ id: file.id, url: file.url!, name: file.name })}
+                      />
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition flex items-center justify-center">
+                        <button
+                          type="button"
+                          onClick={() => setUploadedFiles((prev) => prev.filter((f) => f.id !== file.id))}
+                          className="opacity-0 group-hover:opacity-100 transition"
+                        >
+                          <X className="h-4 w-4 text-white" />
+                        </button>
+                      </div>
+                      <p className="text-xs p-1 truncate text-gray-600">{file.name}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Image Preview Modal */}
+        {previewImage && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setPreviewImage(null)}>
+            <div className="bg-white rounded-lg p-4 max-w-2xl max-h-96 flex flex-col" onClick={(e) => e.stopPropagation()}>
+              <div className="flex justify-between items-center mb-3">
+                <p className="font-semibold text-sm">{previewImage.name}</p>
+                <button onClick={() => setPreviewImage(null)}>
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <img src={previewImage.url} alt={previewImage.name} className="w-full h-auto object-cover rounded" />
+            </div>
+          </div>
+        )}
 
         {/* Multi-Language Editor Tabs */}
         <div className="space-y-3">
