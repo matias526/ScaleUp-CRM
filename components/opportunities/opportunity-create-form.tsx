@@ -750,7 +750,7 @@ export default function OpportunityCreateForm() {
       {/* Narrow Container for Entire Form */}
       <div className="max-w-2xl mx-auto w-full">
         <Card>
-        <CardHeader className="pb-6 bg-blue-50">
+        <CardHeader className="pb-6 bg-primary/10">
           {/* Header Title and Description */}
           <div className="mb-6">
             <CardTitle className="text-2xl mb-2 text-gray-900">{t("opportunities.header.title") || "Crear nueva oportunidad"}</CardTitle>
@@ -1217,20 +1217,22 @@ export default function OpportunityCreateForm() {
                     )}
                   />
 
-                  {/* Estimated Value */}
-                  <FormField
-                    control={form.control}
-                    name="estimated_value"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("opportunities.form.estimated_value")} (USD)</FormLabel>
-                        <FormControl>
-                          <Input type="number" placeholder="0.00" step="0.01" {...field} value={field.value ?? ""} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {/* Estimated Value - Only for ScaleUp users */}
+                  {isScaleUpUser && (
+                    <FormField
+                      control={form.control}
+                      name="estimated_value"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("opportunities.form.estimated_value")} (USD)</FormLabel>
+                          <FormControl>
+                            <Input type="number" placeholder="0.00" step="0.01" {...field} value={field.value ?? ""} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
 
                   {/* Estimated Close Date */}
                   <FormField
