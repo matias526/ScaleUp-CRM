@@ -7,14 +7,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Building, Globe, Mail, MapPin, Phone, User, FileText } from "lucide-react"
 import { EndCustomerPartners } from "@/components/end-customers/end-customer-partners"
 
+// 1. Corregimos la interfaz: params es una Promise
 interface EndCustomerDetailPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default async function EndCustomerDetailPage({ params }: EndCustomerDetailPageProps) {
-  const [customer, partners] = await Promise.all([getEndCustomerById(params.id), getEndCustomerPartners(params.id)])
+  // 2. Resolvemos la promesa de params antes de usar el id
+  const { id } = await params
+
+  // 3. Ahora usamos el id resuelto para las peticiones
+  const [customer, partners] = await Promise.all([
+    getEndCustomerById(id),
+    getEndCustomerPartners(id)
+  ])
 
   if (!customer) {
     notFound()
@@ -139,7 +147,6 @@ export default async function EndCustomerDetailPage({ params }: EndCustomerDetai
         </Card>
       </div>
 
-      {/* Sección de Partners Relacionados */}
       <EndCustomerPartners partners={partners} />
     </div>
   )

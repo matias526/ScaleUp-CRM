@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, use } from "react" // 1. Importamos 'use' de React
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,7 +10,11 @@ import { type User, UserService } from "@/lib/services/user-service"
 import { Edit, ArrowLeft, Mail, RefreshCw, Building2, UserCheck } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 
-export default function UserDetailsPage({ params }: { params: { id: string } }) {
+export default function UserDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  // 3. "Desenvolvemos" los params usando el hook 'use'
+  const resolvedParams = use(params)
+  const id = resolvedParams.id
+
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -20,7 +24,8 @@ export default function UserDetailsPage({ params }: { params: { id: string } }) 
     setIsLoading(true)
     setError(null)
     try {
-      const data = await UserService.getUserById(params.id)
+      // 4. Usamos el id ya resuelto
+      const data = await UserService.getUserById(id)
       if (!data) {
         throw new Error("Usuario no encontrado")
       }
@@ -30,7 +35,7 @@ export default function UserDetailsPage({ params }: { params: { id: string } }) 
     } finally {
       setIsLoading(false)
     }
-  }, [params.id])
+  }, [id]) // 5. Dependencia actualizada
 
   useEffect(() => {
     loadUser()
