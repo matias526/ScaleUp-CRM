@@ -3,14 +3,17 @@ import { notFound } from "next/navigation"
 import { getTaskById } from "@/lib/services/task-service"
 import TaskDetail from "@/components/tasks/task-detail"
 
+// 1. La interfaz ahora define params como una Promise
 interface TaskPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
+// 2. La función sigue siendo async, eso está perfecto
 export default async function TaskPage({ params }: TaskPageProps) {
-  const { id } = params
+  // 3. ¡FUNDAMENTAL! Hay que esperar a que los params se resuelvan
+  const { id } = await params
 
   try {
     const task = await getTaskById(id)
