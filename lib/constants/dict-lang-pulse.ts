@@ -12,9 +12,9 @@ export const DICT_LANG_PULSE = {
     pt: "Modelos de Mensagem",
   },
   "pulse.description": {
-    es: "Gestiona templates reutilizables para Pulse en múltiples idiomas con inserción atómica",
-    en: "Manage reusable message templates for Pulse in multiple languages with atomic insertion",
-    pt: "Gerencie modelos de mensagens reutilizáveis para Pulse em múltiplos idiomas com inserção atômica",
+    es: "Gestiona templates reutilizables para mensajes en múltiples idiomas con inserción atómica",
+    en: "Manage reusable message templates for messages in multiple languages with atomic insertion",
+    pt: "Gerencie modelos de mensagens reutilizáveis para mensagems em múltiplos idiomas com inserção atômica",
   },
   "pulse.create_template": {
     es: "Crear Template",
