@@ -178,7 +178,11 @@ export default function SafeEditor({ value, onChange, placeholder, disabled, onA
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  fileInputRef.current?.click()
+                }}
                 disabled={disabled}
                 title="Insertar Imagen"
                 className="h-8 w-8 p-0"
@@ -190,6 +194,7 @@ export default function SafeEditor({ value, onChange, placeholder, disabled, onA
                 type="file"
                 accept="image/*"
                 onChange={handleImageUpload}
+                onClick={(e) => e.stopPropagation()}
                 className="hidden"
               />
             </>
