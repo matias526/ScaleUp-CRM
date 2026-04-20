@@ -27,8 +27,14 @@ const newlinesToBr = (text: string): string => {
   return text.replaceAll("\n", "[BR]")
 }
 
-// Función para procesar y validar imágenes
-const processImageFile = async (file: File): Promise<{ id: string; name: string; size: number; url: string } | null> => {
+// Función para procesar y validar imágenes (sin subir)
+const processImageFile = async (file: File): Promise<{ 
+  id: string
+  file: File
+  blobUrl: string
+  name: string
+  size: number
+} | null> => {
   try {
     if (!file.type.startsWith("image/")) {
       alert("Solo se permiten archivos de imagen")
@@ -40,14 +46,15 @@ const processImageFile = async (file: File): Promise<{ id: string; name: string;
       return null
     }
 
-    // Crear URL temporal para preview
-    const url = URL.createObjectURL(file)
+    // Crear blob URL temporal para preview (no se sube hasta guardar)
+    const blobUrl = URL.createObjectURL(file)
     
     return {
       id: crypto.randomUUID(),
+      file,
+      blobUrl,
       name: file.name,
       size: file.size,
-      url,
     }
   } catch (error) {
     console.error("[v0] Error procesando imagen:", error)
@@ -110,8 +117,15 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
   const [techCompanies, setTechCompanies] = useState<Array<{ id: string; name: string }>>([])
   const [loadingCompanies, setLoadingCompanies] = useState(true)
   
-  // Estado para adjuntos
-  const [uploadedFiles, setUploadedFiles] = useState<Array<{ id: string; name: string; size: number; url?: string }>>([])
+  // Estado para adjuntos (subida diferida)
+  // Almacena archivos pendientes de guardar localmente
+  const [pendingAttachments, setPendingAttachments] = useState<Array<{ 
+    id: string
+    file: File
+    blobUrl: string
+    name: string
+    size: number
+  }>>([])
   const [uploadingFile, setUploadingFile] = useState(false)
   const [previewImage, setPreviewImage] = useState<{ id: string; url: string; name: string } | null>(null)
 
@@ -307,6 +321,87 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
     }
   }
 
+  // Función para subir archivos pendientes de forma transaccional
+  const uploadPendingAttachments = async (templateId: string): Promise<void> => {
+    if (pendingAttachments.length === 0) {
+      console.log("[v0] No hay adjuntos pendientes")
+      return
+    }
+
+    console.log(`[v0] Subiendo ${pendingAttachments.length} adjuntos para template ${templateId}`)
+
+    try {
+      for (const attachment of pendingAttachments) {
+        // Subir archivo a Supabase Storage
+        const fileExt = attachment.file.name.split(".").pop()
+        const fileName = `${templateId}/${attachment.id}.${fileExt}`
+        
+        const { error: uploadError } = await supabase.storage
+          .from("pulse-attachments")
+          .upload(fileName, attachment.file)
+
+        if (uploadError) {
+          throw new Error(`Error subiendo archivo ${attachment.name}: ${uploadError.message}`)
+        }
+
+        console.log(`[v0] Archivo subido: ${fileName}`)
+
+        // Obtener URL pública
+        const { data } = supabase.storage.from("pulse-attachments").getPublicUrl(fileName)
+        const publicUrl = data.publicUrl
+
+        // Crear registro en pulse_message_attachments
+        const { data: attachmentData, error: attachmentError } = await supabase
+          .from("pulse_message_attachments")
+          .insert([
+            {
+              file_name: attachment.name,
+              file_path: fileName,
+              file_size: attachment.size,
+              public_url: publicUrl,
+            },
+          ])
+          .select()
+          .single()
+
+        if (attachmentError) throw attachmentError
+
+        // Crear relación en pulse_template_attachments_join
+        const { error: joinError } = await supabase
+          .from("pulse_template_attachments_join")
+          .insert([
+            {
+              template_id: templateId,
+              attachment_id: attachmentData.id,
+            },
+          ])
+
+        if (joinError) throw joinError
+
+        console.log(`[v0] Adjunto registrado en BD: ${attachment.name}`)
+      }
+
+      // Limpiar attachments pendientes después de subir exitosamente
+      setPendingAttachments([])
+      console.log("[v0] Todos los adjuntos subidos exitosamente")
+    } catch (error) {
+      console.error("[v0] Error subiendo adjuntos:", error)
+      throw error
+    }
+  }
+
+  // Función para reemplazar blob URLs con URLs reales en el contenido
+  const replaceBlobUrlsInContent = (
+    content: string,
+    blobToUrlMap: Map<string, string>
+  ): string => {
+    let updatedContent = content
+    blobToUrlMap.forEach((realUrl, blobUrl) => {
+      updatedContent = updatedContent.replaceAll(blobUrl, realUrl)
+    })
+    return updatedContent
+  }
+
   const handleSave = async (data: PulseTemplateFormData) => {
     try {
       setLoading(true)
@@ -424,6 +519,13 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
 
         if (translationsError) throw translationsError
         console.log("[v0] Traducciones insertadas")
+      }
+
+      // Subir adjuntos pendientes si existen
+      const templateId = template?.id || templateData?.id
+      if (templateId && pendingAttachments.length > 0) {
+        console.log("[v0] Iniciando subida de adjuntos...")
+        await uploadPendingAttachments(templateId)
       }
 
       console.log("[v0] Guardado exitoso, llamando onSubmit")
@@ -553,7 +655,7 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                         for (const file of e.target.files) {
                           const processed = await processImageFile(file)
                           if (processed) {
-                            setUploadedFiles((prev) => [...prev, processed])
+                            setPendingAttachments((prev) => [...prev, processed])
                           }
                         }
                         setUploadingFile(false)
@@ -566,20 +668,20 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                 {uploadingFile && <Loader2 className="h-4 w-4 animate-spin" />}
               </div>
 
-              {uploadedFiles.length > 0 && (
+              {pendingAttachments.length > 0 && (
                 <div className="grid grid-cols-2 gap-3">
-                  {uploadedFiles.map((file) => (
+                  {pendingAttachments.map((file) => (
                     <div key={file.id} className="relative group border rounded-lg overflow-hidden bg-white">
                       <img
-                        src={file.url}
+                        src={file.blobUrl}
                         alt={file.name}
                         className="w-full h-32 object-cover cursor-pointer"
-                        onClick={() => setPreviewImage({ id: file.id, url: file.url!, name: file.name })}
+                        onClick={() => setPreviewImage({ id: file.id, url: file.blobUrl, name: file.name })}
                       />
                       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition flex items-center justify-center">
                         <button
                           type="button"
-                          onClick={() => setUploadedFiles((prev) => prev.filter((f) => f.id !== file.id))}
+                          onClick={() => setPendingAttachments((prev) => prev.filter((f) => f.id !== file.id))}
                           className="opacity-0 group-hover:opacity-100 transition"
                         >
                           <X className="h-4 w-4 text-white" />
