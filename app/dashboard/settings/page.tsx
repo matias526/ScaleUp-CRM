@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { Settings, Languages, Database, FileText, Clock, Mail, FileSpreadsheet, HardDrive, Shield } from "lucide-react"
+import { Settings, Languages, Database, FileText, Clock, Mail, FileSpreadsheet, HardDrive, Shield, Zap } from "lucide-react"
 
 export default function SettingsPage() {
   return (
@@ -136,6 +136,22 @@ export default function SettingsPage() {
           <CardContent>
             <Button asChild variant="outline" className="w-full bg-transparent">
               <Link href="/dashboard/settings/file-security">Configurar Seguridad</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Pulse Templates */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center space-x-2">
+              <Zap className="h-5 w-5" />
+              <span>Pulse Templates</span>
+            </CardTitle>
+            <CardDescription>Gestionar templates reutilizables para Pulse</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild variant="outline" className="w-full bg-transparent">
+              <Link href="/dashboard/settings/pulse-templates">Administrar Templates</Link>
             </Button>
           </CardContent>
         </Card>

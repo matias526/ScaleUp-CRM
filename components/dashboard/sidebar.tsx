@@ -24,7 +24,6 @@ import { useAuth } from "@/components/auth/auth-provider"
 import Image from "next/image"
 import { TranslationService } from "@/lib/services/translation-service"
 
-// Traducciones de respaldo para el sidebar
 const sidebarTranslations = {
   en: {
     "sidebar.dashboard": "Dashboard",
@@ -42,6 +41,7 @@ const sidebarTranslations = {
     "sidebar.settings.custom_fields": "Custom Fields",
     "sidebar.settings.translations": "Translations",
     "sidebar.settings.supabase": "Supabase Setup",
+    "sidebar.settings.pulse_templates": "Pulse Templates",
     "sidebar.knowledge_base": "Knowledge Base",
     "sidebar.ai_knowledge_base": "AI Knowledge Base",
     "sidebar.ai_knowledge_base.chat": "Chat with Mika",
@@ -65,6 +65,7 @@ const sidebarTranslations = {
     "sidebar.settings.custom_fields": "Campos Personalizados",
     "sidebar.settings.translations": "Traducciones",
     "sidebar.settings.supabase": "Configuración Supabase",
+    "sidebar.settings.pulse_templates": "Pulse Templates",
     "sidebar.knowledge_base": "Base de Conocimiento",
     "sidebar.ai_knowledge_base": "Base de Conocimiento IA",
     "sidebar.ai_knowledge_base.chat": "Chat con Mika",
@@ -88,6 +89,7 @@ const sidebarTranslations = {
     "sidebar.settings.custom_fields": "Campos Personalizados",
     "sidebar.settings.translations": "Traduções",
     "sidebar.settings.supabase": "Configuração Supabase",
+    "sidebar.settings.pulse_templates": "Pulse Templates",
     "sidebar.knowledge_base": "Base de Conhecimento",
     "sidebar.ai_knowledge_base": "Base de Conocimiento IA",
     "sidebar.ai_knowledge_base.chat": "Chat com Mika",
@@ -288,6 +290,10 @@ export function Sidebar() {
         {
           href: "/dashboard/settings/supabase-setup",
           labelKey: "sidebar.settings.supabase",
+        },
+        {
+          href: "/dashboard/settings/pulse-templates",
+          labelKey: "sidebar.settings.pulse_templates",
         },
       ],
     },
