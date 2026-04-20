@@ -412,18 +412,20 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
 
         // Obtener URL pública
         const { data } = supabase.storage.from("pulse-assets").getPublicUrl(`attachments/${fileName}`)
-        const publicUrl = data.publicUrl
+        const fileUrl = data.publicUrl
 
-        // Crear registro en pulse_message_attachments
+        // Obtener tipo de archivo del MIME type
+        const fileType = attachment.file.type || "application/octet-stream"
+
+        // Crear registro en pulse_message_attachments (sin language_code aquí)
         const { data: attachmentData, error: attachmentError } = await supabase
           .from("pulse_message_attachments")
           .insert([
             {
               file_name: attachment.name,
-              file_path: `attachments/${fileName}`,
+              file_url: fileUrl,
+              file_type: fileType,
               file_size: attachment.size,
-              public_url: publicUrl,
-              language_code: attachment.language,
             },
           ])
           .select()
@@ -431,19 +433,22 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
 
         if (attachmentError) throw attachmentError
 
-        // Crear relación en pulse_template_attachments_join
+        // Crear relación en pulse_template_attachments_join (con language_code)
+        const languageCode = attachment.language === "global" ? "all" : attachment.language
+
         const { error: joinError } = await supabase
           .from("pulse_template_attachments_join")
           .insert([
             {
               template_id: templateId,
               attachment_id: attachmentData.id,
+              language_code: languageCode,
             },
           ])
 
         if (joinError) throw joinError
 
-        console.log(`[v0] Adjunto registrado en BD: ${attachment.name}`)
+        console.log(`[v0] Adjunto registrado en BD: ${attachment.name} (language: ${languageCode})`)
       }
 
       // Limpiar attachments pendientes después de subir exitosamente
@@ -940,7 +945,7 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="global">Global</SelectItem>
+                        <SelectItem value="all">Global</SelectItem>
                         <SelectItem value="es">Español</SelectItem>
                         <SelectItem value="en">Inglés</SelectItem>
                         <SelectItem value="pt">Portugués</SelectItem>
@@ -972,7 +977,7 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                     for (const file of e.target.files) {
                       const processed = await processAttachmentFile(file)
                       if (processed) {
-                        setPendingAttachments((prev) => [...prev, { ...processed, language: "global" }])
+                        setPendingAttachments((prev) => [...prev, { ...processed, language: "all" }])
                       }
                     }
                     setUploadingFile(false)
