@@ -16,6 +16,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DICT_LANG_PULSE } from "@/lib/constants/dict-lang-pulse"
 import { getActiveTechCompaniesClient } from "@/lib/services/tech-company-service-client"
 
+// Convertir [BR] a saltos de línea reales para edición
+const brToNewlines = (text: string): string => {
+  return text.replaceAll("[BR]", "\n")
+}
+
+// Convertir saltos de línea reales a [BR] para almacenamiento
+const newlinesToBr = (text: string): string => {
+  return text.replaceAll("\n", "[BR]")
+}
+
 // Validación más flexible: solo requiere español, el resto puede estar vacío inicialmente
 const pulseTemplateSchema = z.object({
   internal_code: z
@@ -159,15 +169,6 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
     return restored
   }
 
-  // Convertir [BR] a saltos de línea reales para edición
-  const brToNewlines = (text: string): string => {
-    return text.replaceAll("[BR]", "\n")
-  }
-
-  // Convertir saltos de línea reales a [BR] para almacenamiento
-  const newlinesToBr = (text: string): string => {
-    return text.replaceAll("\n", "[BR]")
-  }
 
   // Auto-traducción usando Groq - traduce DESDE el idioma actual a los otros dos
   const handleAutoTranslate = async () => {
@@ -297,23 +298,23 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
           },
           ...(hasEN
             ? [
-                {
-                  language_code: "en",
-                  display_name: newlinesToBr(data.display_name_en),
-                  subject: newlinesToBr(data.subject_en),
-                  body_content: newlinesToBr(data.body_content_en),
-                },
-              ]
+              {
+                language_code: "en",
+                display_name: newlinesToBr(data.display_name_en),
+                subject: newlinesToBr(data.subject_en),
+                body_content: newlinesToBr(data.body_content_en),
+              },
+            ]
             : []),
           ...(hasPT
             ? [
-                {
-                  language_code: "pt",
-                  display_name: newlinesToBr(data.display_name_pt),
-                  subject: newlinesToBr(data.subject_pt),
-                  body_content: newlinesToBr(data.body_content_pt),
-                },
-              ]
+              {
+                language_code: "pt",
+                display_name: newlinesToBr(data.display_name_pt),
+                subject: newlinesToBr(data.subject_pt),
+                body_content: newlinesToBr(data.body_content_pt),
+              },
+            ]
             : []),
         ]
 
@@ -359,25 +360,25 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
           },
           ...(hasEN
             ? [
-                {
-                  template_id: templateId,
-                  language_code: "en",
-                  display_name: newlinesToBr(data.display_name_en),
-                  subject: newlinesToBr(data.subject_en),
-                  body_content: newlinesToBr(data.body_content_en),
-                },
-              ]
+              {
+                template_id: templateId,
+                language_code: "en",
+                display_name: newlinesToBr(data.display_name_en),
+                subject: newlinesToBr(data.subject_en),
+                body_content: newlinesToBr(data.body_content_en),
+              },
+            ]
             : []),
           ...(hasPT
             ? [
-                {
-                  template_id: templateId,
-                  language_code: "pt",
-                  display_name: newlinesToBr(data.display_name_pt),
-                  subject: newlinesToBr(data.subject_pt),
-                  body_content: newlinesToBr(data.body_content_pt),
-                },
-              ]
+              {
+                template_id: templateId,
+                language_code: "pt",
+                display_name: newlinesToBr(data.display_name_pt),
+                subject: newlinesToBr(data.subject_pt),
+                body_content: newlinesToBr(data.body_content_pt),
+              },
+            ]
             : []),
         ]
 
