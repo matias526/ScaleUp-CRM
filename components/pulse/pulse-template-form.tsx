@@ -343,8 +343,16 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
     const map = new Map<string, string>()
     let counter = 0
 
+    // Proteger tags de imagen [IMG]url[/IMG]
+    let protected_text = text.replace(/\[IMG\](.*?)\[\/IMG\]/g, (match) => {
+      const placeholder = `__PULSEIMG_${counter}__`
+      map.set(placeholder, match)
+      counter++
+      return placeholder
+    })
+
     // Proteger saltos de línea [BR]
-    let protected_text = text.replace(/\[BR\]/g, (match) => {
+    protected_text = protected_text.replace(/\[BR\]/g, (match) => {
       const placeholder = `__PULSEBR_${counter}__`
       map.set(placeholder, match)
       counter++
@@ -825,6 +833,10 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                 Português (PT)
               </TabsTrigger>
             </TabsList>
+            
+            <div className="text-xs text-gray-600 mt-3 p-2 bg-blue-50 rounded border border-blue-200 mb-4">
+              💡 Cada idioma es <strong>completamente independiente</strong>. Las imágenes se copian en la traducción inicial, pero después puedes cambiarlas/eliminarlas por separado en cada idioma.
+            </div>
 
             {/* Español */}
             <TabsContent value="es" className="space-y-4 mt-4">
