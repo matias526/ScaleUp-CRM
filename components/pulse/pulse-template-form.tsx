@@ -9,12 +9,11 @@ import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Loader2, Upload, X, Copy, Mail } from "lucide-react"
+import { Loader2, Upload, X } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import SafeEditor from "./safe-editor"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DICT_LANG_PULSE } from "@/lib/constants/dict-lang-pulse"
-import { PULSE_TEMPLATE_VARIABLES } from "@/lib/constants/pulse-variables"
 import { getActiveTechCompaniesClient } from "@/lib/services/tech-company-service-client"
 
 // Convertir [BR] a saltos de línea reales para edición
@@ -28,10 +27,10 @@ const newlinesToBr = (text: string): string => {
 }
 
 
-// Función para renderizar preview del contenido - SIN EVAL ni backticks
-// Usa .split() para dividir en texto plano y etiquetas, todo como strings
+// Función para renderizar preview del contenido
+// Soporta tanto \n como [BR], y procesa [B], [I], [U], [IMG], {{variables}}
 const renderPreview = (content: string): React.ReactNode => {
-  // Normalizar: convertir \n a [BR]
+  // Normalizar: convertir \n a [BR] si existen, luego split
   const normalized = content.replaceAll("\n", "[BR]")
   const lines = normalized.split("[BR]")
 
@@ -41,12 +40,15 @@ const renderPreview = (content: string): React.ReactNode => {
     const line = lines[i]
     
     // Renderizar la línea con formato
-    const formattedLine = renderFormattedLine(line, i)
-    result.push(
-      <div key={`line-${i}`} className="whitespace-pre-wrap break-words">
-        {formattedLine}
-      </div>
-    )
+    if (line || i === 0) {
+      // Incluso líneas vacías pueden contener imágenes
+      const formattedLine = renderFormattedLine(line, i)
+      result.push(
+        <div key={`line-${i}`} className="whitespace-pre-wrap break-words">
+          {formattedLine}
+        </div>
+      )
+    }
 
     // Agregar <br /> después de cada línea (excepto la última)
     if (i < lines.length - 1) {
@@ -57,22 +59,39 @@ const renderPreview = (content: string): React.ReactNode => {
   return result
 }
 
-// Renderizar una línea individual - SOLO STRINGS, SIN EVAL
+// Renderizar una línea individual procesando etiquetas
+// Orden de prioridad: 1) [BR] (ya hecho), 2) [IMG], 3) [B/I/U], 4) {{variables}}, 5) texto plano
 const renderFormattedLine = (line: string, baseKey: number): React.ReactNode[] => {
   const parts: React.ReactNode[] = []
-  
-  // Paso 1: Separar por [IMG]...[/IMG]
-  const imgParts = line.split(/(\[IMG\][^\[]*\[\/IMG\])/g)
-  
-  for (let i = 0; i < imgParts.length; i++) {
-    const imgPart = imgParts[i]
-    
-    // Si es una imagen, renderizar como <img>
-    if (imgPart.startsWith("[IMG]")) {
-      const imgUrl = imgPart.replace(/\[IMG\](.*?)\[\/IMG\]/g, "$1")
+  let lastIndex = 0
+  let componentCounter = 0
+
+  // Regex MEJORADO con grupos nombrados (en orden de prioridad)
+  // Grupo 1: [IMG]url[/IMG]
+  // Grupo 2: [B]text[/B]
+  // Grupo 3: [I]text[/I]
+  // Grupo 4: [U]text[/U]
+  // Grupo 5: {{variable}}
+  const regex = /\[IMG\](.*?)\[\/IMG\]|\[B\](.*?)\[\/B\]|\[I\](.*?)\[\/I\]|\[U\](.*?)\[\/U\]|\{\{([^}]*)\}\}/g
+  let match
+
+  while ((match = regex.exec(line)) !== null) {
+    // Agregar texto plano ANTES del match (IMPORTANTE: no filtrar con trim)
+    if (match.index > lastIndex) {
+      const plainText = line.substring(lastIndex, match.index)
+      if (plainText) {
+        parts.push(plainText)
+      }
+    }
+
+    const key = `line-${baseKey}-elem-${componentCounter++}`
+
+    if (match[1] !== undefined) {
+      // [IMG]url[/IMG]
+      const imgUrl = match[1]
       parts.push(
         <img
-          key={`img-${baseKey}-${i}`}
+          key={key}
           src={imgUrl}
           alt="Imagen del mensaje"
           className="max-w-full max-h-80 rounded my-2 block"
@@ -81,144 +100,58 @@ const renderFormattedLine = (line: string, baseKey: number): React.ReactNode[] =
           }}
         />
       )
-    } else {
-      // No es imagen, procesar formato [B], [I], [U], {{variables}}
-      const textParts = renderFormattedText(imgPart, baseKey, i)
-      parts.push(...textParts)
-    }
-  }
-
-  return parts.length > 0 ? parts : [" "]
-}
-
-// Renderizar texto con formato [B], [I], [U] y {{variables}} - TODO COMO STRINGS
-const renderFormattedText = (text: string, baseKey: number, lineIndex: number): React.ReactNode[] => {
-  const parts: React.ReactNode[] = []
-  let counter = 0
-
-  // Paso 1: Procesar [B]...[/B]
-  let tempText = text
-  tempText = processTag(tempText, "B", (content) => (
-    <strong key={`b-${baseKey}-${lineIndex}-${counter++}`} className="font-bold">
-      {content}
-    </strong>
-  ), parts)
-
-  // Paso 2: Procesar [I]...[/I]
-  tempText = processTag(tempText, "I", (content) => (
-    <em key={`i-${baseKey}-${lineIndex}-${counter++}`} className="italic">
-      {content}
-    </em>
-  ), parts)
-
-  // Paso 3: Procesar [U]...[/U]
-  tempText = processTag(tempText, "U", (content) => (
-    <u key={`u-${baseKey}-${lineIndex}-${counter++}`} className="underline">
-      {content}
-    </u>
-  ), parts)
-
-  // Paso 4: Procesar {{variables}} - COMO STRINGS, SIN EVAL
-  const varParts = tempText.split(/({{[^}]*}})/g)
-  for (const part of varParts) {
-    if (part.startsWith("{{") && part.endsWith("}}")) {
-      // Es una variable - renderizar con span azul
+    } else if (match[2] !== undefined) {
+      // [B]text[/B]
+      parts.push(
+        <strong key={key} className="font-bold">
+          {match[2]}
+        </strong>
+      )
+    } else if (match[3] !== undefined) {
+      // [I]text[/I]
+      parts.push(
+        <em key={key} className="italic">
+          {match[3]}
+        </em>
+      )
+    } else if (match[4] !== undefined) {
+      // [U]text[/U]
+      parts.push(
+        <u key={key} className="underline">
+          {match[4]}
+        </u>
+      )
+    } else if (match[5] !== undefined) {
+      // {{variable}} - SIEMPRE MOSTRAR CON RESALTADO
+      const variableName = match[5]
       parts.push(
         <span
-          key={`var-${baseKey}-${lineIndex}-${counter++}`}
+          key={key}
           className="bg-blue-100 text-blue-700 px-1 rounded font-mono text-sm whitespace-nowrap"
           title="Campo dinámico que se reemplazará al enviar"
         >
-          {part}
+          {`{{${variableName}}}`}
         </span>
       )
-    } else if (part) {
-      // Texto plano
-      parts.push(part)
     }
-  }
 
-  return parts.length > 0 ? parts : [text || " "]
-}
-
-// Helper para procesar tags [TAG]content[/TAG]
-const processTag = (
-  text: string,
-  tag: string,
-  renderer: (content: string) => React.ReactNode,
-  parts: React.ReactNode[]
-): string => {
-  const regex = new RegExp(`\\[${tag}\\](.*?)\\[/${tag}\\]`, "g")
-  let lastIndex = 0
-  let match
-  let result = ""
-
-  while ((match = regex.exec(text)) !== null) {
-    // Agregar texto antes del match
-    result += text.substring(lastIndex, match.index)
-    
-    // Agregar elemento renderizado (como placeholder)
-    const key = `__PLACEHOLDER_${parts.length}__`
-    parts.push(renderer(match[1]))
-    result += key
-    
     lastIndex = regex.lastIndex
   }
 
-  // Agregar texto restante
-  result += text.substring(lastIndex)
-  
-  return result
-}
-
-// Renderizar Subject - SIN BACKTICKS, TODO COMO STRINGS
-const renderSubjectPreview = (subject: string): React.ReactNode[] => {
-  const parts: React.ReactNode[] = []
-  let counter = 0
-
-  // Procesar [B]...[/B]
-  let tempSubject = subject
-  tempSubject = processTag(tempSubject, "B", (content) => (
-    <strong key={`subj-b-${counter++}`} className="font-bold">
-      {content}
-    </strong>
-  ), parts)
-
-  // Procesar [I]...[/I]
-  tempSubject = processTag(tempSubject, "I", (content) => (
-    <em key={`subj-i-${counter++}`} className="italic">
-      {content}
-    </em>
-  ), parts)
-
-  // Procesar [U]...[/U]
-  tempSubject = processTag(tempSubject, "U", (content) => (
-    <u key={`subj-u-${counter++}`} className="underline">
-      {content}
-    </u>
-  ), parts)
-
-  // Procesar {{variables}} - SOLO COMO STRINGS
-  const varParts = tempSubject.split(/({{[^}]*}})/g)
-  for (const part of varParts) {
-    if (part.startsWith("{{") && part.endsWith("}}")) {
-      // Variable - SIN backticks, renderizar el string tal cual
-      parts.push(
-        <span
-          key={`subj-var-${counter++}`}
-          className="bg-blue-100 text-blue-700 px-1 rounded font-mono text-sm whitespace-nowrap"
-          title="Campo dinámico que se reemplazará al enviar"
-        >
-          {part}
-        </span>
-      )
-    } else if (part) {
-      parts.push(part)
+  // Agregar texto RESTANTE (IMPORTANTE: preservar TODO)
+  if (lastIndex < line.length) {
+    const remaining = line.substring(lastIndex)
+    if (remaining) {
+      parts.push(remaining)
     }
   }
 
-  return parts.length > 0 ? parts : [subject || "—"]
+  // Si la línea estaba vacía, retornar espacio vacío para preservar altura
+  return parts.length > 0 ? parts : [" "]
 }
+
+
+// Función para procesar y validar archivos adjuntos (cualquier tipo)
 const processAttachmentFile = async (file: File): Promise<{
   id: string
   file: File
@@ -926,32 +859,9 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Asunto</FormLabel>
-                    <FormDescription className="text-xs mb-2">Soporta variables: {{contact_name}}, {{opportunity_name}}, {{company_name}}</FormDescription>
-                    <div className="space-y-2">
-                      <FormControl>
-                        <Input placeholder="Ej: Nueva Oportunidad {{opportunity_name}}" {...field} disabled={loading} />
-                      </FormControl>
-                      <div className="flex gap-1 flex-wrap">
-                        {PULSE_TEMPLATE_VARIABLES.slice(0, 3).map((variable) => (
-                          <Button
-                            key={variable.name}
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="text-xs h-7"
-                            onClick={() => {
-                              const tag = `{{${variable.name}}}`
-                              navigator.clipboard.writeText(tag)
-                              // Agregar variable al final del input
-                              field.onChange(field.value + ` ${tag}`)
-                            }}
-                          >
-                            <Copy className="h-3 w-3 mr-1" />
-                            {variable.name}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
+                    <FormControl>
+                      <Input placeholder="Ej: Nueva Oportunidad {{opportunity_name}}" {...field} disabled={loading} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -1002,31 +912,9 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Subject</FormLabel>
-                    <FormDescription className="text-xs mb-2">Supports variables: {{contact_name}}, {{opportunity_name}}, {{company_name}}</FormDescription>
-                    <div className="space-y-2">
-                      <FormControl>
-                        <Input placeholder="E.g.: New Opportunity {{opportunity_name}}" {...field} disabled={loading} />
-                      </FormControl>
-                      <div className="flex gap-1 flex-wrap">
-                        {PULSE_TEMPLATE_VARIABLES.slice(0, 3).map((variable) => (
-                          <Button
-                            key={variable.name}
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="text-xs h-7"
-                            onClick={() => {
-                              const tag = `{{${variable.name}}}`
-                              navigator.clipboard.writeText(tag)
-                              field.onChange(field.value + ` ${tag}`)
-                            }}
-                          >
-                            <Copy className="h-3 w-3 mr-1" />
-                            {variable.name}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
+                    <FormControl>
+                      <Input placeholder="E.g.: New Opportunity {{opportunity_name}}" {...field} disabled={loading} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -1077,31 +965,9 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Assunto</FormLabel>
-                    <FormDescription className="text-xs mb-2">Suporta variáveis: {{contact_name}}, {{opportunity_name}}, {{company_name}}</FormDescription>
-                    <div className="space-y-2">
-                      <FormControl>
-                        <Input placeholder="Ex.: Nova Oportunidade {{opportunity_name}}" {...field} disabled={loading} />
-                      </FormControl>
-                      <div className="flex gap-1 flex-wrap">
-                        {PULSE_TEMPLATE_VARIABLES.slice(0, 3).map((variable) => (
-                          <Button
-                            key={variable.name}
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="text-xs h-7"
-                            onClick={() => {
-                              const tag = `{{${variable.name}}}`
-                              navigator.clipboard.writeText(tag)
-                              field.onChange(field.value + ` ${tag}`)
-                            }}
-                          >
-                            <Copy className="h-3 w-3 mr-1" />
-                            {variable.name}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
+                    <FormControl>
+                      <Input placeholder="Ex.: Nova Oportunidade {{opportunity_name}}" {...field} disabled={loading} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -1253,53 +1119,52 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
 
         {/* COLUMNA DERECHA - PREVIEW (1 columna, sticky) */}
         <div className="hidden lg:block sticky top-4 h-fit">
-          <div className="bg-slate-100 rounded-lg border border-slate-300 shadow-lg overflow-hidden">
-            {/* Email Client Mockup */}
-            <div className="bg-white rounded">
+          <div className="bg-gradient-to-b from-gray-50 to-gray-100 rounded-lg border border-gray-200 shadow-lg overflow-hidden">
+            {/* Email Preview Container */}
+            <div className="bg-white">
               {/* Email Header */}
-              <div className="bg-slate-900 text-white px-4 py-3 flex items-center gap-2">
-                <Mail className="h-4 w-4" />
-                <p className="text-sm font-semibold">Email Preview</p>
+              <div className="bg-gray-900 text-white p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide">Preview del Mensaje</p>
+                <p className="text-sm text-gray-300">{DICT_LANG_PULSE[currentTab as keyof typeof DICT_LANG_PULSE]}</p>
               </div>
 
               {/* Email Content */}
-              <div className="p-4 space-y-4 max-h-[650px] overflow-y-auto bg-slate-50">
-                {/* From Line */}
-                <div className="text-sm border-b border-slate-200 pb-2">
-                  <p className="text-xs font-semibold text-slate-600">Para:</p>
-                  <p className="text-slate-700">{form.getValues(`display_name_${currentTab}`) || "Cliente"} &lt;contact@example.com&gt;</p>
+              <div className="p-4 space-y-3 max-h-[600px] overflow-y-auto">
+                {/* Display Name */}
+                <div className="border-b pb-2">
+                  <p className="text-xs font-semibold text-gray-600 mb-1">Nombre a mostrar:</p>
+                  <p className="text-sm font-semibold text-gray-900">{form.getValues(`display_name_${currentTab}`) || "—"}</p>
                 </div>
 
-                {/* Subject Line */}
-                <div className="border-b border-slate-200 pb-3">
-                  <p className="text-xs font-semibold text-slate-600 mb-1">Asunto:</p>
-                  <p className="text-sm font-semibold text-slate-900 break-words leading-snug">
-                    {form.getValues(`subject_${currentTab}`) 
-                      ? renderSubjectPreview(form.getValues(`subject_${currentTab}`))
-                      : "—"}
-                  </p>
+                {/* Subject */}
+                <div className="border-b pb-2">
+                  <p className="text-xs font-semibold text-gray-600 mb-1">Asunto:</p>
+                  <p className="text-sm text-gray-700 font-medium">{form.getValues(`subject_${currentTab}`) || "—"}</p>
                 </div>
 
                 {/* Body Content */}
-                <div className="bg-white rounded p-4 text-sm whitespace-pre-wrap break-words leading-relaxed text-slate-800 border border-slate-200">
-                  {form.getValues(`body_content_${currentTab}`) 
-                    ? renderPreview(form.getValues(`body_content_${currentTab}`))
-                    : <span className="text-slate-400">El contenido aparecerá aquí...</span>}
+                <div>
+                  <p className="text-xs font-semibold text-gray-600 mb-2">Cuerpo del Mensaje:</p>
+                  <div className="bg-white border rounded p-3 text-sm whitespace-pre-wrap break-words leading-relaxed text-gray-800">
+                    {form.getValues(`body_content_${currentTab}`) 
+                      ? renderPreview(form.getValues(`body_content_${currentTab}`))
+                      : "—"}
+                  </div>
                 </div>
 
-                {/* Attachments Badge */}
+                {/* Attachments Info */}
                 {(existingAttachments.length > 0 || pendingAttachments.length > 0) && (
-                  <div className="bg-blue-50 border border-blue-200 rounded p-2">
-                    <p className="text-xs font-semibold text-blue-700">
-                      📎 {existingAttachments.length + pendingAttachments.length} {existingAttachments.length + pendingAttachments.length === 1 ? "Adjunto" : "Adjuntos"}
+                  <div className="border-t pt-2 mt-2">
+                    <p className="text-xs font-semibold text-gray-600 mb-1">
+                      📎 {existingAttachments.length + pendingAttachments.length} Adjuntos
                     </p>
                   </div>
                 )}
               </div>
 
-              {/* Footer Info */}
-              <div className="bg-slate-100 px-4 py-2 border-t border-slate-200 text-center">
-                <p className="text-xs text-slate-600 font-medium">Así verá el usuario el mensaje</p>
+              {/* Footer */}
+              <div className="bg-gray-50 px-4 py-2 border-t text-center text-xs text-gray-600">
+                Así verá el usuario este mensaje
               </div>
             </div>
           </div>
