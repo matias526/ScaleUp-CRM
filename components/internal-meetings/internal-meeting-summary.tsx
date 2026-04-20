@@ -70,15 +70,19 @@ export default function InternalMeetingSummary({ meetingId, meetingDate, weeklyT
       }
 
       // Cargar compromisos
-      const commitmentsResponse = await fetch(`/api/internal-meetings/${meetingId}/commitments?t=${Date.now()}`)
+      const RescommitmentsResponse = await fetch(`/api/internal-meetings/${meetingId}/commitments?t=${Date.now()}`);
+
       //const commitmentsResponse = await fetch(`/api/internal-meetings/${meetingId}/commitments`)
-      if (commitmentsResponse.ok) {
-        const commitmentsResult = await commitmentsResponse.json()
-        if (commitmentsResult.success) {
-          setPreviousCommitments(commitmentsResult.previousCommitments || [])
-          setCurrentCommitments(commitmentsResult.currentCommitments || [])
+      if (RescommitmentsResponse.ok) {
+        const RescommitmentsResult = await RescommitmentsResponse.json()
+        if (RescommitmentsResult.success) {
+          setPreviousCommitments(RescommitmentsResult.previousCommitments || [])
+          setCurrentCommitments(RescommitmentsResult.currentCommitments || [])
+        } else {
+          console.error("ERROR EN SUCCESS:", RescommitmentsResult.error);
         }
       }
+      console.error("DESPUES DE LLAMAR A COMPROMISOS");
 
       // Cargar participantes
       const participantsResponse = await fetch(`/api/internal-meetings/${meetingId}/participants`)

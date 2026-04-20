@@ -1,16 +1,18 @@
+console.error("!!! EL ARCHIVO DE COMMITMENTS ROUTE FUE LEÍDO POR EL NAVEGADOR !!!");
 import { type NextRequest, NextResponse } from "next/server"
 //import { createClient } from "@/lib/supabase/server"
 import { createServerClient } from "@/lib/supabase/server"
 export const dynamic = "force-dynamic";
 
-console.error("!!! EL ARCHIVO DE COMMITMENTS ROUTE FUE LEÍDO POR EL NAVEGADOR !!!");
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   console.error("DENTRO DE LA FUNCION");
   try {
-    const supabase = createServerClient()
+    const resolvedParams = await params;
+    const meetingId = resolvedParams.id;
 
-    const meetingId = params.id
+    const supabase = createServerClient()
 
     const {
       data: { user },
