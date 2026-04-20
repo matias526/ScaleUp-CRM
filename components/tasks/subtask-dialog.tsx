@@ -14,7 +14,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar } from "@/components/ui/spanish-calendar"
 import { useTranslations } from "@/hooks/use-translations"
 import { useTaskService } from "@/lib/services/task-service-client"
 import { supabase } from "@/lib/supabase/client"
@@ -24,6 +23,17 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
+import { CalendarIcon } from "lucide-react" // Ícono real
+import { format } from "date-fns"
+import { es } from "date-fns/locale"
+import { cn } from "@/lib/utils"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+// El componente Calendar real de Shadcn
+import { Calendar } from "@/components/ui/spanish-calendar"
 
 interface SubtaskDialogProps {
   isOpen: boolean
@@ -44,7 +54,7 @@ const formSchema = z.object({
 export function SubtaskDialog({ isOpen, onClose, onSubtaskCreated, parentTask }: SubtaskDialogProps) {
   const { t } = useTranslations()
   const taskService = useTaskService()
-  
+
   // Estados para datos relacionados
   const [users, setUsers] = useState<any[]>([])
   const [currentUser, setCurrentUser] = useState<any>(null)
@@ -253,23 +263,37 @@ export function SubtaskDialog({ isOpen, onClose, onSubtaskCreated, parentTask }:
               control={form.control}
               name="due_date"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Due Date</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-                      <Input
-                        type="date"
-                        {...field}
-                        value={field.value ? new Date(field.value).toISOString().split("T")[0] : ""}
-                        onChange={(e) => {
-                          const value = e.target.value
-                          field.onChange(value ? new Date(value) : null)
-                        }}
-                        className="pl-10 transition-all focus:ring-2 focus:ring-primary/20"
+                <FormItem className="flex flex-col">
+                  <FormLabel>{t("tasks.due_date", "Fecha de vencimiento")}</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP", { locale: es })
+                          ) : (
+                            <span>{t("common.pick_date", "Seleccionar fecha")}</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={(date) => date < new Date("1900-01-01")}
+                        initialFocus
                       />
-                    </div>
-                  </FormControl>
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}
