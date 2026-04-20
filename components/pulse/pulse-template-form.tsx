@@ -60,27 +60,34 @@ const renderPreview = (content: string): React.ReactNode => {
 }
 
 // Renderizar una línea individual procesando etiquetas
+// Orden de prioridad: 1) [BR] (ya hecho), 2) [IMG], 3) [B/I/U], 4) {{variables}}, 5) texto plano
 const renderFormattedLine = (line: string, baseKey: number): React.ReactNode[] => {
   const parts: React.ReactNode[] = []
   let lastIndex = 0
   let componentCounter = 0
 
-  // Regex que captura: [B]...[/B], [I]...[/I], [U]...[/U], [IMG]...[/IMG], {{variables}}
-  // IMPORTANTE: [IMG] se captura primero para no romper URLs que contengan otros tags
-  const regex = /\[IMG\](.*?)\[\/IMG\]|\[B\](.*?)\[\/B\]|\[I\](.*?)\[\/I\]|\[U\](.*?)\[\/U\]|\{\{[^}]+\}\}/g
+  // Regex MEJORADO con grupos nombrados (en orden de prioridad)
+  // Grupo 1: [IMG]url[/IMG]
+  // Grupo 2: [B]text[/B]
+  // Grupo 3: [I]text[/I]
+  // Grupo 4: [U]text[/U]
+  // Grupo 5: {{variable}}
+  const regex = /\[IMG\](.*?)\[\/IMG\]|\[B\](.*?)\[\/B\]|\[I\](.*?)\[\/I\]|\[U\](.*?)\[\/U\]|\{\{([^}]*)\}\}/g
   let match
 
   while ((match = regex.exec(line)) !== null) {
-    // Agregar texto plano antes del match
+    // Agregar texto plano ANTES del match (IMPORTANTE: no filtrar con trim)
     if (match.index > lastIndex) {
       const plainText = line.substring(lastIndex, match.index)
-      parts.push(plainText)
+      if (plainText) {
+        parts.push(plainText)
+      }
     }
 
     const key = `line-${baseKey}-elem-${componentCounter++}`
 
     if (match[1] !== undefined) {
-      // [IMG]url[/IMG] - renderizar imagen
+      // [IMG]url[/IMG]
       const imgUrl = match[1]
       parts.push(
         <img
@@ -88,7 +95,7 @@ const renderFormattedLine = (line: string, baseKey: number): React.ReactNode[] =
           src={imgUrl}
           alt="Imagen del mensaje"
           className="max-w-full max-h-80 rounded my-2 block"
-          onError={(e) => {
+          onError={() => {
             console.warn("[v0] Error cargando imagen:", imgUrl)
           }}
         />
@@ -115,10 +122,15 @@ const renderFormattedLine = (line: string, baseKey: number): React.ReactNode[] =
         </u>
       )
     } else if (match[5] !== undefined) {
-      // {{variable}}
+      // {{variable}} - SIEMPRE MOSTRAR CON RESALTADO
+      const variableName = match[5]
       parts.push(
-        <span key={key} className="bg-yellow-100 px-1 rounded font-mono text-sm">
-          {match[5]}
+        <span
+          key={key}
+          className="bg-blue-100 text-blue-700 px-1 rounded font-mono text-sm whitespace-nowrap"
+          title="Campo dinámico que se reemplazará al enviar"
+        >
+          {`{{${variableName}}}`}
         </span>
       )
     }
@@ -126,12 +138,16 @@ const renderFormattedLine = (line: string, baseKey: number): React.ReactNode[] =
     lastIndex = regex.lastIndex
   }
 
-  // Agregar texto plano restante
+  // Agregar texto RESTANTE (IMPORTANTE: preservar TODO)
   if (lastIndex < line.length) {
-    parts.push(line.substring(lastIndex))
+    const remaining = line.substring(lastIndex)
+    if (remaining) {
+      parts.push(remaining)
+    }
   }
 
-  return parts.length > 0 ? parts : [line || " "]
+  // Si la línea estaba vacía, retornar espacio vacío para preservar altura
+  return parts.length > 0 ? parts : [" "]
 }
 
 
