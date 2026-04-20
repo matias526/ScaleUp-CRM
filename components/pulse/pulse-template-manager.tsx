@@ -7,17 +7,29 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Plus, Trash2, Edit2, Copy, Loader2, Globe } from "lucide-react"
 import PulseTemplateForm from "./pulse-template-form"
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 interface PulseTemplate {
   id: string
-  name: string
-  description: string | null
-  content_es: string
-  content_en: string
-  content_pt: string
+  internal_code: string
+  category: string
+  is_active: boolean
   created_at: string
   updated_at: string
+  translations: {
+    language_code: string
+    display_name: string
+    subject: string
+    body_content: string
+  }[]
 }
 
 export default function PulseTemplateManager() {
@@ -36,16 +48,40 @@ export default function PulseTemplateManager() {
   const fetchTemplates = async () => {
     try {
       setLoading(true)
+      console.log("[v0] Trayendo templates...")
+
       const { data, error } = await supabase
         .from("pulse_message_templates")
-        .select("*")
+        .select(
+          `
+          id,
+          internal_code,
+          category,
+          is_active,
+          created_at,
+          updated_at,
+          pulse_message_template_translations (
+            language_code,
+            display_name,
+            subject,
+            body_content
+          )
+        `,
+        )
         .order("created_at", { ascending: false })
 
       if (error) throw error
-      setTemplates(data || [])
-      console.log("[v0] Templates cargados:", data)
+
+      const templates = (data || []).map((template: any) => ({
+        ...template,
+        translations: template.pulse_message_template_translations || [],
+      }))
+
+      console.log("[v0] Templates trayidos:", templates)
+      setTemplates(templates)
     } catch (err) {
       console.error("[v0] Error fetching pulse templates:", err)
+      alert(`Error al traer templates: ${err instanceof Error ? err.message : "Error desconocido"}`)
     } finally {
       setLoading(false)
     }
@@ -55,47 +91,67 @@ export default function PulseTemplateManager() {
     if (!deletingId) return
 
     try {
-      const { error } = await supabase
-        .from("pulse_message_templates")
-        .delete()
-        .eq("id", deletingId)
+      console.log("[v0] Eliminando template:", deletingId)
+
+      const { error } = await supabase.from("pulse_message_templates").delete().eq("id", deletingId)
       if (error) throw error
+
       setTemplates(templates.filter((t) => t.id !== deletingId))
       setDeletingId(null)
       console.log("[v0] Template eliminado")
     } catch (err) {
       console.error("[v0] Error deleting pulse template:", err)
+      alert(`Error al eliminar: ${err instanceof Error ? err.message : "Error desconocido"}`)
     }
   }
 
   const handleCopyTemplate = async (template: PulseTemplate) => {
     try {
       setCopying(template.id)
-      const newTemplate = {
-        name: `${template.name} (Copia)`,
-        description: template.description,
-        content_es: template.content_es,
-        content_en: template.content_en,
-        content_pt: template.content_pt,
-      }
+      console.log("[v0] Copiando template:", template.id)
 
-      const { data, error } = await supabase
+      // 1. Crear nuevo template
+      const { data: newTemplateData, error: templateError } = await supabase
         .from("pulse_message_templates")
-        .insert([newTemplate])
+        .insert([
+          {
+            internal_code: `${template.internal_code}_COPY`,
+            category: template.category,
+            is_active: true,
+          },
+        ])
         .select()
-      if (error) throw error
-      if (data) {
-        setTemplates([data[0], ...templates])
-        console.log("[v0] Template copiado")
-      }
+        .single()
+
+      if (templateError) throw templateError
+
+      // 2. Copiar traducciones
+      const newTranslations = template.translations.map((tr) => ({
+        template_id: newTemplateData.id,
+        language_code: tr.language_code,
+        display_name: `${tr.display_name} (Copia)`,
+        subject: tr.subject,
+        body_content: tr.body_content,
+      }))
+
+      const { error: translationsError } = await supabase
+        .from("pulse_message_template_translations")
+        .insert(newTranslations)
+
+      if (translationsError) throw translationsError
+
+      console.log("[v0] Template copiado exitosamente")
+      await fetchTemplates()
     } catch (err) {
       console.error("[v0] Error copying pulse template:", err)
+      alert(`Error al copiar: ${err instanceof Error ? err.message : "Error desconocido"}`)
     } finally {
       setCopying(null)
     }
   }
 
   const handleTemplateSubmit = async () => {
+    console.log("[v0] Template guardado, actualizando lista")
     setEditingTemplate(null)
     setShowForm(false)
     await fetchTemplates()
@@ -107,7 +163,9 @@ export default function PulseTemplateManager() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-lg font-semibold">{t("pulse.templates_list", "Plantillas de Mensaje")}</h2>
-          <p className="text-sm text-gray-600">{t("pulse.description", "Gestiona templates reutilizables para Pulse en múltiples idiomas")}</p>
+          <p className="text-sm text-gray-600">
+            {t("pulse.description", "Gestiona templates reutilizables para Pulse en múltiples idiomas con inserción atómica")}
+          </p>
         </div>
         <Button onClick={() => setShowForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
@@ -118,9 +176,13 @@ export default function PulseTemplateManager() {
       {/* Template Form Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+          <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <CardHeader>
-              <CardTitle>{editingTemplate ? t("pulse.edit_template", "Editar Template") : t("pulse.create_template", "Crear Template Nuevo")}</CardTitle>
+              <CardTitle>
+                {editingTemplate
+                  ? t("pulse.edit_template", "Editar Template")
+                  : t("pulse.create_template", "Crear Template Nuevo")}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <PulseTemplateForm
@@ -143,7 +205,10 @@ export default function PulseTemplateManager() {
             <AlertDialogHeader>
               <AlertDialogTitle>{t("common.confirm_delete", "¿Confirmar eliminación?")}</AlertDialogTitle>
               <AlertDialogDescription>
-                {t("pulse.delete_template_description", "Esta acción no se puede deshacer. El template y todas sus versiones de idioma será eliminado permanentemente.")}
+                {t(
+                  "pulse.delete_template_description",
+                  "Esta acción no se puede deshacer. El template y todas sus traducciones serán eliminados permanentemente.",
+                )}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogAction onClick={handleDeleteTemplate} className="bg-red-600">
@@ -166,71 +231,81 @@ export default function PulseTemplateManager() {
           <CardContent className="py-12 text-center">
             <Globe className="h-12 w-12 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-500">{t("pulse.no_templates", "No hay templates creados todavía")}</p>
-            <p className="text-sm text-gray-400 mt-2">{t("pulse.create_first_template", "Crea tu primer template para comenzar")}</p>
+            <p className="text-sm text-gray-400 mt-2">
+              {t("pulse.create_first_template", "Crea tu primer template para comenzar")}
+            </p>
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4">
-          {templates.map((template) => (
-            <Card key={template.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      {template.name}
-                      <span className="text-xs font-normal text-gray-500 flex gap-1">
-                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded">ES</span>
-                        <span className="px-2 py-1 bg-green-100 text-green-700 rounded">EN</span>
-                        <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded">PT</span>
-                      </span>
-                    </CardTitle>
-                    {template.description && <CardDescription className="mt-1">{template.description}</CardDescription>}
+          {templates.map((template) => {
+            const esTranslation = template.translations.find((tr) => tr.language_code === "es")
+
+            return (
+              <Card key={template.id} className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-3">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <CardTitle className="text-lg flex items-center gap-3">
+                        <span className="font-mono text-sm bg-gray-100 px-3 py-1 rounded">{template.internal_code}</span>
+                        <span className="flex gap-1">
+                          <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">ES</span>
+                          <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">EN</span>
+                          <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded">PT</span>
+                        </span>
+                      </CardTitle>
+                      {esTranslation && <CardDescription className="mt-2">{esTranslation.display_name}</CardDescription>}
+                      <p className="text-xs text-gray-500 mt-1">
+                        Categoría: <span className="font-semibold">{template.category}</span>
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleCopyTemplate(template)}
+                        disabled={copying === template.id}
+                        title={t("common.copy", "Copiar")}
+                      >
+                        {copying === template.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Copy className="h-4 w-4" />}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setEditingTemplate(template)
+                          setShowForm(true)
+                        }}
+                        title={t("common.edit", "Editar")}
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setDeletingId(template.id)}
+                        className="text-red-600 hover:bg-red-50"
+                        title={t("common.delete", "Eliminar")}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleCopyTemplate(template)}
-                      disabled={copying === template.id}
-                      title={t("common.copy", "Copiar")}
-                    >
-                      {copying === template.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Copy className="h-4 w-4" />}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setEditingTemplate(template)
-                        setShowForm(true)
-                      }}
-                      title={t("common.edit", "Editar")}
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setDeletingId(template.id)}
-                      className="text-red-600 hover:bg-red-50"
-                      title={t("common.delete", "Eliminar")}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {/* Preview de contenido en español */}
-                <div>
-                  <p className="text-xs font-semibold text-gray-600 mb-2">Versión Español (ES)</p>
-                  <div className="bg-gray-50 p-3 rounded text-sm text-gray-700 max-h-20 overflow-y-auto whitespace-pre-wrap break-words">
-                    {template.content_es.substring(0, 150)}
-                    {template.content_es.length > 150 ? "..." : ""}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {/* Preview ES */}
+                  {esTranslation && (
+                    <div>
+                      <p className="text-xs font-semibold text-gray-600 mb-2">Asunto (ES)</p>
+                      <div className="bg-gray-50 p-3 rounded text-sm text-gray-700 max-h-16 overflow-y-auto">
+                        {esTranslation.subject}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )
+          })}
         </div>
       )}
     </div>
