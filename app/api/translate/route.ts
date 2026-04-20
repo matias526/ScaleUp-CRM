@@ -62,3 +62,6 @@ Respond ONLY with valid JSON in this exact format:
     )
   }
 }
+
+// Force rebuild - Last updated: 2026-04-20T14:35:00Z
+// This ensures the compiler detects changes and doesn't use cached versions
