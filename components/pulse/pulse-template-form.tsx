@@ -434,35 +434,20 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
     try {
       setTranslating(true)
 
-      // Determinar idioma fuente y idiomas destino
       const sourceLanguage = currentTab
       const targetLanguages = {
-        es: [
-          { code: "en", name: "English" },
-          { code: "pt", name: "Portuguese (Brazil)" },
-        ],
-        en: [
-          { code: "es", name: "Spanish" },
-          { code: "pt", name: "Portuguese (Brazil)" },
-        ],
-        pt: [
-          { code: "es", name: "Spanish" },
-          { code: "en", name: "English" },
-        ],
+        es: [{ code: "en", name: "English" }, { code: "pt", name: "Portuguese (Brazil)" }],
+        en: [{ code: "es", name: "Spanish" }, { code: "pt", name: "Portuguese (Brazil)" }],
+        pt: [{ code: "es", name: "Spanish" }, { code: "en", name: "English" }],
       }[sourceLanguage] || []
 
-      console.log(`[v0] Traduciendo desde ${sourceLanguage} a:`, targetLanguages.map((t) => t.code))
-
-      // Obtener textos del idioma fuente y convertir \n a [BR] antes de enviar
       const sourceTexts = {
-        display_name: form.getValues(`display_name_${sourceLanguage}`).replace(/\n/g, "[BR]"),
-        subject: form.getValues(`subject_${sourceLanguage}`).replace(/\n/g, "[BR]"),
-        body_content: form.getValues(`body_content_${sourceLanguage}`).replace(/\n/g, "[BR]"),
+        display_name: (form.getValues(`display_name_${sourceLanguage}`) || "").replace(/\n/g, "[BR]"),
+        subject: (form.getValues(`subject_${sourceLanguage}`) || "").replace(/\n/g, "[BR]"),
+        body_content: (form.getValues(`body_content_${sourceLanguage}`) || "").replace(/\n/g, "[BR]"),
       }
 
-      console.log("[v0] Textos fuente:", sourceTexts)
-
-      // Proteger contenido
+      // 1. Protegemos el contenido (incluyendo tus nuevos [B])
       const protectedTexts = Object.entries(sourceTexts).reduce(
         (acc, [key, text]) => {
           acc[key] = protectContent(text)
@@ -471,11 +456,8 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
         {} as Record<string, ReturnType<typeof protectContent>>,
       )
 
-      // Traducir a cada idioma destino
       for (const targetLang of targetLanguages) {
         try {
-          console.log(`[v0] Iniciando traducción a ${targetLang.code}...`)
-
           const response = await fetch("/api/translate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -494,37 +476,35 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
           if (!response.ok) throw new Error(`Error translating to ${targetLang.code}`)
 
           const { translations } = await response.json()
-          console.log(`[v0] Traducción a ${targetLang.code} recibida:`, translations)
 
-          // Restaurar contenido protegido
           const restoredTranslations = Object.entries(translations).reduce(
             (acc, [key, text]) => {
-              const restored = restoreContent(text as string, protectedTexts[key].map)
+              // --- EL FIX CRÍTICO AQUÍ ---
+              // Si 'text' es el objeto {label, tag} que causa el error #31, extraemos solo el label.
+              // Si es un string, lo usamos directo.
+              const cleanText = (text && typeof text === 'object' && (text as any).label)
+                ? (text as any).label
+                : (typeof text === 'string' ? text : "");
+
+              const restored = restoreContent(cleanText, protectedTexts[key].map)
               acc[`${key}_${targetLang.code}`] = restored
-              console.log(`[v0] ${key}_${targetLang.code} restaurado:`, restored)
               return acc
             },
             {} as Record<string, string>,
           )
 
-          // Actualizar campos del formulario - convertir [BR] a saltos de línea reales
           Object.entries(restoredTranslations).forEach(([fieldName, value]) => {
-            // Convertir [BR] a \n para que se vea como saltos de línea en la interfaz
-            const displayValue = brToNewlines(value as string)
-            form.setValue(fieldName, displayValue)
+            const displayValue = brToNewlines(value)
+            // Aseguramos que siempre sea string para el input
+            form.setValue(fieldName as any, String(displayValue))
           })
 
-          console.log(`[v0] Traducción a ${targetLang.code} completada`)
         } catch (err) {
           console.error(`[v0] Error traduciendo a ${targetLang.code}:`, err)
-          alert(`Error al traducir a ${targetLang.name}: ${err instanceof Error ? err.message : "Error desconocido"}`)
         }
       }
-
-      console.log("[v0] Auto-traducción completada")
     } catch (error) {
       console.error("[v0] Error en auto-traducción:", error)
-      alert("Error en la auto-traducción. Revisa la consola.")
     } finally {
       setTranslating(false)
     }
