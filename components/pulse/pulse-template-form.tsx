@@ -735,33 +735,36 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSave)} className="max-w-[1600px] mx-auto space-y-8 pb-32">
 
-        {/* SECCIÓN 1: CONFIGURACIÓN GLOBAL (Ancho completo) */}
+        {/* SECCIÓN 1: CONFIGURACIÓN SUPERIOR (Ancho completo) */}
         <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <FormField control={form.control} name="internal_code" render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-[10px] font-extrabold uppercase text-slate-400 tracking-widest">Código Interno</FormLabel>
-                <FormControl><Input {...field} disabled={!!template} className="font-mono bg-slate-50" /></FormControl>
+                <FormLabel className="text-[10px] font-bold uppercase text-slate-400">Código Interno</FormLabel>
+                <FormControl><Input {...field} disabled={!!template} className="bg-slate-50" /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
+
             <FormField control={form.control} name="category" render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-[10px] font-extrabold uppercase text-slate-400 tracking-widest">Categoría</FormLabel>
+                <FormLabel className="text-[10px] font-bold uppercase text-slate-400">Categoría</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl><SelectTrigger className="bg-slate-50"><SelectValue /></SelectTrigger></FormControl>
                   <SelectContent>
+                    {/* Aquí he dejado los valores estándar, asegúrate que coincidan con tu enum */}
                     <SelectItem value="metodologia">Metodología</SelectItem>
-                    <SelectItem value="posteos_redes">Posteos en Redes</SelectItem>
+                    <SelectItem value="posteos_redes">Posteos</SelectItem>
                     <SelectItem value="campanas">Campañas</SelectItem>
                     <SelectItem value="noticias">Noticias</SelectItem>
                   </SelectContent>
                 </Select>
               </FormItem>
             )} />
+
             <FormField control={form.control} name="tech_company_id" render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-[10px] font-extrabold uppercase text-slate-400 tracking-widest">Empresa Tecnológica</FormLabel>
+                <FormLabel className="text-[10px] font-bold uppercase text-slate-400">Empresa Tecnológica</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value || "none"}>
                   <FormControl><SelectTrigger className="bg-slate-50"><SelectValue /></SelectTrigger></FormControl>
                   <SelectContent>
@@ -774,47 +777,45 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
           </div>
         </div>
 
-        {/* SECCIÓN 2: EDITOR + PREVIEW (Grid de dos columnas) */}
+        {/* SECCIÓN 2: GRID HÍBRIDO (Editor + Preview) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-          {/* COLUMNA EDITOR (7/12) */}
-          <div className="lg:col-span-7 space-y-6">
-            {/* IMPORTANTE: El componente Tabs debe envolver TODO (botones y contenido) */}
-            <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
-
-              <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative">
+          {/* LADO IZQUIERDO: EDITOR (7 columnas) */}
+          <div className="lg:col-span-7">
+            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative">
+              <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
                 <div className="flex justify-between items-center mb-6 border-b pb-4">
-                  {/* Aquí solo dejamos la lista de botones */}
                   <TabsList className="bg-slate-100 p-1">
                     <TabsTrigger value="es" className="font-bold">ES</TabsTrigger>
                     <TabsTrigger value="en" className="font-bold">EN</TabsTrigger>
                     <TabsTrigger value="pt" className="font-bold">PT</TabsTrigger>
                   </TabsList>
 
-                  <Button type="button" variant="outline" size="sm" onClick={handleAutoTranslate} disabled={translating} className="text-[10px] font-bold uppercase tracking-tighter">
+                  <Button type="button" variant="outline" size="sm" onClick={handleAutoTranslate} disabled={translating} className="text-[10px] font-bold uppercase">
                     {translating ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : null}
-                    Traducir desde {currentTab.toUpperCase()}
+                    Auto-Traducir Otros
                   </Button>
                 </div>
 
-                {/* Los contenidos están ahora DENTRO del componente Tabs */}
                 {["es", "en", "pt"].map((lang) => (
                   <TabsContent key={lang} value={lang} className="space-y-6 mt-0">
                     <FormField control={form.control} name={`display_name_${lang}` as any} render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[10px] font-extrabold uppercase text-slate-400 tracking-widest">Nombre del Template</FormLabel>
-                        <FormControl><Input {...field} placeholder="Ej: Bienvenida" /></FormControl>
+                        <FormLabel className="text-[10px] font-bold text-slate-400">Nombre Público</FormLabel>
+                        <FormControl><Input {...field} /></FormControl>
                       </FormItem>
                     )} />
+
                     <FormField control={form.control} name={`subject_${lang}` as any} render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[10px] font-extrabold uppercase text-slate-400 tracking-widest">Asunto / Título</FormLabel>
-                        <FormControl><Input {...field} className="font-medium" /></FormControl>
+                        <FormLabel className="text-[10px] font-bold text-slate-400">Asunto</FormLabel>
+                        <FormControl><Input {...field} /></FormControl>
                       </FormItem>
                     )} />
+
                     <FormField control={form.control} name={`body_content_${lang}` as any} render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[10px] font-extrabold uppercase text-slate-400 tracking-widest">Cuerpo del Mensaje</FormLabel>
+                        <FormLabel className="text-[10px] font-bold text-slate-400">Contenido</FormLabel>
                         <FormControl>
                           <SafeEditor
                             value={field.value}
@@ -826,45 +827,65 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                     )} />
                   </TabsContent>
                 ))}
-              </div>
+              </Tabs>
+            </div>
 
-            </Tabs> {/* <--- EL CIERRE DE TABS VA AQUÍ, al final de la tarjeta */}
+            {/* SECCIÓN 3: ADJUNTOS (Debajo del editor, ancho completo del bloque izquierdo) */}
+            <div className="mt-8 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+              <h3 className="text-[10px] font-bold uppercase text-slate-400 mb-4">Adjuntos del Template</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* He respetado tus lógicas de mapeo originales */}
+                {existingAttachments.map((file) => (
+                  <div key={file.id} className="flex items-center justify-between p-2 bg-slate-50 border rounded-lg">
+                    <span className="text-xs truncate">{file.file_name}</span>
+                    <Button type="button" variant="ghost" size="sm" onClick={() => removeAttachment(file.id, true)}>
+                      <X className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </div>
+                ))}
+                {pendingAttachments.map((file, index) => (
+                  <div key={index} className="flex items-center justify-between p-2 bg-blue-50 border border-blue-100 rounded-lg">
+                    <span className="text-xs truncate">{file.name}</span>
+                    <Button type="button" variant="ghost" size="sm" onClick={() => removeAttachment(index, false)}>
+                      <X className="h-4 w-4 text-blue-500" />
+                    </Button>
+                  </div>
+                ))}
+                <label className="border-2 border-dashed border-slate-200 rounded-lg p-2 text-center cursor-pointer hover:bg-slate-50 transition-colors">
+                  <span className="text-[10px] font-bold text-slate-400">+ Subir Archivo</span>
+                  <input type="file" multiple className="hidden" onChange={onFileChange} />
+                </label>
+              </div>
+            </div>
           </div>
 
-          {/* COLUMNA PREVIEW (5/12 - STICKY) */}
+          {/* LADO DERECHO: PREVIEW STICKY (5 columnas) */}
           <div className="lg:col-span-5 sticky top-8">
-            <div className="flex bg-slate-200/50 p-1 rounded-xl mb-4 border border-slate-300 w-fit mx-auto">
-              <Button type="button" variant={previewMode === "email" ? "secondary" : "ghost"} size="sm" onClick={() => setPreviewMode("email")} className="rounded-lg px-6 font-bold text-xs">EMAIL</Button>
-              <Button type="button" variant={previewMode === "whatsapp" ? "secondary" : "ghost"} size="sm" onClick={() => setPreviewMode("whatsapp")} className="rounded-lg px-6 font-bold text-xs">WHATSAPP</Button>
+            <div className="flex bg-slate-100 p-1 rounded-xl mb-4 border border-slate-200 w-fit mx-auto">
+              <Button type="button" variant={previewMode === "email" ? "white" : "ghost"} size="sm" onClick={() => setPreviewMode("email")} className="text-[10px] font-bold shadow-sm">EMAIL</Button>
+              <Button type="button" variant={previewMode === "whatsapp" ? "white" : "ghost"} size="sm" onClick={() => setPreviewMode("whatsapp")} className="text-[10px] font-bold">WHATSAPP</Button>
             </div>
 
             <div className={cn(
-              "mx-auto bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden transition-all duration-500",
-              previewMode === "email" ? "w-full min-h-[600px]" : "w-[320px] h-[650px] border-[10px] border-slate-900 rounded-[45px] bg-[#e5ddd5]"
+              "mx-auto bg-white rounded-[2rem] shadow-2xl border-[10px] border-slate-900 overflow-hidden",
+              previewMode === "email" ? "w-full" : "w-[300px] h-[600px]"
             )}>
-              {/* Browser/Phone Header */}
-              <div className="bg-slate-100 border-b p-3 flex gap-1.5 items-center">
-                <div className="w-2 h-2 rounded-full bg-red-400" />
-                <div className="w-2 h-2 rounded-full bg-amber-400" />
-                <div className="w-2 h-2 rounded-full bg-green-400" />
-              </div>
-
-              <div className="p-6 overflow-y-auto max-h-[580px]">
+              <div className="p-6 h-full overflow-y-auto">
                 {previewMode === "email" ? (
                   <div className="space-y-4">
                     <div className="border-b pb-2">
-                      <span className="text-[10px] text-slate-400 font-bold uppercase">Asunto: </span>
-                      <span className="text-sm font-semibold">{form.watch(`subject_${currentTab}`)}</span>
+                      <p className="text-[10px] text-slate-400 font-bold">ASUNTO:</p>
+                      <p className="text-sm font-bold">{form.watch(`subject_${currentTab}`)}</p>
                     </div>
-                    <div className="text-sm leading-relaxed text-slate-700">
+                    <div className="text-sm leading-relaxed">
                       {renderPreview(form.watch(`body_content_${currentTab}`) || "")}
                     </div>
                   </div>
                 ) : (
-                  <div className="flex flex-col justify-end h-full">
-                    <div className="bg-white p-3 rounded-xl rounded-tr-none shadow-sm ml-auto max-w-[90%] text-[13px] border border-slate-200">
+                  <div className="bg-[#e5ddd5] -m-6 p-6 h-full flex flex-col justify-end">
+                    <div className="bg-white p-3 rounded-lg rounded-tr-none shadow-sm ml-auto max-w-[90%] text-[13px]">
                       {renderPreview(form.watch(`body_content_${currentTab}`) || "")}
-                      <div className="text-[9px] text-slate-400 text-right mt-1">12:00 PM ✓✓</div>
+                      <p className="text-[9px] text-slate-400 text-right mt-1">12:00 PM ✓✓</p>
                     </div>
                   </div>
                 )}
@@ -873,63 +894,11 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
           </div>
         </div>
 
-        {/* SECCIÓN 3: ADJUNTOS */}
-        <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm mt-8">
-          <div className="flex items-center gap-2 mb-6 border-b pb-4">
-            <Upload className="h-5 w-5 text-blue-600" />
-            <h3 className="text-[10px] font-extrabold uppercase text-slate-400 tracking-widest">Gestión de Archivos Adjuntos</h3>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {existingAttachments.map((file) => (
-              <div key={file.id} className="flex items-center justify-between p-3 bg-slate-50 border rounded-lg">
-                <span className="text-xs font-bold truncate text-slate-700">{file.file_name}</span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeAttachment(file.id, true)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-
-            {pendingAttachments.map((file, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-blue-50/50 border border-blue-100 rounded-lg">
-                <span className="text-xs font-bold truncate text-blue-700">{file.name}</span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeAttachment(index, false)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-
-            <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 min-h-[80px]">
-              <div className="flex items-center gap-3">
-                <Upload className="h-4 w-4 text-slate-400" />
-                <p className="text-xs font-bold text-slate-600">Añadir adjunto</p>
-              </div>
-              <input
-                type="file"
-                multiple
-                className="hidden"
-                onChange={onFileChange}
-                disabled={uploadingFile}
-              />
-            </label>
-          </div>
-        </div>
-
-        {/* PIE DE PÁGINA FIXO PARA ACCIONES */}
+        {/* PIE DE PÁGINA FIXO */}
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
           <div className="max-w-[1600px] mx-auto flex justify-end gap-3 px-8">
             <Button type="button" variant="ghost" onClick={onCancel} className="font-bold text-slate-500">Cancelar</Button>
-            <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700 px-10 font-bold shadow-lg shadow-blue-500/20">
+            <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700 px-10 font-bold text-white shadow-lg shadow-blue-500/20">
               {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               {template ? "Guardar Cambios" : "Crear Template"}
             </Button>
@@ -939,4 +908,3 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
       </form>
     </Form>
   )
-}
