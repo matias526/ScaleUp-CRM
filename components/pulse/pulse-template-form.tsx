@@ -60,6 +60,27 @@ const renderPreview = (content: string): React.ReactNode => {
   return result
 }
 
+const renderSubjectPreview = (text: string) => {
+  const parts: React.ReactNode[] = [];
+  const regex = /\{\{([^}]*)\}\}/g;
+  let lastIndex = 0;
+  let match;
+
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.substring(lastIndex, match.index));
+    }
+    parts.push(
+      <span key={match.index} className="bg-blue-50 text-blue-600 px-1 rounded border border-blue-100 font-mono text-[10px] font-bold mx-0.5">
+        {"{{" + match[1] + "}}"}
+      </span>
+    );
+    lastIndex = regex.lastIndex;
+  }
+  if (lastIndex < text.length) parts.push(text.substring(lastIndex));
+  return parts.length > 0 ? parts : text;
+};
+
 // Renderizar una línea individual procesando etiquetas
 // Orden de prioridad: 1) [BR] (ya hecho), 2) [IMG], 3) [B/I/U], 4) {{variables}}, 5) texto plano
 const renderFormattedLine = (line: string, baseKey: number): React.ReactNode[] => {
@@ -827,12 +848,39 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                       </FormItem>
                     )} />
 
-                    <FormField control={form.control} name={`subject_${lang}` as any} render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-[10px] font-bold text-slate-400">Asunto</FormLabel>
-                        <FormControl><Input {...field} /></FormControl>
-                      </FormItem>
-                    )} />
+                    <FormField
+                      control={form.control}
+                      name={`subject_${lang}` as any}
+                      render={({ field }) => (
+                        <FormItem>
+                          <div className="flex justify-between items-end mb-2">
+                            <FormLabel className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                              Asunto del Email
+                            </FormLabel>
+                            {/* Atajos rápidos para variables */}
+                            <div className="flex gap-1">
+                              {['name', 'first_name', 'company'].map((v) => (
+                                <button
+                                  key={v}
+                                  type="button"
+                                  onClick={() => field.onChange(`${field.value || ""}{{${v}}}`)}
+                                  className="text-[9px] font-bold bg-slate-100 hover:bg-blue-100 text-slate-500 hover:text-blue-600 px-1.5 py-0.5 rounded border border-slate-200 transition-colors"
+                                >
+                                  + {"{{" + v + "}}"}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="Ej: Hola {{name}}, tenemos una propuesta..."
+                              className="h-11 border-slate-200 focus:ring-blue-500 font-medium"
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
 
                     <FormField control={form.control} name={`body_content_${lang}` as any} render={({ field }) => (
                       <FormItem>
@@ -904,13 +952,10 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
             )}>
               <div className="p-6 h-full overflow-y-auto">
                 {previewMode === "email" ? (
-                  <div className="space-y-4">
-                    <div className="border-b pb-2">
-                      <p className="text-[10px] text-slate-400 font-bold">ASUNTO:</p>
-                      <p className="text-sm font-bold">{form.watch(`subject_${currentTab}`)}</p>
-                    </div>
-                    <div className="text-sm leading-relaxed">
-                      {renderPreview(form.watch(`body_content_${currentTab}`) || "")}
+                  <div className="mt-4">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Asunto:</p>
+                    <div className="text-sm font-bold text-slate-800 flex items-center flex-wrap">
+                      {renderSubjectPreview(form.watch(`subject_${currentTab}`) || '(Sin asunto)')}
                     </div>
                   </div>
                 ) : (
