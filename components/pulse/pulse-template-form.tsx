@@ -15,6 +15,7 @@ import SafeEditor from "./safe-editor"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DICT_LANG_PULSE } from "@/lib/constants/dict-lang-pulse"
 import { getActiveTechCompaniesClient } from "@/lib/services/tech-company-service-client"
+import { cn } from "@/lib/utils"
 
 // Convertir [BR] a saltos de línea reales para edición
 const brToNewlines = (text: string): string => {
