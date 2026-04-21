@@ -763,50 +763,56 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
 
           {/* COLUMNA EDITOR (7/12) */}
           <div className="lg:col-span-7 space-y-6">
-            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative">
-              <div className="flex justify-between items-center mb-6 border-b pb-4">
-                <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-fit">
+            {/* IMPORTANTE: El componente Tabs debe envolver TODO (botones y contenido) */}
+            <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
+
+              <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative">
+                <div className="flex justify-between items-center mb-6 border-b pb-4">
+                  {/* Aquí solo dejamos la lista de botones */}
                   <TabsList className="bg-slate-100 p-1">
                     <TabsTrigger value="es" className="font-bold">ES</TabsTrigger>
                     <TabsTrigger value="en" className="font-bold">EN</TabsTrigger>
                     <TabsTrigger value="pt" className="font-bold">PT</TabsTrigger>
                   </TabsList>
-                </Tabs>
-                <Button type="button" variant="outline" size="sm" onClick={handleAutoTranslate} disabled={translating} className="text-[10px] font-bold uppercase tracking-tighter">
-                  {translating ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : null}
-                  Traducir desde {currentTab.toUpperCase()}
-                </Button>
+
+                  <Button type="button" variant="outline" size="sm" onClick={handleAutoTranslate} disabled={translating} className="text-[10px] font-bold uppercase tracking-tighter">
+                    {translating ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : null}
+                    Traducir desde {currentTab.toUpperCase()}
+                  </Button>
+                </div>
+
+                {/* Los contenidos están ahora DENTRO del componente Tabs */}
+                {["es", "en", "pt"].map((lang) => (
+                  <TabsContent key={lang} value={lang} className="space-y-6 mt-0">
+                    <FormField control={form.control} name={`display_name_${lang}` as any} render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[10px] font-extrabold uppercase text-slate-400 tracking-widest">Nombre del Template</FormLabel>
+                        <FormControl><Input {...field} placeholder="Ej: Bienvenida" /></FormControl>
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name={`subject_${lang}` as any} render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[10px] font-extrabold uppercase text-slate-400 tracking-widest">Asunto / Título</FormLabel>
+                        <FormControl><Input {...field} className="font-medium" /></FormControl>
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name={`body_content_${lang}` as any} render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[10px] font-extrabold uppercase text-slate-400 tracking-widest">Cuerpo del Mensaje</FormLabel>
+                        <FormControl>
+                          <SafeEditor
+                            value={field.value}
+                            onChange={field.onChange}
+                            onAddImage={(url) => field.onChange(field.value + `\n[IMG]${url}[/IMG]`)}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )} />
+                  </TabsContent>
+                ))}
               </div>
 
-              {["es", "en", "pt"].map((lang) => (
-                <TabsContent key={lang} value={lang} className="space-y-6 mt-0">
-                  <FormField control={form.control} name={`display_name_${lang}` as any} render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-extrabold uppercase text-slate-400 tracking-widest">Nombre del Template</FormLabel>
-                      <FormControl><Input {...field} placeholder="Ej: Bienvenida" /></FormControl>
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name={`subject_${lang}` as any} render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-extrabold uppercase text-slate-400 tracking-widest">Asunto / Título</FormLabel>
-                      <FormControl><Input {...field} className="font-medium" /></FormControl>
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name={`body_content_${lang}` as any} render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-extrabold uppercase text-slate-400 tracking-widest">Cuerpo del Mensaje</FormLabel>
-                      <FormControl>
-                        <SafeEditor
-                          value={field.value}
-                          onChange={field.onChange}
-                          onAddImage={(url) => field.onChange(field.value + `\n[IMG]${url}[/IMG]`)}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )} />
-                </TabsContent>
-              ))}
-            </div>
+            </Tabs> {/* <--- EL CIERRE DE TABS VA AQUÍ, al final de la tarjeta */}
           </div>
 
           {/* COLUMNA PREVIEW (5/12 - STICKY) */}
