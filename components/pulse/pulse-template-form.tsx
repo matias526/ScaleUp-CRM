@@ -858,12 +858,88 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
         </div>
 
         {/* SECCIÓN 3: ADJUNTOS (Ancho completo) */}
-        <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
-          <h3 className="text-[10px] font-extrabold uppercase text-slate-400 tracking-widest mb-6">Gestión de Archivos Adjuntos</h3>
-          {/* Aquí mantén tu lógica de adjuntos actual, solo la envolví en este contenedor blanco */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* ... Tus mapeos de existingAttachments y pendingAttachments ... */}
+        <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm mt-8">
+          <div className="flex items-center gap-2 mb-6 border-b pb-4">
+            <Upload className="h-5 w-5 text-blue-600" />
+            <h3 className="text-[10px] font-extrabold uppercase text-slate-400 tracking-widest">Gestión de Archivos Adjuntos</h3>
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* 1. ARCHIVOS YA EXISTENTES EN EL TEMPLATE */}
+            {existingAttachments.map((file) => (
+              <div key={file.id} className="flex items-center justify-between p-3 bg-slate-50 border rounded-lg group hover:border-blue-200 transition-colors">
+                <div className="flex items-center gap-3 overflow-hidden">
+                  <div className="bg-white p-2 rounded border shadow-sm text-blue-500">
+                    <FileText className="h-4 w-4" />
+                  </div>
+                  <div className="flex flex-col overflow-hidden">
+                    <span className="text-xs font-bold truncate pr-2 text-slate-700">{file.file_name}</span>
+                    <span className="text-[9px] text-slate-400 uppercase">Archivo guardado</span>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeAttachment(file.id, true)}
+                  className="h-8 w-8 p-0 text-slate-300 hover:text-red-500 hover:bg-red-50"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+
+            {/* 2. ARCHIVOS NUEVOS (PENDIENTES DE SUBIR) */}
+            {pendingAttachments.map((file, index) => (
+              <div key={index} className="flex items-center justify-between p-3 bg-blue-50/50 border border-blue-100 rounded-lg animate-in fade-in slide-in-from-bottom-2">
+                <div className="flex items-center gap-3 overflow-hidden">
+                  <div className="bg-blue-600 p-2 rounded text-white shadow-md">
+                    <Upload className="h-4 w-4" />
+                  </div>
+                  <div className="flex flex-col overflow-hidden">
+                    <span className="text-xs font-bold truncate pr-2 text-blue-700">{file.name}</span>
+                    <span className="text-[9px] text-blue-400 uppercase font-bold tracking-tighter">Pendiente de guardado</span>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeAttachment(index, false)}
+                  className="h-8 w-8 p-0 text-blue-300 hover:text-red-500"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+
+            {/* 3. BOTÓN DE CARGA (DROPZONE MOCK) */}
+            <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 hover:border-blue-300 transition-all group min-h-[80px]">
+              <div className="flex items-center gap-3">
+                <div className="bg-slate-100 p-2 rounded-full group-hover:bg-blue-100 transition-colors">
+                  <Upload className="h-4 w-4 text-slate-400 group-hover:text-blue-500" />
+                </div>
+                <div className="text-left">
+                  <p className="text-xs font-bold text-slate-600 group-hover:text-blue-600">Añadir adjunto</p>
+                  <p className="text-[9px] text-slate-400 uppercase tracking-tighter">PDF, PNG, JPG, DOCX</p>
+                </div>
+              </div>
+              <input
+                type="file"
+                multiple
+                className="hidden"
+                onChange={handleFileUpload}
+                disabled={uploadingFile}
+              />
+            </label>
+          </div>
+
+          {uploadingFile && (
+            <div className="mt-4 flex items-center justify-center gap-2 text-blue-600">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span className="text-xs font-bold uppercase tracking-widest">Subiendo archivos...</span>
+            </div>
+          )}
         </div>
 
         {/* PIE DE PÁGINA FIXO PARA ACCIONES */}
