@@ -277,6 +277,22 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
     body_content_pt: brToNewlines(template?.translations.find((tr) => tr.language_code === "pt")?.body_content || ""),
   }
 
+  // --- FUNCIONES DE ADJUNTOS (PEGAR AQUÍ) ---
+  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    const files = Array.from(e.target.files);
+    setPendingAttachments((prev) => [...prev, ...files]);
+  };
+
+  const removeAttachment = async (idOrIndex: string | number, isExisting: boolean) => {
+    if (isExisting) {
+      setExistingAttachments((prev) => prev.filter((file) => file.id !== idOrIndex));
+    } else {
+      setPendingAttachments((prev) => prev.filter((_, i) => i !== idOrIndex));
+    }
+  };
+  // ------------------------------------------
+
   const form = useForm<PulseTemplateFormData>({
     resolver: zodResolver(pulseTemplateSchema),
     defaultValues,
@@ -865,46 +881,35 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Existentes - Usando removeAttachment */}
             {existingAttachments.map((file) => (
-              <div key={file.id} className="flex items-center justify-between p-3 bg-slate-50 border rounded-lg group hover:border-blue-200 transition-colors">
-                <div className="flex items-center gap-3 overflow-hidden">
-                  <FileText className="h-4 w-4 text-blue-500" />
-                  <span className="text-xs font-bold truncate pr-2 text-slate-700">{file.file_name}</span>
-                </div>
+              <div key={file.id} className="flex items-center justify-between p-3 bg-slate-50 border rounded-lg">
+                <span className="text-xs font-bold truncate text-slate-700">{file.file_name}</span>
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
                   onClick={() => removeAttachment(file.id, true)}
-                  className="h-8 w-8 p-0 text-slate-300 hover:text-red-500"
                 >
                   <X className="h-4 w-4" />
                 </Button>
               </div>
             ))}
 
-            {/* Pendientes - Usando removeAttachment */}
             {pendingAttachments.map((file, index) => (
               <div key={index} className="flex items-center justify-between p-3 bg-blue-50/50 border border-blue-100 rounded-lg">
-                <div className="flex items-center gap-3 overflow-hidden">
-                  <Upload className="h-4 w-4 text-blue-600" />
-                  <span className="text-xs font-bold truncate pr-2 text-blue-700">{file.name}</span>
-                </div>
+                <span className="text-xs font-bold truncate text-blue-700">{file.name}</span>
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
                   onClick={() => removeAttachment(index, false)}
-                  className="h-8 w-8 p-0 text-blue-300 hover:text-red-500"
                 >
                   <X className="h-4 w-4" />
                 </Button>
               </div>
             ))}
 
-            {/* Botón de carga - Usando onFileChange */}
-            <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-all min-h-[80px]">
+            <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 min-h-[80px]">
               <div className="flex items-center gap-3">
                 <Upload className="h-4 w-4 text-slate-400" />
                 <p className="text-xs font-bold text-slate-600">Añadir adjunto</p>
