@@ -78,31 +78,22 @@ const renderFormattedLine = (line: string, baseKey: number): React.ReactNode[] =
 
   while ((match = regex.exec(line)) !== null) {
     // Agregar texto plano ANTES del match (IMPORTANTE: no filtrar con trim)
-    if (match.index > lastIndex) {
-      const plainText = line.substring(lastIndex, match.index)
-      if (plainText) {
-        parts.push(plainText)
-      }
-    }
-
-    const key = `line-${baseKey}-elem-${componentCounter++}`
-
     if (match[1] !== undefined) {
       // [IMG]url[/IMG]
       const imgUrl = match[1]
 
-      // Si es un blob que ya expiró, no intentamos cargarlo para evitar el error en consola
-      if (imgSrc.startsWith('blob:') && !imgSrc.includes(window.location.host)) {
-        return <div className="text-[10px] text-red-400 italic">Imagen no disponible (temporal)</div>;
-      }
+      // BORRAMOS el bloque "if (imgSrc.startsWith...)" que causaba el error de referencia
+
       parts.push(
         <img
           key={key}
           src={imgUrl}
           alt="Imagen del mensaje"
           className="max-w-full max-h-80 rounded my-2 block"
-          onError={() => {
-            console.warn("[v0] Error cargando imagen:", imgUrl)
+          onError={(e) => {
+            console.warn("[v0] Error cargando imagen:", imgUrl);
+            // Opcional: ocultar la imagen rota para que no moleste
+            (e.target as HTMLImageElement).style.display = 'none';
           }}
         />
       )
