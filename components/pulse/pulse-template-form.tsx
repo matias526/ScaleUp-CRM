@@ -865,9 +865,9 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Existentes */}
+            {/* Existentes - Usando removeAttachment */}
             {existingAttachments.map((file) => (
-              <div key={file.id} className="flex items-center justify-between p-3 bg-slate-50 border rounded-lg">
+              <div key={file.id} className="flex items-center justify-between p-3 bg-slate-50 border rounded-lg group hover:border-blue-200 transition-colors">
                 <div className="flex items-center gap-3 overflow-hidden">
                   <FileText className="h-4 w-4 text-blue-500" />
                   <span className="text-xs font-bold truncate pr-2 text-slate-700">{file.file_name}</span>
@@ -876,15 +876,15 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => onRemoveAttachment(file.id, true)}
-                  className="h-8 w-8 p-0 hover:text-red-500"
+                  onClick={() => removeAttachment(file.id, true)}
+                  className="h-8 w-8 p-0 text-slate-300 hover:text-red-500"
                 >
                   <X className="h-4 w-4" />
                 </Button>
               </div>
             ))}
 
-            {/* Pendientes */}
+            {/* Pendientes - Usando removeAttachment */}
             {pendingAttachments.map((file, index) => (
               <div key={index} className="flex items-center justify-between p-3 bg-blue-50/50 border border-blue-100 rounded-lg">
                 <div className="flex items-center gap-3 overflow-hidden">
@@ -895,15 +895,15 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => onRemoveAttachment(index, false)}
-                  className="h-8 w-8 p-0 hover:text-red-500"
+                  onClick={() => removeAttachment(index, false)}
+                  className="h-8 w-8 p-0 text-blue-300 hover:text-red-500"
                 >
                   <X className="h-4 w-4" />
                 </Button>
               </div>
             ))}
 
-            {/* Botón de carga */}
+            {/* Botón de carga - Usando onFileChange */}
             <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-all min-h-[80px]">
               <div className="flex items-center gap-3">
                 <Upload className="h-4 w-4 text-slate-400" />
