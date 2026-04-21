@@ -293,14 +293,27 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
     setPendingAttachments((prev) => [...prev, ...newFiles]);
   };
 
-  const removeAttachment = async (idOrIndex: string | number, isExisting: boolean) => {
+  const removeAttachment = async (id: string, isExisting: boolean) => {
     if (isExisting) {
-      setExistingAttachments((prev) => prev.filter((file) => file.id !== idOrIndex));
+      // 1. Borramos la relación en la tabla join de Supabase
+      const { error } = await supabase
+        .from("pulse_template_attachments_join")
+        .delete()
+        .eq("attachment_id", id);
+
+      if (error) {
+        console.error("Error al borrar adjunto:", error);
+        alert("No se pudo borrar el archivo de la base de datos");
+        return;
+      }
+
+      // 2. Actualizamos el estado local
+      setExistingAttachments(prev => prev.filter(a => a.id !== id));
     } else {
-      setPendingAttachments((prev) => prev.filter((_, i) => i !== idOrIndex));
+      // Si es un archivo pendiente (no guardado aún), solo limpiamos el estado local
+      setPendingAttachments(prev => prev.filter(a => a.id !== id));
     }
   };
-  // ------------------------------------------
 
   const form = useForm<PulseTemplateFormData>({
     resolver: zodResolver(pulseTemplateSchema),
@@ -845,12 +858,23 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
             <div className="mt-8 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
               <h3 className="text-[10px] font-bold uppercase text-slate-400 mb-4">Adjuntos del Template</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* He respetado tus lógicas de mapeo originales */}
                 {existingAttachments.map((file) => (
-                  <div key={file.id} className="flex items-center justify-between p-2 bg-slate-50 border rounded-lg">
-                    <span className="text-xs truncate">{file.file_name}</span>
-                    <Button type="button" variant="ghost" size="sm" onClick={() => removeAttachment(file.id, true)}>
-                      <X className="h-4 w-4 text-red-500" />
+                  <div key={file.id} className="flex items-center justify-between p-3 bg-slate-50 border rounded-lg group">
+                    {/* Cambiamos el span por un <a> para que sea clickeable y use la URL real */}
+                    <a
+                      href={file.file_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-bold truncate hover:text-blue-600 hover:underline flex-1"
+                    >{file.file_name}</a>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeAttachment(file.id, true)}
+                      className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 text-red-500"
+                    >
+                      <X className="h-4 w-4" />
                     </Button>
                   </div>
                 ))}
