@@ -876,7 +876,7 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleRemoveAttachment(file.id, true)}
+                  onClick={() => onRemoveAttachment(file.id, true)}
                   className="h-8 w-8 p-0 hover:text-red-500"
                 >
                   <X className="h-4 w-4" />
@@ -895,7 +895,7 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleRemoveAttachment(index, false)}
+                  onClick={() => onRemoveAttachment(index, false)}
                   className="h-8 w-8 p-0 hover:text-red-500"
                 >
                   <X className="h-4 w-4" />
@@ -913,7 +913,7 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                 type="file"
                 multiple
                 className="hidden"
-                onChange={handleFileChange}
+                onChange={onFileChange}
                 disabled={uploadingFile}
               />
             </label>
