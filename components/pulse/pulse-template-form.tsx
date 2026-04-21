@@ -90,6 +90,11 @@ const renderFormattedLine = (line: string, baseKey: number): React.ReactNode[] =
     if (match[1] !== undefined) {
       // [IMG]url[/IMG]
       const imgUrl = match[1]
+
+      // Si es un blob que ya expiró, no intentamos cargarlo para evitar el error en consola
+      if (imgSrc.startsWith('blob:') && !imgSrc.includes(window.location.host)) {
+        return <div className="text-[10px] text-red-400 italic">Imagen no disponible (temporal)</div>;
+      }
       parts.push(
         <img
           key={key}
@@ -616,6 +621,19 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
       if (template?.id) {
         // UPDATE
         console.log("[v0] Actualizando template:", template.id)
+
+        // --- FIX: AGREGAR ESTO PARA ACTUALIZAR CATEGORIA Y EMPRESA ---
+        const { error: mainUpdateError } = await supabase
+          .from("pulse_message_templates")
+          .update({
+            category: data.category,
+            tech_company_id: data.tech_company_id === "none" ? null : data.tech_company_id,
+            // Agregá internal_code si querés permitir que se edite, si no, dejalo fuera
+          })
+          .eq("id", template.id)
+
+        if (mainUpdateError) throw mainUpdateError
+        // -----------------------------------------------------------
 
         const translations = [
           {
