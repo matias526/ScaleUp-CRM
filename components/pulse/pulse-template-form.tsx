@@ -83,18 +83,25 @@ const renderFormattedLine = (line: string, baseKey: number): React.ReactNode[] =
       // [IMG]url[/IMG]
       const imgUrl = match[1]
 
-      // BORRAMOS el bloque "if (imgSrc.startsWith...)" que causaba el error de referencia
+      // Creamos una key única y segura
+      const imgKey = `img-${baseKey}-${componentCounter++}`
 
       parts.push(
         <img
-          key={elementKey}
+          key={imgKey}
           src={imgUrl}
-          alt="Imagen del mensaje"
-          className="max-w-full max-h-80 rounded my-2 block"
+          alt="Contenido"
+          className="max-w-full max-h-80 rounded my-2 block shadow-sm border border-slate-100"
+          // El secreto para que no scrollee el error infinito en consola:
           onError={(e) => {
-            console.warn("[v0] Error cargando imagen:", imgUrl);
-            // Opcional: ocultar la imagen rota para que no moleste
-            (e.target as HTMLImageElement).style.display = 'none';
+            const target = e.target as HTMLImageElement;
+            // Evitamos re-entrada: si ya pusimos el placeholder, no hacemos nada más
+            if (target.dataset.errorHandled) return;
+
+            target.dataset.errorHandled = "true";
+            target.src = "https://placehold.co/400x200?text=Imagen+Expirada";
+            target.className = "max-w-full h-20 rounded my-2 block opacity-40 grayscale";
+            console.warn("[v0] Imagen blob expirada omitida:", imgUrl);
           }}
         />
       )
