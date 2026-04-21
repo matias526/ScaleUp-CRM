@@ -78,6 +78,7 @@ const renderFormattedLine = (line: string, baseKey: number): React.ReactNode[] =
 
   while ((match = regex.exec(line)) !== null) {
     // Agregar texto plano ANTES del match (IMPORTANTE: no filtrar con trim)
+    const elementKey = `line-${baseKey}-elem-${componentCounter++}`
     if (match[1] !== undefined) {
       // [IMG]url[/IMG]
       const imgUrl = match[1]
@@ -86,7 +87,7 @@ const renderFormattedLine = (line: string, baseKey: number): React.ReactNode[] =
 
       parts.push(
         <img
-          key={key}
+          key={elementKey}
           src={imgUrl}
           alt="Imagen del mensaje"
           className="max-w-full max-h-80 rounded my-2 block"
@@ -100,21 +101,21 @@ const renderFormattedLine = (line: string, baseKey: number): React.ReactNode[] =
     } else if (match[2] !== undefined) {
       // [B]text[/B]
       parts.push(
-        <strong key={key} className="font-bold">
+        <strong key={elementKey} className="font-bold">
           {match[2]}
         </strong>
       )
     } else if (match[3] !== undefined) {
       // [I]text[/I]
       parts.push(
-        <em key={key} className="italic">
+        <em key={elementKey} className="italic">
           {match[3]}
         </em>
       )
     } else if (match[4] !== undefined) {
       // [U]text[/U]
       parts.push(
-        <u key={key} className="underline">
+        <u key={elementKey} className="underline">
           {match[4]}
         </u>
       )
@@ -123,7 +124,7 @@ const renderFormattedLine = (line: string, baseKey: number): React.ReactNode[] =
       const variableName = match[5]
       parts.push(
         <span
-          key={key}
+          key={elementKey}
           className="bg-blue-100 text-blue-700 px-1 rounded font-mono text-sm whitespace-nowrap"
           title="Campo dinámico que se reemplazará al enviar"
         >
