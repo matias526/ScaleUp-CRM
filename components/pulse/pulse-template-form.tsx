@@ -873,3 +873,4 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
       </form>
     </Form>
   )
+}
