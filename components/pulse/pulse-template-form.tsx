@@ -280,8 +280,17 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
   // --- FUNCIONES DE ADJUNTOS (PEGAR AQUÍ) ---
   const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
-    const files = Array.from(e.target.files);
-    setPendingAttachments((prev) => [...prev, ...files]);
+
+    // Convertimos los archivos en el objeto que la función de subida espera
+    const newFiles = Array.from(e.target.files).map(file => ({
+      id: crypto.randomUUID(),
+      file: file, // Objeto File real para el storage
+      name: file.name,
+      size: file.size,
+      language: "all" // O el valor por defecto que prefieras
+    }));
+
+    setPendingAttachments((prev) => [...prev, ...newFiles]);
   };
 
   const removeAttachment = async (idOrIndex: string | number, isExisting: boolean) => {
@@ -519,13 +528,14 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
 
     try {
       for (const attachment of pendingAttachments) {
-        // Subir archivo a Supabase Storage
-        const fileExt = attachment.file.name.split(".").pop()
+        // Usamos attachment.file que es donde guardamos el archivo real en onFileChange
+        const file = attachment.file;
+        const fileExt = file.name.split(".").pop()
         const fileName = `${templateId}/${attachment.id}.${fileExt}`
 
         const { error: uploadError } = await supabase.storage
           .from("pulse-assets")
-          .upload(`attachments/${fileName}`, attachment.file)
+          .upload(`attachments/${fileName}`, file)
 
         if (uploadError) {
           throw new Error(`Error subiendo archivo ${attachment.name}: ${uploadError.message}`)
@@ -537,10 +547,10 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
         const { data } = supabase.storage.from("pulse-assets").getPublicUrl(`attachments/${fileName}`)
         const fileUrl = data.publicUrl
 
-        // Obtener tipo de archivo del MIME type
-        const fileType = attachment.file.type || "application/octet-stream"
+        // Obtener tipo de archivo del MIME type directamente del file
+        const fileType = file.type || "application/octet-stream"
 
-        // Crear registro en pulse_message_attachments (sin language_code aquí)
+        // Crear registro en pulse_message_attachments
         const { data: attachmentData, error: attachmentError } = await supabase
           .from("pulse_message_attachments")
           .insert([
@@ -556,8 +566,9 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
 
         if (attachmentError) throw attachmentError
 
-        // Crear relación en pulse_template_attachments_join (con language_code)
-        const languageCode = attachment.language === "global" ? "all" : attachment.language
+        // Crear relación en pulse_template_attachments_join
+        // Ajuste de "global" a "all" según tu lógica
+        const languageCode = attachment.language === "global" || attachment.language === "all" ? "all" : attachment.language
 
         const { error: joinError } = await supabase
           .from("pulse_template_attachments_join")
