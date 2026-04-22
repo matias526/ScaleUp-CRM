@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Send, Loader2, Calendar, Mail, Phone, AlertCircle } from "lucide-react"
+import { Send, Loader2, X, Paperclip, AlertCircle } from "lucide-react"
 import { toast } from "@/components/ui/use-toast"
 import { sendPulseMessage, PulseMessageRecipient } from "@/lib/services/pulse-message-service"
 import { replaceVariables, VariableValues, PULSE_MESSAGE_VARIABLES } from "@/lib/pulse/pulse-message-variables"
@@ -48,13 +48,7 @@ interface PulseMessageSenderProps {
   endCustomer?: EndCustomer
   templates: Array<{
     id: string
-    internal_code: string
-    translations: Array<{
-      language_code: string
-      display_name: string
-      subject: string
-      body_content: string
-    }>
+    name: string
   }>
   isOpen: boolean
   onClose: () => void
@@ -69,30 +63,27 @@ export function PulseMessageSenderOpportunity({
   onClose,
 }: PulseMessageSenderProps) {
   const { user } = useAuth()
-  const [selectedTemplate, setSelectedTemplate] = useState<string>("")
-  const [sendMode, setSendMode] = useState<"individual" | "group">("individual")
-  const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set())
-  const [toEmails, setToEmails] = useState<string[]>([])
-  const [ccEmails, setCcEmails] = useState<string[]>([])
-  const [bccEmails, setBccEmails] = useState<string[]>([])
-  const [subject, setSubject] = useState<string>("")
-  const [bodyContent, setBodyContent] = useState<string>("")
-  const [scheduledAt, setScheduledAt] = useState<string>("")
+  const [channel, setChannel] = useState("email")
+  const [sender, setSender] = useState("personal")
+  const [toContacts, setToContacts] = useState<Set<string>>(new Set())
+  const [ccContacts, setCcContacts] = useState<Set<string>>(new Set())
+  const [bccContacts, setBccContacts] = useState<Set<string>>(new Set())
+  const [sendIndividual, setSendIndividual] = useState(false)
+  const [selectedTemplate, setSelectedTemplate] = useState("")
+  const [subject, setSubject] = useState("")
+  const [message, setMessage] = useState("")
+  const [attachments, setAttachments] = useState<File[]>([])
   const [loading, setLoading] = useState(false)
-  const [showPreview, setShowPreview] = useState(false)
-
-  const currentTemplate = useMemo(() => {
-    if (!selectedTemplate) return null
-    return templates.find((t) => t.id === selectedTemplate)
-  }, [selectedTemplate, templates])
+  const [scheduledFor, setScheduledFor] = useState("")
 
   // Obtener valores de variables del contexto
   const variableValues: VariableValues = useMemo(() => {
+    const firstToContact = toContacts.size === 1 ? contacts.find((c) => toContacts.has(c.id)) : null
     return {
-      contact_name: selectedContacts.size === 1 ? contacts.find((c) => selectedContacts.has(c.id))?.name || "" : "",
-      contact_email: selectedContacts.size === 1 ? contacts.find((c) => selectedContacts.has(c.id))?.email || "" : "",
-      contact_phone: selectedContacts.size === 1 ? contacts.find((c) => selectedContacts.has(c.id))?.phone || "" : "",
-      contact_position: selectedContacts.size === 1 ? contacts.find((c) => selectedContacts.has(c.id))?.position || "" : "",
+      contact_name: firstToContact?.name || "",
+      contact_email: firstToContact?.email || "",
+      contact_phone: firstToContact?.phone || "",
+      contact_position: firstToContact?.position || "",
       company_name: endCustomer?.name || "",
       company_industry: endCustomer?.industry || "",
       company_city: endCustomer?.city || "",
@@ -107,135 +98,96 @@ export function PulseMessageSenderOpportunity({
       today_date: new Date().toLocaleDateString("es-ES"),
       current_time: new Date().toLocaleTimeString("es-ES"),
     }
-  }, [selectedContacts, contacts, endCustomer, opportunity, user])
+  }, [toContacts, contacts, endCustomer, opportunity, user])
 
-  // Vista previa renderizada
-  const previewSubject = useMemo(() => replaceVariables(subject, variableValues), [subject, variableValues])
-  const previewBody = useMemo(() => replaceVariables(bodyContent, variableValues), [bodyContent, variableValues])
+  // Renderizar preview con variables reemplazadas
+  const previewMessage = useMemo(() => {
+    return replaceVariables(message, variableValues)
+  }, [message, variableValues])
 
-  const handleSelectTemplate = (templateId: string) => {
-    setSelectedTemplate(templateId)
-    const template = templates.find((t) => t.id === templateId)
-    if (template) {
-      // Obtener traducción en español
-      const esTrans = template.translations.find((t) => t.language_code === "es")
-      if (esTrans) {
-        setSubject(esTrans.subject)
-        setBodyContent(esTrans.body_content)
-      }
-    }
-  }
-
-  const handleToggleContact = (contactId: string) => {
-    const newSelection = new Set(selectedContacts)
-    if (newSelection.has(contactId)) {
-      newSelection.delete(contactId)
-    } else {
-      newSelection.add(contactId)
-    }
-    setSelectedContacts(newSelection)
-
-    // Actualizar emails según modo
-    if (sendMode === "group") {
-      const selectedContactsArray = contacts.filter((c) => newSelection.has(c.id))
-      setToEmails(selectedContactsArray.map((c) => c.email))
-    }
-  }
-
-  const handleSelectAll = () => {
-    if (selectedContacts.size === contacts.length) {
-      setSelectedContacts(new Set())
-      if (sendMode === "group") {
-        setToEmails([])
-      }
-    } else {
-      setSelectedContacts(new Set(contacts.map((c) => c.id)))
-      if (sendMode === "group") {
-        setToEmails(contacts.map((c) => c.email))
-      }
-    }
-  }
-
-  const handleSendMode = (mode: "individual" | "group") => {
-    setSendMode(mode)
-    if (mode === "group" && selectedContacts.size > 0) {
-      setToEmails(contacts.filter((c) => selectedContacts.has(c.id)).map((c) => c.email))
-    }
-  }
+  const previewSubject = useMemo(() => {
+    return replaceVariables(subject, variableValues)
+  }, [subject, variableValues])
 
   const handleSend = async () => {
-    // Validaciones
-    if (!selectedTemplate) {
-      toast({ title: "Error", description: "Selecciona un template", variant: "destructive" })
+    if (toContacts.size === 0) {
+      toast.error("Selecciona al menos un contacto en 'Para'")
       return
     }
 
-    if (selectedContacts.size === 0) {
-      toast({ title: "Error", description: "Selecciona al menos un contacto", variant: "destructive" })
-      return
-    }
-
-    if (!subject.trim()) {
-      toast({ title: "Error", description: "El asunto no puede estar vacío", variant: "destructive" })
-      return
-    }
-
-    if (!bodyContent.trim()) {
-      toast({ title: "Error", description: "El contenido no puede estar vacío", variant: "destructive" })
-      return
-    }
-
-    if (sendMode === "group" && toEmails.length === 0) {
-      toast({ title: "Error", description: "Agrega al menos un email en 'Para'", variant: "destructive" })
-      return
-    }
-
-    if (scheduledAt && new Date(scheduledAt) < new Date()) {
-      toast({ title: "Error", description: "La fecha programada debe ser en el futuro", variant: "destructive" })
-      return
-    }
-
+    setLoading(true)
     try {
-      setLoading(true)
+      const recipients: PulseMessageRecipient[] = Array.from(toContacts).map((contactId) => ({
+        type: "to",
+        email: contacts.find((c) => c.id === contactId)?.email || "",
+      }))
 
-      const recipients: PulseMessageRecipient[] = contacts
-        .filter((c) => selectedContacts.has(c.id))
-        .map((c) => ({
-          contact_id: c.id,
-          email: c.email,
-          name: c.name,
+      recipients.push(
+        ...Array.from(ccContacts).map((contactId) => ({
+          type: "cc" as const,
+          email: contacts.find((c) => c.id === contactId)?.email || "",
         }))
+      )
+
+      recipients.push(
+        ...Array.from(bccContacts).map((contactId) => ({
+          type: "bcc" as const,
+          email: contacts.find((c) => c.id === contactId)?.email || "",
+        }))
+      )
 
       await sendPulseMessage({
         template_id: selectedTemplate,
-        opportunity_id: opportunity.id,
-        user_id: user!.id,
+        channel: channel as "email" | "whatsapp",
+        send_mode: sendIndividual ? "individual" : "group",
         recipients,
-        send_mode: sendMode,
-        to_emails: toEmails,
-        cc_emails: ccEmails,
-        bcc_emails: bccEmails,
         subject,
-        body_content: bodyContent,
-        variables_values: variableValues,
-        scheduled_at: scheduledAt || null,
+        body: message,
+        scheduled_for: scheduledFor ? new Date(scheduledFor) : null,
+        attachments: attachments.map((f) => f.name),
       })
 
-      toast({
-        title: "Éxito",
-        description: scheduledAt ? "Mensaje programado correctamente" : "Mensaje enviado correctamente",
-      })
-
+      toast.success("Mensaje enviado correctamente")
       onClose()
     } catch (error) {
-      console.error("[v0] Error al enviar mensaje:", error)
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Error al enviar",
-        variant: "destructive",
-      })
+      console.error("[v0] Error sending message:", error)
+      toast.error(error instanceof Error ? error.message : "Error al enviar mensaje")
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    setAttachments((prev) => [...prev, ...files])
+  }
+
+  const removeAttachment = (index: number) => {
+    setAttachments((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const toggleContact = (contactId: string, type: "to" | "cc" | "bcc") => {
+    if (type === "to") {
+      setToContacts((prev) => {
+        const newSet = new Set(prev)
+        if (newSet.has(contactId)) newSet.delete(contactId)
+        else newSet.add(contactId)
+        return newSet
+      })
+    } else if (type === "cc") {
+      setCcContacts((prev) => {
+        const newSet = new Set(prev)
+        if (newSet.has(contactId)) newSet.delete(contactId)
+        else newSet.add(contactId)
+        return newSet
+      })
+    } else {
+      setBccContacts((prev) => {
+        const newSet = new Set(prev)
+        if (newSet.has(contactId)) newSet.delete(contactId)
+        else newSet.add(contactId)
+        return newSet
+      })
     }
   }
 
@@ -243,221 +195,358 @@ export function PulseMessageSenderOpportunity({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Enviar Mensaje - {opportunity.name}</DialogTitle>
-          <DialogDescription>Selecciona un template, contactos y configura el envío</DialogDescription>
+      <DialogContent className="max-w-6xl h-[90vh] p-0 flex flex-col">
+        {/* Header */}
+        <DialogHeader className="border-b px-6 py-4 space-y-2">
+          <DialogTitle className="text-xl">Enviar Comunicación</DialogTitle>
+          <DialogDescription>Configura y previsualiza tu mensaje antes de enviar.</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
-          {/* PASO 1: SELECCIONAR TEMPLATE */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">1. Selecciona un Template</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Select value={selectedTemplate} onValueChange={handleSelectTemplate}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Elige un template..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {templates.map((template) => {
-                    const esTrans = template.translations.find((t) => t.language_code === "es")
-                    return (
-                      <SelectItem key={template.id} value={template.id}>
-                        {esTrans?.display_name || template.internal_code}
-                      </SelectItem>
-                    )
-                  })}
-                </SelectContent>
-              </Select>
-            </CardContent>
-          </Card>
-
-          {/* PASO 2: SELECCIONAR CONTACTOS */}
-          <Card>
-            <CardHeader className="pb-3">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-base">2. Selecciona Contactos</CardTitle>
-                <Button variant="outline" size="sm" onClick={handleSelectAll}>
-                  {selectedContacts.size === contacts.length ? "Deseleccionar Todo" : "Seleccionar Todo"}
-                </Button>
+        {/* Main Content - Two Columns */}
+        <div className="flex-1 overflow-hidden flex">
+          {/* COLUMNA 1: CONFIGURACIÓN (45%) */}
+          <div className="w-[45%] border-r overflow-y-auto p-6 space-y-6">
+            {/* 1. CANAL Y REMITENTE */}
+            <div>
+              <h3 className="font-semibold text-sm uppercase tracking-wide text-slate-700 mb-3">Canal y Remitente</h3>
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <Label className="text-xs mb-2 block">Canal</Label>
+                  <Select value={channel} onValueChange={setChannel}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="email">Email</SelectItem>
+                      <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex-1">
+                  <Label className="text-xs mb-2 block">Remitente</Label>
+                  <Select value={sender} onValueChange={setSender}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="personal">Personal</SelectItem>
+                      <SelectItem value="system">Sistema</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2 max-h-48 overflow-y-auto border rounded-lg p-3">
-                {contacts.length === 0 ? (
-                  <p className="text-sm text-slate-500">No hay contactos en esta oportunidad</p>
-                ) : (
-                  contacts.map((contact) => (
-                    <div key={contact.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded">
-                      <Checkbox
-                        checked={selectedContacts.has(contact.id)}
-                        onCheckedChange={() => handleToggleContact(contact.id)}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium">{contact.name}</p>
-                        <p className="text-xs text-slate-500">{contact.email}</p>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-              <p className="text-xs text-slate-600 mt-2">{selectedContacts.size} contacto(s) seleccionado(s)</p>
-            </CardContent>
-          </Card>
+            </div>
 
-          {/* PASO 3: MODO DE ENVÍO */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">3. Modo de Envío</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex gap-4">
-                <Button
-                  variant={sendMode === "individual" ? "default" : "outline"}
-                  onClick={() => handleSendMode("individual")}
-                  className="flex-1"
-                >
-                  Uno a Uno
-                </Button>
-                <Button
-                  variant={sendMode === "group" ? "default" : "outline"}
-                  onClick={() => handleSendMode("group")}
-                  className="flex-1"
-                >
-                  Grupal (To/CC/BCC)
-                </Button>
-              </div>
-
-              {sendMode === "group" && (
-                <div className="space-y-3">
-                  <div>
-                    <Label className="text-xs">Para (To)</Label>
-                    <div className="text-xs text-slate-600 bg-slate-50 p-2 rounded mt-1">
-                      {toEmails.length > 0 ? toEmails.join(", ") : "Selecciona contactos arriba"}
-                    </div>
-                  </div>
-                  <div>
-                    <Label className="text-xs">CC (opcional)</Label>
-                    <Input
-                      placeholder="email1@example.com, email2@example.com"
-                      value={ccEmails.join(", ")}
-                      onChange={(e) => setCcEmails(e.target.value.split(",").map((e) => e.trim()))}
-                      className="text-xs"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs">BCC (opcional)</Label>
-                    <Input
-                      placeholder="email1@example.com, email2@example.com"
-                      value={bccEmails.join(", ")}
-                      onChange={(e) => setBccEmails(e.target.value.split(",").map((e) => e.trim()))}
-                      className="text-xs"
-                    />
+            {/* 2. DESTINATARIOS */}
+            <div>
+              <h3 className="font-semibold text-sm uppercase tracking-wide text-slate-700 mb-3">Destinatarios</h3>
+              <div className="space-y-3">
+                {/* Para */}
+                <div>
+                  <Label className="text-xs mb-2 block">Para</Label>
+                  <div className="flex flex-wrap gap-2 p-2 border rounded bg-slate-50 min-h-9">
+                    {Array.from(toContacts).map((cId) => {
+                      const contact = contacts.find((c) => c.id === cId)
+                      return (
+                        <Badge key={cId} variant="secondary" className="flex items-center gap-1">
+                          {contact?.name}
+                          <button onClick={() => toggleContact(cId, "to")} className="hover:text-red-500">
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      )
+                    })}
+                    <Select value="" onValueChange={(val) => toggleContact(val, "to")}>
+                      <SelectTrigger className="h-7 w-24 text-xs">
+                        <SelectValue placeholder="+ Agregar" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {contacts
+                          .filter((c) => !toContacts.has(c.id) && !ccContacts.has(c.id) && !bccContacts.has(c.id))
+                          .map((c) => (
+                            <SelectItem key={c.id} value={c.id}>
+                              {c.name}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
 
-          {/* PASO 4: CONTENIDO DEL MENSAJE */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">4. Contenido del Mensaje</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label className="text-xs">Asunto</Label>
-                <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Asunto del mensaje" />
+                {/* CC */}
+                <div>
+                  <Label className="text-xs mb-2 block">CC</Label>
+                  <div className="flex flex-wrap gap-2 p-2 border rounded bg-slate-50 min-h-9">
+                    {Array.from(ccContacts).map((cId) => {
+                      const contact = contacts.find((c) => c.id === cId)
+                      return (
+                        <Badge key={cId} variant="secondary" className="flex items-center gap-1">
+                          {contact?.name}
+                          <button onClick={() => toggleContact(cId, "cc")} className="hover:text-red-500">
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      )
+                    })}
+                    <Select value="" onValueChange={(val) => toggleContact(val, "cc")}>
+                      <SelectTrigger className="h-7 w-24 text-xs">
+                        <SelectValue placeholder="+ Agregar" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {contacts
+                          .filter((c) => !toContacts.has(c.id) && !ccContacts.has(c.id) && !bccContacts.has(c.id))
+                          .map((c) => (
+                            <SelectItem key={c.id} value={c.id}>
+                              {c.name}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* BCC */}
+                <div>
+                  <Label className="text-xs mb-2 block">BCC</Label>
+                  <div className="flex flex-wrap gap-2 p-2 border rounded bg-slate-50 min-h-9">
+                    {Array.from(bccContacts).map((cId) => {
+                      const contact = contacts.find((c) => c.id === cId)
+                      return (
+                        <Badge key={cId} variant="secondary" className="flex items-center gap-1">
+                          {contact?.name}
+                          <button onClick={() => toggleContact(cId, "bcc")} className="hover:text-red-500">
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      )
+                    })}
+                    <Select value="" onValueChange={(val) => toggleContact(val, "bcc")}>
+                      <SelectTrigger className="h-7 w-24 text-xs">
+                        <SelectValue placeholder="+ Agregar" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {contacts
+                          .filter((c) => !toContacts.has(c.id) && !ccContacts.has(c.id) && !bccContacts.has(c.id))
+                          .map((c) => (
+                            <SelectItem key={c.id} value={c.id}>
+                              {c.name}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Envío Individual */}
+                <div className="flex items-center gap-2 pt-2">
+                  <Checkbox id="individual" checked={sendIndividual} onCheckedChange={setSendIndividual} />
+                  <Label htmlFor="individual" className="text-xs cursor-pointer">
+                    Envío Individual (uno por uno)
+                  </Label>
+                </div>
               </div>
-              <div>
-                <Label className="text-xs">Contenido</Label>
-                <Textarea
-                  value={bodyContent}
-                  onChange={(e) => setBodyContent(e.target.value)}
-                  placeholder="Contenido del mensaje"
-                  className="min-h-32"
+            </div>
+
+            {/* 3. CONTENIDO DEL MENSAJE */}
+            <div>
+              <h3 className="font-semibold text-sm uppercase tracking-wide text-slate-700 mb-3">Contenido del Mensaje</h3>
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-xs mb-2 block">Template</Label>
+                  <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Elegir template..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {templates.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label className="text-xs mb-2 block">Asunto</Label>
+                  <Input
+                    placeholder="Asunto del email..."
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    className="h-9"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-xs mb-2 block">Mensaje</Label>
+                  <Textarea
+                    placeholder="Escribe tu mensaje aquí..."
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    className="min-h-32 resize-none"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    Usa variables disponibles: {PULSE_MESSAGE_VARIABLES.slice(0, 3).map((v) => v.tag).join(", ")}...
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 4. ADJUNTOS */}
+            <div>
+              <h3 className="font-semibold text-sm uppercase tracking-wide text-slate-700 mb-3">Adjuntos</h3>
+              <div className="border-2 border-dashed rounded-lg p-4 text-center bg-slate-50 cursor-pointer hover:bg-slate-100 transition">
+                <input
+                  type="file"
+                  multiple
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  id="file-upload"
                 />
+                <Label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center gap-2">
+                  <Paperclip className="h-5 w-5 text-slate-400" />
+                  <span className="text-sm text-slate-600">Arrastra archivos aquí o haz clic</span>
+                </Label>
               </div>
-
-              {/* Variables disponibles */}
-              <div className="bg-slate-50 p-3 rounded border border-slate-200">
-                <p className="text-xs font-semibold mb-2 text-slate-700">Variables disponibles:</p>
-                <div className="flex flex-wrap gap-2">
-                  {PULSE_MESSAGE_VARIABLES.map((variable) => (
-                    <Badge
-                      key={variable.tag}
-                      variant="outline"
-                      className="text-xs cursor-pointer hover:bg-slate-200"
-                      onClick={() => {
-                        setBodyContent(bodyContent + ` ${variable.tag}`)
-                      }}
-                    >
-                      {variable.tag}
-                    </Badge>
+              {attachments.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  {attachments.map((file, idx) => (
+                    <div key={idx} className="flex items-center justify-between text-sm p-2 bg-slate-50 rounded">
+                      <span className="truncate">{file.name}</span>
+                      <button
+                        onClick={() => removeAttachment(idx)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
                   ))}
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              )}
+            </div>
 
-          {/* PASO 5: PROGRAMACIÓN */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">5. Programación (Opcional)</CardTitle>
-            </CardHeader>
-            <CardContent>
+            {/* Programación */}
+            <div>
+              <Label className="text-xs mb-2 block">Programar Envío (Opcional)</Label>
+              <Input
+                type="datetime-local"
+                value={scheduledFor}
+                onChange={(e) => setScheduledFor(e.target.value)}
+                className="h-9"
+              />
+            </div>
+          </div>
+
+          {/* COLUMNA 2: PREVISUALIZACIÓN (55%) */}
+          <div className="w-[55%] bg-slate-50 border-l overflow-y-auto p-6">
+            <div className="space-y-4">
               <div>
-                <Label className="text-xs">Enviar en fecha/hora específica</Label>
-                <div className="flex gap-2 mt-2">
-                  <Input type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} />
-                  {scheduledAt && (
-                    <Button variant="ghost" size="sm" onClick={() => setScheduledAt("")}>
-                      Limpiar
-                    </Button>
-                  )}
-                </div>
-                <p className="text-xs text-slate-500 mt-2">
-                  Si no especificas fecha, el mensaje se enviará inmediatamente
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+                <h3 className="font-semibold text-sm uppercase tracking-wide text-slate-700 mb-3">Vista Previa del Mensaje</h3>
+                <Card className="bg-white">
+                  <CardContent className="p-4 space-y-3 text-sm">
+                    {/* From */}
+                    <div className="border-b pb-3">
+                      <p className="text-xs text-slate-500 font-medium">De:</p>
+                      <p className="text-slate-900">
+                        {sender === "personal" ? user?.email : "sistema@scaleup.com"}
+                      </p>
+                    </div>
 
-          {/* BOTONES DE ACCIÓN */}
-          <div className="flex gap-2 justify-end">
-            <Button variant="outline" onClick={onClose} disabled={loading}>
-              Cancelar
-            </Button>
-            <Button variant="outline" onClick={() => setShowPreview(!showPreview)}>
-              {showPreview ? "Ocultar" : "Ver"} Preview
-            </Button>
-            <Button onClick={handleSend} disabled={loading} className="gap-2">
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              {scheduledAt ? "Programar" : "Enviar"}
-            </Button>
+                    {/* To */}
+                    <div className="border-b pb-3">
+                      <p className="text-xs text-slate-500 font-medium">Para:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {Array.from(toContacts)
+                          .map((cId) => contacts.find((c) => c.id === cId)?.email)
+                          .join(", ") || "No seleccionado"}
+                      </div>
+                    </div>
+
+                    {/* CC/BCC */}
+                    {(ccContacts.size > 0 || bccContacts.size > 0) && (
+                      <div className="border-b pb-3">
+                        {ccContacts.size > 0 && (
+                          <div>
+                            <p className="text-xs text-slate-500 font-medium">CC:</p>
+                            <p>
+                              {Array.from(ccContacts)
+                                .map((cId) => contacts.find((c) => c.id === cId)?.email)
+                                .join(", ")}
+                            </p>
+                          </div>
+                        )}
+                        {bccContacts.size > 0 && (
+                          <div>
+                            <p className="text-xs text-slate-500 font-medium">BCC:</p>
+                            <p>
+                              {Array.from(bccContacts)
+                                .map((cId) => contacts.find((c) => c.id === cId)?.email)
+                                .join(", ")}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Subject */}
+                    <div className="border-b pb-3">
+                      <p className="text-xs text-slate-500 font-medium">Asunto:</p>
+                      <p className="font-medium text-slate-900">{previewSubject || "(sin asunto)"}</p>
+                    </div>
+
+                    {/* Message Body */}
+                    <div className="border-b pb-3">
+                      <p className="text-xs text-slate-500 font-medium mb-2">Mensaje:</p>
+                      <div className="prose prose-sm max-w-none text-slate-900 whitespace-pre-wrap leading-relaxed">
+                        {previewMessage || "(mensaje vacío)"}
+                      </div>
+                    </div>
+
+                    {/* Attachments */}
+                    {attachments.length > 0 && (
+                      <div>
+                        <p className="text-xs text-slate-500 font-medium mb-2">Adjuntos:</p>
+                        <div className="space-y-1">
+                          {attachments.map((file, idx) => (
+                            <p key={idx} className="text-xs text-slate-700 flex items-center gap-1">
+                              <Paperclip className="h-3 w-3" /> {file.name}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Info Badge */}
+                <div className="mt-4 flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded">
+                  <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-blue-900">
+                    Las variables se reemplazan dinámicamente en esta vista previa y aparecen en negrita en el mensaje enviado.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* PREVIEW */}
-        {showPreview && (
-          <Card className="mt-6 border-blue-200 bg-blue-50">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base text-blue-900">Vista Previa</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div>
-                <p className="text-xs font-semibold text-slate-700 mb-1">Asunto:</p>
-                <p className="text-sm bg-white p-2 rounded border">{previewSubject}</p>
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-slate-700 mb-1">Contenido:</p>
-                <div className="text-sm bg-white p-3 rounded border whitespace-pre-wrap">{previewBody}</div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {/* Footer - Actions */}
+        <div className="border-t px-6 py-4 flex justify-end gap-3">
+          <Button variant="outline" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button variant="outline" onClick={() => {}}>
+            Guardar como Nuevo Template
+          </Button>
+          <Button
+            onClick={handleSend}
+            disabled={loading || toContacts.size === 0}
+            className="bg-blue-600 hover:bg-blue-700 gap-2"
+          >
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            Enviar Mensaje
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   )
