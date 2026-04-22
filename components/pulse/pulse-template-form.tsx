@@ -778,7 +778,7 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
       <form onSubmit={form.handleSubmit(handleSave)} className="w-full">
         {/* ENCABEZADO */}
         <div className="px-8 py-6 border-b border-slate-200">
-          <h1 className="text-3xl font-extrabold text-slate-900 mb-1">
+          <h1 className="text-3xl font-bold text-slate-900 mb-1">
             {template ? "Editar Template" : "Crear Nuevo Template"}
           </h1>
           <p className="text-sm text-slate-600">
@@ -789,26 +789,25 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
         </div>
 
         {/* CONTENIDO */}
-        <div className="px-8 py-8 space-y-6 max-h-[calc(100vh-320px)] overflow-y-auto">
+        <div className="px-8 py-8 space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto">
 
         {/* SECCIÓN 1: CONFIGURACIÓN SUPERIOR (Ancho completo) */}
-        <div className="bg-white p-10 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-          <h2 className="text-base font-bold text-slate-950 mb-6 pb-4 border-b border-slate-100">Configuración del Template</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="bg-white p-10 rounded-lg border border-slate-200 shadow-sm">
+          <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-6">Datos Generales</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <FormField control={form.control} name="internal_code" render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Código Interno</FormLabel>
-                <FormControl><Input {...field} disabled={!!template} className="bg-white focus:bg-white font-medium transition-colors border-slate-300" placeholder="Ej: WELCOME_OPP" /></FormControl>
-                <FormDescription className="text-[9px] text-slate-500 mt-1">Identificador único (no editable después de crear)</FormDescription>
+                <FormLabel className="text-xs font-semibold uppercase text-slate-700 tracking-wide">Código Interno</FormLabel>
+                <FormControl><Input {...field} disabled={!!template} className="h-11 border-slate-300 rounded-lg" placeholder="Ej: WELCOME_OPP" /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
 
             <FormField control={form.control} name="category" render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Categoría</FormLabel>
+                <FormLabel className="text-xs font-semibold uppercase text-slate-700 tracking-wide">Categoría</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl><SelectTrigger className="bg-white focus:bg-white transition-colors border-slate-300"><SelectValue /></SelectTrigger></FormControl>
+                  <FormControl><SelectTrigger className="h-11 border-slate-300 rounded-lg"><SelectValue /></SelectTrigger></FormControl>
                   <SelectContent>
                     <SelectItem value="metodologia">Metodología</SelectItem>
                     <SelectItem value="posteos_redes">Posteos</SelectItem>
@@ -822,9 +821,9 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
 
             <FormField control={form.control} name="tech_company_id" render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Empresa Tecnológica</FormLabel>
+                <FormLabel className="text-xs font-semibold uppercase text-slate-700 tracking-wide">Empresa Tecnológica</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value || "none"}>
-                  <FormControl><SelectTrigger className="bg-white focus:bg-white transition-colors border-slate-300"><SelectValue /></SelectTrigger></FormControl>
+                  <FormControl><SelectTrigger className="h-11 border-slate-300 rounded-lg"><SelectValue /></SelectTrigger></FormControl>
                   <SelectContent>
                     <SelectItem value="none">Sin empresa (Global)</SelectItem>
                     {techCompanies.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
@@ -836,87 +835,83 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
           </div>
         </div>
 
-        {/* SECCIÓN 2: GRID HÍBRIDO (Editor + Preview) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* SECCIÓN 2: CONTENIDO POR IDIOMAS */}
+        <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+          {/* Encabezado con Tabs y Auto-traducir */}
+          <div className="border-b border-slate-200 px-10 py-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Contenido por Idioma</h3>
+              <Button type="button" variant="outline" size="sm" onClick={handleAutoTranslate} disabled={translating} className="text-xs font-semibold uppercase text-slate-700 border-slate-300 h-9">
+                {translating ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : null}
+                Auto-Traducir
+              </Button>
+            </div>
+            <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
+              <TabsList className="bg-slate-100 p-0.5 border border-slate-200 rounded-lg w-fit">
+                <TabsTrigger value="es" className="text-xs font-semibold uppercase tracking-wide text-slate-600 px-4 py-1.5 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded">ES</TabsTrigger>
+                <TabsTrigger value="en" className="text-xs font-semibold uppercase tracking-wide text-slate-600 px-4 py-1.5 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded">EN</TabsTrigger>
+                <TabsTrigger value="pt" className="text-xs font-semibold uppercase tracking-wide text-slate-600 px-4 py-1.5 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded">PT</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
 
-          {/* LADO IZQUIERDO: EDITOR (7 columnas) */}
-          <div className="lg:col-span-7">
-            <div className="bg-white p-10 rounded-xl border border-slate-200 shadow-sm relative">
-              <h2 className="text-base font-bold text-slate-950 mb-6 pb-4 border-b border-slate-100">Contenido por Idioma</h2>
+          {/* Grid Editor + Preview */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
+            {/* EDITOR */}
+            <div className="border-r border-slate-200 p-10 space-y-6 overflow-y-auto max-h-[600px]">
               <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
-                <div className="flex justify-between items-center mb-6 gap-4">
-                  <TabsList className="bg-slate-100 p-0.5 border border-slate-200 rounded-lg">
-                    <TabsTrigger value="es" className="text-xs font-semibold uppercase tracking-wide text-slate-600 px-4 py-1.5 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm">ES</TabsTrigger>
-                    <TabsTrigger value="en" className="text-xs font-semibold uppercase tracking-wide text-slate-600 px-4 py-1.5 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm">EN</TabsTrigger>
-                    <TabsTrigger value="pt" className="text-xs font-semibold uppercase tracking-wide text-slate-600 px-4 py-1.5 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm">PT</TabsTrigger>
-                  </TabsList>
-
-                  <Button type="button" variant="outline" size="sm" onClick={handleAutoTranslate} disabled={translating} className="text-[9px] font-semibold uppercase text-slate-700 border-slate-300 bg-white hover:bg-slate-50 transition-colors whitespace-nowrap">
-                    {translating ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : null}
-                    Auto-Traducir
-                  </Button>
-                </div>
-
                 {["es", "en", "pt"].map((lang) => (
                   <TabsContent key={lang} value={lang} className="space-y-6 mt-0">
                     <FormField control={form.control} name={`display_name_${lang}` as any} render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Nombre Público</FormLabel>
-                        <FormControl><Input {...field} placeholder="Ej: Bienvenida Especial" className="bg-white focus:bg-white font-medium transition-colors border-slate-300" /></FormControl>
+                        <FormLabel className="text-xs font-semibold uppercase text-slate-700 tracking-wide">Nombre Público</FormLabel>
+                        <FormControl><Input {...field} placeholder="Ej: Bienvenida Especial" className="h-11 border-slate-300 rounded-lg" /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
 
-
-                    <FormField
-                      control={form.control}
-                      name={`subject_${lang}` as any}
-                      render={({ field }) => (
-                        <FormItem>
-                          <div className="flex justify-between items-end mb-2">
-                            <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                              Asunto del Email
-                            </FormLabel>
-                            {/* Atajos rápidos para variables */}
-                            <div className="flex gap-2 flex-wrap">
-                              {['name', 'first_name', 'company'].map((v) => (
-                                <button
-                                  key={v}
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    const currentVal = field.value || "";
-                                    field.onChange(`${currentVal}{{${v}}}`);
-                                  }}
-                                  className="text-xs font-medium bg-slate-100 hover:bg-slate-150 text-slate-600 px-3 py-1.5 rounded-full border border-slate-200 transition-all hover:border-slate-300"
-                                >
-                                  {"{{"+ v +"}}"}
-                                </button>
-                              ))}
-                            </div>
+                    <FormField control={form.control} name={`subject_${lang}` as any} render={({ field }) => (
+                      <FormItem>
+                        <div className="flex justify-between items-end mb-2">
+                          <FormLabel className="text-xs font-semibold uppercase text-slate-700 tracking-wide">Asunto del Email</FormLabel>
+                          <div className="flex gap-2 flex-wrap">
+                            {['name', 'first_name', 'company'].map((v) => (
+                              <button
+                                key={v}
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  const currentVal = field.value || "";
+                                  field.onChange(`${currentVal}{{${v}}}`);
+                                }}
+                                className="text-xs font-medium bg-slate-100 hover:bg-slate-150 text-slate-600 px-2.5 py-1 rounded-full border border-slate-200 transition-all hover:border-slate-300"
+                              >
+                                {"{{"+ v +"}}"}
+                              </button>
+                            ))}
                           </div>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              onMouseUp={(e) => e.stopPropagation()}
-                              onSelect={(e) => e.stopPropagation()}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') e.preventDefault();
-                                e.stopPropagation();
-                              }}
-                              onClick={(e) => e.stopPropagation()}
-                              placeholder="Ej: Hola {{name}}, tenemos una propuesta..."
-                              className="h-11 border-slate-300 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 bg-white font-medium transition-all"
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
+                        </div>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            onMouseUp={(e) => e.stopPropagation()}
+                            onSelect={(e) => e.stopPropagation()}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') e.preventDefault();
+                              e.stopPropagation();
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            placeholder="Ej: Hola {{name}}, tenemos una propuesta..."
+                            className="h-11 border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )} />
 
                     <FormField control={form.control} name={`body_content_${lang}` as any} render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Contenido</FormLabel>
+                        <FormLabel className="text-xs font-semibold uppercase text-slate-700 tracking-wide">Contenido</FormLabel>
                         <FormControl>
                           <SafeEditor
                             value={field.value}
@@ -927,145 +922,117 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                         <FormMessage />
                       </FormItem>
                     )} />
+
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-semibold uppercase text-slate-700 tracking-wide">Adjuntos</h4>
+                      <div className="grid gap-2">
+                        {existingAttachments.map((file) => (
+                          <div key={file.id} className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded group hover:border-slate-300 text-sm">
+                            <a href={file.file_url} target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:text-blue-600 truncate flex-1 font-medium">{file.file_name}</a>
+                            <Button type="button" variant="ghost" size="sm" onClick={() => removeAttachment(file.id, true)} className="h-6 w-6 p-0 text-slate-400 hover:text-red-500">
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ))}
+                        {pendingAttachments.map((file, index) => (
+                          <div key={index} className="flex items-center justify-between p-2.5 bg-blue-50 border border-blue-200 rounded text-sm">
+                            <span className="text-blue-900 font-medium truncate flex-1">{file.name}</span>
+                            <Button type="button" variant="ghost" size="sm" onClick={() => removeAttachment(index, false)} className="h-6 w-6 p-0 text-blue-500 hover:text-blue-700">
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ))}
+                        <label className="border-2 border-dashed border-slate-300 rounded-lg p-3 text-center cursor-pointer hover:border-slate-400 hover:bg-slate-50 transition-all">
+                          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">+ Subir Archivo</span>
+                          <input type="file" multiple className="hidden" onChange={onFileChange} />
+                        </label>
+                      </div>
+                    </div>
                   </TabsContent>
                 ))}
               </Tabs>
             </div>
 
-            {/* SECCIÓN 3: ADJUNTOS (Debajo del editor) */}
-            <div className="mt-8 bg-white p-10 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-              <h2 className="text-base font-bold text-slate-950 mb-6 pb-4 border-b border-slate-100">Adjuntos del Template</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {existingAttachments.map((file) => (
-                  <div key={file.id} className="flex items-center justify-between p-3 bg-gradient-to-r from-slate-50 to-slate-100/50 border border-slate-200/50 rounded-lg group hover:border-slate-300 hover:shadow-sm transition-all">
-                    <a
-                      href={file.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs font-semibold truncate hover:text-blue-600 hover:underline flex-1 text-slate-700"
-                    >{file.file_name}</a>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeAttachment(file.id, true)}
-                      className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 transition-all"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+            {/* PREVIEW */}
+            <div className="bg-slate-50 p-10 overflow-y-auto max-h-[600px] border-l border-slate-200">
+              <div className="flex gap-2 mb-6 bg-white border border-slate-200 rounded-lg p-1 w-fit">
+                <Button
+                  type="button"
+                  variant={previewMode === "email" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setPreviewMode("email")}
+                  className="text-xs font-semibold uppercase rounded text-slate-700"
+                >
+                  EMAIL
+                </Button>
+                <Button
+                  type="button"
+                  variant={previewMode === "whatsapp" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setPreviewMode("whatsapp")}
+                  className="text-xs font-semibold uppercase rounded text-slate-700"
+                >
+                  WHATSAPP
+                </Button>
+              </div>
+
+              <div className={cn(
+                "rounded-lg overflow-hidden transition-all",
+                previewMode === "email"
+                  ? "w-full bg-white border border-slate-200 shadow-md"
+                  : "w-64 h-96 bg-white border border-slate-200 rounded-3xl shadow-md flex flex-col"
+              )}>
+                {previewMode === "email" ? (
+                  <div className="flex flex-col h-full bg-white">
+                    <div className="bg-slate-100 border-b border-slate-200 p-3.5 space-y-2">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-2 h-2 rounded-full bg-red-400 shadow-sm" />
+                        <div className="w-2 h-2 rounded-full bg-amber-400 shadow-sm" />
+                        <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-sm" />
+                      </div>
+                      <p className="text-[9px] text-slate-500 font-semibold uppercase">Asunto:</p>
+                      <div className="text-xs font-semibold text-slate-900">{renderSubjectPreview(form.watch(`subject_${currentTab}`) || '')}</div>
+                    </div>
+                    <div className="p-4 flex-1 overflow-y-auto">
+                      <div className="text-xs text-slate-700 leading-relaxed">{renderPreview(form.watch(`body_content_${currentTab}`) || "")}</div>
+                    </div>
                   </div>
-                ))}
-                {pendingAttachments.map((file, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-blue-100/50 border border-blue-200/50 rounded-lg hover:border-blue-300/70 transition-all">
-                    <span className="text-xs font-semibold truncate text-blue-900">{file.name}</span>
-                    <Button type="button" variant="ghost" size="sm" onClick={() => removeAttachment(index, false)} className="h-8 w-8 p-0 text-blue-500 hover:text-blue-700">
-                      <X className="h-4 w-4" />
-                    </Button>
+                ) : (
+                  <div className="h-full flex flex-col bg-gradient-to-b from-slate-100 to-slate-50">
+                    <div className="p-3 text-center border-b border-slate-200">
+                      <p className="text-[10px] font-semibold text-slate-600">12:45 PM</p>
+                    </div>
+                    <div className="flex-1 p-3 overflow-y-auto space-y-2">
+                      <div className="bg-white rounded-2xl rounded-tl-sm p-3 shadow-sm max-w-xs">
+                        <div className="text-xs text-slate-700 leading-relaxed">{renderPreview(form.watch(`body_content_${currentTab}`) || "")}</div>
+                        <p className="text-[9px] text-slate-400 text-right mt-1">12:45 PM</p>
+                      </div>
+                    </div>
                   </div>
-                ))}
-                <label className="border-2 border-dashed border-slate-200 hover:border-slate-300 rounded-lg p-4 text-center cursor-pointer hover:bg-slate-50/50 transition-all group">
-                  <span className="text-[10px] font-bold text-slate-400 group-hover:text-slate-600 uppercase tracking-wide">+ Subir Archivo</span>
-                  <input type="file" multiple className="hidden" onChange={onFileChange} />
-                </label>
+                )}
               </div>
             </div>
           </div>
-
-          {/* LADO DERECHO: PREVIEW STICKY (5 columnas) */}
-          <div className="lg:col-span-5 sticky top-24">
-            <div className="flex bg-gradient-to-r from-slate-50 to-slate-100/50 p-1.5 rounded-lg mb-6 border border-slate-200 shadow-sm w-fit mx-auto">
-              <Button
-                type="button"
-                variant={previewMode === "email" ? "white" : "ghost"}
-                size="sm"
-                onClick={() => setPreviewMode("email")}
-                className={cn("text-[10px] font-semibold uppercase tracking-wide transition-all rounded-md", previewMode === "email" && "shadow-md")}
-              >
-                ✉️ EMAIL
-              </Button>
-              <Button
-                type="button"
-                variant={previewMode === "whatsapp" ? "white" : "ghost"}
-                size="sm"
-                onClick={() => setPreviewMode("whatsapp")}
-                className={cn("text-[10px] font-semibold uppercase tracking-wide transition-all rounded-md", previewMode === "whatsapp" && "shadow-md")}
-              >
-                💬 WHATSAPP
-              </Button>
-            </div>
-
-            <div className={cn(
-              "mx-auto transition-all duration-500 ease-in-out overflow-hidden shadow-lg rounded-xl",
-              previewMode === "email"
-                ? "w-full bg-white rounded-xl border border-slate-200"
-                : "w-[320px] h-[640px] bg-white rounded-[3.5rem] border-[14px] border-slate-950 relative"
-            )}>
-
-              {previewMode === "email" ? (
-                /* --- UI DE EMAIL ESTILO DESKTOP --- */
-                <div className="flex flex-col h-full">
-                  <div className="bg-gradient-to-b from-slate-100 to-slate-50 border-b border-slate-200 p-4 space-y-2.5">
-                    <div className="flex items-center gap-1.5 mb-2">
-                      <div className="w-2.5 h-2.5 rounded-full bg-red-400 shadow-sm" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-sm" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-sm" />
-                    </div>
-                    <div>
-                      <p className="text-[9px] text-slate-500 font-bold uppercase tracking-tight">Asunto:</p>
-                      <div className="text-sm font-semibold text-slate-900 leading-tight mt-1">
-                        {renderSubjectPreview(form.watch(`subject_${currentTab}`) || '(Sin asunto)')}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-6 h-[500px] overflow-y-auto bg-white">
-                    <div className="prose prose-sm max-w-none text-slate-700">
-                      {renderPreview(form.watch(`body_content_${currentTab}`) || "")}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                /* --- UI DE WHATSAPP --- */
-                <div className="h-full flex flex-col bg-gradient-to-b from-[#efeae2] to-[#e9ddd7] relative">
-                  <div className="absolute top-0 inset-x-0 h-6 bg-slate-950 flex justify-center items-end pb-1 z-10 rounded-t-3xl">
-                    <div className="w-20 h-3 bg-slate-800 rounded-full" />
-                  </div>
-
-                  <div className="flex-1 p-4 pt-10 overflow-y-auto space-y-2">
-                    <div className="relative bg-white p-3 rounded-2xl rounded-tl-none shadow-md max-w-[85%] text-[13px] self-start border border-slate-100">
-                      <div className="leading-relaxed text-slate-800">
-                        {renderPreview(form.watch(`body_content_${currentTab}`) || "")}
-                      </div>
-                      <p className="text-[9px] text-slate-400 text-right mt-2 uppercase font-medium">12:00 PM</p>
-                      <div className="absolute top-0 -left-2 w-0 h-0 border-t-[10px] border-t-white border-l-[10px] border-l-transparent" />
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-          {/* Fin lg:col-span-5 */}
         </div>
 
-        {/* PIE DE PÁGINA FIXO - Estilo CRM */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 z-50 shadow-[0_-10px_50px_rgba(0,0,0,0.08)]">
-          <div className="max-w-7xl mx-auto flex justify-between gap-3 px-8">
-            <Button type="button" variant="ghost" onClick={onCancel} className="font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all rounded-lg">
-              Cancelar
-            </Button>
-            <div className="flex gap-3">
-              <Button type="button" variant="outline" className="font-semibold text-slate-700 hover:bg-slate-50 border-slate-300 rounded-lg">
-                Anterior
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={loading} 
-                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 px-10 font-semibold text-white shadow-lg shadow-blue-500/25 rounded-lg transition-all hover:shadow-xl"
-              >
-                {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                {template ? "Guardar Cambios" : "Siguiente"}
-              </Button>
-            </div>
-          </div>
+        {/* PIE DE PÁGINA */}
+        <div className="border-t border-slate-200 bg-slate-50 px-8 py-4 flex justify-end gap-3">
+          <Button 
+            type="button" 
+            variant="ghost" 
+            onClick={onCancel} 
+            className="font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+          >
+            Cancelar
+          </Button>
+          <Button 
+            type="submit" 
+            disabled={loading} 
+            className="bg-blue-600 hover:bg-blue-700 px-8 font-semibold text-white"
+          >
+            {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            {template ? "Guardar Cambios" : "Crear Template"}
+          </Button>
         </div>
         </div>
       </form>
