@@ -69,6 +69,7 @@ import { format as formatDate } from "date-fns"
 import { getLocale as getLocaleString } from "@/lib/utils"
 import { es as esLocale, enUS, pt } from "date-fns/locale"
 import { EndCustomerInfoDialog } from "./end-customer-info-dialog"
+import { PulseMessageSenderOpportunity } from "@/components/pulse/pulse-message-sender-opportunity"
 
 // Función para obtener el objeto locale de date-fns
 const getDateFnsLocale = () => {
@@ -373,8 +374,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
   const [isLoadingPartners, setIsLoadingPartners] = useState(false)
   const [isPartnerAssignDialogOpen, setIsPartnerAssignDialogOpen] = useState(false)
   const [selectedPartnerId, setSelectedPartnerId] = useState<string>("")
-
-  // Estados y funciones para la edición inline de la fecha
+  const [showPulseMessageSender, setShowPulseMessageSender] = useState(false)
   const [editingField, setEditingField] = useState(null)
   const [dateEditValue, setDateEditValue] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -1144,7 +1144,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-8">
       {showDebug && <DebugPanel logs={debugLogs} />}
 
       <div className="flex items-center justify-between">
@@ -1874,7 +1874,10 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                 </div>
               </div>
             )}
-            <OpportunityContactsSection opportunityId={opportunity?.id} />
+            <OpportunityContactsSection 
+              opportunityId={opportunity?.id} 
+              onSendMessage={() => setShowPulseMessageSender(true)}
+            />
           </div>
 
           {/* Tareas relacionadas */}
@@ -1902,6 +1905,14 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
           onClose={() => setShowEndCustomerInfo(false)}
           opportunity={opportunity}
           endCustomerId={opportunity?.end_customer?.id}
+        />
+      )}
+
+      {/* Modal de envío de mensajes Pulse */}
+      {showPulseMessageSender && (
+        <PulseMessageSenderOpportunity
+          opportunityId={opportunity?.id}
+          onClose={() => setShowPulseMessageSender(false)}
         />
       )}
     </div>

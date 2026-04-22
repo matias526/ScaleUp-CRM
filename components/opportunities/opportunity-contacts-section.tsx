@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Star, Trash2, Plus } from "lucide-react"
+import { Star, Trash2, Plus, Send, Edit2 } from "lucide-react"
 import { useTranslations } from "@/hooks/use-translations"
 import { DICT_LANG_CONTACTS } from "@/lib/constants/dict-lang-contacts"
 import { OpportunityContactService, type OpportunityContact } from "@/lib/services/opportunity-contact-service"
@@ -23,9 +23,10 @@ import {
 
 interface OpportunityContactsSectionProps {
   opportunityId: string
+  onSendMessage?: () => void
 }
 
-export function OpportunityContactsSection({ opportunityId }: OpportunityContactsSectionProps) {
+export function OpportunityContactsSection({ opportunityId, onSendMessage }: OpportunityContactsSectionProps) {
   const { t } = useTranslations(DICT_LANG_CONTACTS)
   const [contacts, setContacts] = useState<OpportunityContact[]>([])
   const [loading, setLoading] = useState(true)
@@ -127,14 +128,26 @@ export function OpportunityContactsSection({ opportunityId }: OpportunityContact
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
           <CardTitle className="text-lg">{t("opportunity.contacts.title")}</CardTitle>
-          <Button
-            size="sm"
-            onClick={() => setShowModal(true)}
-            variant="outline"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            {t("opportunity.contacts.addContact")}
-          </Button>
+          <div className="flex gap-2">
+            {onSendMessage && (
+              <Button
+                size="sm"
+                onClick={onSendMessage}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Send className="h-4 w-4 mr-2" />
+                Enviar Mensaje
+              </Button>
+            )}
+            <Button
+              size="sm"
+              onClick={() => setShowModal(true)}
+              variant="outline"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              {t("opportunity.contacts.addContact")}
+            </Button>
+          </div>
         </CardHeader>
 
         <CardContent>
@@ -192,14 +205,33 @@ export function OpportunityContactsSection({ opportunityId }: OpportunityContact
                           )}
                         </td>
                         <td className="py-3 px-3 text-center">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setContactToRemove(oc.id)}
-                            className="h-6 w-6 p-0 text-gray-400 hover:text-red-500"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <div className="flex justify-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              title="Editar contacto"
+                              className="h-8 w-8 p-0 text-gray-400 hover:text-blue-500"
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              title="Enviar mensaje a este contacto"
+                              className="h-8 w-8 p-0 text-gray-400 hover:text-green-500"
+                            >
+                              <Send className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setContactToRemove(oc.id)}
+                              className="h-8 w-8 p-0 text-gray-400 hover:text-red-500"
+                              title="Remover contacto"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     )
