@@ -863,7 +863,15 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                                 <button
                                   key={v}
                                   type="button"
-                                  onClick={() => field.onChange(`${field.value || ""}{{${v}}}`)}
+                                  onClick={(e) => {
+                                    // 1. Evitamos que el click "suba" y cierre la modal
+                                    e.preventDefault();
+                                    e.stopPropagation();
+
+                                    // 2. Actualizamos el valor
+                                    const currentVal = field.value || "";
+                                    field.onChange(`${currentVal}{{${v}}}`);
+                                  }}
                                   className="text-[9px] font-bold bg-slate-100 hover:bg-blue-100 text-slate-500 hover:text-blue-600 px-1.5 py-0.5 rounded border border-slate-200 transition-colors"
                                 >
                                   + {"{{" + v + "}}"}
