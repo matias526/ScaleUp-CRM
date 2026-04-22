@@ -5,9 +5,9 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(request: NextRequest) {
   try {
-    const { to, subject, html, from, replyTo } = await request.json()
+    const { to, cc, bcc, subject, html, from, replyTo } = await request.json()
 
-    console.log("Enviando email con Resend:", { to, subject, from })
+    console.log("Enviando email con Resend:", { to, cc, bcc, subject, from })
 
     // Validar que tenemos la API key
     if (!process.env.RESEND_API_KEY) {
@@ -23,14 +23,31 @@ export async function POST(request: NextRequest) {
     // Usar el email por defecto si no se proporciona
     const fromEmail = from || process.env.NEXT_PUBLIC_EMAIL_FROM || "ScaleUp CRM <no-reply@scaleup-global.com>"
 
-    // Enviar email con Resend
-    const result = await resend.emails.send({
+    // Filtrar emails vacíos en CC y BCC
+    const validCc = cc?.filter((email: string) => email && email.trim()) || []
+    const validBcc = bcc?.filter((email: string) => email && email.trim()) || []
+
+    // Construir objeto de envío
+    const emailData: any = {
       from: fromEmail,
       to: to,
       subject: subject,
       html: html,
       replyTo: replyTo,
-    })
+    }
+
+    // Agregar CC si hay
+    if (validCc.length > 0) {
+      emailData.cc = validCc
+    }
+
+    // Agregar BCC si hay
+    if (validBcc.length > 0) {
+      emailData.bcc = validBcc
+    }
+
+    // Enviar email con Resend
+    const result = await resend.emails.send(emailData)
 
     console.log("Email enviado correctamente:", result)
 

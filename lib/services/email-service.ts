@@ -1,6 +1,8 @@
 // Función para enviar emails usando Resend
 export async function sendEmail(emailData: {
   to: string[]
+  cc?: string[]
+  bcc?: string[]
   subject: string
   html: string
   from?: string
@@ -19,6 +21,64 @@ export async function sendEmail(emailData: {
         success: false,
         message: "No se proporcionaron destinatarios válidos",
       }
+    }
+
+    // Filtrar destinatarios nulos o vacíos
+    const validRecipients = emailData.to.filter((email) => email && typeof email === "string" && email.trim() !== "")
+
+    if (validRecipients.length === 0) {
+      console.error("No hay destinatarios válidos después de filtrar")
+      return {
+        success: false,
+        message: "No hay destinatarios válidos",
+      }
+    }
+
+    // Usar el email por defecto si no se proporciona
+    const from = emailData.from || process.env.NEXT_PUBLIC_EMAIL_FROM || "ScaleUp CRM <no-reply@scaleup-global.com>"
+
+    // Enviar el email usando la API route
+    try {
+      const response = await fetch("/api/send-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          to: validRecipients,
+          cc: emailData.cc,
+          bcc: emailData.bcc,
+          subject: emailData.subject,
+          html: emailData.html,
+          from,
+          replyTo: emailData.replyTo,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error("Error en la respuesta de la API:", errorData)
+        throw new Error(errorData.message || "Error al enviar el email")
+      }
+
+      const result = await response.json()
+      console.log("Email enviado correctamente:", result)
+      return { success: true, data: result.data }
+    } catch (fetchError) {
+      console.error("Error en la petición fetch:", fetchError)
+      return {
+        success: false,
+        message: fetchError instanceof Error ? fetchError.message : "Error al enviar el email",
+      }
+    }
+  } catch (error) {
+    console.error("Error general al enviar email:", error)
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Error al enviar el email",
+    }
+  }
+}
     }
 
     // Filtrar destinatarios nulos o vacíos
