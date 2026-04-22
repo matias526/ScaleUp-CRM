@@ -1909,9 +1909,33 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
       )}
 
       {/* Modal de envío de mensajes Pulse */}
-      {showPulseMessageSender && (
+      {showPulseMessageSender && opportunity && (
         <PulseMessageSenderOpportunity
-          opportunityId={opportunity?.id}
+          opportunity={{
+            id: opportunity.id,
+            name: opportunity.name,
+            value: opportunity.value,
+            probability: opportunity.probability,
+            stage: opportunity.stage,
+            description: opportunity.description,
+            end_customer_id: opportunity.end_customer_id,
+          }}
+          contacts={opportunity.opportunity_contacts?.map((oc) => ({
+            id: oc.contact?.id,
+            name: oc.contact?.first_name + " " + oc.contact?.last_name,
+            email: oc.contact?.email,
+            phone: oc.contact?.phone,
+            position: oc.contact?.position,
+          })) || []}
+          endCustomer={opportunity.end_customer ? {
+            id: opportunity.end_customer.id,
+            name: opportunity.end_customer.name,
+            industry: opportunity.end_customer.industry,
+            city: opportunity.end_customer.city,
+            country: opportunity.end_customer.country,
+          } : undefined}
+          templates={[]}
+          isOpen={showPulseMessageSender}
           onClose={() => setShowPulseMessageSender(false)}
         />
       )}

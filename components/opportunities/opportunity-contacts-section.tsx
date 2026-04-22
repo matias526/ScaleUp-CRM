@@ -32,6 +32,7 @@ export function OpportunityContactsSection({ opportunityId, onSendMessage }: Opp
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [contactToRemove, setContactToRemove] = useState<string | null>(null)
+  const [contactToMessage, setContactToMessage] = useState<string | null>(null)
 
   // Load contacts
   useEffect(() => {
@@ -217,6 +218,10 @@ export function OpportunityContactsSection({ opportunityId, onSendMessage }: Opp
                             <Button
                               size="sm"
                               variant="ghost"
+                              onClick={() => {
+                                setContactToMessage(oc.id)
+                                onSendMessage?.()
+                              }}
                               title="Enviar mensaje a este contacto"
                               className="h-8 w-8 p-0 text-gray-400 hover:text-green-500"
                             >
