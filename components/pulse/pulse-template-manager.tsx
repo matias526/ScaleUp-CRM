@@ -276,12 +276,7 @@ export default function PulseTemplateManager() {
             className="w-full max-w-4xl max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <CardHeader>
-              <CardTitle>
-                {editingTemplate
-                  ? t("pulse.edit_template", "Editar Template")
-                  : t("pulse.create_template", "Crear Template Nuevo")}
-              </CardTitle>
+            <CardHeader className="p-0 border-0">
             </CardHeader>
             <CardContent>
               <PulseTemplateForm
