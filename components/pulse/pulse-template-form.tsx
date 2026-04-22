@@ -792,13 +792,7 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
               </div>
             </div>
             
-            {/* Indicador de progreso visual */}
-            <div className="flex items-center gap-4">
-              <div className="flex-1 max-w-xs h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-blue-500 to-blue-600 w-1/3 rounded-full transition-all duration-300" />
-              </div>
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Paso 1/3</span>
-            </div>
+
           </div>
         </div>
 
@@ -806,16 +800,13 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
         <div className="max-w-7xl mx-auto px-8 py-10 space-y-8 pb-44">
 
         {/* SECCIÓN 1: CONFIGURACIÓN SUPERIOR (Ancho completo) */}
-        <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
-            <div className="flex items-center justify-center w-9 h-9 bg-blue-600 text-white font-bold rounded-full text-sm shadow-sm">1</div>
-            <h2 className="text-base font-bold text-slate-900">Configuración del Template</h2>
-          </div>
+        <div className="bg-white p-10 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
+          <h2 className="text-base font-bold text-slate-950 mb-6 pb-4 border-b border-slate-100">Configuración del Template</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <FormField control={form.control} name="internal_code" render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Código Interno</FormLabel>
-                <FormControl><Input {...field} disabled={!!template} className="bg-slate-50/50 focus:bg-white font-medium transition-colors border-slate-200" placeholder="Ej: WELCOME_OPP" /></FormControl>
+                <FormControl><Input {...field} disabled={!!template} className="bg-white focus:bg-white font-medium transition-colors border-slate-300" placeholder="Ej: WELCOME_OPP" /></FormControl>
                 <FormDescription className="text-[9px] text-slate-500 mt-1">Identificador único (no editable después de crear)</FormDescription>
                 <FormMessage />
               </FormItem>
@@ -825,7 +816,7 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
               <FormItem>
                 <FormLabel className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Categoría</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl><SelectTrigger className="bg-slate-50/50 focus:bg-white transition-colors border-slate-200"><SelectValue /></SelectTrigger></FormControl>
+                  <FormControl><SelectTrigger className="bg-white focus:bg-white transition-colors border-slate-300"><SelectValue /></SelectTrigger></FormControl>
                   <SelectContent>
                     <SelectItem value="metodologia">Metodología</SelectItem>
                     <SelectItem value="posteos_redes">Posteos</SelectItem>
@@ -841,7 +832,7 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
               <FormItem>
                 <FormLabel className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Empresa Tecnológica</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value || "none"}>
-                  <FormControl><SelectTrigger className="bg-slate-50/50 focus:bg-white transition-colors border-slate-200"><SelectValue /></SelectTrigger></FormControl>
+                  <FormControl><SelectTrigger className="bg-white focus:bg-white transition-colors border-slate-300"><SelectValue /></SelectTrigger></FormControl>
                   <SelectContent>
                     <SelectItem value="none">Sin empresa (Global)</SelectItem>
                     {techCompanies.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
@@ -858,20 +849,17 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
 
           {/* LADO IZQUIERDO: EDITOR (7 columnas) */}
           <div className="lg:col-span-7">
-            <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm relative">
-              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
-                <div className="flex items-center justify-center w-9 h-9 bg-blue-600 text-white font-bold rounded-full text-sm shadow-sm">2</div>
-                <h2 className="text-base font-bold text-slate-900">Contenido por Idioma</h2>
-              </div>
+            <div className="bg-white p-10 rounded-xl border border-slate-200 shadow-sm relative">
+              <h2 className="text-base font-bold text-slate-950 mb-6 pb-4 border-b border-slate-100">Contenido por Idioma</h2>
               <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
                 <div className="flex justify-between items-center mb-6 gap-4">
-                  <TabsList className="bg-slate-50/50 p-1 border border-slate-200/50 rounded-lg shadow-sm">
-                    <TabsTrigger value="es" className="font-bold text-xs uppercase tracking-wide data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm">ES</TabsTrigger>
-                    <TabsTrigger value="en" className="font-bold text-xs uppercase tracking-wide data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm">EN</TabsTrigger>
-                    <TabsTrigger value="pt" className="font-bold text-xs uppercase tracking-wide data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm">PT</TabsTrigger>
+                  <TabsList className="bg-slate-100 p-0.5 border border-slate-200 rounded-lg">
+                    <TabsTrigger value="es" className="text-xs font-semibold uppercase tracking-wide text-slate-600 px-4 py-1.5 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm">ES</TabsTrigger>
+                    <TabsTrigger value="en" className="text-xs font-semibold uppercase tracking-wide text-slate-600 px-4 py-1.5 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm">EN</TabsTrigger>
+                    <TabsTrigger value="pt" className="text-xs font-semibold uppercase tracking-wide text-slate-600 px-4 py-1.5 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm">PT</TabsTrigger>
                   </TabsList>
 
-                  <Button type="button" variant="outline" size="sm" onClick={handleAutoTranslate} disabled={translating} className="text-[9px] font-bold uppercase shadow-sm hover:shadow-md transition-shadow whitespace-nowrap">
+                  <Button type="button" variant="outline" size="sm" onClick={handleAutoTranslate} disabled={translating} className="text-[9px] font-semibold uppercase text-slate-700 border-slate-300 bg-white hover:bg-slate-50 transition-colors whitespace-nowrap">
                     {translating ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : null}
                     Auto-Traducir
                   </Button>
@@ -882,7 +870,7 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                     <FormField control={form.control} name={`display_name_${lang}` as any} render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Nombre Público</FormLabel>
-                        <FormControl><Input {...field} placeholder="Ej: Bienvenida Especial" className="bg-slate-50/50 focus:bg-white font-medium transition-colors border-slate-200" /></FormControl>
+                        <FormControl><Input {...field} placeholder="Ej: Bienvenida Especial" className="bg-white focus:bg-white font-medium transition-colors border-slate-300" /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -898,7 +886,7 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                               Asunto del Email
                             </FormLabel>
                             {/* Atajos rápidos para variables */}
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 flex-wrap">
                               {['name', 'first_name', 'company'].map((v) => (
                                 <button
                                   key={v}
@@ -909,9 +897,9 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                                     const currentVal = field.value || "";
                                     field.onChange(`${currentVal}{{${v}}}`);
                                   }}
-                                  className="text-[11px] font-semibold bg-gradient-to-b from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-150 text-blue-700 px-2.5 py-1 rounded-md border border-blue-200/50 hover:border-blue-300 transition-all shadow-sm hover:shadow-md cursor-pointer"
+                                  className="text-xs font-medium bg-slate-100 hover:bg-slate-150 text-slate-600 px-3 py-1.5 rounded-full border border-slate-200 transition-all hover:border-slate-300"
                                 >
-                                  {"{{" + v + "}}"}
+                                  {"{{"+ v +"}}"}
                                 </button>
                               ))}
                             </div>
@@ -927,7 +915,7 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                               }}
                               onClick={(e) => e.stopPropagation()}
                               placeholder="Ej: Hola {{name}}, tenemos una propuesta..."
-                              className="h-11 border-slate-200 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 bg-white font-medium transition-all shadow-sm focus:shadow-md"
+                              className="h-11 border-slate-300 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 bg-white font-medium transition-all"
                             />
                           </FormControl>
                         </FormItem>
@@ -953,11 +941,8 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
             </div>
 
             {/* SECCIÓN 3: ADJUNTOS (Debajo del editor) */}
-            <div className="mt-8 bg-white p-8 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
-                <div className="flex items-center justify-center w-9 h-9 bg-blue-600 text-white font-bold rounded-full text-sm shadow-sm">3</div>
-                <h2 className="text-base font-bold text-slate-900">Adjuntos del Template</h2>
-              </div>
+            <div className="mt-8 bg-white p-10 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
+              <h2 className="text-base font-bold text-slate-950 mb-6 pb-4 border-b border-slate-100">Adjuntos del Template</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {existingAttachments.map((file) => (
                   <div key={file.id} className="flex items-center justify-between p-3 bg-gradient-to-r from-slate-50 to-slate-100/50 border border-slate-200/50 rounded-lg group hover:border-slate-300 hover:shadow-sm transition-all">

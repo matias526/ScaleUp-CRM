@@ -108,22 +108,22 @@ export default function SafeEditor({ value, onChange, placeholder, disabled, onA
   }
 
   return (
-    <div className="flex flex-col w-full border rounded-lg overflow-hidden border-slate-200 shadow-sm">
+    <div className="flex flex-col w-full border rounded-md overflow-hidden border-slate-300 shadow-none">
       {/* TOOLBAR */}
-      <div className="flex flex-wrap items-center gap-2 p-2 bg-slate-50 border-b border-slate-200">
+      <div className="flex flex-wrap items-center gap-2 p-3 bg-slate-50 border-b border-slate-300">
         <div className="flex gap-1 border-r pr-2 border-slate-300">
-          <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={(e) => { e.preventDefault(); e.stopPropagation(); wrapText("[B]", "[/B]"); }}>
+          <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-600 hover:text-slate-900 hover:bg-slate-100" onClick={(e) => { e.preventDefault(); e.stopPropagation(); wrapText("[B]", "[/B]"); }}>
             <Bold className="h-4 w-4" />
           </Button>
-          <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={(e) => { e.preventDefault(); e.stopPropagation(); wrapText("[I]", "[/I]"); }}>
+          <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-600 hover:text-slate-900 hover:bg-slate-100" onClick={(e) => { e.preventDefault(); e.stopPropagation(); wrapText("[I]", "[/I]"); }}>
             <Italic className="h-4 w-4" />
           </Button>
-          <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={(e) => { e.preventDefault(); e.stopPropagation(); wrapText("[U]", "[/U]"); }}>
+          <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-600 hover:text-slate-900 hover:bg-slate-100" onClick={(e) => { e.preventDefault(); e.stopPropagation(); wrapText("[U]", "[/U]"); }}>
             <Underline className="h-4 w-4" />
           </Button>
           {onAddImage && (
             <>
-              <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={(e) => { e.preventDefault(); e.stopPropagation(); fileInputRef.current?.click(); }}>
+              <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-600 hover:text-slate-900 hover:bg-slate-100" onClick={(e) => { e.preventDefault(); e.stopPropagation(); fileInputRef.current?.click(); }}>
                 <ImageIcon className="h-4 w-4" />
               </Button>
               <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
@@ -136,7 +136,7 @@ export default function SafeEditor({ value, onChange, placeholder, disabled, onA
           {Object.entries(PULSE_VARIABLES).map(([categoryKey, variables]) => (
             <DropdownMenu key={categoryKey}>
               <DropdownMenuTrigger asChild>
-                <Button type="button" variant="outline" size="sm" className="text-[10px] font-bold h-8 uppercase bg-white" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                <Button type="button" variant="outline" size="sm" className="text-[10px] font-semibold h-8 uppercase bg-white border-slate-300 text-slate-700 hover:bg-slate-50" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
                   {categoryKey.replace('_', ' ')}
                 </Button>
               </DropdownMenuTrigger>
@@ -160,11 +160,11 @@ export default function SafeEditor({ value, onChange, placeholder, disabled, onA
         onSelect={handleSelection}
         placeholder={placeholder}
         disabled={disabled}
-        className="w-full h-64 p-3 font-mono text-sm resize-none focus:outline-none bg-white"
+        className="w-full h-64 p-4 font-mono text-sm resize-none focus:outline-none bg-white text-slate-700 placeholder:text-slate-400"
       />
 
       {/* FOOTER */}
-      <div className="p-2 bg-slate-50 border-t border-slate-200 text-[10px] text-slate-400">
+      <div className="p-3 bg-slate-50 border-t border-slate-300 text-[10px] text-slate-500 font-medium">
         Soporta [B], [I], [U] y Variables.
       </div>
     </div>
