@@ -1,20 +1,17 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Send, Loader2, X, Paperclip, AlertCircle } from "lucide-react"
-import { toast } from "@/components/ui/use-toast"
-import { sendPulseMessage, PulseMessageRecipient } from "@/lib/services/pulse-message-service"
-import { replaceVariables, VariableValues, PULSE_MESSAGE_VARIABLES } from "@/lib/pulse/pulse-message-variables"
+import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
+import { Card } from "@/components/ui/card"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Send, X, Upload, Mail, MessageCircle } from "lucide-react"
 import { useAuth } from "@/components/auth/auth-provider"
+import { sendPulseMessage } from "@/lib/services/pulse-message-service"
+import { toast } from "@/components/ui/use-toast"
 
 interface Contact {
   id: string
@@ -42,14 +39,11 @@ interface EndCustomer {
   country?: string
 }
 
-interface PulseMessageSenderProps {
+interface PulseMessageSenderOpportunityProps {
   opportunity: Opportunity
   contacts: Contact[]
   endCustomer?: EndCustomer
-  templates: Array<{
-    id: string
-    name: string
-  }>
+  templates: any[]
   isOpen: boolean
   onClose: () => void
 }
@@ -58,32 +52,30 @@ export function PulseMessageSenderOpportunity({
   opportunity,
   contacts,
   endCustomer,
-  templates,
   isOpen,
   onClose,
-}: PulseMessageSenderProps) {
+}: PulseMessageSenderOpportunityProps) {
   const { user } = useAuth()
-  const [channel, setChannel] = useState("email")
-  const [sender, setSender] = useState("personal")
-  const [toContacts, setToContacts] = useState<Set<string>>(new Set())
-  const [ccContacts, setCcContacts] = useState<Set<string>>(new Set())
-  const [bccContacts, setBccContacts] = useState<Set<string>>(new Set())
-  const [sendIndividual, setSendIndividual] = useState(false)
+  const [channel, setChannel] = useState<"email" | "whatsapp">("email")
   const [selectedTemplate, setSelectedTemplate] = useState("")
+  const [toEmails, setToEmails] = useState<string[]>([])
+  const [ccEmails, setCcEmails] = useState<string[]>([])
+  const [bccEmails, setBccEmails] = useState<string[]>([])
   const [subject, setSubject] = useState("")
   const [message, setMessage] = useState("")
-  const [attachments, setAttachments] = useState<File[]>([])
-  const [loading, setLoading] = useState(false)
-  const [scheduledFor, setScheduledFor] = useState("")
+  const [sendMode, setSendMode] = useState<"individual" | "group">("group")
+  const [scheduleDate, setScheduleDate] = useState("")
+  const [scheduleTime, setScheduleTime] = useState("")
+  const [sending, setSending] = useState(false)
 
-  // Obtener valores de variables del contexto
-  const variableValues: VariableValues = useMemo(() => {
-    const firstToContact = toContacts.size === 1 ? contacts.find((c) => toContacts.has(c.id)) : null
+  // Valores de variables para preview
+  const variableValues = useMemo(() => {
+    const firstContact = contacts[0]
     return {
-      contact_name: firstToContact?.name || "",
-      contact_email: firstToContact?.email || "",
-      contact_phone: firstToContact?.phone || "",
-      contact_position: firstToContact?.position || "",
+      contact_name: firstContact?.name || "",
+      contact_email: firstContact?.email || "",
+      contact_phone: firstContact?.phone || "",
+      contact_position: firstContact?.position || "",
       company_name: endCustomer?.name || "",
       company_industry: endCustomer?.industry || "",
       company_city: endCustomer?.city || "",
@@ -98,453 +90,406 @@ export function PulseMessageSenderOpportunity({
       today_date: new Date().toLocaleDateString("es-ES"),
       current_time: new Date().toLocaleTimeString("es-ES"),
     }
-  }, [toContacts, contacts, endCustomer, opportunity, user])
+  }, [contacts, endCustomer, opportunity, user])
 
-  // Renderizar preview con variables reemplazadas
+  // Reemplazar variables en el mensaje
   const previewMessage = useMemo(() => {
-    return replaceVariables(message, variableValues)
+    let result = message
+    Object.entries(variableValues).forEach(([key, value]) => {
+      const regex = new RegExp(`{{${key}}}`, "g")
+      result = result.replace(regex, String(value))
+    })
+    return result
   }, [message, variableValues])
 
   const previewSubject = useMemo(() => {
-    return replaceVariables(subject, variableValues)
+    let result = subject
+    Object.entries(variableValues).forEach(([key, value]) => {
+      const regex = new RegExp(`{{${key}}}`, "g")
+      result = result.replace(regex, String(value))
+    })
+    return result
   }, [subject, variableValues])
 
+  const handleAddContact = (contactId: string) => {
+    const contact = contacts.find((c) => c.id === contactId)
+    if (contact && !toEmails.includes(contact.email)) {
+      setToEmails([...toEmails, contact.email])
+    }
+  }
+
+  const handleRemoveFromEmail = (email: string) => {
+    setToEmails(toEmails.filter((e) => e !== email))
+  }
+
+  const handleRemoveCcEmail = (email: string) => {
+    setCcEmails(ccEmails.filter((e) => e !== email))
+  }
+
+  const handleRemoveBccEmail = (email: string) => {
+    setBccEmails(bccEmails.filter((e) => e !== email))
+  }
+
   const handleSend = async () => {
-    if (toContacts.size === 0) {
-      toast.error("Selecciona al menos un contacto en 'Para'")
+    if (!subject.trim() || !message.trim()) {
+      toast({
+        description: "Asunto y mensaje son requeridos",
+        variant: "destructive",
+      })
       return
     }
 
-    setLoading(true)
+    if (toEmails.length === 0) {
+      toast({
+        description: "Debe seleccionar al menos un destinatario",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setSending(true)
     try {
-      const recipients: PulseMessageRecipient[] = Array.from(toContacts).map((contactId) => ({
-        type: "to",
-        email: contacts.find((c) => c.id === contactId)?.email || "",
-      }))
-
-      recipients.push(
-        ...Array.from(ccContacts).map((contactId) => ({
-          type: "cc" as const,
-          email: contacts.find((c) => c.id === contactId)?.email || "",
-        }))
-      )
-
-      recipients.push(
-        ...Array.from(bccContacts).map((contactId) => ({
-          type: "bcc" as const,
-          email: contacts.find((c) => c.id === contactId)?.email || "",
-        }))
-      )
-
       await sendPulseMessage({
         template_id: selectedTemplate,
-        channel: channel as "email" | "whatsapp",
-        send_mode: sendIndividual ? "individual" : "group",
-        recipients,
+        opportunity_id: opportunity.id,
+        channel,
+        to_emails: toEmails,
+        cc_emails: ccEmails,
+        bcc_emails: bccEmails,
         subject,
-        body: message,
-        scheduled_for: scheduledFor ? new Date(scheduledFor) : null,
-        attachments: attachments.map((f) => f.name),
+        body_content: message,
+        send_mode: sendMode,
+        schedule_date: scheduleDate ? new Date(scheduleDate) : null,
+        schedule_time: scheduleTime,
       })
 
-      toast.success("Mensaje enviado correctamente")
+      toast({
+        description: "Mensaje enviado correctamente",
+      })
       onClose()
     } catch (error) {
-      console.error("[v0] Error sending message:", error)
-      toast.error(error instanceof Error ? error.message : "Error al enviar mensaje")
+      toast({
+        description: error instanceof Error ? error.message : "Error al enviar mensaje",
+        variant: "destructive",
+      })
     } finally {
-      setLoading(false)
+      setSending(false)
     }
   }
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
-    setAttachments((prev) => [...prev, ...files])
-  }
-
-  const removeAttachment = (index: number) => {
-    setAttachments((prev) => prev.filter((_, i) => i !== index))
-  }
-
-  const toggleContact = (contactId: string, type: "to" | "cc" | "bcc") => {
-    if (type === "to") {
-      setToContacts((prev) => {
-        const newSet = new Set(prev)
-        if (newSet.has(contactId)) newSet.delete(contactId)
-        else newSet.add(contactId)
-        return newSet
-      })
-    } else if (type === "cc") {
-      setCcContacts((prev) => {
-        const newSet = new Set(prev)
-        if (newSet.has(contactId)) newSet.delete(contactId)
-        else newSet.add(contactId)
-        return newSet
-      })
-    } else {
-      setBccContacts((prev) => {
-        const newSet = new Set(prev)
-        if (newSet.has(contactId)) newSet.delete(contactId)
-        else newSet.add(contactId)
-        return newSet
-      })
-    }
-  }
-
-  if (!isOpen) return null
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl h-[90vh] p-0 flex flex-col">
-        {/* Header */}
-        <DialogHeader className="border-b px-6 py-4 space-y-2">
-          <DialogTitle className="text-xl">Enviar Comunicación</DialogTitle>
-          <DialogDescription>Configura y previsualiza tu mensaje antes de enviar.</DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-6xl h-[90vh] p-0 gap-0 bg-white rounded-lg shadow-xl">
+        {/* HEADER CON FONDO AZUL - ESTILO SCALEUP */}
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 border-b border-blue-800">
+          <DialogHeader className="space-y-1">
+            <DialogTitle className="text-xl font-semibold text-white">Enviar Mensaje</DialogTitle>
+            <p className="text-sm text-blue-100">{opportunity.name}</p>
+          </DialogHeader>
+        </div>
 
-        {/* Main Content - Two Columns */}
-        <div className="flex-1 overflow-hidden flex">
-          {/* COLUMNA 1: CONFIGURACIÓN (45%) */}
-          <div className="w-[45%] border-r overflow-y-auto p-6 space-y-6">
-            {/* 1. CANAL Y REMITENTE */}
-            <div>
-              <h3 className="font-semibold text-sm uppercase tracking-wide text-slate-700 mb-3">Canal y Remitente</h3>
-              <div className="flex gap-3">
-                <div className="flex-1">
-                  <Label className="text-xs mb-2 block">Canal</Label>
-                  <Select value={channel} onValueChange={setChannel}>
-                    <SelectTrigger className="h-9">
+        {/* CONTENIDO PRINCIPAL - DOS COLUMNAS */}
+        <div className="flex flex-1 overflow-hidden">
+          {/* COLUMNA IZQUIERDA (60%) - CONFIGURACIÓN */}
+          <div className="w-3/5 border-r border-slate-200 overflow-y-auto">
+            <ScrollArea className="h-full">
+              <div className="p-5 space-y-4">
+                {/* CANAL Y REMITENTE */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Canal</label>
+                  <Select value={channel} onValueChange={(val) => setChannel(val as any)}>
+                    <SelectTrigger className="h-9 border-slate-300 rounded-md">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="email">Email</SelectItem>
-                      <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                      <SelectItem value="email">
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-4 w-4" />
+                          Email
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="whatsapp">
+                        <div className="flex items-center gap-2">
+                          <MessageCircle className="h-4 w-4" />
+                          WhatsApp
+                        </div>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex-1">
-                  <Label className="text-xs mb-2 block">Remitente</Label>
-                  <Select value={sender} onValueChange={setSender}>
-                    <SelectTrigger className="h-9">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="personal">Personal</SelectItem>
-                      <SelectItem value="system">Sistema</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
 
-            {/* 2. DESTINATARIOS */}
-            <div>
-              <h3 className="font-semibold text-sm uppercase tracking-wide text-slate-700 mb-3">Destinatarios</h3>
-              <div className="space-y-3">
-                {/* Para */}
-                <div>
-                  <Label className="text-xs mb-2 block">Para</Label>
-                  <div className="flex flex-wrap gap-2 p-2 border rounded bg-slate-50 min-h-9">
-                    {Array.from(toContacts).map((cId) => {
-                      const contact = contacts.find((c) => c.id === cId)
-                      return (
-                        <Badge key={cId} variant="secondary" className="flex items-center gap-1">
-                          {contact?.name}
-                          <button onClick={() => toggleContact(cId, "to")} className="hover:text-red-500">
-                            <X className="h-3 w-3" />
-                          </button>
-                        </Badge>
-                      )
-                    })}
-                    <Select value="" onValueChange={(val) => toggleContact(val, "to")}>
-                      <SelectTrigger className="h-7 w-24 text-xs">
-                        <SelectValue placeholder="+ Agregar" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {contacts
-                          .filter((c) => !toContacts.has(c.id) && !ccContacts.has(c.id) && !bccContacts.has(c.id))
-                          .map((c) => (
-                            <SelectItem key={c.id} value={c.id}>
-                              {c.name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* CC */}
-                <div>
-                  <Label className="text-xs mb-2 block">CC</Label>
-                  <div className="flex flex-wrap gap-2 p-2 border rounded bg-slate-50 min-h-9">
-                    {Array.from(ccContacts).map((cId) => {
-                      const contact = contacts.find((c) => c.id === cId)
-                      return (
-                        <Badge key={cId} variant="secondary" className="flex items-center gap-1">
-                          {contact?.name}
-                          <button onClick={() => toggleContact(cId, "cc")} className="hover:text-red-500">
-                            <X className="h-3 w-3" />
-                          </button>
-                        </Badge>
-                      )
-                    })}
-                    <Select value="" onValueChange={(val) => toggleContact(val, "cc")}>
-                      <SelectTrigger className="h-7 w-24 text-xs">
-                        <SelectValue placeholder="+ Agregar" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {contacts
-                          .filter((c) => !toContacts.has(c.id) && !ccContacts.has(c.id) && !bccContacts.has(c.id))
-                          .map((c) => (
-                            <SelectItem key={c.id} value={c.id}>
-                              {c.name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* BCC */}
-                <div>
-                  <Label className="text-xs mb-2 block">BCC</Label>
-                  <div className="flex flex-wrap gap-2 p-2 border rounded bg-slate-50 min-h-9">
-                    {Array.from(bccContacts).map((cId) => {
-                      const contact = contacts.find((c) => c.id === cId)
-                      return (
-                        <Badge key={cId} variant="secondary" className="flex items-center gap-1">
-                          {contact?.name}
-                          <button onClick={() => toggleContact(cId, "bcc")} className="hover:text-red-500">
-                            <X className="h-3 w-3" />
-                          </button>
-                        </Badge>
-                      )
-                    })}
-                    <Select value="" onValueChange={(val) => toggleContact(val, "bcc")}>
-                      <SelectTrigger className="h-7 w-24 text-xs">
-                        <SelectValue placeholder="+ Agregar" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {contacts
-                          .filter((c) => !toContacts.has(c.id) && !ccContacts.has(c.id) && !bccContacts.has(c.id))
-                          .map((c) => (
-                            <SelectItem key={c.id} value={c.id}>
-                              {c.name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* Envío Individual */}
-                <div className="flex items-center gap-2 pt-2">
-                  <Checkbox id="individual" checked={sendIndividual} onCheckedChange={setSendIndividual} />
-                  <Label htmlFor="individual" className="text-xs cursor-pointer">
-                    Envío Individual (uno por uno)
-                  </Label>
-                </div>
-              </div>
-            </div>
-
-            {/* 3. CONTENIDO DEL MENSAJE */}
-            <div>
-              <h3 className="font-semibold text-sm uppercase tracking-wide text-slate-700 mb-3">Contenido del Mensaje</h3>
-              <div className="space-y-3">
-                <div>
-                  <Label className="text-xs mb-2 block">Template</Label>
+                {/* TEMPLATE SELECTOR */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Template (Opcional)</label>
                   <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
-                    <SelectTrigger className="h-9">
-                      <SelectValue placeholder="Elegir template..." />
+                    <SelectTrigger className="h-9 border-slate-300 rounded-md">
+                      <SelectValue placeholder="Seleccionar template" />
                     </SelectTrigger>
                     <SelectContent>
-                      {templates.map((t) => (
-                        <SelectItem key={t.id} value={t.id}>
-                          {t.name}
+                      <SelectItem value="none">Sin template</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* DESTINATARIOS */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Destinatarios</label>
+
+                  {/* Agregar contacto */}
+                  <Select onValueChange={handleAddContact}>
+                    <SelectTrigger className="h-9 border-slate-300 rounded-md">
+                      <SelectValue placeholder="+ Agregar contacto" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {contacts.map((contact) => (
+                        <SelectItem key={contact.id} value={contact.id}>
+                          {contact.name} ({contact.email})
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+
+                  {/* Para - Chips */}
+                  {toEmails.length > 0 && (
+                    <div className="space-y-1.5">
+                      <p className="text-xs text-slate-500 font-medium">Para:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {toEmails.map((email) => (
+                          <Badge key={email} className="bg-blue-100 text-blue-800 hover:bg-blue-100 text-xs font-medium">
+                            {email}
+                            <button
+                              onClick={() => handleRemoveFromEmail(email)}
+                              className="ml-1.5 hover:opacity-70"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* CC - Chips */}
+                  {ccEmails.length > 0 && (
+                    <div className="space-y-1.5">
+                      <p className="text-xs text-slate-500 font-medium">CC:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {ccEmails.map((email) => (
+                          <Badge key={email} className="bg-amber-100 text-amber-800 hover:bg-amber-100 text-xs font-medium">
+                            {email}
+                            <button
+                              onClick={() => handleRemoveCcEmail(email)}
+                              className="ml-1.5 hover:opacity-70"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* BCC - Chips */}
+                  {bccEmails.length > 0 && (
+                    <div className="space-y-1.5">
+                      <p className="text-xs text-slate-500 font-medium">BCC:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {bccEmails.map((email) => (
+                          <Badge key={email} className="bg-slate-100 text-slate-800 hover:bg-slate-100 text-xs font-medium">
+                            {email}
+                            <button
+                              onClick={() => handleRemoveBccEmail(email)}
+                              className="ml-1.5 hover:opacity-70"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                <div>
-                  <Label className="text-xs mb-2 block">Asunto</Label>
+                {/* MODO DE ENVÍO */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Modo de Envío</label>
+                  <Select value={sendMode} onValueChange={(val) => setSendMode(val as any)}>
+                    <SelectTrigger className="h-9 border-slate-300 rounded-md">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="group">Un email grupal (To/CC/BCC)</SelectItem>
+                      <SelectItem value="individual">Emails individuales (uno a uno)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* CONTENIDO */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Asunto</label>
+                  <div className="flex justify-between items-end gap-2 mb-2">
+                    <div className="flex-1" />
+                    <div className="flex gap-1 flex-wrap justify-end">
+                      {["contact_name", "company_name", "opportunity_name"].map((v) => (
+                        <button
+                          key={v}
+                          type="button"
+                          onClick={() => setSubject(subject + `{{${v}}}`)}
+                          className="text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-1 rounded border border-slate-200 transition-all"
+                        >
+                          {`{{${v}}}`}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   <Input
-                    placeholder="Asunto del email..."
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
-                    className="h-9"
+                    placeholder="Ej: Propuesta especial para {{company_name}}"
+                    className="h-9 border-slate-300 rounded-md text-sm"
                   />
                 </div>
 
-                <div>
-                  <Label className="text-xs mb-2 block">Mensaje</Label>
-                  <Textarea
-                    placeholder="Escribe tu mensaje aquí..."
+                {/* MENSAJE */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Mensaje</label>
+                  <textarea
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    className="min-h-32 resize-none"
+                    placeholder="Escribe tu mensaje aquí..."
+                    className="w-full h-32 p-3 border border-slate-300 rounded-md text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
-                  <p className="text-xs text-slate-500 mt-1">
-                    Usa variables disponibles: {PULSE_MESSAGE_VARIABLES.slice(0, 3).map((v) => v.tag).join(", ")}...
-                  </p>
+                </div>
+
+                {/* ADJUNTOS */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Adjuntos (Opcional)</label>
+                  <div className="border-2 border-dashed border-slate-300 rounded-md p-4 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all">
+                    <Upload className="h-5 w-5 text-slate-400 mx-auto mb-2" />
+                    <p className="text-xs text-slate-600">Arrastra archivos o haz clic para cargar</p>
+                  </div>
+                </div>
+
+                {/* PROGRAMACIÓN */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Fecha (Opcional)</label>
+                    <Input
+                      type="date"
+                      value={scheduleDate}
+                      onChange={(e) => setScheduleDate(e.target.value)}
+                      className="h-9 border-slate-300 rounded-md text-sm"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Hora (Opcional)</label>
+                    <Input
+                      type="time"
+                      value={scheduleTime}
+                      onChange={(e) => setScheduleTime(e.target.value)}
+                      className="h-9 border-slate-300 rounded-md text-sm"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-
-            {/* 4. ADJUNTOS */}
-            <div>
-              <h3 className="font-semibold text-sm uppercase tracking-wide text-slate-700 mb-3">Adjuntos</h3>
-              <div className="border-2 border-dashed rounded-lg p-4 text-center bg-slate-50 cursor-pointer hover:bg-slate-100 transition">
-                <input
-                  type="file"
-                  multiple
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  id="file-upload"
-                />
-                <Label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center gap-2">
-                  <Paperclip className="h-5 w-5 text-slate-400" />
-                  <span className="text-sm text-slate-600">Arrastra archivos aquí o haz clic</span>
-                </Label>
-              </div>
-              {attachments.length > 0 && (
-                <div className="mt-3 space-y-2">
-                  {attachments.map((file, idx) => (
-                    <div key={idx} className="flex items-center justify-between text-sm p-2 bg-slate-50 rounded">
-                      <span className="truncate">{file.name}</span>
-                      <button
-                        onClick={() => removeAttachment(idx)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Programación */}
-            <div>
-              <Label className="text-xs mb-2 block">Programar Envío (Opcional)</Label>
-              <Input
-                type="datetime-local"
-                value={scheduledFor}
-                onChange={(e) => setScheduledFor(e.target.value)}
-                className="h-9"
-              />
-            </div>
+            </ScrollArea>
           </div>
 
-          {/* COLUMNA 2: PREVISUALIZACIÓN (55%) */}
-          <div className="w-[55%] bg-slate-50 border-l overflow-y-auto p-6">
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-semibold text-sm uppercase tracking-wide text-slate-700 mb-3">Vista Previa del Mensaje</h3>
-                <Card className="bg-white">
-                  <CardContent className="p-4 space-y-3 text-sm">
-                    {/* From */}
-                    <div className="border-b pb-3">
-                      <p className="text-xs text-slate-500 font-medium">De:</p>
-                      <p className="text-slate-900">
-                        {sender === "personal" ? user?.email : "sistema@scaleup.com"}
-                      </p>
-                    </div>
+          {/* COLUMNA DERECHA (40%) - PREVIEW */}
+          <div className="w-2/5 bg-slate-50 border-l border-slate-200 p-5 overflow-y-auto">
+            <ScrollArea className="h-full">
+              <div className="space-y-4 pr-4">
+                <h3 className="text-sm font-semibold text-slate-900">Previsualización</h3>
 
-                    {/* To */}
-                    <div className="border-b pb-3">
-                      <p className="text-xs text-slate-500 font-medium">Para:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {Array.from(toContacts)
-                          .map((cId) => contacts.find((c) => c.id === cId)?.email)
-                          .join(", ") || "No seleccionado"}
-                      </div>
-                    </div>
-
-                    {/* CC/BCC */}
-                    {(ccContacts.size > 0 || bccContacts.size > 0) && (
-                      <div className="border-b pb-3">
-                        {ccContacts.size > 0 && (
-                          <div>
-                            <p className="text-xs text-slate-500 font-medium">CC:</p>
-                            <p>
-                              {Array.from(ccContacts)
-                                .map((cId) => contacts.find((c) => c.id === cId)?.email)
-                                .join(", ")}
-                            </p>
-                          </div>
-                        )}
-                        {bccContacts.size > 0 && (
-                          <div>
-                            <p className="text-xs text-slate-500 font-medium">BCC:</p>
-                            <p>
-                              {Array.from(bccContacts)
-                                .map((cId) => contacts.find((c) => c.id === cId)?.email)
-                                .join(", ")}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Subject */}
-                    <div className="border-b pb-3">
-                      <p className="text-xs text-slate-500 font-medium">Asunto:</p>
-                      <p className="font-medium text-slate-900">{previewSubject || "(sin asunto)"}</p>
-                    </div>
-
-                    {/* Message Body */}
-                    <div className="border-b pb-3">
-                      <p className="text-xs text-slate-500 font-medium mb-2">Mensaje:</p>
-                      <div className="prose prose-sm max-w-none text-slate-900 whitespace-pre-wrap leading-relaxed">
-                        {previewMessage || "(mensaje vacío)"}
-                      </div>
-                    </div>
-
-                    {/* Attachments */}
-                    {attachments.length > 0 && (
+                {/* PREVIEW EMAIL */}
+                {channel === "email" && (
+                  <Card className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+                    <div className="p-4 space-y-3 text-sm">
                       <div>
-                        <p className="text-xs text-slate-500 font-medium mb-2">Adjuntos:</p>
-                        <div className="space-y-1">
-                          {attachments.map((file, idx) => (
-                            <p key={idx} className="text-xs text-slate-700 flex items-center gap-1">
-                              <Paperclip className="h-3 w-3" /> {file.name}
-                            </p>
-                          ))}
+                        <p className="text-xs text-slate-500 font-medium">De:</p>
+                        <p className="font-semibold text-slate-900">{user?.email || "noreply@scaleup.com"}</p>
+                      </div>
+                      <div className="border-t border-slate-200 pt-3">
+                        <p className="text-xs text-slate-500 font-medium">Para:</p>
+                        <p className="font-semibold text-slate-900 break-words">{toEmails.join(", ") || "(sin destinatarios)"}</p>
+                      </div>
+                      {ccEmails.length > 0 && (
+                        <div className="border-t border-slate-200 pt-3">
+                          <p className="text-xs text-slate-500 font-medium">CC:</p>
+                          <p className="font-semibold text-slate-900 break-words">{ccEmails.join(", ")}</p>
+                        </div>
+                      )}
+                      {bccEmails.length > 0 && (
+                        <div className="border-t border-slate-200 pt-3">
+                          <p className="text-xs text-slate-500 font-medium">BCC:</p>
+                          <p className="font-semibold text-slate-900 break-words">{bccEmails.join(", ")}</p>
+                        </div>
+                      )}
+                      <div className="border-t border-slate-200 pt-3">
+                        <p className="text-xs text-slate-500 font-medium">Asunto:</p>
+                        <p className="font-semibold text-slate-900 break-words">{previewSubject || "(sin asunto)"}</p>
+                      </div>
+                      <div className="border-t border-slate-200 pt-3">
+                        <div className="bg-white border border-slate-200 rounded p-3 min-h-32">
+                          <p className="text-xs text-slate-700 whitespace-pre-wrap break-words">{previewMessage || "(mensaje vacío)"}</p>
                         </div>
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
+                    </div>
+                  </Card>
+                )}
 
-                {/* Info Badge */}
-                <div className="mt-4 flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded">
-                  <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                  <p className="text-xs text-blue-900">
-                    Las variables se reemplazan dinámicamente en esta vista previa y aparecen en negrita en el mensaje enviado.
-                  </p>
+                {/* PREVIEW WHATSAPP */}
+                {channel === "whatsapp" && (
+                  <Card className="bg-green-50 border border-green-200 rounded-lg overflow-hidden p-4">
+                    <div className="space-y-2">
+                      <div className="bg-green-100 rounded-lg p-3 max-w-xs ml-auto">
+                        <p className="text-sm text-slate-900 break-words">{previewMessage || "(mensaje vacío)"}</p>
+                        <div className="flex justify-end items-center gap-1 mt-2">
+                          <p className="text-xs text-slate-600">{new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</p>
+                          <svg className="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                )}
+
+                {/* INFO DE VARIABLES */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-xs font-semibold text-blue-900 mb-2">Variables Disponibles:</p>
+                  <div className="text-xs text-blue-800 space-y-1">
+                    <p>• {`{{contact_name}}`} - Nombre del contacto</p>
+                    <p>• {`{{company_name}}`} - Empresa</p>
+                    <p>• {`{{opportunity_name}}`} - Nombre de la oportunidad</p>
+                    <p>• {`{{user_name}}`} - Tu nombre</p>
+                  </div>
                 </div>
               </div>
-            </div>
+            </ScrollArea>
           </div>
         </div>
 
-        {/* Footer - Actions */}
-        <div className="border-t px-6 py-4 flex justify-end gap-3">
-          <Button variant="outline" onClick={onClose}>
+        {/* FOOTER CON BOTONES FIJOS */}
+        <div className="border-t border-slate-200 bg-white px-6 py-3 flex justify-end gap-3">
+          <Button variant="outline" onClick={onClose} className="h-9 rounded-md text-slate-700 border-slate-300">
             Cancelar
-          </Button>
-          <Button variant="outline" onClick={() => {}}>
-            Guardar como Nuevo Template
           </Button>
           <Button
             onClick={handleSend}
-            disabled={loading || toContacts.size === 0}
-            className="bg-blue-600 hover:bg-blue-700 gap-2"
+            disabled={sending || toEmails.length === 0}
+            className="bg-blue-600 hover:bg-blue-700 text-white h-9 rounded-md gap-2 disabled:opacity-50"
           >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            Enviar Mensaje
+            {sending ? (
+              <>
+                <span className="animate-spin">⏳</span> Enviando...
+              </>
+            ) : (
+              <>
+                <Send className="h-4 w-4" />
+                Enviar Mensaje
+              </>
+            )}
           </Button>
         </div>
       </DialogContent>
