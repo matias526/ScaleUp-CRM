@@ -775,29 +775,21 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSave)} className="relative">
-        {/* ENCABEZADO ESTILO CRM */}
-        <div className="bg-gradient-to-b from-slate-50 to-white border-b border-slate-200 px-8 py-8 sticky top-0 z-40">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-start justify-between mb-6">
-              <div className="flex-1">
-                <h1 className="text-3xl font-bold text-slate-900 mb-2">
-                  {template ? "Editar Template" : "Crear Nuevo Template"}
-                </h1>
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  {template 
-                    ? "Actualiza el contenido y configuración del template de mensajes para mantener la consistencia en tus comunicaciones"
-                    : "Configura un nuevo template de mensajes para Email y WhatsApp con variables dinámicas y contenido multiidioma"}
-                </p>
-              </div>
-            </div>
-            
-
-          </div>
+      <form onSubmit={form.handleSubmit(handleSave)} className="w-full">
+        {/* ENCABEZADO */}
+        <div className="px-8 py-6 border-b border-slate-200">
+          <h1 className="text-3xl font-extrabold text-slate-900 mb-1">
+            {template ? "Editar Template" : "Crear Nuevo Template"}
+          </h1>
+          <p className="text-sm text-slate-600">
+            {template 
+              ? "Actualiza el contenido y configuración del template"
+              : "Configura un nuevo template para Email y WhatsApp"}
+          </p>
         </div>
 
-        {/* CONTENIDO PRINCIPAL */}
-        <div className="max-w-7xl mx-auto px-8 py-10 space-y-8 pb-44">
+        {/* CONTENIDO */}
+        <div className="px-8 py-8 space-y-6 max-h-[calc(100vh-320px)] overflow-y-auto">
 
         {/* SECCIÓN 1: CONFIGURACIÓN SUPERIOR (Ancho completo) */}
         <div className="bg-white p-10 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
