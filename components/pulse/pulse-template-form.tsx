@@ -777,37 +777,34 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSave)} className="w-full">
         {/* ENCABEZADO */}
-        <div className="px-8 py-6 border-b border-slate-200">
-          <h1 className="text-3xl font-bold text-slate-900 mb-1">
+        <div className="bg-[#f0f7ff] px-10 py-8 border-b border-slate-200">
+          <h1 className="text-2xl font-bold text-slate-900">
             {template ? "Editar Template" : "Crear Nuevo Template"}
           </h1>
-          <p className="text-sm text-slate-600">
-            {template 
-              ? "Actualiza el contenido y configuración del template"
-              : "Configura un nuevo template para Email y WhatsApp"}
-          </p>
         </div>
 
-        {/* CONTENIDO */}
-        <div className="px-8 py-8 space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto">
+        {/* CONTENIDO - GRID 2 COLUMNAS */}
+        <div className="px-10 py-8 grid grid-cols-12 gap-8 max-h-[calc(100vh-240px)] overflow-y-auto">
+          {/* COLUMNA IZQUIERDA - EDICIÓN (8 columnas) */}
+          <div className="col-span-8 space-y-6">
 
-        {/* SECCIÓN 1: CONFIGURACIÓN SUPERIOR (Ancho completo) */}
-        <div className="bg-white p-10 rounded-lg border border-slate-200 shadow-sm">
-          <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-6">Datos Generales</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* SECCIÓN 1: CONFIGURACIÓN SUPERIOR */}
+        <div className="pb-6 border-b border-slate-200">
+          <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-6">Datos Generales</h3>
+          <div className="grid grid-cols-3 gap-6">
             <FormField control={form.control} name="internal_code" render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs font-semibold uppercase text-slate-700 tracking-wide">Código Interno</FormLabel>
-                <FormControl><Input {...field} disabled={!!template} className="h-11 border-slate-300 rounded-lg" placeholder="Ej: WELCOME_OPP" /></FormControl>
+                <FormLabel className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Código Interno</FormLabel>
+                <FormControl><Input {...field} disabled={!!template} className="h-10 border-slate-300 rounded-md mt-2" placeholder="WELCOME_OPP" /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
 
             <FormField control={form.control} name="category" render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs font-semibold uppercase text-slate-700 tracking-wide">Categoría</FormLabel>
+                <FormLabel className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Categoría</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl><SelectTrigger className="h-11 border-slate-300 rounded-lg"><SelectValue /></SelectTrigger></FormControl>
+                  <FormControl><SelectTrigger className="h-10 border-slate-300 rounded-md mt-2"><SelectValue /></SelectTrigger></FormControl>
                   <SelectContent>
                     <SelectItem value="metodologia">Metodología</SelectItem>
                     <SelectItem value="posteos_redes">Posteos</SelectItem>
@@ -821,9 +818,9 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
 
             <FormField control={form.control} name="tech_company_id" render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs font-semibold uppercase text-slate-700 tracking-wide">Empresa Tecnológica</FormLabel>
+                <FormLabel className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Empresa Tecnológica</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value || "none"}>
-                  <FormControl><SelectTrigger className="h-11 border-slate-300 rounded-lg"><SelectValue /></SelectTrigger></FormControl>
+                  <FormControl><SelectTrigger className="h-10 border-slate-300 rounded-md mt-2"><SelectValue /></SelectTrigger></FormControl>
                   <SelectContent>
                     <SelectItem value="none">Sin empresa (Global)</SelectItem>
                     {techCompanies.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
@@ -836,199 +833,198 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
         </div>
 
         {/* SECCIÓN 2: CONTENIDO POR IDIOMAS */}
-        <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
-          {/* Encabezado con Tabs y Auto-traducir */}
-          <div className="border-b border-slate-200 px-10 py-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Contenido por Idioma</h3>
-              <Button type="button" variant="outline" size="sm" onClick={handleAutoTranslate} disabled={translating} className="text-xs font-semibold uppercase text-slate-700 border-slate-300 h-9">
-                {translating ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : null}
-                Auto-Traducir
-              </Button>
-            </div>
+        <div className="pb-6 border-b border-slate-200">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Contenido por Idioma</h3>
+            <Button type="button" variant="outline" size="sm" onClick={handleAutoTranslate} disabled={translating} className="text-xs font-semibold uppercase text-slate-700 border-slate-300 h-9 rounded-md">
+              {translating ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : null}
+              Auto-Traducir
+            </Button>
+          </div>
+          
+          {/* Tabs con estilo Underline */}
+          <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
+            <TabsList className="bg-transparent border-b border-slate-200 p-0 w-full gap-8 h-auto rounded-none">
+              <TabsTrigger value="es" className="text-xs font-semibold uppercase tracking-wide text-slate-600 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:text-slate-900 rounded-none bg-transparent">ES</TabsTrigger>
+              <TabsTrigger value="en" className="text-xs font-semibold uppercase tracking-wide text-slate-600 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:text-slate-900 rounded-none bg-transparent">EN</TabsTrigger>
+              <TabsTrigger value="pt" className="text-xs font-semibold uppercase tracking-wide text-slate-600 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:text-slate-900 rounded-none bg-transparent">PT</TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          {/* Contenido de Tabs */}
+          <div className="mt-6">
             <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
-              <TabsList className="bg-slate-100 p-0.5 border border-slate-200 rounded-lg w-fit">
-                <TabsTrigger value="es" className="text-xs font-semibold uppercase tracking-wide text-slate-600 px-4 py-1.5 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded">ES</TabsTrigger>
-                <TabsTrigger value="en" className="text-xs font-semibold uppercase tracking-wide text-slate-600 px-4 py-1.5 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded">EN</TabsTrigger>
-                <TabsTrigger value="pt" className="text-xs font-semibold uppercase tracking-wide text-slate-600 px-4 py-1.5 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm rounded">PT</TabsTrigger>
-              </TabsList>
+              {["es", "en", "pt"].map((lang) => (
+                <TabsContent key={lang} value={lang} className="space-y-6 mt-0">
+                  <FormField control={form.control} name={`display_name_${lang}` as any} render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Nombre Público</FormLabel>
+                      <FormControl><Input {...field} placeholder="Ej: Bienvenida Especial" className="h-10 border-slate-300 rounded-md mt-2" /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+
+                  <FormField control={form.control} name={`subject_${lang}` as any} render={({ field }) => (
+                    <FormItem>
+                      <div className="flex justify-between items-end mb-2">
+                        <FormLabel className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Asunto del Email</FormLabel>
+                        <div className="flex gap-2 flex-wrap">
+                          {['name', 'first_name', 'company'].map((v) => (
+                            <button
+                              key={v}
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                const currentVal = field.value || "";
+                                field.onChange(`${currentVal}{{${v}}}`);
+                              }}
+                              className="text-xs font-medium bg-slate-100 hover:bg-slate-150 text-slate-600 px-2.5 py-1.5 rounded border border-slate-200 transition-all hover:border-slate-300"
+                            >
+                              {"{{"+ v +"}}"}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          onMouseUp={(e) => e.stopPropagation()}
+                          onSelect={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') e.preventDefault();
+                            e.stopPropagation();
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          placeholder="Ej: Hola {{name}}, tenemos una propuesta..."
+                          className="h-10 border-slate-300 rounded-md mt-2 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )} />
+
+                  <FormField control={form.control} name={`body_content_${lang}` as any} render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Contenido</FormLabel>
+                      <FormControl>
+                        <SafeEditor
+                          value={field.value}
+                          onChange={field.onChange}
+                          onAddImage={(url) => field.onChange(field.value + `\n[IMG]${url}[/IMG]`)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+
+                  <div className="space-y-3">
+                    <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Adjuntos</h4>
+                    <div className="grid gap-2">
+                      {existingAttachments.map((file) => (
+                        <div key={file.id} className="flex items-center justify-between p-2 bg-slate-50 border border-slate-200 rounded group hover:border-slate-300 text-sm">
+                          <a href={file.file_url} target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:text-blue-600 truncate flex-1 font-medium">{file.file_name}</a>
+                          <Button type="button" variant="ghost" size="sm" onClick={() => removeAttachment(file.id, true)} className="h-6 w-6 p-0 text-slate-400 hover:text-red-500">
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                      {pendingAttachments.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between p-2 bg-blue-50 border border-blue-200 rounded text-sm">
+                          <span className="text-blue-900 font-medium truncate flex-1">{file.name}</span>
+                          <Button type="button" variant="ghost" size="sm" onClick={() => removeAttachment(index, false)} className="h-6 w-6 p-0 text-blue-500 hover:text-blue-700">
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                      <label className="border-2 border-dashed border-slate-300 rounded p-3 text-center cursor-pointer hover:border-slate-400 hover:bg-slate-50 transition-all">
+                        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">+ Subir Archivo</span>
+                        <input type="file" multiple className="hidden" onChange={onFileChange} />
+                      </label>
+                    </div>
+                  </div>
+                </TabsContent>
+              ))}
             </Tabs>
           </div>
+        </div>
 
-          {/* Grid Editor + Preview */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
-            {/* EDITOR */}
-            <div className="border-r border-slate-200 p-10 space-y-6 overflow-y-auto max-h-[600px]">
-              <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
-                {["es", "en", "pt"].map((lang) => (
-                  <TabsContent key={lang} value={lang} className="space-y-6 mt-0">
-                    <FormField control={form.control} name={`display_name_${lang}` as any} render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs font-semibold uppercase text-slate-700 tracking-wide">Nombre Público</FormLabel>
-                        <FormControl><Input {...field} placeholder="Ej: Bienvenida Especial" className="h-11 border-slate-300 rounded-lg" /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-
-                    <FormField control={form.control} name={`subject_${lang}` as any} render={({ field }) => (
-                      <FormItem>
-                        <div className="flex justify-between items-end mb-2">
-                          <FormLabel className="text-xs font-semibold uppercase text-slate-700 tracking-wide">Asunto del Email</FormLabel>
-                          <div className="flex gap-2 flex-wrap">
-                            {['name', 'first_name', 'company'].map((v) => (
-                              <button
-                                key={v}
-                                type="button"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  const currentVal = field.value || "";
-                                  field.onChange(`${currentVal}{{${v}}}`);
-                                }}
-                                className="text-xs font-medium bg-slate-100 hover:bg-slate-150 text-slate-600 px-2.5 py-1 rounded-full border border-slate-200 transition-all hover:border-slate-300"
-                              >
-                                {"{{"+ v +"}}"}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            onMouseUp={(e) => e.stopPropagation()}
-                            onSelect={(e) => e.stopPropagation()}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') e.preventDefault();
-                              e.stopPropagation();
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                            placeholder="Ej: Hola {{name}}, tenemos una propuesta..."
-                            className="h-11 border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )} />
-
-                    <FormField control={form.control} name={`body_content_${lang}` as any} render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs font-semibold uppercase text-slate-700 tracking-wide">Contenido</FormLabel>
-                        <FormControl>
-                          <SafeEditor
-                            value={field.value}
-                            onChange={field.onChange}
-                            onAddImage={(url) => field.onChange(field.value + `\n[IMG]${url}[/IMG]`)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-
-                    <div className="space-y-3">
-                      <h4 className="text-xs font-semibold uppercase text-slate-700 tracking-wide">Adjuntos</h4>
-                      <div className="grid gap-2">
-                        {existingAttachments.map((file) => (
-                          <div key={file.id} className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded group hover:border-slate-300 text-sm">
-                            <a href={file.file_url} target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:text-blue-600 truncate flex-1 font-medium">{file.file_name}</a>
-                            <Button type="button" variant="ghost" size="sm" onClick={() => removeAttachment(file.id, true)} className="h-6 w-6 p-0 text-slate-400 hover:text-red-500">
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ))}
-                        {pendingAttachments.map((file, index) => (
-                          <div key={index} className="flex items-center justify-between p-2.5 bg-blue-50 border border-blue-200 rounded text-sm">
-                            <span className="text-blue-900 font-medium truncate flex-1">{file.name}</span>
-                            <Button type="button" variant="ghost" size="sm" onClick={() => removeAttachment(index, false)} className="h-6 w-6 p-0 text-blue-500 hover:text-blue-700">
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ))}
-                        <label className="border-2 border-dashed border-slate-300 rounded-lg p-3 text-center cursor-pointer hover:border-slate-400 hover:bg-slate-50 transition-all">
-                          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">+ Subir Archivo</span>
-                          <input type="file" multiple className="hidden" onChange={onFileChange} />
-                        </label>
-                      </div>
-                    </div>
-                  </TabsContent>
-                ))}
-              </Tabs>
+          {/* COLUMNA DERECHA - PREVIEW (4 columnas) */}
+          <div className="col-span-4 sticky top-0 h-fit">
+            <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-4">Vista Previa</h3>
+            
+            <div className="flex gap-2 mb-6 bg-white border border-slate-200 rounded p-1 w-full">
+              <Button
+                type="button"
+                variant={previewMode === "email" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setPreviewMode("email")}
+                className="text-xs font-semibold uppercase rounded flex-1 bg-white text-slate-700"
+              >
+                EMAIL
+              </Button>
+              <Button
+                type="button"
+                variant={previewMode === "whatsapp" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setPreviewMode("whatsapp")}
+                className="text-xs font-semibold uppercase rounded flex-1 bg-white text-slate-700"
+              >
+                WHATSAPP
+              </Button>
             </div>
 
-            {/* PREVIEW */}
-            <div className="bg-slate-50 p-10 overflow-y-auto max-h-[600px] border-l border-slate-200">
-              <div className="flex gap-2 mb-6 bg-white border border-slate-200 rounded-lg p-1 w-fit">
-                <Button
-                  type="button"
-                  variant={previewMode === "email" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setPreviewMode("email")}
-                  className="text-xs font-semibold uppercase rounded text-slate-700"
-                >
-                  EMAIL
-                </Button>
-                <Button
-                  type="button"
-                  variant={previewMode === "whatsapp" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setPreviewMode("whatsapp")}
-                  className="text-xs font-semibold uppercase rounded text-slate-700"
-                >
-                  WHATSAPP
-                </Button>
-              </div>
-
-              <div className={cn(
-                "rounded-lg overflow-hidden transition-all",
-                previewMode === "email"
-                  ? "w-full bg-white border border-slate-200 shadow-md"
-                  : "w-64 h-96 bg-white border border-slate-200 rounded-3xl shadow-md flex flex-col"
-              )}>
-                {previewMode === "email" ? (
-                  <div className="flex flex-col h-full bg-white">
-                    <div className="bg-slate-100 border-b border-slate-200 p-3.5 space-y-2">
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-2 h-2 rounded-full bg-red-400 shadow-sm" />
-                        <div className="w-2 h-2 rounded-full bg-amber-400 shadow-sm" />
-                        <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-sm" />
-                      </div>
-                      <p className="text-[9px] text-slate-500 font-semibold uppercase">Asunto:</p>
-                      <div className="text-xs font-semibold text-slate-900">{renderSubjectPreview(form.watch(`subject_${currentTab}`) || '')}</div>
+            <div className={cn(
+              "overflow-hidden transition-all border border-slate-200 rounded",
+              previewMode === "email"
+                ? "w-full bg-white"
+                : "w-full h-96 bg-white rounded-2xl flex flex-col"
+            )}>
+              {previewMode === "email" ? (
+                <div className="flex flex-col h-full bg-white">
+                  <div className="bg-slate-100 border-b border-slate-200 p-3 space-y-2">
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 rounded-full bg-red-400" />
+                      <div className="w-2 h-2 rounded-full bg-amber-400" />
+                      <div className="w-2 h-2 rounded-full bg-emerald-400" />
                     </div>
-                    <div className="p-4 flex-1 overflow-y-auto">
+                    <p className="text-[8px] text-slate-500 font-semibold uppercase">Asunto:</p>
+                    <div className="text-xs font-semibold text-slate-900">{renderSubjectPreview(form.watch(`subject_${currentTab}`) || '')}</div>
+                  </div>
+                  <div className="p-3 flex-1 overflow-y-auto">
+                    <div className="text-xs text-slate-700 leading-relaxed">{renderPreview(form.watch(`body_content_${currentTab}`) || "")}</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="h-full flex flex-col bg-gradient-to-b from-slate-100 to-slate-50">
+                  <div className="p-2 text-center border-b border-slate-200">
+                    <p className="text-[9px] font-semibold text-slate-600">12:45 PM</p>
+                  </div>
+                  <div className="flex-1 p-3 overflow-y-auto flex justify-center">
+                    <div className="bg-white rounded-2xl rounded-tl-sm p-3 max-w-[80%] shadow">
                       <div className="text-xs text-slate-700 leading-relaxed">{renderPreview(form.watch(`body_content_${currentTab}`) || "")}</div>
+                      <p className="text-[8px] text-slate-400 text-right mt-1">12:45 PM</p>
                     </div>
                   </div>
-                ) : (
-                  <div className="h-full flex flex-col bg-gradient-to-b from-slate-100 to-slate-50">
-                    <div className="p-3 text-center border-b border-slate-200">
-                      <p className="text-[10px] font-semibold text-slate-600">12:45 PM</p>
-                    </div>
-                    <div className="flex-1 p-3 overflow-y-auto space-y-2">
-                      <div className="bg-white rounded-2xl rounded-tl-sm p-3 shadow-sm max-w-xs">
-                        <div className="text-xs text-slate-700 leading-relaxed">{renderPreview(form.watch(`body_content_${currentTab}`) || "")}</div>
-                        <p className="text-[9px] text-slate-400 text-right mt-1">12:45 PM</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* PIE DE PÁGINA */}
-        <div className="border-t border-slate-200 bg-slate-50 px-8 py-4 flex justify-end gap-3">
+        <div className="border-t border-slate-200 bg-white px-10 py-4 flex justify-end gap-3">
           <Button 
             type="button" 
-            variant="ghost" 
+            variant="outline" 
             onClick={onCancel} 
-            className="font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+            className="font-semibold text-slate-700 border-slate-300"
           >
             Cancelar
           </Button>
           <Button 
             type="submit" 
             disabled={loading} 
-            className="bg-blue-600 hover:bg-blue-700 px-8 font-semibold text-white"
+            className="bg-[#2563eb] hover:bg-blue-700 px-8 font-semibold text-white"
           >
             {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             {template ? "Guardar Cambios" : "Crear Template"}
