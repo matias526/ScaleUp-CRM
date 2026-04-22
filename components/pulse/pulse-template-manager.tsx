@@ -5,10 +5,14 @@ import { useTranslation } from "@/hooks/use-translations"
 import { supabase } from "@/lib/supabase/client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Plus, Trash2, Edit2, Copy, Loader2, Globe, X } from "lucide-react"
+import { Plus, Trash2, Edit2, Copy, Loader2, Globe, X, Search } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
 import PulseTemplateForm from "./pulse-template-form"
 import { getActiveTechCompaniesClient } from "@/lib/services/tech-company-service-client"
+import { useDebounce } from "@/hooks/use-debounce"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,6 +46,13 @@ const CATEGORIES = [
   { value: "noticias", label: "Noticias" },
 ]
 
+const CATEGORY_COLORS: Record<string, string> = {
+  metodologia: "bg-blue-100 text-blue-800",
+  posteos_redes: "bg-purple-100 text-purple-800",
+  campanas: "bg-green-100 text-green-800",
+  noticias: "bg-orange-100 text-orange-800",
+}
+
 export default function PulseTemplateManager() {
   const { t } = useTranslation()
   const [templates, setTemplates] = useState<PulseTemplate[]>([])
@@ -50,6 +61,8 @@ export default function PulseTemplateManager() {
   const [editingTemplate, setEditingTemplate] = useState<PulseTemplate | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [copying, setCopying] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState<string>("")
+  const debouncedSearchTerm = useDebounce(searchTerm, 500)
   
   // Filtros
   const [filterCategory, setFilterCategory] = useState<string>("all")
@@ -61,6 +74,12 @@ export default function PulseTemplateManager() {
     fetchTemplates()
     fetchTechCompanies()
   }, [])
+
+  useEffect(() => {
+    if (debouncedSearchTerm || filterCategory !== "all" || filterTechCompany !== "all") {
+      // Ya se filtra en el computed
+    }
+  }, [debouncedSearchTerm, filterCategory, filterTechCompany])
 
   const fetchTechCompanies = async () => {
     try {
@@ -187,83 +206,110 @@ export default function PulseTemplateManager() {
     await fetchTemplates()
   }
 
-  // Filtrar templates basado en categoría y tech_company
+  // Filtrar templates basado en categoría, tech_company y búsqueda
   const filteredTemplates = templates.filter((template) => {
     const categoryMatch = filterCategory === "all" || template.category === filterCategory
     const companyMatch = filterTechCompany === "all" || template.tech_company_id === filterTechCompany
-    return categoryMatch && companyMatch
+    const esTranslation = template.translations.find((tr) => tr.language_code === "es")
+    const searchMatch =
+      !debouncedSearchTerm ||
+      template.internal_code.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+      esTranslation?.display_name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+      esTranslation?.subject.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+    return categoryMatch && companyMatch && searchMatch
   })
 
   return (
-    <div className="space-y-6">
-      {/* Header with Create Button */}
-      <div className="flex justify-between items-center">
+    <Card>
+      {/* Card Header */}
+      <CardHeader className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0 pb-4">
         <div>
-          <h2 className="text-lg font-semibold">{t("pulse.templates_list", "Plantillas de Mensaje")}</h2>
-          <p className="text-sm text-gray-600">
-            {t("pulse.description", "Gestiona templates reutilizables para Pulse en múltiples idiomas con inserción atómica")}
-          </p>
+          <CardTitle>{t("pulse.templates_list", "Plantillas de Mensaje")}</CardTitle>
+          <CardDescription className="mt-1">
+            {t("pulse.description", "Gestiona templates reutilizables para Pulse en múltiples idiomas")}
+          </CardDescription>
         </div>
-        <Button onClick={() => setShowForm(true)}>
-          <Plus className="h-4 w-4 mr-2" />
+        <Button onClick={() => setShowForm(true)} className="gap-2">
+          <Plus className="h-4 w-4" />
           {t("pulse.create_template", "Crear Template")}
         </Button>
-      </div>
+      </CardHeader>
 
-      {/* Filtros */}
-      <div className="flex gap-3 items-end">
-        <div className="flex-1">
-          <label className="text-sm font-medium block mb-2">Categoría</label>
-          <Select value={filterCategory} onValueChange={setFilterCategory}>
-            <SelectTrigger>
-              <SelectValue placeholder="Todas las categorías" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas las categorías</SelectItem>
-              {CATEGORIES.map((cat) => (
-                <SelectItem key={cat.value} value={cat.value}>
-                  {cat.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      {/* Filters */}
+      <CardContent className="border-t border-b border-slate-200 py-4 space-y-4">
+        <div className="flex flex-col gap-3 md:flex-row md:items-end">
+          {/* Search */}
+          <div className="flex-1 min-w-0">
+            <label className="text-xs font-semibold uppercase tracking-wide text-slate-600 block mb-2">Buscar</label>
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+              <Input
+                type="search"
+                placeholder={t("common.search", "Buscar por código o nombre...")}
+                className="pl-8 h-9"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Category Filter */}
+          <div className="flex-1 min-w-0">
+            <label className="text-xs font-semibold uppercase tracking-wide text-slate-600 block mb-2">Categoría</label>
+            <Select value={filterCategory} onValueChange={setFilterCategory}>
+              <SelectTrigger className="h-9">
+                <SelectValue placeholder="Todas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las categorías</SelectItem>
+                {CATEGORIES.map((cat) => (
+                  <SelectItem key={cat.value} value={cat.value}>
+                    {cat.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Company Filter */}
+          <div className="flex-1 min-w-0">
+            <label className="text-xs font-semibold uppercase tracking-wide text-slate-600 block mb-2">Empresa</label>
+            <Select value={filterTechCompany} onValueChange={setFilterTechCompany} disabled={loadingCompanies}>
+              <SelectTrigger className="h-9">
+                <SelectValue placeholder="Todas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las empresas</SelectItem>
+                <SelectItem value="null">Sin empresa</SelectItem>
+                {techCompanies.map((company) => (
+                  <SelectItem key={company.id} value={company.id}>
+                    {company.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Clear Filters Button */}
+          {(filterCategory !== "all" || filterTechCompany !== "all" || searchTerm) && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setFilterCategory("all")
+                setFilterTechCompany("all")
+                setSearchTerm("")
+              }}
+              className="gap-2 h-9"
+            >
+              <X className="h-4 w-4" />
+              Limpiar
+            </Button>
+          )}
         </div>
+      </CardContent>
 
-        <div className="flex-1">
-          <label className="text-sm font-medium block mb-2">Empresa Tecnológica</label>
-          <Select value={filterTechCompany} onValueChange={setFilterTechCompany} disabled={loadingCompanies}>
-            <SelectTrigger>
-              <SelectValue placeholder="Todas las empresas" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas las empresas</SelectItem>
-              <SelectItem value="null">Sin empresa asignada</SelectItem>
-              {techCompanies.map((company) => (
-                <SelectItem key={company.id} value={company.id}>
-                  {company.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {(filterCategory !== "all" || filterTechCompany !== "all") && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setFilterCategory("all")
-              setFilterTechCompany("all")
-            }}
-            className="gap-2"
-          >
-            <X className="h-4 w-4" />
-            Limpiar
-          </Button>
-        )}
-      </div>
-
-      {/* Template Form Modal */}
+      {/* Modal de Formulario */}
       {showForm && (
         <div
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
@@ -313,101 +359,135 @@ export default function PulseTemplateManager() {
         </AlertDialog>
       )}
 
-      {/* Templates List */}
-      {loading ? (
-        <Card>
-          <CardContent className="py-8 flex justify-center">
-            <Loader2 className="h-8 w-8 animate-spin" />
-          </CardContent>
-        </Card>
-      ) : filteredTemplates.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <Globe className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">
+      {/* Tabla de Templates */}
+      <CardContent className="pt-6">
+        {loading ? (
+          <div className="flex h-32 items-center justify-center">
+            <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+          </div>
+        ) : filteredTemplates.length === 0 ? (
+          <div className="flex h-32 flex-col items-center justify-center space-y-2">
+            <Globe className="h-10 w-10 text-slate-300" />
+            <p className="text-sm text-slate-500 font-medium">
               {templates.length === 0
                 ? t("pulse.no_templates", "No hay templates creados todavía")
                 : t("pulse.no_results", "No hay templates que coincidan con los filtros")}
             </p>
-            <p className="text-sm text-gray-400 mt-2">
+            <p className="text-xs text-slate-400">
               {templates.length === 0
                 ? t("pulse.create_first_template", "Crea tu primer template para comenzar")
                 : t("pulse.adjust_filters", "Ajusta los filtros e intenta de nuevo")}
             </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4">
-          {filteredTemplates.map((template) => {
-            const esTranslation = template.translations.find((tr) => tr.language_code === "es")
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-slate-50 hover:bg-slate-50">
+                  <TableHead className="font-semibold text-xs uppercase tracking-wide text-slate-600">Código</TableHead>
+                  <TableHead className="font-semibold text-xs uppercase tracking-wide text-slate-600">Nombre</TableHead>
+                  <TableHead className="font-semibold text-xs uppercase tracking-wide text-slate-600 hidden md:table-cell">Categoría</TableHead>
+                  <TableHead className="font-semibold text-xs uppercase tracking-wide text-slate-600 hidden lg:table-cell">Idiomas</TableHead>
+                  <TableHead className="font-semibold text-xs uppercase tracking-wide text-slate-600 hidden lg:table-cell">Empresa</TableHead>
+                  <TableHead className="text-right font-semibold text-xs uppercase tracking-wide text-slate-600">Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredTemplates.map((template) => {
+                  const esTranslation = template.translations.find((tr) => tr.language_code === "es")
+                  const categoryData = CATEGORIES.find((cat) => cat.value === template.category)
+                  const hasAll3Languages = ["es", "en", "pt"].every((lang) =>
+                    template.translations.some((tr) => tr.language_code === lang)
+                  )
+                  const techCompany = techCompanies.find((tc) => tc.id === template.tech_company_id)
 
-            return (
-              <Card key={template.id} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg flex items-center gap-3">
-                        <span className="font-mono text-sm bg-gray-100 px-3 py-1 rounded">{template.internal_code}</span>
-                        <span className="flex gap-1">
-                          <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">ES</span>
-                          <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">EN</span>
-                          <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded">PT</span>
+                  return (
+                    <TableRow key={template.id} className="hover:bg-slate-50">
+                      <TableCell>
+                        <code className="bg-slate-100 px-2.5 py-1 rounded text-xs font-medium text-slate-700">
+                          {template.internal_code}
+                        </code>
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        <div>
+                          <p className="text-sm font-medium text-slate-900">{esTranslation?.display_name || "Sin nombre"}</p>
+                          <p className="text-xs text-slate-500 line-clamp-1">{esTranslation?.subject || ""}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        <Badge className={CATEGORY_COLORS[template.category] || "bg-slate-100 text-slate-800"}>
+                          {categoryData?.label || template.category}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        <div className="flex gap-1">
+                          {["es", "en", "pt"].map((lang) => {
+                            const hasLang = template.translations.some((tr) => tr.language_code === lang)
+                            return (
+                              <span
+                                key={lang}
+                                className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                                  hasLang ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-400"
+                                }`}
+                              >
+                                {lang.toUpperCase()}
+                              </span>
+                            )
+                          })}
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        <span className="text-sm text-slate-600">
+                          {techCompany?.name || <span className="text-slate-400">-</span>}
                         </span>
-                      </CardTitle>
-                      {esTranslation && <CardDescription className="mt-2">{esTranslation.display_name}</CardDescription>}
-                      <p className="text-xs text-gray-500 mt-1">
-                        Categoría: <span className="font-semibold">{template.category}</span>
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleCopyTemplate(template)}
-                        disabled={copying === template.id}
-                        title={t("common.copy", "Copiar")}
-                      >
-                        {copying === template.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Copy className="h-4 w-4" />}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setEditingTemplate(template)
-                          setShowForm(true)
-                        }}
-                        title={t("common.edit", "Editar")}
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setDeletingId(template.id)}
-                        className="text-red-600 hover:bg-red-50"
-                        title={t("common.delete", "Eliminar")}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {/* Preview ES */}
-                  {esTranslation && (
-                    <div>
-                      <p className="text-xs font-semibold text-gray-600 mb-2">Asunto (ES)</p>
-                      <div className="bg-gray-50 p-3 rounded text-sm text-gray-700 max-h-16 overflow-y-auto">
-                        {esTranslation.subject}
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
-      )}
-    </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleCopyTemplate(template)}
+                            disabled={copying === template.id}
+                            title={t("common.copy", "Copiar")}
+                            className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
+                          >
+                            {copying === template.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setEditingTemplate(template)
+                              setShowForm(true)
+                            }}
+                            title={t("common.edit", "Editar")}
+                            className="h-8 w-8 p-0 hover:bg-amber-50 hover:text-amber-600"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setDeletingId(template.id)}
+                            title={t("common.delete", "Eliminar")}
+                            className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   )
 }
