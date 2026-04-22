@@ -883,6 +883,8 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                             <Input
                               {...field}
                               // Evitamos que eventos de teclado o click "suban" a la modal
+                              onMouseUp={(e) => e.stopPropagation()}
+                              onSelect={(e) => e.stopPropagation()}
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') e.preventDefault(); // Evita que Enter mande el form
                                 e.stopPropagation();
