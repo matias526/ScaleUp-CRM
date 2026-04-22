@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import PulseTemplateForm from "./pulse-template-form"
 import { getActiveTechCompaniesClient } from "@/lib/services/tech-company-service-client"
+import { UserService } from "@/lib/services/user-service"
 import { useDebounce } from "@/hooks/use-debounce"
 import {
   AlertDialog,
@@ -28,6 +29,7 @@ interface PulseTemplate {
   internal_code: string
   category: string
   tech_company_id: string | null
+  user_id: string | null
   is_active: boolean
   created_at: string
   updated_at: string
@@ -67,12 +69,16 @@ export default function PulseTemplateManager() {
   // Filtros
   const [filterCategory, setFilterCategory] = useState<string>("all")
   const [filterTechCompany, setFilterTechCompany] = useState<string>("all")
+  const [filterAuthor, setFilterAuthor] = useState<string>("all")
   const [techCompanies, setTechCompanies] = useState<Array<{ id: string; name: string }>>([])
+  const [authors, setAuthors] = useState<Array<{ id: string; name: string }>>([])
   const [loadingCompanies, setLoadingCompanies] = useState(true)
+  const [loadingAuthors, setLoadingAuthors] = useState(true)
 
   useEffect(() => {
     fetchTemplates()
     fetchTechCompanies()
+    fetchAuthors()
   }, [])
 
   useEffect(() => {
@@ -93,6 +99,22 @@ export default function PulseTemplateManager() {
     }
   }
 
+  const fetchAuthors = async () => {
+    try {
+      setLoadingAuthors(true)
+      const users = await UserService.getUsersByRoles(["Admin", "BDM", "Marketing"])
+      const authorsList = users.map((user) => ({
+        id: user.id,
+        name: `${user.first_name} ${user.last_name}`,
+      }))
+      setAuthors(authorsList)
+    } catch (error) {
+      console.error("[v0] Error al cargar autores:", error)
+    } finally {
+      setLoadingAuthors(false)
+    }
+  }
+
   const fetchTemplates = async () => {
     try {
       setLoading(true)
@@ -106,6 +128,7 @@ export default function PulseTemplateManager() {
           internal_code,
           category,
           tech_company_id,
+          user_id,
           is_active,
           created_at,
           updated_at,
@@ -206,17 +229,21 @@ export default function PulseTemplateManager() {
     await fetchTemplates()
   }
 
-  // Filtrar templates basado en categoría, tech_company y búsqueda
+  // Filtrar templates basado en categoría, tech_company, autor y búsqueda
   const filteredTemplates = templates.filter((template) => {
     const categoryMatch = filterCategory === "all" || template.category === filterCategory
     const companyMatch = filterTechCompany === "all" || template.tech_company_id === filterTechCompany
+    const authorMatch =
+      filterAuthor === "all" ||
+      (filterAuthor === "sistema" && template.user_id === null) ||
+      (filterAuthor !== "sistema" && template.user_id === filterAuthor)
     const esTranslation = template.translations.find((tr) => tr.language_code === "es")
     const searchMatch =
       !debouncedSearchTerm ||
       template.internal_code.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
       esTranslation?.display_name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
       esTranslation?.subject.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
-    return categoryMatch && companyMatch && searchMatch
+    return categoryMatch && companyMatch && authorMatch && searchMatch
   })
 
   return (
@@ -290,14 +317,34 @@ export default function PulseTemplateManager() {
             </Select>
           </div>
 
+          {/* Author Filter */}
+          <div className="flex-1 min-w-0">
+            <label className="text-xs font-semibold uppercase tracking-wide text-slate-600 block mb-2">Origen/Autor</label>
+            <Select value={filterAuthor} onValueChange={setFilterAuthor} disabled={loadingAuthors}>
+              <SelectTrigger className="h-9">
+                <SelectValue placeholder="Todos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los orígenes</SelectItem>
+                <SelectItem value="sistema">Sistema</SelectItem>
+                {authors.map((author) => (
+                  <SelectItem key={author.id} value={author.id}>
+                    {author.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Clear Filters Button */}
-          {(filterCategory !== "all" || filterTechCompany !== "all" || searchTerm) && (
+          {(filterCategory !== "all" || filterTechCompany !== "all" || filterAuthor !== "all" || searchTerm) && (
             <Button
               variant="outline"
               size="sm"
               onClick={() => {
                 setFilterCategory("all")
                 setFilterTechCompany("all")
+                setFilterAuthor("all")
                 setSearchTerm("")
               }}
               className="gap-2 h-9"
@@ -389,6 +436,7 @@ export default function PulseTemplateManager() {
                   <TableHead className="font-semibold text-xs uppercase tracking-wide text-slate-600 hidden md:table-cell">Categoría</TableHead>
                   <TableHead className="font-semibold text-xs uppercase tracking-wide text-slate-600 hidden lg:table-cell">Idiomas</TableHead>
                   <TableHead className="font-semibold text-xs uppercase tracking-wide text-slate-600 hidden lg:table-cell">Empresa</TableHead>
+                  <TableHead className="font-semibold text-xs uppercase tracking-wide text-slate-600 hidden md:table-cell">Origen/Autor</TableHead>
                   <TableHead className="text-right font-semibold text-xs uppercase tracking-wide text-slate-600">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -440,6 +488,17 @@ export default function PulseTemplateManager() {
                         <span className="text-sm text-slate-600">
                           {techCompany?.name || <span className="text-slate-400">-</span>}
                         </span>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {template.user_id === null ? (
+                          <Badge className="bg-slate-200 text-slate-800 hover:bg-slate-200">
+                            Sistema
+                          </Badge>
+                        ) : (
+                          <span className="text-sm text-slate-600">
+                            {authors.find((a) => a.id === template.user_id)?.name || "-"}
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="flex justify-end gap-1">

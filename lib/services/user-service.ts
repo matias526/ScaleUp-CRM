@@ -493,6 +493,52 @@ export class UserService {
       return []
     }
   }
+
+  /**
+   * Obtiene usuarios con roles específicos (Admin, BDM, Marketing)
+   * Excluye usuarios inactivos
+   * @returns Lista de usuarios con roles específicos
+   */
+  static async getUsersByRoles(roleCodes: string[] = ["Admin", "BDM", "Marketing"]): Promise<User[]> {
+    try {
+      const { data, error } = await supabase
+        .from("users")
+        .select(`
+          id, email, first_name, last_name, role_id, tech_company_id, partner_id, 
+          is_active, preferred_language, theme_preference, created_at, updated_at, phone, profile_image,
+          roles:role_id (code),
+          tech_companies:tech_company_id (name),
+          partners:partner_id (name)
+        `)
+        .in("roles.code", roleCodes)
+        .eq("is_active", true)
+        .order("first_name")
+
+      if (error) {
+        console.error("Error al obtener usuarios por roles:", error)
+        return []
+      }
+
+      // Formatear los datos
+      const formattedData = (data || []).map((user) => ({
+        ...user,
+        role_code: user.roles?.code || null,
+        tech_company_name: user.tech_companies?.name || null,
+        partner_name: user.partners?.name || null,
+      }))
+
+      // Eliminar los objetos anidados
+      formattedData.forEach((user) => {
+        delete (user as any).roles
+        delete (user as any).tech_companies
+        delete (user as any).partners
+      })
+
+      return formattedData
+    } catch (error) {
+      console.error("Error inesperado al obtener usuarios por roles:", error)
+      return []
+    }
 }
 
 export const getUserById = UserService.getUserById
