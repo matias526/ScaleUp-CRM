@@ -103,10 +103,12 @@ export default function PulseTemplateManager() {
     try {
       setLoadingAuthors(true)
       const users = await UserService.getUsersByRoles(["Admin", "BDM", "Marketing"])
+      console.log("[v0] Usuarios obtenidos:", users)
       const authorsList = users.map((user) => ({
         id: user.id,
         name: `${user.first_name} ${user.last_name}`,
       }))
+      console.log("[v0] Lista de autores formateada:", authorsList)
       setAuthors(authorsList)
     } catch (error) {
       console.error("[v0] Error al cargar autores:", error)
