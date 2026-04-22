@@ -14,7 +14,7 @@ import { Send, Loader2, Calendar, Mail, Phone, AlertCircle } from "lucide-react"
 import { toast } from "@/components/ui/use-toast"
 import { sendPulseMessage, PulseMessageRecipient } from "@/lib/services/pulse-message-service"
 import { replaceVariables, VariableValues, PULSE_MESSAGE_VARIABLES } from "@/lib/pulse/pulse-message-variables"
-import { useAuth } from "@/hooks/use-auth"
+import { useAuth } from "@/components/auth/auth-provider"
 
 interface Contact {
   id: string
