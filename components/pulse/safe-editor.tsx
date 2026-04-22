@@ -131,31 +131,23 @@ export default function SafeEditor({ value, onChange, placeholder, disabled, onA
           )}
         </div>
 
-        {/* VARIABLES - Usando exactamente la lógica que te funciona en el Asunto */}
-        <div className="flex flex-col gap-3 mb-4 border-b pb-4">
+        {/* VARIABLES */}
+        <div className="flex gap-1">
           {Object.entries(PULSE_VARIABLES).map(([categoryKey, variables]) => (
-            <div key={categoryKey} className="flex flex-col gap-1.5">
-              <span className="text-[10px] font-bold text-slate-400 uppercase">
-                {categoryKey.replace('_', ' ')}
-              </span>
-              <div className="flex gap-2 flex-wrap">
-                {Object.entries(variables as any).map(([key, label]) => (
-                  <button
-                    key={key}
-                    type="button" // IMPORTANTE para que no mande el form
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      // Aquí la única diferencia es llamar a insertText en lugar de field.onChange
-                      insertText(`{{${key}}}`);
-                    }}
-                    className="text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-600 px-2.5 py-1.5 rounded border border-slate-200 transition-all hover:border-slate-300"
-                  >
-                    {label as string}
-                  </button>
+            <DropdownMenu key={categoryKey}>
+              <DropdownMenuTrigger asChild>
+                <Button type="button" variant="outline" size="sm" className="text-[10px] font-semibold h-8 uppercase bg-white border-slate-300 text-slate-700 hover:bg-slate-50" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                  {categoryKey.replace('_', ' ')}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56 bg-white z-[100]" onCloseAutoFocus={(e) => e.preventDefault()}>
+                {(variables as any).map((variable: { label: string; tag: string }) => (
+                  <DropdownMenuItem key={variable.tag} className="text-xs cursor-pointer hover:bg-blue-50" onClick={(e) => { e.preventDefault(); e.stopPropagation(); insertText(variable.tag); }}>
+                    {variable.label}
+                  </DropdownMenuItem>
                 ))}
-              </div>
-            </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ))}
         </div>
       </div>
