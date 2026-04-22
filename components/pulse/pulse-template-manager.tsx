@@ -65,7 +65,7 @@ export default function PulseTemplateManager() {
   const [copying, setCopying] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState<string>("")
   const debouncedSearchTerm = useDebounce(searchTerm, 500)
-  
+
   // Filtros
   const [filterCategory, setFilterCategory] = useState<string>("all")
   const [filterTechCompany, setFilterTechCompany] = useState<string>("all")
@@ -102,7 +102,7 @@ export default function PulseTemplateManager() {
   const fetchAuthors = async () => {
     try {
       setLoadingAuthors(true)
-      const users = await UserService.getUsersByRoles(["Admin", "BDM", "Marketing"])
+      const users = await UserService.getUsersByRoles(["Admin", "BDD", "Marketing"])
       console.log("[v0] Usuarios obtenidos:", users)
       const authorsList = users.map((user) => ({
         id: user.id,
@@ -476,9 +476,8 @@ export default function PulseTemplateManager() {
                             return (
                               <span
                                 key={lang}
-                                className={`px-2 py-0.5 rounded text-xs font-semibold ${
-                                  hasLang ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-400"
-                                }`}
+                                className={`px-2 py-0.5 rounded text-xs font-semibold ${hasLang ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-400"
+                                  }`}
                               >
                                 {lang.toUpperCase()}
                               </span>

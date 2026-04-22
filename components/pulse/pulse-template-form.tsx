@@ -909,11 +909,13 @@ export default function PulseTemplateForm({ template, onSubmit, onCancel }: Puls
                       <FormItem>
                         <FormLabel className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Contenido</FormLabel>
                         <FormControl>
-                          <SafeEditor
-                            value={field.value}
-                            onChange={field.onChange}
-                            onAddImage={(url) => field.onChange(field.value + `\n[IMG]${url}[/IMG]`)}
-                          />
+                          <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                            <SafeEditor
+                              value={field.value}
+                              onChange={field.onChange}
+                              onAddImage={(url) => field.onChange(field.value + `\n[IMG]${url}[/IMG]`)}
+                            />
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
