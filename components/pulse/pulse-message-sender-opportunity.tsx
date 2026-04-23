@@ -176,24 +176,24 @@ export function PulseMessageSenderOpportunity({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl h-[90vh] p-0 gap-0 bg-slate-50 rounded-lg border border-slate-200">
+      <DialogContent className="max-w-4xl h-[90vh] p-0 gap-0 bg-white rounded-lg border border-slate-200 shadow-lg">
         {/* HEADER - ESTILO CREAR OPORTUNIDAD */}
-        <div className="bg-slate-100 border-b border-slate-200 px-6 py-6">
-          <h2 className="text-2xl font-semibold text-slate-900">Enviar Mensaje</h2>
-          <p className="text-sm text-slate-600 mt-1">
+        <div className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200 px-8 py-8">
+          <h2 className="text-2xl font-bold text-slate-900">Enviar Mensaje</h2>
+          <p className="text-slate-600 mt-2">
             {opportunity?.name ? `Oportunidad: ${opportunity.name}` : "Configura y envía un mensaje a tus contactos"}
           </p>
         </div>
 
         {/* CONTENIDO PRINCIPAL */}
         <ScrollArea className="flex-1">
-          <div className="p-6 space-y-6">
+          <div className="px-8 py-8 space-y-8">
             {/* CANAL Y TEMPLATE - GRID 2 COLUMNAS */}
             <div className="grid grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-semibold text-slate-900 mb-2">Canal *</label>
+                <label className="block text-sm font-bold text-slate-900 mb-3 uppercase tracking-wider">Canal *</label>
                 <Select value={channel} onValueChange={(val) => setChannel(val as any)}>
-                  <SelectTrigger className="h-10 border-slate-300 bg-white rounded-lg">
+                  <SelectTrigger className="h-10 border border-slate-300 bg-white rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -214,9 +214,9 @@ export function PulseMessageSenderOpportunity({
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-900 mb-2">Template (Opcional)</label>
+                <label className="block text-sm font-bold text-slate-900 mb-3 uppercase tracking-wider">Template (Opcional)</label>
                 <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
-                  <SelectTrigger className="h-10 border-slate-300 bg-white rounded-lg">
+                  <SelectTrigger className="h-10 border border-slate-300 bg-white rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
                     <SelectValue placeholder="Seleccionar template" />
                   </SelectTrigger>
                   <SelectContent>
@@ -227,11 +227,11 @@ export function PulseMessageSenderOpportunity({
             </div>
 
             {/* DESTINATARIOS */}
-            <div className="bg-white border border-slate-200 rounded-lg p-4">
-              <label className="block text-sm font-semibold text-slate-900 mb-3">Destinatarios *</label>
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-6">
+              <label className="block text-sm font-bold text-slate-900 mb-4 uppercase tracking-wider">Destinatarios *</label>
 
               <Select onValueChange={handleAddContact}>
-                <SelectTrigger className="h-10 border-slate-300 bg-slate-50 rounded-lg mb-3">
+                <SelectTrigger className="h-10 border border-slate-300 bg-white rounded-lg text-sm mb-4 focus:ring-2 focus:ring-blue-500">
                   <SelectValue placeholder="+ Agregar contacto" />
                 </SelectTrigger>
                 <SelectContent>
@@ -244,13 +244,13 @@ export function PulseMessageSenderOpportunity({
               </Select>
 
               {/* CHIPS DE DESTINATARIOS */}
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {toEmails.length > 0 && (
                   <div>
-                    <p className="text-xs font-medium text-slate-500 mb-2 uppercase tracking-wider">Para:</p>
+                    <p className="text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">Para:</p>
                     <div className="flex flex-wrap gap-2">
                       {toEmails.map((email) => (
-                        <Badge key={email} className="bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 text-xs font-medium pl-3">
+                        <Badge key={email} className="bg-blue-100 text-blue-700 hover:bg-blue-200 border border-blue-300 text-xs font-semibold pl-3 py-1.5">
                           {email}
                           <button
                             onClick={() => handleRemoveFromEmail(email)}
@@ -266,10 +266,10 @@ export function PulseMessageSenderOpportunity({
 
                 {ccEmails.length > 0 && (
                   <div>
-                    <p className="text-xs font-medium text-slate-500 mb-2 uppercase tracking-wider">CC:</p>
+                    <p className="text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">CC:</p>
                     <div className="flex flex-wrap gap-2">
                       {ccEmails.map((email) => (
-                        <Badge key={email} className="bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 text-xs font-medium pl-3">
+                        <Badge key={email} className="bg-amber-100 text-amber-700 hover:bg-amber-200 border border-amber-300 text-xs font-semibold pl-3 py-1.5">
                           {email}
                           <button
                             onClick={() => handleRemoveCcEmail(email)}
@@ -285,10 +285,10 @@ export function PulseMessageSenderOpportunity({
 
                 {bccEmails.length > 0 && (
                   <div>
-                    <p className="text-xs font-medium text-slate-500 mb-2 uppercase tracking-wider">BCC:</p>
+                    <p className="text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">BCC:</p>
                     <div className="flex flex-wrap gap-2">
                       {bccEmails.map((email) => (
-                        <Badge key={email} className="bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300 text-xs font-medium pl-3">
+                        <Badge key={email} className="bg-slate-200 text-slate-700 hover:bg-slate-300 border border-slate-400 text-xs font-semibold pl-3 py-1.5">
                           {email}
                           <button
                             onClick={() => handleRemoveBccEmail(email)}
@@ -306,9 +306,9 @@ export function PulseMessageSenderOpportunity({
 
             {/* MODO DE ENVÍO */}
             <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-2">Modo de Envío *</label>
+              <label className="block text-sm font-bold text-slate-900 mb-3 uppercase tracking-wider">Modo de Envío *</label>
               <Select value={sendMode} onValueChange={(val) => setSendMode(val as any)}>
-                <SelectTrigger className="h-10 border-slate-300 bg-white rounded-lg">
+                <SelectTrigger className="h-10 border border-slate-300 bg-white rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -320,20 +320,20 @@ export function PulseMessageSenderOpportunity({
 
             {/* ASUNTO */}
             <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-2">Asunto *</label>
+              <label className="block text-sm font-bold text-slate-900 mb-3 uppercase tracking-wider">Asunto *</label>
               <Input
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 placeholder="Ej: Propuesta especial para {{company_name}}"
-                className="h-10 border-slate-300 bg-white rounded-lg text-sm"
+                className="h-10 border border-slate-300 bg-white rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
               />
-              <div className="mt-2 flex gap-2 flex-wrap">
+              <div className="mt-3 flex gap-2 flex-wrap">
                 {["{{contact_name}}", "{{company_name}}", "{{opportunity_name}}"].map((v) => (
                   <button
                     key={v}
                     type="button"
                     onClick={() => setSubject(subject + v)}
-                    className="text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded border border-slate-300 transition-all"
+                    className="text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded border border-slate-300 transition-all"
                   >
                     {v}
                   </button>
@@ -343,74 +343,74 @@ export function PulseMessageSenderOpportunity({
 
             {/* MENSAJE */}
             <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-2">Mensaje *</label>
+              <label className="block text-sm font-bold text-slate-900 mb-3 uppercase tracking-wider">Mensaje *</label>
               <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Escribe tu mensaje aquí..."
-                className="w-full h-40 p-3 border border-slate-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                className="w-full h-40 p-4 border border-slate-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
               />
             </div>
 
             {/* ADJUNTOS */}
             <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-2">Adjuntos (Opcional)</label>
-              <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all bg-white">
-                <Upload className="h-6 w-6 text-slate-400 mx-auto mb-2" />
-                <p className="text-sm text-slate-600">Arrastra archivos aquí o haz clic para seleccionar</p>
+              <label className="block text-sm font-bold text-slate-900 mb-3 uppercase tracking-wider">Adjuntos (Opcional)</label>
+              <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all bg-white">
+                <Upload className="h-8 w-8 text-slate-400 mx-auto mb-2" />
+                <p className="text-sm font-medium text-slate-700">Arrastra archivos aquí o haz clic para seleccionar</p>
                 <p className="text-xs text-slate-500 mt-1">Máximo 10MB por archivo</p>
               </div>
             </div>
 
             {/* PROGRAMACIÓN */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-semibold text-slate-900 mb-2">Fecha (Opcional)</label>
+                <label className="block text-sm font-bold text-slate-900 mb-3 uppercase tracking-wider">Fecha (Opcional)</label>
                 <Input
                   type="date"
                   value={scheduleDate}
                   onChange={(e) => setScheduleDate(e.target.value)}
-                  className="h-10 border-slate-300 bg-white rounded-lg text-sm"
+                  className="h-10 border border-slate-300 bg-white rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-900 mb-2">Hora (Opcional)</label>
+                <label className="block text-sm font-bold text-slate-900 mb-3 uppercase tracking-wider">Hora (Opcional)</label>
                 <Input
                   type="time"
                   value={scheduleTime}
                   onChange={(e) => setScheduleTime(e.target.value)}
-                  className="h-10 border-slate-300 bg-white rounded-lg text-sm"
+                  className="h-10 border border-slate-300 bg-white rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
 
             {/* PREVIEW */}
-            <div className="bg-white border border-slate-200 rounded-lg p-4">
-              <h3 className="text-sm font-semibold text-slate-900 mb-3">Previsualización</h3>
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-6">
+              <h3 className="text-sm font-bold text-slate-900 mb-4 uppercase tracking-wider">Previsualización</h3>
 
               {channel === "email" && (
-                <div className="bg-slate-50 border border-slate-200 rounded p-4 space-y-2 text-sm">
+                <div className="bg-white border border-slate-300 rounded-lg p-4 space-y-3 text-sm">
                   <div>
-                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">De:</p>
+                    <p className="text-xs font-bold text-slate-600 uppercase tracking-wider">De:</p>
                     <p className="text-slate-900 font-medium">{user?.email || "noreply@scaleup.com"}</p>
                   </div>
-                  <div className="pt-2 border-t border-slate-200">
-                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Para:</p>
+                  <div className="pt-3 border-t border-slate-200">
+                    <p className="text-xs font-bold text-slate-600 uppercase tracking-wider">Para:</p>
                     <p className="text-slate-900 break-words">{toEmails.join(", ") || "(sin destinatarios)"}</p>
                   </div>
                   {ccEmails.length > 0 && (
-                    <div className="pt-2 border-t border-slate-200">
-                      <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">CC:</p>
+                    <div className="pt-3 border-t border-slate-200">
+                      <p className="text-xs font-bold text-slate-600 uppercase tracking-wider">CC:</p>
                       <p className="text-slate-900 break-words">{ccEmails.join(", ")}</p>
                     </div>
                   )}
-                  <div className="pt-2 border-t border-slate-200">
-                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Asunto:</p>
+                  <div className="pt-3 border-t border-slate-200">
+                    <p className="text-xs font-bold text-slate-600 uppercase tracking-wider">Asunto:</p>
                     <p className="text-slate-900 font-medium">{previewSubject || "(sin asunto)"}</p>
                   </div>
-                  <div className="pt-2 border-t border-slate-200">
-                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Mensaje:</p>
-                    <div className="bg-white border border-slate-300 rounded p-3 min-h-24">
+                  <div className="pt-3 border-t border-slate-200">
+                    <p className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Mensaje:</p>
+                    <div className="bg-slate-50 border border-slate-300 rounded p-3 min-h-24">
                       <p className="text-slate-700 whitespace-pre-wrap text-xs">{previewMessage || "(mensaje vacío)"}</p>
                     </div>
                   </div>
@@ -418,12 +418,12 @@ export function PulseMessageSenderOpportunity({
               )}
 
               {channel === "whatsapp" && (
-                <div className="bg-green-50 rounded p-4">
-                  <div className="bg-green-100 rounded-lg p-3 max-w-xs ml-auto w-fit">
-                    <p className="text-sm text-slate-900 break-words">{previewMessage || "(mensaje vacío)"}</p>
+                <div className="bg-green-50 rounded-lg p-4">
+                  <div className="bg-green-500 rounded-lg p-4 max-w-xs ml-auto w-fit">
+                    <p className="text-sm text-white break-words font-medium">{previewMessage || "(mensaje vacío)"}</p>
                     <div className="flex justify-end items-center gap-1 mt-2">
-                      <p className="text-xs text-slate-600">{new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</p>
-                      <svg className="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                      <p className="text-xs text-green-100">{new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</p>
+                      <svg className="h-4 w-4 text-green-200" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" />
                       </svg>
                     </div>
@@ -435,22 +435,29 @@ export function PulseMessageSenderOpportunity({
         </ScrollArea>
 
         {/* FOOTER CON BOTONES */}
-        <div className="border-t border-slate-200 bg-white px-6 py-4 flex justify-end gap-3 rounded-b-lg">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            className="border-slate-300 text-slate-700 hover:bg-slate-50"
-          >
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleSend}
-            disabled={sending}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            {sending ? "Enviando..." : "Enviar"}
-            <Send className="h-4 w-4 ml-2" />
-          </Button>
+        <div className="border-t border-slate-200 bg-white px-8 py-4 flex justify-between items-center rounded-b-lg">
+          <div className="text-xs text-slate-500">
+            {toEmails.length > 0 && (
+              <span>{toEmails.length} destinatario{toEmails.length > 1 ? "s" : ""} seleccionado{toEmails.length > 1 ? "s" : ""}</span>
+            )}
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={onClose}
+              className="border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSend}
+              disabled={sending}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+            >
+              {sending ? "Enviando..." : "Enviar"}
+              <Send className="h-4 w-4 ml-2" />
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
