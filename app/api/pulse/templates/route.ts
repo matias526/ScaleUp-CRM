@@ -15,31 +15,43 @@ export async function GET(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser()
 
-    // Query para obtener templates activos del usuario o globales (sin usuario)
-    let query = supabase
+    let templates: any[] = []
+
+    // Traer templates globales (user_id IS NULL)
+    const { data: globalTemplates, error: globalError } = await supabase
       .from("pulse_message_templates")
       .select("id, internal_code, category, user_id, is_active, created_at")
       .eq("is_active", true)
+      .is("user_id", null)
+      .order("created_at", { ascending: false })
 
-    // Filtrar por usuario: templates del usuario actual O templates globales (user_id NULL)
-    if (user?.id) {
-      query = query.or(`user_id.is.null,user_id.eq.${user.id}`)
-    } else {
-      // Si no hay usuario autenticado, solo traer templates globales
-      query = query.is("user_id", null)
+    if (globalError) {
+      console.error("Error fetching global templates:", globalError)
+      return NextResponse.json({ error: globalError.message }, { status: 500 })
     }
 
-    query = query.order("created_at", { ascending: false })
+    templates = globalTemplates || []
 
-    const { data: templates, error } = await query
+    // Si hay usuario autenticado, también traer sus templates personales
+    if (user?.id) {
+      const { data: userTemplates, error: userError } = await supabase
+        .from("pulse_message_templates")
+        .select("id, internal_code, category, user_id, is_active, created_at")
+        .eq("is_active", true)
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
 
-    if (error) {
-      console.error("Error fetching templates:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      if (userError) {
+        console.error("Error fetching user templates:", userError)
+        return NextResponse.json({ error: userError.message }, { status: 500 })
+      }
+
+      // Combinar templates del usuario con templates globales
+      templates = [...(userTemplates || []), ...templates]
     }
 
     // Si se solicitan traducciones, traerlas por separado
-    if (includeTranslations && templates && templates.length > 0) {
+    if (includeTranslations && templates.length > 0) {
       const templateIds = templates.map((t: any) => t.id)
 
       const { data: translations, error: translationsError } = await supabase
