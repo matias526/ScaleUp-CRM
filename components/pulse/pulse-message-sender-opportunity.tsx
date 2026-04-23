@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -12,6 +12,8 @@ import { Send, X, Upload, Mail, MessageCircle } from "lucide-react"
 import { useAuth } from "@/components/auth/auth-provider"
 import { sendPulseMessage } from "@/lib/services/pulse-message-service"
 import { toast } from "@/components/ui/use-toast"
+import { useTranslations } from "@/hooks/use-translations"
+import { DICT_LANG_CONTACTS } from "@/lib/constants/dict-lang-contacts"
 
 interface Contact {
   id: string
@@ -56,6 +58,7 @@ export function PulseMessageSenderOpportunity({
   onClose,
 }: PulseMessageSenderOpportunityProps) {
   const { user } = useAuth()
+  const { language } = useTranslations(DICT_LANG_CONTACTS)
   const [channel, setChannel] = useState<"email" | "whatsapp">("email")
   const [selectedTemplate, setSelectedTemplate] = useState("")
   const [toEmails, setToEmails] = useState<string[]>([])
@@ -67,6 +70,61 @@ export function PulseMessageSenderOpportunity({
   const [scheduleDate, setScheduleDate] = useState("")
   const [scheduleTime, setScheduleTime] = useState("")
   const [sending, setSending] = useState(false)
+  const [loadedTemplates, setLoadedTemplates] = useState<any[]>([])
+  const [templatesLoading, setTemplatesLoading] = useState(false)
+
+  // Cargar templates al abrir el modal
+  useEffect(() => {
+    if (isOpen) {
+      loadTemplates()
+    }
+  }, [isOpen])
+
+  // Función para cargar templates
+  const loadTemplates = async () => {
+    try {
+      setTemplatesLoading(true)
+      const response = await fetch(
+        "/api/pulse/templates?includeTranslations=true"
+      )
+      if (!response.ok) throw new Error("Error al cargar templates")
+
+      const data = await response.json()
+      setLoadedTemplates(data || [])
+    } catch (error) {
+      console.error("Error cargando templates:", error)
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los templates",
+        variant: "destructive",
+      })
+    } finally {
+      setTemplatesLoading(false)
+    }
+  }
+
+  // Filtrar y ordenar templates por idioma del usuario
+  const sortedTemplates = useMemo(() => {
+    return loadedTemplates
+      .filter((template: any) => {
+        const translation = template.translations?.find(
+          (t: any) => t.language_code === language
+        )
+        return translation !== undefined
+      })
+      .map((template: any) => {
+        const translation = template.translations?.find(
+          (t: any) => t.language_code === language
+        )
+        return {
+          ...template,
+          displayName: translation?.display_name || template.internal_code,
+        }
+      })
+      .sort((a: any, b: any) =>
+        a.displayName.localeCompare(b.displayName)
+      )
+  }, [loadedTemplates, language])
 
   const variableValues = useMemo(() => {
     const firstContact = contacts[0]
@@ -219,10 +277,15 @@ export function PulseMessageSenderOpportunity({
                     <label className="block text-sm font-bold text-slate-900">Template (Opcional)</label>
                     <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
                       <SelectTrigger className="h-10 border border-slate-300 rounded-lg text-sm">
-                        <SelectValue placeholder="Seleccionar template" />
+                        <SelectValue placeholder={templatesLoading ? "Cargando..." : "Seleccionar template"} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">Sin template</SelectItem>
+                        {sortedTemplates.map((template: any) => (
+                          <SelectItem key={template.id} value={template.id}>
+                            {template.displayName}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
