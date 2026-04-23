@@ -11,6 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Send, X, Upload, Mail, MessageCircle } from "lucide-react"
 import { useAuth } from "@/components/auth/auth-provider"
 import { sendPulseMessage } from "@/lib/services/pulse-message-service"
+import { replaceVariables } from "@/lib/pulse/pulse-message-variables"
 import { toast } from "@/components/ui/use-toast"
 import { useTranslations } from "@/hooks/use-translations"
 import { DICT_LANG_CONTACTS } from "@/lib/constants/dict-lang-contacts"
@@ -150,21 +151,11 @@ export function PulseMessageSenderOpportunity({
   }, [contacts, endCustomer, opportunity, user])
 
   const previewMessage = useMemo(() => {
-    let result = message
-    Object.entries(variableValues).forEach(([key, value]) => {
-      const regex = new RegExp(`{{${key}}}`, "g")
-      result = result.replace(regex, String(value))
-    })
-    return result
+    return replaceVariables(message, variableValues)
   }, [message, variableValues])
 
   const previewSubject = useMemo(() => {
-    let result = subject
-    Object.entries(variableValues).forEach(([key, value]) => {
-      const regex = new RegExp(`{{${key}}}`, "g")
-      result = result.replace(regex, String(value))
-    })
-    return result
+    return replaceVariables(subject, variableValues)
   }, [subject, variableValues])
 
   // Cargar asunto y contenido cuando se selecciona un template
