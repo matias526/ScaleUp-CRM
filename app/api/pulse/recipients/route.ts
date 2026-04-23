@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     // Traer users de la tech_company
     const { data: techCompanyUsers, error: techCompanyError } = await supabase
       .from("users")
-      .select("id, email, first_name, last_name")
+      .select("id, email, first_name, last_name, roles(code)")
       .eq("tech_company_id", techCompanyId)
 
     if (techCompanyError) {
@@ -28,8 +28,8 @@ export async function GET(request: NextRequest) {
     // Traer users con rol Admin o BDD (estos pueden estar en cualquier tech_company)
     const { data: adminUsers, error: adminError } = await supabase
       .from("users")
-      .select("id, email, first_name, last_name")
-      .or("role.eq.Admin,role.eq.BDD")
+      .select("id, email, first_name, last_name, roles(code)")
+      .or("roles.code.eq.Admin,roles.code.eq.BDD")
 
     if (adminError) {
       console.error("Error fetching admin users:", adminError)
