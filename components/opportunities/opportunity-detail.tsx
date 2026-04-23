@@ -1920,6 +1920,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
             description: opportunity.description,
             end_customer_id: opportunity.end_customer_id,
           }}
+          techCompanyId={opportunity.tech_company_id}
           contacts={opportunity.opportunity_contacts?.map((oc) => ({
             id: oc.contact?.id,
             name: oc.contact?.first_name + " " + oc.contact?.last_name,

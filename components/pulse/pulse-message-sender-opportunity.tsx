@@ -44,6 +44,7 @@ interface EndCustomer {
 
 interface PulseMessageSenderOpportunityProps {
   opportunity: Opportunity
+  techCompanyId?: string
   contacts: Contact[]
   endCustomer?: EndCustomer
   templates: any[]
@@ -53,6 +54,7 @@ interface PulseMessageSenderOpportunityProps {
 
 export function PulseMessageSenderOpportunity({
   opportunity,
+  techCompanyId,
   contacts,
   endCustomer,
   isOpen,
@@ -74,13 +76,42 @@ export function PulseMessageSenderOpportunity({
   const [loadedTemplates, setLoadedTemplates] = useState<any[]>([])
   const [templatesLoading, setTemplatesLoading] = useState(false)
   const [selectedAttachments, setSelectedAttachments] = useState<any[]>([])
+  const [recipients, setRecipients] = useState<any[]>([])
+  const [recipientsLoading, setRecipientsLoading] = useState(false)
+  const [manualEmail, setManualEmail] = useState("")
 
-  // Cargar templates al abrir el modal
+  // Cargar templates y recipients al abrir el modal
   useEffect(() => {
     if (isOpen) {
       loadTemplates()
+      loadRecipients()
     }
   }, [isOpen])
+
+  // Función para cargar recipients (users de tech_company + admins/BDD)
+  const loadRecipients = async () => {
+    if (!techCompanyId) return
+
+    try {
+      setRecipientsLoading(true)
+      const response = await fetch(
+        `/api/pulse/recipients?techCompanyId=${techCompanyId}`
+      )
+      if (!response.ok) throw new Error("Error al cargar recipients")
+
+      const data = await response.json()
+      setRecipients(data || [])
+    } catch (error) {
+      console.error("Error cargando recipients:", error)
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los usuarios",
+        variant: "destructive",
+      })
+    } finally {
+      setRecipientsLoading(false)
+    }
+  }
 
   // Función para cargar templates
   const loadTemplates = async () => {
@@ -189,10 +220,28 @@ export function PulseMessageSenderOpportunity({
     }
   }, [selectedTemplate, sortedTemplates, language])
 
-  const handleAddContact = (contactId: string) => {
-    const contact = contacts.find((c) => c.id === contactId)
-    if (contact && !toEmails.includes(contact.email)) {
-      setToEmails([...toEmails, contact.email])
+  const handleAddContact = (value: string) => {
+    if (value.startsWith("contact-")) {
+      // Es un contacto de la oportunidad
+      const contactId = value.replace("contact-", "")
+      const contact = contacts.find((c) => c.id === contactId)
+      if (contact && !toEmails.includes(contact.email)) {
+        setToEmails([...toEmails, contact.email])
+      }
+    } else if (value.startsWith("user-")) {
+      // Es un user de la tech_company o admin
+      const userId = value.replace("user-", "")
+      const userRecipient = recipients.find((r) => r.id === userId)
+      if (userRecipient && !toEmails.includes(userRecipient.email)) {
+        setToEmails([...toEmails, userRecipient.email])
+      }
+    }
+  }
+
+  const handleAddManualEmail = () => {
+    if (manualEmail.trim() && !toEmails.includes(manualEmail)) {
+      setToEmails([...toEmails, manualEmail])
+      setManualEmail("")
     }
   }
 
@@ -317,18 +366,65 @@ export function PulseMessageSenderOpportunity({
                 <div className="space-y-3 bg-slate-50 border border-slate-200 rounded-lg p-6">
                   <label className="block text-sm font-bold text-slate-900">Destinatarios *</label>
 
+                  {/* Select de opciones disponibles */}
                   <Select onValueChange={handleAddContact}>
                     <SelectTrigger className="h-10 border border-slate-300 rounded-lg text-sm bg-white">
-                      <SelectValue placeholder="+ Agregar contacto" />
+                      <SelectValue placeholder="+ Agregar destinatario" />
                     </SelectTrigger>
                     <SelectContent>
-                      {contacts.map((contact) => (
-                        <SelectItem key={contact.id} value={contact.id}>
-                          {contact.name} ({contact.email})
-                        </SelectItem>
-                      ))}
+                      {/* Contactos de la oportunidad */}
+                      {contacts.length > 0 && (
+                        <>
+                          <div className="px-2 py-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                            Contactos de la oportunidad
+                          </div>
+                          {contacts.map((contact) => (
+                            <SelectItem key={`contact-${contact.id}`} value={`contact-${contact.id}`}>
+                              {contact.name} ({contact.email})
+                            </SelectItem>
+                          ))}
+                        </>
+                      )}
+
+                      {/* Users de la TechCompany */}
+                      {recipients.length > 0 && (
+                        <>
+                          <div className="px-2 py-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                            Usuarios de la empresa
+                          </div>
+                          {recipients.map((user) => (
+                            <SelectItem key={`user-${user.id}`} value={`user-${user.id}`}>
+                              {user.first_name} {user.last_name} ({user.email})
+                            </SelectItem>
+                          ))}
+                        </>
+                      )}
                     </SelectContent>
                   </Select>
+
+                  {/* Input para agregar emails manuales */}
+                  <div className="flex gap-2">
+                    <Input
+                      type="email"
+                      value={manualEmail}
+                      onChange={(e) => setManualEmail(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault()
+                          handleAddManualEmail()
+                        }
+                      }}
+                      placeholder="O escribe un email manual..."
+                      className="h-10 border border-slate-300 rounded-lg text-sm flex-1"
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleAddManualEmail}
+                      className="h-10 px-4 bg-slate-200 hover:bg-slate-300 text-slate-900 font-semibold rounded-lg text-sm"
+                    >
+                      +
+                    </Button>
+                  </div>
 
                   {toEmails.length > 0 && (
                     <div className="space-y-2 pt-2">
