@@ -179,9 +179,9 @@ export function PulseMessageSenderOpportunity({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-6xl h-[90vh] p-0 gap-0 bg-white rounded-lg shadow-xl">
         {/* HEADER - ESTILO CREAR OPORTUNIDAD */}
-        <div className="bg-slate-100 border-b border-slate-200 px-8 py-6">
-          <h2 className="text-2xl font-bold text-slate-900">Enviar Mensaje</h2>
-          <p className="text-sm text-slate-600 mt-2">Configura y envía un mensaje a tus contactos. Oportunidad: {opportunity.name}</p>
+        <div className="bg-blue-50 border-b border-blue-200 px-8 py-6">
+          <h2 className="text-2xl font-bold text-blue-900">Enviar Mensaje</h2>
+          <p className="text-sm text-blue-600 mt-2">Configura y envía un mensaje a tus contactos. Oportunidad: {opportunity.name}</p>
         </div>
 
         {/* CONTENIDO PRINCIPAL - DOS COLUMNAS */}
