@@ -10,11 +10,17 @@ export async function GET(request: NextRequest) {
   try {
     const includeTranslations = request.nextUrl.searchParams.get("includeTranslations") === "true"
 
-    // Query para obtener templates activos
+    // Obtener usuario autenticado
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    // Query para obtener templates activos del usuario o globales (sin usuario)
     let query = supabase
       .from("pulse_message_templates")
-      .select("id, internal_code, category, is_active, created_at")
+      .select("id, internal_code, category, user_id, is_active, created_at")
       .eq("is_active", true)
+      .or(`user_id.is.null,user_id.eq.${user?.id || ""}`)
       .order("created_at", { ascending: false })
 
     const { data: templates, error } = await query
