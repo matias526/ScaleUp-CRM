@@ -20,8 +20,16 @@ export async function GET(request: NextRequest) {
       .from("pulse_message_templates")
       .select("id, internal_code, category, user_id, is_active, created_at")
       .eq("is_active", true)
-      .or(`user_id.is.null,user_id.eq.${user?.id || ""}`)
-      .order("created_at", { ascending: false })
+
+    // Filtrar por usuario: templates del usuario actual O templates globales (user_id NULL)
+    if (user?.id) {
+      query = query.or(`user_id.is.null,user_id.eq.${user.id}`)
+    } else {
+      // Si no hay usuario autenticado, solo traer templates globales
+      query = query.is("user_id", null)
+    }
+
+    query = query.order("created_at", { ascending: false })
 
     const { data: templates, error } = await query
 
