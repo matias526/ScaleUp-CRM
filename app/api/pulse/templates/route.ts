@@ -64,10 +64,39 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: translationsError.message }, { status: 500 })
       }
 
+      // Traer attachments del template
+      const { data: templateAttachments, error: attachmentsError } = await supabase
+        .from("pulse_template_attachments_join")
+        .select(
+          `
+          template_id,
+          language_code,
+          pulse_message_attachments (
+            id,
+            file_name,
+            file_url,
+            file_type,
+            file_size
+          )
+        `
+        )
+        .in("template_id", templateIds)
+
+      if (attachmentsError) {
+        console.error("Error fetching attachments:", attachmentsError)
+        return NextResponse.json({ error: attachmentsError.message }, { status: 500 })
+      }
+
       // Agrupar traducciones por template
       const templatesWithTranslations = templates.map((template: any) => ({
         ...template,
         translations: translations?.filter((t: any) => t.template_id === template.id) || [],
+        attachments: templateAttachments
+          ?.filter((ta: any) => ta.template_id === template.id)
+          .map((ta: any) => ({
+            language_code: ta.language_code,
+            attachment: ta.pulse_message_attachments,
+          })) || [],
       }))
 
       return NextResponse.json(templatesWithTranslations)

@@ -73,6 +73,7 @@ export function PulseMessageSenderOpportunity({
   const [sending, setSending] = useState(false)
   const [loadedTemplates, setLoadedTemplates] = useState<any[]>([])
   const [templatesLoading, setTemplatesLoading] = useState(false)
+  const [selectedAttachments, setSelectedAttachments] = useState<any[]>([])
 
   // Cargar templates al abrir el modal
   useEffect(() => {
@@ -158,7 +159,7 @@ export function PulseMessageSenderOpportunity({
     return replaceVariables(subject, variableValues)
   }, [subject, variableValues])
 
-  // Cargar asunto y contenido cuando se selecciona un template
+  // Cargar asunto, contenido y adjuntos cuando se selecciona un template
   useEffect(() => {
     if (selectedTemplate && selectedTemplate !== "none") {
       const template = sortedTemplates.find((t: any) => t.id === selectedTemplate)
@@ -170,7 +171,21 @@ export function PulseMessageSenderOpportunity({
           setSubject(translation.subject || "")
           setMessage(translation.body_content || "")
         }
+
+        // Cargar attachments del template (filtrados por idioma o "all")
+        const attachments = template.attachments
+          ?.filter(
+            (ta: any) =>
+              ta.language_code === language || ta.language_code === "all"
+          )
+          .map((ta: any) => ta.attachment)
+          .filter(Boolean) || []
+
+        setSelectedAttachments(attachments)
       }
+    } else {
+      // Limpiar attachments si no hay template seleccionado
+      setSelectedAttachments([])
     }
   }, [selectedTemplate, sortedTemplates, language])
 
@@ -415,6 +430,41 @@ export function PulseMessageSenderOpportunity({
                 {/* ADJUNTOS */}
                 <div className="space-y-3">
                   <label className="block text-sm font-bold text-slate-900">Adjuntos (Opcional)</label>
+
+                  {/* Mostrar adjuntos cargados del template */}
+                  {selectedAttachments.length > 0 && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <p className="text-sm font-semibold text-blue-900 mb-3">Adjuntos del template:</p>
+                      <div className="space-y-2">
+                        {selectedAttachments.map((attachment: any) => (
+                          <div
+                            key={attachment.id}
+                            className="flex items-center justify-between bg-white border border-blue-100 rounded p-3"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Upload className="h-4 w-4 text-blue-600" />
+                              <div className="text-sm">
+                                <p className="font-medium text-slate-900">{attachment.file_name}</p>
+                                <p className="text-xs text-slate-500">
+                                  {attachment.file_size ? `${(attachment.file_size / 1024).toFixed(2)} KB` : "Tamaño desconocido"}
+                                </p>
+                              </div>
+                            </div>
+                            <a
+                              href={attachment.file_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-blue-600 hover:text-blue-800 underline"
+                            >
+                              Ver
+                            </a>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Dropzone para agregar más adjuntos */}
                   <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all bg-white">
                     <Upload className="h-6 w-6 text-slate-400 mx-auto mb-2" />
                     <p className="text-sm text-slate-600">Arrastra archivos aquí o haz clic para seleccionar</p>
@@ -485,6 +535,19 @@ export function PulseMessageSenderOpportunity({
                           <p className="text-xs text-slate-700 whitespace-pre-wrap break-words">{previewMessage || "(mensaje vacío)"}</p>
                         </div>
                       </div>
+                      {selectedAttachments.length > 0 && (
+                        <div className="border-t border-slate-200 pt-3">
+                          <p className="text-xs font-semibold text-slate-600">Adjuntos:</p>
+                          <div className="mt-2 space-y-1">
+                            {selectedAttachments.map((attachment: any) => (
+                              <div key={attachment.id} className="text-xs text-slate-600 flex items-center gap-2">
+                                <span className="w-4 h-4">📎</span>
+                                <span>{attachment.file_name}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </Card>
                 )}
