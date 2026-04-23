@@ -167,6 +167,22 @@ export function PulseMessageSenderOpportunity({
     return result
   }, [subject, variableValues])
 
+  // Cargar asunto y contenido cuando se selecciona un template
+  useEffect(() => {
+    if (selectedTemplate && selectedTemplate !== "none") {
+      const template = sortedTemplates.find((t: any) => t.id === selectedTemplate)
+      if (template) {
+        const translation = template.translations?.find(
+          (t: any) => t.language_code === language
+        )
+        if (translation) {
+          setSubject(translation.subject || "")
+          setMessage(translation.body_content || "")
+        }
+      }
+    }
+  }, [selectedTemplate, sortedTemplates, language])
+
   const handleAddContact = (contactId: string) => {
     const contact = contacts.find((c) => c.id === contactId)
     if (contact && !toEmails.includes(contact.email)) {
