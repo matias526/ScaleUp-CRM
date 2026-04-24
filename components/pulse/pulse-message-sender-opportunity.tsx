@@ -88,14 +88,14 @@ export function PulseMessageSenderOpportunity({
     }
   }, [isOpen])
 
-  // Función para cargar recipients (users de tech_company + admins/BDD)
+  // Función para cargar recipients (users de tech_company + admins/BDD + contactos)
   const loadRecipients = async () => {
-    if (!techCompanyId) return
+    if (!techCompanyId || !opportunity.id) return
 
     try {
       setRecipientsLoading(true)
       const response = await fetch(
-        `/api/pulse/recipients?techCompanyId=${techCompanyId}`
+        `/api/pulse/recipients?techCompanyId=${techCompanyId}&opportunityId=${opportunity.id}`
       )
       if (!response.ok) throw new Error("Error al cargar recipients")
 

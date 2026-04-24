@@ -9,15 +9,39 @@ const supabase = createClient(
 export async function GET(request: NextRequest) {
   try {
     const techCompanyId = request.nextUrl.searchParams.get("techCompanyId")
+    const opportunityId = request.nextUrl.searchParams.get("opportunityId")
 
-    if (!techCompanyId) {
-      return NextResponse.json({ error: "Missing techCompanyId" }, { status: 400 })
+    if (!techCompanyId || !opportunityId) {
+      return NextResponse.json(
+        { error: "Missing techCompanyId or opportunityId" },
+        { status: 400 }
+      )
     }
 
-    // Traer users de la tech_company
+    // 1. Traer contactos relacionados a esa oportunidad
+    const { data: opportunityContacts, error: opportunityContactsError } =
+      await supabase
+        .from("opportunity_contacts")
+        .select(
+          `
+          contact:contacts(
+            id,
+            email,
+            first_name,
+            last_name
+          )
+        `
+        )
+        .eq("opportunity_id", opportunityId)
+
+    if (opportunityContactsError) {
+      console.error("Error fetching opportunity contacts:", opportunityContactsError)
+    }
+
+    // 2. Traer usuarios de la TechCompany (sin filtrar por role)
     const { data: techCompanyUsers, error: techCompanyError } = await supabase
       .from("users")
-      .select("id, email, first_name, last_name, roles(code)")
+      .select("id, email, first_name, last_name")
       .eq("tech_company_id", techCompanyId)
 
     if (techCompanyError) {
@@ -25,31 +49,59 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: techCompanyError.message }, { status: 500 })
     }
 
-    // Traer users con rol Admin o BDD (estos pueden estar en cualquier tech_company)
-    const { data: adminUsers, error: adminError } = await supabase
-      .from("users")
-      .select("id, email, first_name, last_name, roles(code)")
-      .or("roles.code.eq.Admin,roles.code.eq.BDD")
+    // 3. Traer usuarios de ScaleUp con rol Admin o BDD
+    // Primero obtener los role_ids para Admin y BDD
+    const { data: adminBddRoles, error: rolesError } = await supabase
+      .from("roles")
+      .select("id")
+      .in("code", ["Admin", "BDD"])
 
-    if (adminError) {
-      console.error("Error fetching admin users:", adminError)
-      return NextResponse.json({ error: adminError.message }, { status: 500 })
+    if (rolesError) {
+      console.error("Error fetching admin/BDD roles:", rolesError)
+      return NextResponse.json({ error: rolesError.message }, { status: 500 })
     }
 
-    // Combinar y deduplicar users
+    const adminBddRoleIds = adminBddRoles?.map((r) => r.id) || []
+
+    let adminUsers = []
+    if (adminBddRoleIds.length > 0) {
+      const { data: adminUsersData, error: adminUsersError } = await supabase
+        .from("users")
+        .select("id, email, first_name, last_name")
+        .in("role_id", adminBddRoleIds)
+
+      if (adminUsersError) {
+        console.error("Error fetching admin users:", adminUsersError)
+      } else {
+        adminUsers = adminUsersData || []
+      }
+    }
+
+    // Combinar contactos
+    const contacts = opportunityContacts
+      ?.map((oc: any) => oc.contact)
+      .filter((c) => c && c.email) || []
+
+    // Combinar usuarios
     const allUsers = [
       ...(techCompanyUsers || []),
-      ...(adminUsers || []),
+      ...adminUsers,
     ]
 
-    // Remover duplicados por id
+    // Deduplicar usuarios por id
     const uniqueUsers = Array.from(
       new Map(allUsers.map((u) => [u.id, u])).values()
     )
 
-    return NextResponse.json(uniqueUsers)
+    // Combinar contactos y usuarios, deduplicar por email
+    const allRecipients = [...contacts, ...uniqueUsers]
+    const uniqueRecipients = Array.from(
+      new Map(allRecipients.map((r) => [r.email, r])).values()
+    )
+
+    return NextResponse.json(uniqueRecipients)
   } catch (error) {
-    console.error("Error in users API:", error)
+    console.error("Error in recipients API:", error)
     return NextResponse.json(
       { error: "Error al obtener usuarios" },
       { status: 500 }
