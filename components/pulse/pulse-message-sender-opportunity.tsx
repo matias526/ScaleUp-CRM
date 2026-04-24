@@ -79,6 +79,7 @@ export function PulseMessageSenderOpportunity({
   const [recipients, setRecipients] = useState<any[]>([])
   const [recipientsLoading, setRecipientsLoading] = useState(false)
   const [manualEmail, setManualEmail] = useState("")
+  const [recipientType, setRecipientType] = useState<"to" | "cc" | "bcc">("to")
 
   // Cargar templates y recipients al abrir el modal
   useEffect(() => {
@@ -225,22 +226,32 @@ export function PulseMessageSenderOpportunity({
       // Es un contacto de la oportunidad
       const contactId = value.replace("contact-", "")
       const contact = contacts.find((c) => c.id === contactId)
-      if (contact && !toEmails.includes(contact.email)) {
-        setToEmails([...toEmails, contact.email])
+      if (contact && contact.email) {
+        addEmailToGroup(contact.email)
       }
     } else if (value.startsWith("user-")) {
       // Es un user de la tech_company o admin
       const userId = value.replace("user-", "")
       const userRecipient = recipients.find((r) => r.id === userId)
-      if (userRecipient && !toEmails.includes(userRecipient.email)) {
-        setToEmails([...toEmails, userRecipient.email])
+      if (userRecipient && userRecipient.email) {
+        addEmailToGroup(userRecipient.email)
       }
     }
   }
 
+  const addEmailToGroup = (email: string) => {
+    if (recipientType === "to" && !toEmails.includes(email)) {
+      setToEmails([...toEmails, email])
+    } else if (recipientType === "cc" && !ccEmails.includes(email)) {
+      setCcEmails([...ccEmails, email])
+    } else if (recipientType === "bcc" && !bccEmails.includes(email)) {
+      setBccEmails([...bccEmails, email])
+    }
+  }
+
   const handleAddManualEmail = () => {
-    if (manualEmail.trim() && !toEmails.includes(manualEmail)) {
-      setToEmails([...toEmails, manualEmail])
+    if (manualEmail.trim()) {
+      addEmailToGroup(manualEmail)
       setManualEmail("")
     }
   }
@@ -365,6 +376,43 @@ export function PulseMessageSenderOpportunity({
                 {/* DESTINATARIOS */}
                 <div className="space-y-3 bg-slate-50 border border-slate-200 rounded-lg p-6">
                   <label className="block text-sm font-bold text-slate-900">Destinatarios *</label>
+
+                  {/* Botones para seleccionar To/CC/BCC */}
+                  <div className="flex gap-2 border-b border-slate-200 pb-3">
+                    <button
+                      type="button"
+                      onClick={() => setRecipientType("to")}
+                      className={`px-3 py-2 rounded text-sm font-semibold transition-all ${
+                        recipientType === "to"
+                          ? "bg-blue-600 text-white"
+                          : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100"
+                      }`}
+                    >
+                      Para (To)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRecipientType("cc")}
+                      className={`px-3 py-2 rounded text-sm font-semibold transition-all ${
+                        recipientType === "cc"
+                          ? "bg-amber-600 text-white"
+                          : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100"
+                      }`}
+                    >
+                      CC
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRecipientType("bcc")}
+                      className={`px-3 py-2 rounded text-sm font-semibold transition-all ${
+                        recipientType === "bcc"
+                          ? "bg-slate-600 text-white"
+                          : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100"
+                      }`}
+                    >
+                      BCC
+                    </button>
+                  </div>
 
                   {/* Select de opciones disponibles */}
                   <Select onValueChange={handleAddContact}>
