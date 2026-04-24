@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // 1. Traer contactos relacionados a esa oportunidad
+    // 1. Traer contactos relacionados a esa oportunidad (solo activos)
     const { data: opportunityContacts, error: opportunityContactsError } =
       await supabase
         .from("opportunity_contacts")
@@ -33,23 +33,25 @@ export async function GET(request: NextRequest) {
         `
         )
         .eq("opportunity_id", opportunityId)
+        .eq("contacts.is_active", true)
 
     if (opportunityContactsError) {
       console.error("Error fetching opportunity contacts:", opportunityContactsError)
     }
 
-    // 2. Traer usuarios de la TechCompany (sin filtrar por role)
+    // 2. Traer usuarios de la TechCompany (solo activos, sin filtrar por role)
     const { data: techCompanyUsers, error: techCompanyError } = await supabase
       .from("users")
       .select("id, email, first_name, last_name")
       .eq("tech_company_id", techCompanyId)
+      .eq("is_active", true)
 
     if (techCompanyError) {
       console.error("Error fetching tech company users:", techCompanyError)
       return NextResponse.json({ error: techCompanyError.message }, { status: 500 })
     }
 
-    // 3. Traer usuarios de ScaleUp con rol Admin o BDD
+    // 3. Traer usuarios de ScaleUp con rol Admin o BDD (solo activos)
     // Primero obtener los role_ids para Admin y BDD
     const { data: adminBddRoles, error: rolesError } = await supabase
       .from("roles")
@@ -69,6 +71,7 @@ export async function GET(request: NextRequest) {
         .from("users")
         .select("id, email, first_name, last_name")
         .in("role_id", adminBddRoleIds)
+        .eq("is_active", true)
 
       if (adminUsersError) {
         console.error("Error fetching admin users:", adminUsersError)
