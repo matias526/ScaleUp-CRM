@@ -3,6 +3,12 @@
 import { useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { PULSE_VARIABLES } from "@/lib/pulse/pulse-variables"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu"
 import { Bold, Italic, Underline, Image as ImageIcon } from "lucide-react"
 
 interface SafeEditorProps {
@@ -16,7 +22,6 @@ interface SafeEditorProps {
 export default function SafeEditor({ value, onChange, placeholder, disabled, onAddImage }: SafeEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [activeCategory, setActiveCategory] = useState<"entidad" | "destinatario" | "emisor">("entidad")
 
   // 1. MANTENGO TU FUNCIÓN DE SELECCIÓN
   const handleSelection = () => {
@@ -105,9 +110,8 @@ export default function SafeEditor({ value, onChange, placeholder, disabled, onA
   return (
     <div className="flex flex-col w-full border rounded-md overflow-hidden border-slate-300 shadow-none">
       {/* TOOLBAR */}
-      <div className="flex items-center gap-3 p-3 bg-slate-50 border-b border-slate-300">
-        {/* Format buttons */}
-        <div className="flex gap-1 border-r pr-3 border-slate-300">
+      <div className="flex flex-wrap items-center gap-2 p-3 bg-slate-50 border-b border-slate-300">
+        <div className="flex gap-1 border-r pr-2 border-slate-300">
           <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-600 hover:text-slate-900 hover:bg-slate-100" onClick={(e) => { e.preventDefault(); e.stopPropagation(); wrapText("[B]", "[/B]"); }}>
             <Bold className="h-4 w-4" />
           </Button>
@@ -127,83 +131,24 @@ export default function SafeEditor({ value, onChange, placeholder, disabled, onA
           )}
         </div>
 
-        {/* Category buttons */}
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => setActiveCategory("entidad")}
-            className={`text-xs font-semibold px-3 py-2 rounded transition-all ${
-              activeCategory === "entidad"
-                ? "bg-slate-700 text-white"
-                : "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50"
-            }`}
-          >
-            ENTIDAD
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveCategory("destinatario")}
-            className={`text-xs font-semibold px-3 py-2 rounded transition-all ${
-              activeCategory === "destinatario"
-                ? "bg-slate-700 text-white"
-                : "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50"
-            }`}
-          >
-            DESTINATARIO
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveCategory("emisor")}
-            className={`text-xs font-semibold px-3 py-2 rounded transition-all ${
-              activeCategory === "emisor"
-                ? "bg-slate-700 text-white"
-                : "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50"
-            }`}
-          >
-            EMISOR
-          </button>
-        </div>
-      </div>
-
-      {/* VARIABLES - Dynamic based on activeCategory */}
-      <div className="p-3 bg-slate-50 border-b border-slate-300">
-        <div className="flex gap-2 flex-wrap">
-          {activeCategory === "entidad" &&
-            PULSE_VARIABLES.entidad.map((v) => (
-              <button
-                key={v.tag}
-                type="button"
-                onClick={() => { insertText(v.tag) }}
-                className="text-xs font-medium bg-white hover:bg-slate-100 text-slate-700 px-3 py-2 rounded border border-slate-300 transition-all"
-                title={v.label}
-              >
-                {v.tag}
-              </button>
-            ))}
-          {activeCategory === "destinatario" &&
-            PULSE_VARIABLES.destinatario.map((v) => (
-              <button
-                key={v.tag}
-                type="button"
-                onClick={() => { insertText(v.tag) }}
-                className="text-xs font-medium bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-2 rounded border border-blue-300 transition-all"
-                title={v.label}
-              >
-                {v.tag}
-              </button>
-            ))}
-          {activeCategory === "emisor" &&
-            PULSE_VARIABLES.emisor.map((v) => (
-              <button
-                key={v.tag}
-                type="button"
-                onClick={() => { insertText(v.tag) }}
-                className="text-xs font-medium bg-green-50 hover:bg-green-100 text-green-700 px-3 py-2 rounded border border-green-300 transition-all"
-                title={v.label}
-              >
-                {v.tag}
-              </button>
-            ))}
+        {/* VARIABLES */}
+        <div className="flex gap-1">
+          {Object.entries(PULSE_VARIABLES).map(([categoryKey, variables]) => (
+            <DropdownMenu key={categoryKey}>
+              <DropdownMenuTrigger asChild>
+                <Button type="button" variant="outline" size="sm" className="text-[10px] font-semibold h-8 uppercase bg-white border-slate-300 text-slate-700 hover:bg-slate-50" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                  {categoryKey.replace('_', ' ')}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56 bg-white z-[100]" onCloseAutoFocus={(e) => e.preventDefault()}>
+                {(variables as any).map((variable: { label: string; tag: string }) => (
+                  <DropdownMenuItem key={variable.tag} className="text-xs cursor-pointer hover:bg-blue-50" onClick={(e) => { e.preventDefault(); e.stopPropagation(); insertText(variable.tag); }}>
+                    {variable.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ))}
         </div>
       </div>
 
