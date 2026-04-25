@@ -199,14 +199,50 @@ export function PulseMessageSenderOpportunity({
   const [recipientsLoading, setRecipientsLoading] = useState(false)
   const [manualEmail, setManualEmail] = useState("")
   const [recipientType, setRecipientType] = useState<"to" | "cc" | "bcc">("to")
+  const [opportunityRelations, setOpportunityRelations] = useState<any>({})
+  const [relationsLoading, setRelationsLoading] = useState(false)
 
-  // Cargar templates y recipients al abrir el modal
+  // Cargar templates, recipients y relaciones al abrir el modal
   useEffect(() => {
     if (isOpen) {
       loadTemplates()
       loadRecipients()
+      loadOpportunityRelations()
     }
   }, [isOpen])
+
+  // Función para cargar las relaciones de la oportunidad (tech_company, prospect, partner)
+  const loadOpportunityRelations = async () => {
+    try {
+      setRelationsLoading(true)
+      const params = new URLSearchParams()
+
+      if (opportunity.tech_company_id) {
+        params.append("techCompanyId", opportunity.tech_company_id)
+      }
+      if (opportunity.prospect_id) {
+        params.append("prospectId", opportunity.prospect_id)
+      }
+      if (opportunity.partner_id) {
+        params.append("partnerId", opportunity.partner_id)
+      }
+
+      if (params.toString()) {
+        const response = await fetch(
+          `/api/pulse/opportunity-relations?${params.toString()}`
+        )
+        if (!response.ok) throw new Error("Error al cargar relaciones")
+
+        const data = await response.json()
+        setOpportunityRelations(data || {})
+        console.log("[v0] DEBUG - Relaciones cargadas:", data)
+      }
+    } catch (error) {
+      console.error("Error cargando relaciones:", error)
+    } finally {
+      setRelationsLoading(false)
+    }
+  }
 
   // Función para cargar recipients (users de tech_company + admins/BDD + contactos)
   const loadRecipients = async () => {
@@ -319,22 +355,22 @@ export function PulseMessageSenderOpportunity({
     values.opportunity_description = opportunity?.description || ""
 
     // Variables de tech_company
-    if (techCompanyData) {
-      values.tech_company_name = techCompanyData.name || ""
+    if (opportunityRelations.tech_company) {
+      values.tech_company_name = opportunityRelations.tech_company.name || ""
     } else {
       values.tech_company_name = "[Sin empresa técnica]"
     }
 
     // Variables de prospect
-    if (prospectData) {
-      values.prospect_partner_name = prospectData.name || ""
+    if (opportunityRelations.prospect) {
+      values.prospect_partner_name = opportunityRelations.prospect.name || ""
     } else {
       values.prospect_partner_name = "[Sin prospect]"
     }
 
     // Variables de partner
-    if (partnerData) {
-      values.partner_name = partnerData.name || ""
+    if (opportunityRelations.partner) {
+      values.partner_name = opportunityRelations.partner.name || ""
     } else {
       values.partner_name = "[Sin partner]"
     }
@@ -358,7 +394,7 @@ export function PulseMessageSenderOpportunity({
 
     console.log("[v0] DEBUG - variableValues construido:", values)
     return values
-  }, [contacts, endCustomer, opportunity, user, techCompanyData, prospectData, partnerData])
+  }, [contacts, endCustomer, opportunity, user, opportunityRelations])
 
   const previewMessage = useMemo(() => {
     return replaceVariables(message, variableValues)
