@@ -281,7 +281,6 @@ export function PulseMessageSenderOpportunity({
           setSubject(brToNewlines(translation.subject || ""))
           setMessage(brToNewlines(translation.body_content || ""))
         }
-        }
 
         // Cargar attachments del template (filtrados por idioma o "all")
         const attachments = template.attachments
