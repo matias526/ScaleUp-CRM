@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase/client"
+import { createServerClient } from "@/lib/supabase/server"
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,8 +22,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: "userId requerido" }, { status: 400 })
     }
 
-    // Obtener el access_token de la BD
+    // Obtener el access_token de la BD usando servidor client
     console.log("[v0] Buscando token para user:", userId)
+    const supabase = createServerClient()
     const { data: integration, error: queryError } = await (supabase
       .from("user_email_integrations" as any)
       .select("*")
