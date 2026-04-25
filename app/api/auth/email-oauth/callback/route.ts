@@ -20,20 +20,23 @@ export async function GET(request: NextRequest) {
 
     // Si el usuario rechazó la autorización
     if (error) {
-      return NextResponse.redirect(
-        `${request.nextUrl.origin}?email_oauth_error=${error}`
+      return new NextResponse(
+        `<html><body><h1>Error de Google</h1><p>${error}</p></body></html>`,
+        { status: 400, headers: { "Content-Type": "text/html" } }
       )
     }
 
     if (!code) {
-      return NextResponse.redirect(
-        `${request.nextUrl.origin}?email_oauth_error=no_code`
+      return new NextResponse(
+        `<html><body><h1>Error</h1><p>No se recibió código de autorización</p></body></html>`,
+        { status: 400, headers: { "Content-Type": "text/html" } }
       )
     }
 
     if (!state) {
-      return NextResponse.redirect(
-        `${request.nextUrl.origin}?email_oauth_error=no_state`
+      return new NextResponse(
+        `<html><body><h1>Error</h1><p>No se recibió state</p></body></html>`,
+        { status: 400, headers: { "Content-Type": "text/html" } }
       )
     }
 
@@ -49,8 +52,9 @@ export async function GET(request: NextRequest) {
       }
     } catch (decodeError) {
       console.error("[v0] Error decodificando state:", decodeError)
-      return NextResponse.redirect(
-        `${request.nextUrl.origin}?email_oauth_error=invalid_state`
+      return new NextResponse(
+        `<html><body><h1>Error</h1><p>Error decodificando state: ${decodeError instanceof Error ? decodeError.message : String(decodeError)}</p></body></html>`,
+        { status: 400, headers: { "Content-Type": "text/html" } }
       )
     }
 
@@ -70,8 +74,9 @@ export async function GET(request: NextRequest) {
     if (!tokenResponse.ok) {
       const errorData = await tokenResponse.json()
       console.error("[v0] Error exchanging code for token:", errorData)
-      return NextResponse.redirect(
-        `${request.nextUrl.origin}?email_oauth_error=token_exchange_failed`
+      return new NextResponse(
+        `<html><body><h1>Error</h1><p>Error intercambiando token: ${JSON.stringify(errorData)}</p></body></html>`,
+        { status: 400, headers: { "Content-Type": "text/html" } }
       )
     }
 
@@ -88,8 +93,9 @@ export async function GET(request: NextRequest) {
 
     if (!userInfoResponse.ok) {
       console.error("[v0] Error fetching user info")
-      return NextResponse.redirect(
-        `${request.nextUrl.origin}?email_oauth_error=user_info_failed`
+      return new NextResponse(
+        `<html><body><h1>Error</h1><p>Error obteniendo información del usuario</p></body></html>`,
+        { status: 400, headers: { "Content-Type": "text/html" } }
       )
     }
 
