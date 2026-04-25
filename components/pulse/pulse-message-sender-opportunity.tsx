@@ -15,6 +15,7 @@ import { replaceVariables } from "@/lib/pulse/pulse-message-variables"
 import { toast } from "@/components/ui/use-toast"
 import { useTranslations } from "@/hooks/use-translations"
 import { DICT_LANG_CONTACTS } from "@/lib/constants/dict-lang-contacts"
+import SafeEditor from "@/components/pulse/safe-editor"
 
 interface Contact {
   id: string
@@ -563,11 +564,10 @@ export function PulseMessageSenderOpportunity({
                 {/* MENSAJE */}
                 <div className="space-y-3">
                   <label className="block text-sm font-bold text-slate-900">Mensaje *</label>
-                  <textarea
+                  <SafeEditor
                     value={message}
-                    onChange={(e) => setMessage(e.target.value)}
+                    onChange={setMessage}
                     placeholder="Escribe tu mensaje aquí..."
-                    className="w-full h-40 p-4 border border-slate-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                   />
                 </div>
 
