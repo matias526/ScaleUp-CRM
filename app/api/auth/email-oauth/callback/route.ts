@@ -117,8 +117,24 @@ export async function GET(request: NextRequest) {
 
     if (insertError) {
       console.error("[v0] Error guardando integración de email:", insertError)
-      return NextResponse.redirect(
-        `${request.nextUrl.origin}?email_oauth_error=save_failed`
+      
+      // Devolver HTML que cierra la ventana con error
+      return new NextResponse(
+        `
+          <html>
+            <body>
+              <script>
+                localStorage.setItem('email_oauth_error', 'save_failed: ${insertError.message}');
+                window.close();
+              </script>
+              <p>Error al guardar la integración. Ventana cerrándose...</p>
+            </body>
+          </html>
+        `,
+        {
+          status: 500,
+          headers: { "Content-Type": "text/html" },
+        }
       )
     }
 

@@ -17,6 +17,8 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    console.log("[v0] Verificando email integration para userId:", userId)
+
     // Verificar si existe una integración de email para este usuario
     const { data, error } = await supabase
       .from("user_email_integrations")
@@ -24,25 +26,27 @@ export async function GET(request: NextRequest) {
       .eq("user_id", userId)
       .eq("is_active", true)
       .limit(1)
-      .single()
 
-    if (error && error.code !== "PGRST116") {
-      // PGRST116 = no rows returned
-      console.error("Error fetching email integration:", error)
+    console.log("[v0] Resultado query:", { data, error })
+
+    if (error) {
+      console.error("[v0] Error fetching email integration:", error)
       return NextResponse.json(
-        { error: "Error al verificar integración de email" },
+        { error: "Error al verificar integración de email", details: error.message },
         { status: 500 }
       )
     }
 
+    const hasIntegration = data && data.length > 0
+
     return NextResponse.json({
-      hasIntegration: !!data,
+      hasIntegration,
       userId,
     })
   } catch (error) {
-    console.error("Error in user-email-integration API:", error)
+    console.error("[v0] Error in user-email-integration API:", error)
     return NextResponse.json(
-      { error: "Error interno del servidor" },
+      { error: "Error interno del servidor", details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     )
   }
