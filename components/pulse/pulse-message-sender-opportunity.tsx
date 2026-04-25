@@ -17,6 +17,16 @@ import { useTranslations } from "@/hooks/use-translations"
 import { DICT_LANG_CONTACTS } from "@/lib/constants/dict-lang-contacts"
 import SafeEditor from "@/components/pulse/safe-editor"
 
+// Convertir [BR] a saltos de línea reales para edición
+const brToNewlines = (text: string): string => {
+  return text.replaceAll("[BR]", "\n")
+}
+
+// Convertir saltos de línea reales a [BR] para almacenamiento/envío
+const newlinesToBr = (text: string): string => {
+  return text.replaceAll("\n", "[BR]")
+}
+
 // Función para renderizar el contenido con tags [B], [I], [U] y variables
 const renderFormattedContent = (content: string): React.ReactNode[] => {
   const parts: React.ReactNode[] = []
@@ -268,8 +278,9 @@ export function PulseMessageSenderOpportunity({
           (t: any) => t.language_code === language
         )
         if (translation) {
-          setSubject(translation.subject || "")
-          setMessage(translation.body_content || "")
+          setSubject(brToNewlines(translation.subject || ""))
+          setMessage(brToNewlines(translation.body_content || ""))
+        }
         }
 
         // Cargar attachments del template (filtrados por idioma o "all")
