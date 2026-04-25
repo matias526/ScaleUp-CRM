@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase/client"
+import { createServerClient } from "@/lib/supabase/server"
 
 /**
  * Callback de Google OAuth
@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   try {
     console.log("[v0] Callback OAuth iniciado")
     console.log("[v0] URL:", request.nextUrl.toString())
-    
+
     const code = request.nextUrl.searchParams.get("code")
     const state = request.nextUrl.searchParams.get("state")
     const error = request.nextUrl.searchParams.get("error")
@@ -17,6 +17,8 @@ export async function GET(request: NextRequest) {
     console.log("[v0] Code:", code?.substring(0, 20) + "...")
     console.log("[v0] State:", state)
     console.log("[v0] Error:", error)
+
+    const supabase = createServerClient()
 
     // Si el usuario rechazó la autorización
     if (error) {
@@ -46,7 +48,7 @@ export async function GET(request: NextRequest) {
       const decodedState = Buffer.from(state, "base64").toString("utf-8")
       const [userIdFromState] = decodedState.split(":")
       userId = userIdFromState
-      
+
       if (!userId) {
         throw new Error("userId no encontrado en state")
       }
@@ -61,9 +63,9 @@ export async function GET(request: NextRequest) {
     // Intercambiar código por tokens
     // IMPORTANTE: El redirect_uri DEBE ser exactamente el mismo que se usó en la URL de OAuth
     const redirectUri = `${request.nextUrl.origin}/api/auth/email-oauth/callback`
-    
+
     console.log("[v0] redirect_uri:", redirectUri)
-    
+
     const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -156,7 +158,7 @@ export async function GET(request: NextRequest) {
 
     if (insertError) {
       console.error("[v0] Error guardando integración de email:", insertError)
-      
+
       // Devolver HTML con error detallado
       return new NextResponse(
         `
@@ -177,10 +179,10 @@ export async function GET(request: NextRequest) {
               <pre>${JSON.stringify(insertError, null, 2)}</pre>
               <h2 class="info">Datos intentados:</h2>
               <pre>${JSON.stringify({
-                user_id: userId,
-                email: userEmail,
-                provider: "google",
-              }, null, 2)}</pre>
+          user_id: userId,
+          email: userEmail,
+          provider: "google",
+        }, null, 2)}</pre>
             </body>
           </html>
         `,
@@ -212,12 +214,12 @@ export async function GET(request: NextRequest) {
             <h1 class="success">✓ OAuth exitoso!</h1>
             <h2 class="info">Datos guardados:</h2>
             <pre>${JSON.stringify({
-              userId,
-              userEmail,
-              provider: "google",
-              token_expires_at: new Date(Date.now() + expires_in * 1000).toISOString(),
-              is_connected: true,
-            }, null, 2)}</pre>
+        userId,
+        userEmail,
+        provider: "google",
+        token_expires_at: new Date(Date.now() + expires_in * 1000).toISOString(),
+        is_connected: true,
+      }, null, 2)}</pre>
             <p class="info">La ventana se cerrará en 3 segundos...</p>
             <script>
               setTimeout(() => window.close(), 3000);
@@ -232,7 +234,7 @@ export async function GET(request: NextRequest) {
     )
   } catch (error) {
     console.error("[v0] Error en email OAuth callback:", error)
-    
+
     // Devolver HTML con error de servidor
     return new NextResponse(
       `
