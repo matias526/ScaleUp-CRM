@@ -172,6 +172,15 @@ export function PulseMessageSenderOpportunity({
 }: PulseMessageSenderOpportunityProps) {
   const { user } = useAuth()
   const { language } = useTranslations(DICT_LANG_CONTACTS)
+
+  console.log("[v0] DEBUG - Props recibidos:", {
+    opportunity,
+    techCompanyData,
+    prospectData,
+    partnerData,
+    contacts,
+    endCustomer,
+  })
   const [channel, setChannel] = useState<"email" | "whatsapp">("email")
   const [selectedTemplate, setSelectedTemplate] = useState("")
   const [toEmails, setToEmails] = useState<string[]>([])
@@ -347,6 +356,7 @@ export function PulseMessageSenderOpportunity({
       minute: "2-digit",
     })
 
+    console.log("[v0] DEBUG - variableValues construido:", values)
     return values
   }, [contacts, endCustomer, opportunity, user, techCompanyData, prospectData, partnerData])
 

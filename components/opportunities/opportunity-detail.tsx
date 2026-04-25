@@ -1910,7 +1910,13 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
 
       {/* Modal de envío de mensajes Pulse */}
       {showPulseMessageSender && opportunity && (
-        <PulseMessageSenderOpportunity
+        <>
+          {console.log("[v0] DEBUG opportunity-detail - Datos pasados:", {
+            tech_companies: opportunity.tech_companies,
+            prospects: opportunity.prospects,
+            partners: opportunity.partners,
+          })}
+          <PulseMessageSenderOpportunity
           opportunity={{
             id: opportunity.id,
             title: opportunity.title,
@@ -1944,6 +1950,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
           isOpen={showPulseMessageSender}
           onClose={() => setShowPulseMessageSender(false)}
         />
+        </>
       )}
     </div>
   )
