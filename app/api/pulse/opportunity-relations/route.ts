@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
     // Traer prospect si existe el ID
     if (prospectId) {
       const { data, error } = await supabase
-        .from("prospects")
+        .from("prospect_partners")
         .select("id, name")
         .eq("id", prospectId)
         .limit(1)
