@@ -7,9 +7,6 @@ import { createServerClient } from "@/lib/supabase/server"
  */
 export async function GET(request: NextRequest) {
   try {
-    console.log("[v0] Callback OAuth iniciado")
-    console.log("[v0] URL:", request.nextUrl.toString())
-
     const code = request.nextUrl.searchParams.get("code")
     const state = request.nextUrl.searchParams.get("state")
     const error = request.nextUrl.searchParams.get("error")
@@ -64,8 +61,6 @@ export async function GET(request: NextRequest) {
     // IMPORTANTE: El redirect_uri DEBE ser exactamente el mismo que se usó en la URL de OAuth
     const redirectUri = `${request.nextUrl.origin}/api/auth/email-oauth/callback`
 
-    console.log("[v0] redirect_uri:", redirectUri)
-
     const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -108,7 +103,6 @@ export async function GET(request: NextRequest) {
 
     const userInfo = await userInfoResponse.json()
     const userEmail = userInfo.email
-    console.log("[v0] Preparando guardar integración para user:", userId, "email:", userEmail)
 
     // Guardar los tokens en la BD usando insert + update flow
     // Primero intentamos insertar. Si existe, actualizamos.
@@ -122,23 +116,12 @@ export async function GET(request: NextRequest) {
       is_connected: true,
     }
 
-    console.log("[v0] Datos a insertar:", JSON.stringify(insertData, null, 2))
-    console.log("[v0] Tipos:", {
-      user_id: typeof userId,
-      email: typeof userEmail,
-      access_token: typeof access_token,
-      refresh_token: typeof refresh_token,
-      token_expires_at: typeof insertData.token_expires_at,
-      is_connected: typeof insertData.is_connected,
-    })
-
     // Intentar insert
     let insertError = null
     const { error: firstError, data: insertedData } = await (supabase
       .from("user_email_integrations" as any)
       .insert([insertData]) as any)
 
-    console.log("[v0] Respuesta del insert:", { firstError, insertedData })
 
     // Si ya existe (unique constraint), hacer update
     if (firstError && firstError.code === "23505") {
@@ -153,8 +136,6 @@ export async function GET(request: NextRequest) {
     } else {
       insertError = firstError
     }
-
-    console.log("[v0] Resultado final del insert/update:", { insertError })
 
     if (insertError) {
       console.error("[v0] Error guardando integración de email:", insertError)
@@ -193,7 +174,6 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    console.log("[v0] OAuth exitoso para user:", userId, "email:", userEmail)
 
     // Devolver HTML con toda la información de debug
     return new NextResponse(
