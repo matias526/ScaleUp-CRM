@@ -231,6 +231,56 @@ export function PulseMessageSenderOpportunity({
     }
   }
 
+  // Función para iniciar el flujo OAuth de email
+  const handleConnectEmail = async (provider: "google" | "outlook") => {
+    try {
+      const response = await fetch("/api/auth/email-oauth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider }),
+      })
+
+      if (!response.ok) throw new Error("Error al iniciar conexión")
+
+      const data = await response.json()
+      if (data.authUrl) {
+        // Abrir ventana popup para OAuth
+        const width = 500
+        const height = 600
+        const left = window.innerWidth / 2 - width / 2
+        const top = window.innerHeight / 2 - height / 2
+        
+        const popup = window.open(
+          data.authUrl,
+          "email-oauth",
+          `width=${width},height=${height},left=${left},top=${top}`
+        )
+
+        if (!popup) {
+          toast({
+            description: "Por favor permite popups para conectar tu email",
+            variant: "destructive",
+          })
+          return
+        }
+
+        // Esperar a que se cierre la ventana y verificar conexión
+        const interval = setInterval(() => {
+          if (popup.closed) {
+            clearInterval(interval)
+            setShowConnectEmailModal(false)
+            checkUserEmailConnection()
+          }
+        }, 500)
+      }
+    } catch (error) {
+      toast({
+        description: error instanceof Error ? error.message : "Error al conectar email",
+        variant: "destructive",
+      })
+    }
+  }
+
   // Función para cargar las relaciones de la oportunidad (tech_company, prospect, partner)
   const loadOpportunityRelations = async () => {
     try {
@@ -867,33 +917,6 @@ export function PulseMessageSenderOpportunity({
                 {/* MODO DE ENVÍO */}
                 <div className="space-y-3 bg-slate-50 border border-slate-200 rounded-lg p-4">
                   <label className="block text-sm font-bold text-slate-900">Modo de Envío *</label>
-                  <div className="flex gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setSenderMode("personal")}
-                      className={`flex-1 px-4 py-2 rounded font-semibold text-sm transition-all ${senderMode === "personal"
-                          ? "bg-blue-600 text-white border border-blue-600"
-                          : "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50"
-                        }`}
-                    >
-                      Personal
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSenderMode("system")}
-                      className={`flex-1 px-4 py-2 rounded font-semibold text-sm transition-all ${senderMode === "system"
-                          ? "bg-slate-700 text-white border border-slate-700"
-                          : "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50"
-                        }`}
-                    >
-                      System
-                    </button>
-                  </div>
-                  <p className="text-xs text-slate-600">
-                    {senderMode === "personal"
-                      ? "El mensaje saldrá firmado con tu nombre"
-                      : "El mensaje saldrá firmado por ScaleUp"}
-                  </p>
                 </div>
 
                 {/* ASUNTO */}
@@ -1183,34 +1206,36 @@ export function PulseMessageSenderOpportunity({
           </div>
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-900">
-            <p className="font-semibold mb-2">Soportamos:</p>
-            <ul className="list-disc list-inside space-y-1">
-              <li>Gmail</li>
-              <li>Outlook</li>
-              <li>Otros proveedores con OAuth</li>
-            </ul>
+            <p className="font-semibold mb-3">Selecciona tu proveedor de email:</p>
+            <div className="space-y-2">
+              <button
+                onClick={() => handleConnectEmail("google")}
+                className="w-full flex items-center gap-3 px-4 py-3 bg-white border border-slate-300 rounded hover:border-blue-500 hover:bg-blue-50 transition-all"
+              >
+                <div className="w-5 h-5 bg-white rounded flex items-center justify-center text-xs font-bold">
+                  G
+                </div>
+                <span className="font-semibold text-slate-900">Gmail</span>
+              </button>
+              <button
+                onClick={() => handleConnectEmail("outlook")}
+                className="w-full flex items-center gap-3 px-4 py-3 bg-white border border-slate-300 rounded hover:border-blue-500 hover:bg-blue-50 transition-all"
+              >
+                <div className="w-5 h-5 bg-blue-600 rounded flex items-center justify-center text-xs font-bold text-white">
+                  O
+                </div>
+                <span className="font-semibold text-slate-900">Outlook</span>
+              </button>
+            </div>
           </div>
 
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              onClick={() => setShowConnectEmailModal(false)}
-              className="flex-1 border-slate-300"
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={() => {
-                // TODO: Implementar OAuth flow
-                toast({
-                  description: "Funcionalidad en desarrollo",
-                })
-              }}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              Conectar Email
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            onClick={() => setShowConnectEmailModal(false)}
+            className="w-full border-slate-300"
+          >
+            Cancelar
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
