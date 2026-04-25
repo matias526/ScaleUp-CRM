@@ -197,6 +197,7 @@ export function PulseMessageSenderOpportunity({
   const [opportunityRelations, setOpportunityRelations] = useState<any>({})
   const [relationsLoading, setRelationsLoading] = useState(false)
   const [senderMode, setSenderMode] = useState<"personal" | "system">("personal")
+  const [activeSubjectCategory, setActiveSubjectCategory] = useState<"entidad" | "destinatario" | "emisor">("entidad")
 
   // Cargar templates, recipients y relaciones al abrir el modal
   useEffect(() => {
@@ -813,58 +814,82 @@ export function PulseMessageSenderOpportunity({
                     placeholder="Ej: Propuesta especial para {{company_name}}"
                     className="h-10 border border-slate-300 rounded-lg text-sm"
                   />
-                  {/* Botones de variables - Entidad */}
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold text-slate-600 uppercase">ENTIDAD:</p>
-                    <div className="flex gap-2 flex-wrap">
-                      {PULSE_VARIABLES.entidad.map((v) => (
-                        <button
-                          key={v.tag}
-                          type="button"
-                          onClick={() => setSubject(subject + v.tag)}
-                          className="text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded border border-slate-300 transition-all"
-                          title={v.label}
-                        >
-                          {v.tag}
-                        </button>
-                      ))}
-                    </div>
+                  
+                  {/* Toolbar con botones de categoría */}
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setActiveSubjectCategory("entidad")}
+                      className={`text-xs font-semibold px-3 py-2 rounded transition-all ${
+                        activeSubjectCategory === "entidad"
+                          ? "bg-slate-700 text-white"
+                          : "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50"
+                      }`}
+                    >
+                      ENTIDAD
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveSubjectCategory("destinatario")}
+                      className={`text-xs font-semibold px-3 py-2 rounded transition-all ${
+                        activeSubjectCategory === "destinatario"
+                          ? "bg-slate-700 text-white"
+                          : "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50"
+                      }`}
+                    >
+                      DESTINATARIO
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveSubjectCategory("emisor")}
+                      className={`text-xs font-semibold px-3 py-2 rounded transition-all ${
+                        activeSubjectCategory === "emisor"
+                          ? "bg-slate-700 text-white"
+                          : "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50"
+                      }`}
+                    >
+                      EMISOR
+                    </button>
                   </div>
 
-                  {/* Botones de variables - Destinatario */}
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold text-slate-600 uppercase">DESTINATARIO:</p>
-                    <div className="flex gap-2 flex-wrap">
-                      {PULSE_VARIABLES.destinatario.map((v) => (
+                  {/* Variables dinámicas según categoría seleccionada */}
+                  <div className="flex gap-2 flex-wrap">
+                    {activeSubjectCategory === "entidad" &&
+                      PULSE_VARIABLES.entidad.map((v) => (
                         <button
                           key={v.tag}
                           type="button"
                           onClick={() => setSubject(subject + v.tag)}
-                          className="text-xs font-medium bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded border border-blue-300 transition-all"
+                          className="text-xs font-medium bg-white hover:bg-slate-100 text-slate-700 px-3 py-2 rounded border border-slate-300 transition-all"
                           title={v.label}
                         >
                           {v.tag}
                         </button>
                       ))}
-                    </div>
-                  </div>
-
-                  {/* Botones de variables - Emisor */}
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold text-slate-600 uppercase">EMISOR:</p>
-                    <div className="flex gap-2 flex-wrap">
-                      {PULSE_VARIABLES.emisor.map((v) => (
+                    {activeSubjectCategory === "destinatario" &&
+                      PULSE_VARIABLES.destinatario.map((v) => (
                         <button
                           key={v.tag}
                           type="button"
                           onClick={() => setSubject(subject + v.tag)}
-                          className="text-xs font-medium bg-green-100 hover:bg-green-200 text-green-700 px-3 py-2 rounded border border-green-300 transition-all"
+                          className="text-xs font-medium bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-2 rounded border border-blue-300 transition-all"
                           title={v.label}
                         >
                           {v.tag}
                         </button>
                       ))}
-                    </div>
+                    {activeSubjectCategory === "emisor" &&
+                      PULSE_VARIABLES.emisor.map((v) => (
+                        <button
+                          key={v.tag}
+                          type="button"
+                          onClick={() => setSubject(subject + v.tag)}
+                          className="text-xs font-medium bg-green-50 hover:bg-green-100 text-green-700 px-3 py-2 rounded border border-green-300 transition-all"
+                          title={v.label}
+                        >
+                          {v.tag}
+                        </button>
+                      ))}
                   </div>
                 </div>
 
