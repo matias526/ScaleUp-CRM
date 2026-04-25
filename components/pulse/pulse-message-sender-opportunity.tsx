@@ -217,6 +217,12 @@ export function PulseMessageSenderOpportunity({
       setRelationsLoading(true)
       const params = new URLSearchParams()
 
+      console.log("[v0] DEBUG loadOpportunityRelations - opportunity:", {
+        tech_company_id: opportunity.tech_company_id,
+        prospect_id: opportunity.prospect_id,
+        partner_id: opportunity.partner_id,
+      })
+
       if (opportunity.tech_company_id) {
         params.append("techCompanyId", opportunity.tech_company_id)
       }
@@ -226,6 +232,8 @@ export function PulseMessageSenderOpportunity({
       if (opportunity.partner_id) {
         params.append("partnerId", opportunity.partner_id)
       }
+
+      console.log("[v0] DEBUG - Params enviados:", params.toString())
 
       if (params.toString()) {
         const response = await fetch(
