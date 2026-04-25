@@ -27,22 +27,35 @@ const newlinesToBr = (text: string): string => {
   return text.replaceAll("\n", "[BR]")
 }
 
-// Función para renderizar el contenido con tags [IMG], [B], [I], [U] y variables
-const renderFormattedContent = (content: string): React.ReactNode[] => {
+// Función para renderizar el contenido con tags [IMG], [B], [I], [U] y variables (ya reemplazadas)
+const renderFormattedContent = (
+  content: string,
+  variables?: Record<string, string | number>
+): React.ReactNode[] => {
   const parts: React.ReactNode[] = []
   let lastIndex = 0
   let componentCounter = 0
 
-  // Regex para procesar [IMG], [B], [I], [U] y {{variables}} (en orden de prioridad)
-  const regex = /\[IMG\](.*?)\[\/IMG\]|\[B\](.*?)\[\/B\]|\[I\](.*?)\[\/I\]|\[U\](.*?)\[\/U\]|\{\{([^}]*)\}\}/g
+  // Primero reemplazar variables si se proporcionan
+  let processedContent = content
+  if (variables) {
+    Object.entries(variables).forEach(([key, value]) => {
+      const tag = `{{${key}}}`
+      const stringValue = value !== null && value !== undefined ? String(value) : ""
+      processedContent = processedContent.replaceAll(tag, stringValue)
+    })
+  }
+
+  // Regex para procesar [IMG], [B], [I], [U] (ya sin variables, que fueron reemplazadas arriba)
+  const regex = /\[IMG\](.*?)\[\/IMG\]|\[B\](.*?)\[\/B\]|\[I\](.*?)\[\/I\]|\[U\](.*?)\[\/U\]/g
   let match
 
-  while ((match = regex.exec(content)) !== null) {
+  while ((match = regex.exec(processedContent)) !== null) {
     const elementKey = `elem-${componentCounter++}`
 
     // Agregar texto plano antes del match
     if (match.index > lastIndex) {
-      parts.push(content.substring(lastIndex, match.index))
+      parts.push(processedContent.substring(lastIndex, match.index))
     }
 
     if (match[1] !== undefined) {
@@ -87,32 +100,20 @@ const renderFormattedContent = (content: string): React.ReactNode[] => {
           {match[4]}
         </u>
       )
-    } else if (match[5] !== undefined) {
-      // {{variable}}
-      const variableName = match[5]
-      parts.push(
-        <span
-          key={elementKey}
-          className="bg-blue-100 text-blue-700 px-1 rounded font-mono text-xs whitespace-nowrap"
-          title="Campo dinámico que se reemplazará al enviar"
-        >
-          {"{{" + variableName + "}}"}
-        </span>
-      )
     }
 
     lastIndex = regex.lastIndex
   }
 
   // Agregar texto restante
-  if (lastIndex < content.length) {
-    const remaining = content.substring(lastIndex)
+  if (lastIndex < processedContent.length) {
+    const remaining = processedContent.substring(lastIndex)
     if (remaining) {
       parts.push(remaining)
     }
   }
 
-  return parts.length > 0 ? parts : [content]
+  return parts.length > 0 ? parts : [processedContent]
 }
 
 interface Contact {
@@ -280,6 +281,65 @@ export function PulseMessageSenderOpportunity({
       today_date: new Date().toLocaleDateString("es-ES"),
       current_time: new Date().toLocaleTimeString("es-ES"),
     }
+  }, [contacts, endCustomer, opportunity, user])
+
+  // Construir objeto con valores de variables disponibles
+  const variableValues = useMemo(() => {
+    const values: Record<string, string | number> = {}
+
+    // Variables de contacto (primer contacto disponible)
+    if (contacts && contacts.length > 0) {
+      const firstContact = contacts[0]
+      values.contact_name = firstContact.name || ""
+      values.contact_email = firstContact.email || ""
+      values.contact_phone = firstContact.phone || ""
+      values.contact_position = firstContact.position || ""
+    } else {
+      // Si no hay contactos, mostrar placeholders
+      values.contact_name = "[Sin contacto]"
+      values.contact_email = "[Sin contacto]"
+      values.contact_phone = "[Sin contacto]"
+      values.contact_position = "[Sin contacto]"
+    }
+
+    // Variables de empresa/cliente
+    if (endCustomer) {
+      values.company_name = endCustomer.name || ""
+      values.company_industry = endCustomer.industry || ""
+      values.company_city = endCustomer.city || ""
+      values.company_country = endCustomer.country || ""
+    } else {
+      values.company_name = "[Sin empresa]"
+      values.company_industry = "[Sin empresa]"
+      values.company_city = "[Sin empresa]"
+      values.company_country = "[Sin empresa]"
+    }
+
+    // Variables de oportunidad
+    values.opportunity_name = opportunity?.name || ""
+    values.opportunity_stage = opportunity?.stage || ""
+    values.opportunity_value = opportunity?.value || ""
+    values.opportunity_probability = opportunity?.probability || ""
+    values.opportunity_description = opportunity?.description || ""
+
+    // Variables de usuario
+    if (user) {
+      values.user_name = `${user.first_name || ""} ${user.last_name || ""}`.trim()
+      values.user_email = user.email || ""
+    } else {
+      values.user_name = "[Sin usuario]"
+      values.user_email = "[Sin usuario]"
+    }
+
+    // Variables de fecha/hora
+    const now = new Date()
+    values.today_date = now.toLocaleDateString("es-ES")
+    values.current_time = now.toLocaleTimeString("es-ES", {
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+
+    return values
   }, [contacts, endCustomer, opportunity, user])
 
   const previewMessage = useMemo(() => {
@@ -774,7 +834,7 @@ export function PulseMessageSenderOpportunity({
                       </div>
                       <div className="border-t border-slate-200 pt-3">
                         <div className="bg-slate-50 border border-slate-200 rounded p-3 min-h-32 text-xs text-slate-700 whitespace-pre-wrap break-words space-y-1">
-                          {renderFormattedContent(previewMessage) || "(mensaje vacío)"}
+                          {renderFormattedContent(message, variableValues) || "(mensaje vacío)"}
                         </div>
                       </div>
                       {selectedAttachments.length > 0 && (
@@ -798,7 +858,7 @@ export function PulseMessageSenderOpportunity({
                   <Card className="bg-green-50 border border-green-200 rounded-lg overflow-hidden p-4">
                     <div className="space-y-2">
                       <div className="bg-green-500 rounded-lg p-3 max-w-xs ml-auto text-sm text-white break-words font-medium">
-                        {renderFormattedContent(previewMessage) || "(mensaje vacío)"}
+                        {renderFormattedContent(message, variableValues) || "(mensaje vacío)"}
                         <div className="flex justify-end items-center gap-1 mt-2">
                           <p className="text-xs text-green-100">{new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</p>
                           <svg className="h-4 w-4 text-green-200" fill="currentColor" viewBox="0 0 20 20">
