@@ -428,8 +428,9 @@ export function PulseMessageSenderOpportunity({
   }, [message, variableValues])
 
   const previewSubject = useMemo(() => {
-    return replaceVariables(subject, variableValues)
-  }, [subject, variableValues])
+    const currentSubject = currentLanguage === "es" ? subject_es : currentLanguage === "en" ? subject_en : subject_pt
+    return replaceVariables(currentSubject, variableValues)
+  }, [subject_es, subject_en, subject_pt, currentLanguage, variableValues])
 
   // Cargar asunto, contenido y adjuntos cuando se selecciona un template
   useEffect(() => {
@@ -1078,7 +1079,7 @@ export function PulseMessageSenderOpportunity({
                       </div>
                       <div className="border-t border-slate-200 pt-3">
                         <div className="bg-slate-50 border border-slate-200 rounded p-3 min-h-32 text-xs text-slate-700 whitespace-pre-wrap break-words space-y-1">
-                          {renderFormattedContent(message, variableValues) || "(mensaje vacío)"}
+                          {renderFormattedContent(currentLanguage === "es" ? message_es : currentLanguage === "en" ? message_en : message_pt, variableValues) || "(mensaje vacío)"}
                         </div>
                       </div>
                       {selectedAttachments.length > 0 && (
