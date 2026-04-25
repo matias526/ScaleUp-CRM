@@ -177,6 +177,9 @@ export function PulseMessageSenderOpportunity({
   const [toEmails, setToEmails] = useState<string[]>([])
   const [ccEmails, setCcEmails] = useState<string[]>([])
   const [bccEmails, setBccEmails] = useState<string[]>([])
+  const [selectedRecipients, setSelectedRecipients] = useState<
+    Array<{ email: string; first_name: string; last_name: string }>
+  >([])
   const [subject, setSubject] = useState("")
   const [message, setMessage] = useState("")
   const [sendMode, setSendMode] = useState<"individual" | "group">("group")
@@ -223,7 +226,7 @@ export function PulseMessageSenderOpportunity({
         const response = await fetch(
           `/api/pulse/opportunity-relations?${params.toString()}`
         )
-        
+
         if (!response.ok) throw new Error("Error al cargar relaciones")
 
         const data = await response.json()
@@ -394,8 +397,18 @@ export function PulseMessageSenderOpportunity({
       minute: "2-digit",
     })
 
+    // Variables de destinatario (solo si hay exactamente 1 destinatario "to")
+    if (selectedRecipients.length === 1) {
+      values.recipient_first_name = selectedRecipients[0].first_name || ""
+      values.recipient_last_name = selectedRecipients[0].last_name || ""
+    } else {
+      // Si hay múltiples o ninguno, dejar vacío
+      values.recipient_first_name = ""
+      values.recipient_last_name = ""
+    }
+
     return values
-  }, [contacts, endCustomer, opportunity, userInfo, opportunityRelations, senderMode])
+  }, [contacts, endCustomer, opportunity, userInfo, opportunityRelations, senderMode, selectedRecipients])
 
   const previewMessage = useMemo(() => {
     return replaceVariables(message, variableValues)
@@ -441,21 +454,30 @@ export function PulseMessageSenderOpportunity({
       const contactId = value.replace("contact-", "")
       const contact = contacts.find((c) => c.id === contactId)
       if (contact && contact.email) {
-        addEmailToGroup(contact.email)
+        addEmailToGroup(contact.email, {
+          first_name: contact.name?.split(" ")[0] || "",
+          last_name: contact.name?.split(" ").slice(1).join(" ") || "",
+        })
       }
     } else if (value.startsWith("user-")) {
       // Es un user de la tech_company o admin
       const userId = value.replace("user-", "")
       const userRecipient = recipients.find((r) => r.id === userId)
       if (userRecipient && userRecipient.email) {
-        addEmailToGroup(userRecipient.email)
+        addEmailToGroup(userRecipient.email, {
+          first_name: userRecipient.first_name || "",
+          last_name: userRecipient.last_name || "",
+        })
       }
     }
   }
 
-  const addEmailToGroup = (email: string) => {
+  const addEmailToGroup = (email: string, recipient?: { first_name: string; last_name: string }) => {
     if (recipientType === "to" && !toEmails.includes(email)) {
       setToEmails([...toEmails, email])
+      if (recipient) {
+        setSelectedRecipients([...selectedRecipients, { email, ...recipient }])
+      }
     } else if (recipientType === "cc" && !ccEmails.includes(email)) {
       setCcEmails([...ccEmails, email])
     } else if (recipientType === "bcc" && !bccEmails.includes(email)) {
@@ -472,6 +494,7 @@ export function PulseMessageSenderOpportunity({
 
   const handleRemoveFromEmail = (email: string) => {
     setToEmails(toEmails.filter((e) => e !== email))
+    setSelectedRecipients(selectedRecipients.filter((r) => r.email !== email))
   }
 
   const handleRemoveCcEmail = (email: string) => {
@@ -596,33 +619,30 @@ export function PulseMessageSenderOpportunity({
                     <button
                       type="button"
                       onClick={() => setRecipientType("to")}
-                      className={`px-3 py-2 rounded text-sm font-semibold transition-all ${
-                        recipientType === "to"
+                      className={`px-3 py-2 rounded text-sm font-semibold transition-all ${recipientType === "to"
                           ? "bg-blue-600 text-white"
                           : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100"
-                      }`}
+                        }`}
                     >
                       Para (To)
                     </button>
                     <button
                       type="button"
                       onClick={() => setRecipientType("cc")}
-                      className={`px-3 py-2 rounded text-sm font-semibold transition-all ${
-                        recipientType === "cc"
+                      className={`px-3 py-2 rounded text-sm font-semibold transition-all ${recipientType === "cc"
                           ? "bg-amber-600 text-white"
                           : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100"
-                      }`}
+                        }`}
                     >
                       CC
                     </button>
                     <button
                       type="button"
                       onClick={() => setRecipientType("bcc")}
-                      className={`px-3 py-2 rounded text-sm font-semibold transition-all ${
-                        recipientType === "bcc"
+                      className={`px-3 py-2 rounded text-sm font-semibold transition-all ${recipientType === "bcc"
                           ? "bg-slate-600 text-white"
                           : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100"
-                      }`}
+                        }`}
                     >
                       BCC
                     </button>
@@ -758,22 +778,20 @@ export function PulseMessageSenderOpportunity({
                     <button
                       type="button"
                       onClick={() => setSenderMode("personal")}
-                      className={`flex-1 px-4 py-2 rounded font-semibold text-sm transition-all ${
-                        senderMode === "personal"
+                      className={`flex-1 px-4 py-2 rounded font-semibold text-sm transition-all ${senderMode === "personal"
                           ? "bg-blue-600 text-white border border-blue-600"
                           : "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50"
-                      }`}
+                        }`}
                     >
                       Personal
                     </button>
                     <button
                       type="button"
                       onClick={() => setSenderMode("system")}
-                      className={`flex-1 px-4 py-2 rounded font-semibold text-sm transition-all ${
-                        senderMode === "system"
+                      className={`flex-1 px-4 py-2 rounded font-semibold text-sm transition-all ${senderMode === "system"
                           ? "bg-slate-700 text-white border border-slate-700"
                           : "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50"
-                      }`}
+                        }`}
                     >
                       System
                     </button>
@@ -899,7 +917,7 @@ export function PulseMessageSenderOpportunity({
                     <div className="p-4 space-y-3 text-sm">
                       <div>
                         <p className="text-xs font-semibold text-slate-600">De:</p>
-                        <p className="font-semibold text-slate-900">{user?.email || "noreply@scaleup.com"}</p>
+                        <p className="font-semibold text-slate-900">{userInfo?.email || "noreply@scaleup.com"}</p>
                       </div>
                       <div className="border-t border-slate-200 pt-3">
                         <p className="text-xs font-semibold text-slate-600">Para:</p>
