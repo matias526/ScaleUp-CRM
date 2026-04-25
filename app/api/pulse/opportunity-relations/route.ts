@@ -12,13 +12,6 @@ export async function GET(request: NextRequest) {
     const prospectId = request.nextUrl.searchParams.get("prospectId")
     const partnerId = request.nextUrl.searchParams.get("partnerId")
 
-    console.log("[v0] API received params:", {
-      techCompanyId,
-      prospectId,
-      partnerId,
-      fullUrl: request.nextUrl.toString(),
-    })
-
     const result: Record<string, any> = {}
 
     // Traer tech_company si existe el ID
@@ -28,8 +21,6 @@ export async function GET(request: NextRequest) {
         .select("id, name")
         .eq("id", techCompanyId)
         .limit(1)
-
-      console.log("[v0] tech_company query:", { techCompanyId, data, error })
 
       if (!error && data && data.length > 0) {
         result.tech_company = data[0]
@@ -44,8 +35,6 @@ export async function GET(request: NextRequest) {
         .eq("id", prospectId)
         .limit(1)
 
-      console.log("[v0] prospect query:", { prospectId, data, error })
-
       if (!error && data && data.length > 0) {
         result.prospect = data[0]
       }
@@ -59,14 +48,11 @@ export async function GET(request: NextRequest) {
         .eq("id", partnerId)
         .limit(1)
 
-      console.log("[v0] partner query:", { partnerId, data, error })
-
       if (!error && data && data.length > 0) {
         result.partner = data[0]
       }
     }
 
-    console.log("[v0] opportunity-relations result:", result)
     return NextResponse.json(result)
   } catch (error) {
     console.error("Error in opportunity-relations API:", error)

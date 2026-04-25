@@ -172,15 +172,6 @@ export function PulseMessageSenderOpportunity({
 }: PulseMessageSenderOpportunityProps) {
   const { user } = useAuth()
   const { language } = useTranslations(DICT_LANG_CONTACTS)
-
-  console.log("[v0] DEBUG - Props recibidos:", {
-    opportunity,
-    techCompanyData,
-    prospectData,
-    partnerData,
-    contacts,
-    endCustomer,
-  })
   const [channel, setChannel] = useState<"email" | "whatsapp">("email")
   const [selectedTemplate, setSelectedTemplate] = useState("")
   const [toEmails, setToEmails] = useState<string[]>([])
@@ -201,6 +192,7 @@ export function PulseMessageSenderOpportunity({
   const [recipientType, setRecipientType] = useState<"to" | "cc" | "bcc">("to")
   const [opportunityRelations, setOpportunityRelations] = useState<any>({})
   const [relationsLoading, setRelationsLoading] = useState(false)
+  const [sendMode, setSendMode] = useState<"personal" | "system">("personal")
 
   // Cargar templates, recipients y relaciones al abrir el modal
   useEffect(() => {
@@ -217,12 +209,6 @@ export function PulseMessageSenderOpportunity({
       setRelationsLoading(true)
       const params = new URLSearchParams()
 
-      console.log("[v0] DEBUG loadOpportunityRelations - opportunity:", {
-        tech_company_id: opportunity.tech_company_id,
-        prospect_id: opportunity.prospect_id,
-        partner_id: opportunity.partner_id,
-      })
-
       if (opportunity.tech_company_id) {
         params.append("techCompanyId", opportunity.tech_company_id)
       }
@@ -233,20 +219,15 @@ export function PulseMessageSenderOpportunity({
         params.append("partnerId", opportunity.partner_id)
       }
 
-      console.log("[v0] DEBUG - Params enviados:", params.toString())
-
       if (params.toString()) {
         const response = await fetch(
           `/api/pulse/opportunity-relations?${params.toString()}`
         )
-        console.log("[v0] DEBUG - Respuesta del API (status):", response.status)
         
         if (!response.ok) throw new Error("Error al cargar relaciones")
 
         const data = await response.json()
-        console.log("[v0] DEBUG - Respuesta del API (data completa):", data)
         setOpportunityRelations(data || {})
-        console.log("[v0] DEBUG - Relaciones guardadas en state:", data)
       }
     } catch (error) {
       console.error("Error cargando relaciones:", error)
@@ -395,6 +376,16 @@ export function PulseMessageSenderOpportunity({
       values.user_email = "[Sin usuario]"
     }
 
+    // Variables de emisor (cambian según sendMode)
+    if (sendMode === "personal") {
+      values.sender_name = user?.first_name || ""
+      values.sender_lastname = user?.last_name || ""
+    } else {
+      values.sender_name = "ScaleUp"
+      values.sender_lastname = ""
+    }
+    values.sender_company = "ScaleUp"
+
     // Variables de fecha/hora
     const now = new Date()
     values.today_date = now.toLocaleDateString("es-ES")
@@ -403,9 +394,8 @@ export function PulseMessageSenderOpportunity({
       minute: "2-digit",
     })
 
-    console.log("[v0] DEBUG - variableValues construido:", values)
     return values
-  }, [contacts, endCustomer, opportunity, user, opportunityRelations])
+  }, [contacts, endCustomer, opportunity, user, opportunityRelations, sendMode])
 
   const previewMessage = useMemo(() => {
     return replaceVariables(message, variableValues)
@@ -759,6 +749,40 @@ export function PulseMessageSenderOpportunity({
                       <SelectItem value="individual">Emails individuales (uno a uno)</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                {/* MODO DE ENVÍO */}
+                <div className="space-y-3 bg-slate-50 border border-slate-200 rounded-lg p-4">
+                  <label className="block text-sm font-bold text-slate-900">Modo de Envío *</label>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setSendMode("personal")}
+                      className={`flex-1 px-4 py-2 rounded font-semibold text-sm transition-all ${
+                        sendMode === "personal"
+                          ? "bg-blue-600 text-white border border-blue-600"
+                          : "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50"
+                      }`}
+                    >
+                      Personal
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSendMode("system")}
+                      className={`flex-1 px-4 py-2 rounded font-semibold text-sm transition-all ${
+                        sendMode === "system"
+                          ? "bg-slate-700 text-white border border-slate-700"
+                          : "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50"
+                      }`}
+                    >
+                      System
+                    </button>
+                  </div>
+                  <p className="text-xs text-slate-600">
+                    {sendMode === "personal"
+                      ? "El mensaje saldrá firmado con tu nombre"
+                      : "El mensaje saldrá firmado por ScaleUp"}
+                  </p>
                 </div>
 
                 {/* ASUNTO */}
