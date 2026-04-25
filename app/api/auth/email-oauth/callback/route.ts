@@ -97,22 +97,37 @@ export async function GET(request: NextRequest) {
     const userEmail = userInfo.email
     console.log("[v0] Preparando guardar integración para user:", userId, "email:", userEmail)
 
-    // Guardar los tokens en la BD
-    const { error: insertError } = await (supabase
-      .from("user_email_integrations" as any)
-      .upsert({
-        user_id: userId,
-        provider: "google",
-        email: userEmail,
-        access_token: access_token,
-        refresh_token: refresh_token,
-        token_expires_at: new Date(Date.now() + expires_in * 1000).toISOString(),
-        is_connected: true,
-      }, {
-        onConflict: "user_id"
-      }) as any)
+    // Guardar los tokens en la BD usando insert + update flow
+    // Primero intentamos insertar. Si existe, actualizamos.
+    const insertData = {
+      user_id: userId,
+      provider: "google",
+      email: userEmail,
+      access_token: access_token,
+      refresh_token: refresh_token,
+      token_expires_at: new Date(Date.now() + expires_in * 1000).toISOString(),
+      is_connected: true,
+    }
 
-    console.log("[v0] Resultado del upsert:", { insertError })
+    // Intentar insert
+    let insertError = null
+    const { error: firstError } = await (supabase
+      .from("user_email_integrations" as any)
+      .insert([insertData]) as any)
+
+    // Si ya existe (unique constraint), hacer update
+    if (firstError && firstError.code === "23505") {
+      const { error: updateError } = await (supabase
+        .from("user_email_integrations" as any)
+        .update(insertData)
+        .eq("user_id", userId)
+        .eq("email", userEmail) as any)
+      insertError = updateError
+    } else {
+      insertError = firstError
+    }
+
+    console.log("[v0] Resultado del insert/update:", { insertError })
 
     if (insertError) {
       console.error("[v0] Error guardando integración de email:", insertError)
