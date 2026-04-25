@@ -98,8 +98,8 @@ export async function GET(request: NextRequest) {
     console.log("[v0] Preparando guardar integración para user:", userId, "email:", userEmail)
 
     // Guardar los tokens en la BD
-    const { error: insertError } = await supabase
-      .from("user_email_integrations")
+    const { error: insertError } = await (supabase
+      .from("user_email_integrations" as any)
       .upsert({
         user_id: userId,
         provider: "google",
@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
         is_active: true,
       }, {
         onConflict: "user_id"
-      })
+      }) as any)
 
     console.log("[v0] Resultado del upsert:", { insertError })
 

@@ -20,12 +20,12 @@ export async function GET(request: NextRequest) {
     console.log("[v0] Verificando email integration para userId:", userId)
 
     // Verificar si existe una integración de email para este usuario
-    const { data, error } = await supabase
-      .from("user_email_integrations")
+    const { data, error } = await (supabase
+      .from("user_email_integrations" as any)
       .select("id")
       .eq("user_id", userId)
       .eq("is_active", true)
-      .limit(1)
+      .limit(1) as any)
 
     console.log("[v0] Resultado query:", { data, error })
 
