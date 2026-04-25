@@ -971,8 +971,6 @@ export function PulseMessageSenderOpportunity({
                     placeholder="Escribe tu mensaje aquí..."
                   />
                 </div>
-                </div>
-                </div>
 
                 {/* ADJUNTOS */}
                 <div className="space-y-3">
