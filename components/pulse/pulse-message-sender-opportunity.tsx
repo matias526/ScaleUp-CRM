@@ -812,17 +812,58 @@ export function PulseMessageSenderOpportunity({
                     placeholder="Ej: Propuesta especial para {{company_name}}"
                     className="h-10 border border-slate-300 rounded-lg text-sm"
                   />
-                  <div className="flex gap-2 flex-wrap">
-                    {["contact_name", "company_name", "opportunity_name"].map((v) => (
-                      <button
-                        key={v}
-                        type="button"
-                        onClick={() => setSubject(subject + `{{${v}}}`)}
-                        className="text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded border border-slate-300 transition-all"
-                      >
-                        {`{{${v}}}`}
-                      </button>
-                    ))}
+                  {/* Botones de variables - Entidad */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-slate-600 uppercase">ENTIDAD:</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {PULSE_VARIABLES.entidad.map((v) => (
+                        <button
+                          key={v.tag}
+                          type="button"
+                          onClick={() => setSubject(subject + v.tag)}
+                          className="text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded border border-slate-300 transition-all"
+                          title={v.label}
+                        >
+                          {v.tag}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Botones de variables - Destinatario */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-slate-600 uppercase">DESTINATARIO:</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {PULSE_VARIABLES.destinatario.map((v) => (
+                        <button
+                          key={v.tag}
+                          type="button"
+                          onClick={() => setSubject(subject + v.tag)}
+                          className="text-xs font-medium bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded border border-blue-300 transition-all"
+                          title={v.label}
+                        >
+                          {v.tag}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Botones de variables - Emisor */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-slate-600 uppercase">EMISOR:</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {PULSE_VARIABLES.emisor.map((v) => (
+                        <button
+                          key={v.tag}
+                          type="button"
+                          onClick={() => setSubject(subject + v.tag)}
+                          className="text-xs font-medium bg-green-100 hover:bg-green-200 text-green-700 px-3 py-2 rounded border border-green-300 transition-all"
+                          title={v.label}
+                        >
+                          {v.tag}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
