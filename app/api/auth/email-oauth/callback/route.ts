@@ -59,6 +59,11 @@ export async function GET(request: NextRequest) {
     }
 
     // Intercambiar código por tokens
+    // IMPORTANTE: El redirect_uri DEBE ser exactamente el mismo que se usó en la URL de OAuth
+    const redirectUri = `${request.nextUrl.origin}/api/auth/email-oauth/callback`
+    
+    console.log("[v0] redirect_uri:", redirectUri)
+    
     const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -66,7 +71,7 @@ export async function GET(request: NextRequest) {
         code,
         client_id: process.env.GOOGLE_OAUTH_CLIENT_ID,
         client_secret: process.env.GOOGLE_OAUTH_CLIENT_SECRET,
-        redirect_uri: process.env.OAUTH_REDIRECT_URI,
+        redirect_uri: redirectUri,
         grant_type: "authorization_code",
       }),
     })
