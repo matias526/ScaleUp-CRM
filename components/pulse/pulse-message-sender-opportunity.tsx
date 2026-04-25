@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Send, X, Upload, Mail, MessageCircle } from "lucide-react"
 import { useAuth } from "@/components/auth/auth-provider"
 import { sendPulseMessage } from "@/lib/services/pulse-message-service"
@@ -182,6 +181,8 @@ export function PulseMessageSenderOpportunity({
   const [selectedRecipients, setSelectedRecipients] = useState<
     Array<{ email: string; first_name: string; last_name: string }>
   >([])
+  const [subject, setSubject] = useState("")
+  const [message, setMessage] = useState("")
   const [sendMode, setSendMode] = useState<"individual" | "group">("group")
   const [scheduleDate, setScheduleDate] = useState("")
   const [scheduleTime, setScheduleTime] = useState("")
@@ -191,19 +192,12 @@ export function PulseMessageSenderOpportunity({
   const [selectedAttachments, setSelectedAttachments] = useState<any[]>([])
   const [recipients, setRecipients] = useState<any[]>([])
   const [recipientsLoading, setRecipientsLoading] = useState(false)
-  const [senderMode, setSenderMode] = useState<"personal" | "system">("personal")
-  const [openSubjectDropdown, setOpenSubjectDropdown] = useState<"entidad" | "destinatario" | "emisor" | null>(null)
-  const [currentLanguage, setCurrentLanguage] = useState<"es" | "en" | "pt">("es")
-  const [subject_es, setSubject_es] = useState("")
-  const [subject_en, setSubject_en] = useState("")
-  const [subject_pt, setSubject_pt] = useState("")
-  const [message_es, setMessage_es] = useState("")
-  const [message_en, setMessage_en] = useState("")
-  const [message_pt, setMessage_pt] = useState("")
-  const [translating, setTranslating] = useState(false)
+  const [manualEmail, setManualEmail] = useState("")
   const [recipientType, setRecipientType] = useState<"to" | "cc" | "bcc">("to")
   const [opportunityRelations, setOpportunityRelations] = useState<any>({})
   const [relationsLoading, setRelationsLoading] = useState(false)
+  const [senderMode, setSenderMode] = useState<"personal" | "system">("personal")
+  const [openSubjectDropdown, setOpenSubjectDropdown] = useState<"entidad" | "destinatario" | "emisor" | null>(null)
 
   // Cargar templates, recipients y relaciones al abrir el modal
   useEffect(() => {
@@ -428,31 +422,20 @@ export function PulseMessageSenderOpportunity({
   }, [message, variableValues])
 
   const previewSubject = useMemo(() => {
-    const currentSubject = currentLanguage === "es" ? subject_es : currentLanguage === "en" ? subject_en : subject_pt
-    return replaceVariables(currentSubject, variableValues)
-  }, [subject_es, subject_en, subject_pt, currentLanguage, variableValues])
+    return replaceVariables(subject, variableValues)
+  }, [subject, variableValues])
 
   // Cargar asunto, contenido y adjuntos cuando se selecciona un template
   useEffect(() => {
     if (selectedTemplate && selectedTemplate !== "none") {
       const template = sortedTemplates.find((t: any) => t.id === selectedTemplate)
       if (template) {
-        // Cargar los 3 idiomas
-        const translationEs = template.translations?.find((t: any) => t.language_code === "es")
-        const translationEn = template.translations?.find((t: any) => t.language_code === "en")
-        const translationPt = template.translations?.find((t: any) => t.language_code === "pt")
-
-        if (translationEs) {
-          setSubject_es(brToNewlines(translationEs.subject || ""))
-          setMessage_es(brToNewlines(translationEs.body_content || ""))
-        }
-        if (translationEn) {
-          setSubject_en(brToNewlines(translationEn.subject || ""))
-          setMessage_en(brToNewlines(translationEn.body_content || ""))
-        }
-        if (translationPt) {
-          setSubject_pt(brToNewlines(translationPt.subject || ""))
-          setMessage_pt(brToNewlines(translationPt.body_content || ""))
+        const translation = template.translations?.find(
+          (t: any) => t.language_code === language
+        )
+        if (translation) {
+          setSubject(brToNewlines(translation.subject || ""))
+          setMessage(brToNewlines(translation.body_content || ""))
         }
 
         // Cargar attachments del template (filtrados por idioma o "all")
@@ -467,16 +450,10 @@ export function PulseMessageSenderOpportunity({
         setSelectedAttachments(attachments)
       }
     } else {
-      // Limpiar todo si no hay template seleccionado
-      setSubject_es("")
-      setSubject_en("")
-      setSubject_pt("")
-      setMessage_es("")
-      setMessage_en("")
-      setMessage_pt("")
+      // Limpiar attachments si no hay template seleccionado
       setSelectedAttachments([])
     }
-  }, [selectedTemplate, sortedTemplates])
+  }, [selectedTemplate, sortedTemplates, language])
 
   const handleAddContact = (value: string) => {
     if (value.startsWith("contact-")) {
@@ -554,10 +531,6 @@ export function PulseMessageSenderOpportunity({
 
     setSending(true)
     try {
-      // Obtener el subject y message del idioma actual
-      const currentSubject = currentLanguage === "es" ? subject_es : currentLanguage === "en" ? subject_en : subject_pt
-      const currentMessage = currentLanguage === "es" ? message_es : currentLanguage === "en" ? message_en : message_pt
-
       await sendPulseMessage({
         template_id: selectedTemplate,
         opportunity_id: opportunity.id,
@@ -565,8 +538,8 @@ export function PulseMessageSenderOpportunity({
         to_emails: toEmails,
         cc_emails: ccEmails,
         bcc_emails: bccEmails,
-        subject: currentSubject,
-        body_content: currentMessage,
+        subject,
+        body_content: message,
         send_mode: sendMode,
         recipients: [],
         variables_values: variableValues,
@@ -837,137 +810,110 @@ export function PulseMessageSenderOpportunity({
                   </p>
                 </div>
 
-                {/* LANGUAGE TABS */}
-                <div className="space-y-4">
-                  <Tabs value={currentLanguage} onValueChange={(v) => setCurrentLanguage(v as "es" | "en" | "pt")} className="w-full">
-                    <TabsList className="bg-transparent border-b border-slate-200 p-0 w-full gap-8 h-auto rounded-none">
-                      <TabsTrigger value="es" className="text-xs font-semibold uppercase tracking-wide text-slate-600 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:text-slate-900 rounded-none bg-transparent">ES</TabsTrigger>
-                      <TabsTrigger value="en" className="text-xs font-semibold uppercase tracking-wide text-slate-600 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:text-slate-900 rounded-none bg-transparent">EN</TabsTrigger>
-                      <TabsTrigger value="pt" className="text-xs font-semibold uppercase tracking-wide text-slate-600 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:text-slate-900 rounded-none bg-transparent">PT</TabsTrigger>
-                    </TabsList>
-                  </Tabs>
+                {/* ASUNTO */}
+                <div className="space-y-3">
+                  <label className="block text-sm font-bold text-slate-900">Asunto *</label>
+                  <Input
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    placeholder="Ej: Propuesta especial para {{company_name}}"
+                    className="h-10 border border-slate-300 rounded-lg text-sm"
+                  />
+                  
+                  {/* Dropdown buttons */}
+                  <div className="flex gap-2 relative">
+                    {/* ENTIDAD Dropdown */}
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setOpenSubjectDropdown(openSubjectDropdown === "entidad" ? null : "entidad")}
+                        className="text-xs font-semibold px-3 py-2 rounded bg-slate-700 text-white hover:bg-slate-800 transition-all"
+                      >
+                        ENTIDAD
+                      </button>
+                      {openSubjectDropdown === "entidad" && (
+                        <div className="absolute top-full mt-1 left-0 bg-white border border-slate-300 rounded shadow-lg z-10 min-w-max">
+                          {PULSE_VARIABLES.entidad.map((v) => (
+                            <button
+                              key={v.tag}
+                              type="button"
+                              onClick={() => {
+                                setSubject(subject + v.tag)
+                                setOpenSubjectDropdown(null)
+                              }}
+                              className="block w-full text-left text-xs px-4 py-2 hover:bg-slate-100 transition-all border-b border-slate-100 last:border-b-0"
+                            >
+                              {v.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
 
-                  {/* ASUNTO */}
-                  <div className="space-y-3">
-                    <label className="block text-sm font-bold text-slate-900">Asunto *</label>
-                    <Input
-                      value={currentLanguage === "es" ? subject_es : currentLanguage === "en" ? subject_en : subject_pt}
-                      onChange={(e) => {
-                        if (currentLanguage === "es") setSubject_es(e.target.value)
-                        else if (currentLanguage === "en") setSubject_en(e.target.value)
-                        else setSubject_pt(e.target.value)
-                      }}
-                      placeholder="Ej: Propuesta especial para {{company_name}}"
-                      className="h-10 border border-slate-300 rounded-lg text-sm"
-                    />
-                    
-                    {/* Dropdown buttons */}
-                    <div className="flex gap-2 relative">
-                      {/* ENTIDAD Dropdown */}
-                      <div className="relative">
-                        <button
-                          type="button"
-                          onClick={() => setOpenSubjectDropdown(openSubjectDropdown === "entidad" ? null : "entidad")}
-                          className="text-xs font-semibold px-3 py-2 rounded bg-slate-700 text-white hover:bg-slate-800 transition-all"
-                        >
-                          ENTIDAD
-                        </button>
-                        {openSubjectDropdown === "entidad" && (
-                          <div className="absolute top-full mt-1 left-0 bg-white border border-slate-300 rounded shadow-lg z-10 min-w-max">
-                            {PULSE_VARIABLES.entidad.map((v) => (
-                              <button
-                                key={v.tag}
-                                type="button"
-                                onClick={() => {
-                                  const currentValue = currentLanguage === "es" ? subject_es : currentLanguage === "en" ? subject_en : subject_pt
-                                  if (currentLanguage === "es") setSubject_es(currentValue + v.tag)
-                                  else if (currentLanguage === "en") setSubject_en(currentValue + v.tag)
-                                  else setSubject_pt(currentValue + v.tag)
-                                  setOpenSubjectDropdown(null)
-                                }}
-                                className="block w-full text-left text-xs px-4 py-2 hover:bg-slate-100 transition-all border-b border-slate-100 last:border-b-0"
-                              >
-                                {v.label}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                    {/* DESTINATARIO Dropdown */}
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setOpenSubjectDropdown(openSubjectDropdown === "destinatario" ? null : "destinatario")}
+                        className="text-xs font-semibold px-3 py-2 rounded bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 transition-all"
+                      >
+                        DESTINATARIO
+                      </button>
+                      {openSubjectDropdown === "destinatario" && (
+                        <div className="absolute top-full mt-1 left-0 bg-white border border-slate-300 rounded shadow-lg z-10 min-w-max">
+                          {PULSE_VARIABLES.destinatario.map((v) => (
+                            <button
+                              key={v.tag}
+                              type="button"
+                              onClick={() => {
+                                setSubject(subject + v.tag)
+                                setOpenSubjectDropdown(null)
+                              }}
+                              className="block w-full text-left text-xs px-4 py-2 hover:bg-blue-50 transition-all border-b border-slate-100 last:border-b-0 text-blue-700"
+                            >
+                              {v.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
 
-                      {/* DESTINATARIO Dropdown */}
-                      <div className="relative">
-                        <button
-                          type="button"
-                          onClick={() => setOpenSubjectDropdown(openSubjectDropdown === "destinatario" ? null : "destinatario")}
-                          className="text-xs font-semibold px-3 py-2 rounded bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 transition-all"
-                        >
-                          DESTINATARIO
-                        </button>
-                        {openSubjectDropdown === "destinatario" && (
-                          <div className="absolute top-full mt-1 left-0 bg-white border border-slate-300 rounded shadow-lg z-10 min-w-max">
-                            {PULSE_VARIABLES.destinatario.map((v) => (
-                              <button
-                                key={v.tag}
-                                type="button"
-                                onClick={() => {
-                                  const currentValue = currentLanguage === "es" ? subject_es : currentLanguage === "en" ? subject_en : subject_pt
-                                  if (currentLanguage === "es") setSubject_es(currentValue + v.tag)
-                                  else if (currentLanguage === "en") setSubject_en(currentValue + v.tag)
-                                  else setSubject_pt(currentValue + v.tag)
-                                  setOpenSubjectDropdown(null)
-                                }}
-                                className="block w-full text-left text-xs px-4 py-2 hover:bg-blue-50 transition-all border-b border-slate-100 last:border-b-0 text-blue-700"
-                              >
-                                {v.label}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* EMISOR Dropdown */}
-                      <div className="relative">
-                        <button
-                          type="button"
-                          onClick={() => setOpenSubjectDropdown(openSubjectDropdown === "emisor" ? null : "emisor")}
-                          className="text-xs font-semibold px-3 py-2 rounded bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 transition-all"
-                        >
-                          EMISOR
-                        </button>
-                        {openSubjectDropdown === "emisor" && (
-                          <div className="absolute top-full mt-1 left-0 bg-white border border-slate-300 rounded shadow-lg z-10 min-w-max">
-                            {PULSE_VARIABLES.emisor.map((v) => (
-                              <button
-                                key={v.tag}
-                                type="button"
-                                onClick={() => {
-                                  const currentValue = currentLanguage === "es" ? subject_es : currentLanguage === "en" ? subject_en : subject_pt
-                                  if (currentLanguage === "es") setSubject_es(currentValue + v.tag)
-                                  else if (currentLanguage === "en") setSubject_en(currentValue + v.tag)
-                                  else setSubject_pt(currentValue + v.tag)
-                                  setOpenSubjectDropdown(null)
-                                }}
-                                className="block w-full text-left text-xs px-4 py-2 hover:bg-green-50 transition-all border-b border-slate-100 last:border-b-0 text-green-700"
-                              >
-                                {v.label}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                    {/* EMISOR Dropdown */}
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setOpenSubjectDropdown(openSubjectDropdown === "emisor" ? null : "emisor")}
+                        className="text-xs font-semibold px-3 py-2 rounded bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 transition-all"
+                      >
+                        EMISOR
+                      </button>
+                      {openSubjectDropdown === "emisor" && (
+                        <div className="absolute top-full mt-1 left-0 bg-white border border-slate-300 rounded shadow-lg z-10 min-w-max">
+                          {PULSE_VARIABLES.emisor.map((v) => (
+                            <button
+                              key={v.tag}
+                              type="button"
+                              onClick={() => {
+                                setSubject(subject + v.tag)
+                                setOpenSubjectDropdown(null)
+                              }}
+                              className="block w-full text-left text-xs px-4 py-2 hover:bg-green-50 transition-all border-b border-slate-100 last:border-b-0 text-green-700"
+                            >
+                              {v.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
+                </div>
 
                 {/* MENSAJE */}
                 <div className="space-y-3">
                   <label className="block text-sm font-bold text-slate-900">Mensaje *</label>
                   <SafeEditor
-                    value={currentLanguage === "es" ? message_es : currentLanguage === "en" ? message_en : message_pt}
-                    onChange={(value) => {
-                      if (currentLanguage === "es") setMessage_es(value)
-                      else if (currentLanguage === "en") setMessage_en(value)
-                      else setMessage_pt(value)
-                    }}
+                    value={message}
+                    onChange={setMessage}
                     placeholder="Escribe tu mensaje aquí..."
                   />
                 </div>
@@ -1077,7 +1023,7 @@ export function PulseMessageSenderOpportunity({
                       </div>
                       <div className="border-t border-slate-200 pt-3">
                         <div className="bg-slate-50 border border-slate-200 rounded p-3 min-h-32 text-xs text-slate-700 whitespace-pre-wrap break-words space-y-1">
-                          {renderFormattedContent(currentLanguage === "es" ? message_es : currentLanguage === "en" ? message_en : message_pt, variableValues) || "(mensaje vacío)"}
+                          {renderFormattedContent(message, variableValues) || "(mensaje vacío)"}
                         </div>
                       </div>
                       {selectedAttachments.length > 0 && (
