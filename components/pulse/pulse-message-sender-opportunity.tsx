@@ -247,9 +247,14 @@ export function PulseMessageSenderOpportunity({
 
     try {
       setRecipientsLoading(true)
-      const response = await fetch(
-        `/api/pulse/recipients?techCompanyId=${opportunity.tech_company_id}&opportunityId=${opportunity.id}`
-      )
+      const params = new URLSearchParams()
+      params.append("techCompanyId", opportunity.tech_company_id)
+      params.append("opportunityId", opportunity.id)
+      if (opportunity.partner_id) {
+        params.append("partnerId", opportunity.partner_id)
+      }
+
+      const response = await fetch(`/api/pulse/recipients?${params.toString()}`)
       if (!response.ok) throw new Error("Error al cargar recipients")
 
       const data = await response.json()

@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
   try {
     const techCompanyId = request.nextUrl.searchParams.get("techCompanyId")
     const opportunityId = request.nextUrl.searchParams.get("opportunityId")
+    const partnerId = request.nextUrl.searchParams.get("partnerId")
 
     if (!techCompanyId || !opportunityId) {
       return NextResponse.json(
@@ -51,7 +52,23 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: techCompanyError.message }, { status: 500 })
     }
 
-    // 3. Traer usuarios de ScaleUp con rol Admin o BDD (solo activos)
+    // 3. Traer usuarios del Partner (solo activos) si existe partnerId
+    let partnerUsers = []
+    if (partnerId) {
+      const { data: partnerUsersData, error: partnerUsersError } = await supabase
+        .from("users")
+        .select("id, email, first_name, last_name")
+        .eq("partner_id", partnerId)
+        .eq("is_active", true)
+
+      if (partnerUsersError) {
+        console.error("Error fetching partner users:", partnerUsersError)
+      } else {
+        partnerUsers = partnerUsersData || []
+      }
+    }
+
+    // 4. Traer usuarios de ScaleUp con rol Admin o BDD (solo activos)
     // Primero obtener los role_ids para Admin y BDD
     const { data: adminBddRoles, error: rolesError } = await supabase
       .from("roles")
@@ -88,6 +105,7 @@ export async function GET(request: NextRequest) {
     // Combinar usuarios
     const allUsers = [
       ...(techCompanyUsers || []),
+      ...partnerUsers,
       ...adminUsers,
     ]
 
