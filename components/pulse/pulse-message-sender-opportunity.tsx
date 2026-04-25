@@ -198,6 +198,9 @@ export function PulseMessageSenderOpportunity({
   const [relationsLoading, setRelationsLoading] = useState(false)
   const [senderMode, setSenderMode] = useState<"personal" | "system">("personal")
   const [openSubjectDropdown, setOpenSubjectDropdown] = useState<"entidad" | "destinatario" | "emisor" | null>(null)
+  const [hasPersonalEmail, setHasPersonalEmail] = useState(false)
+  const [checkingEmail, setCheckingEmail] = useState(false)
+  const [showConnectEmailModal, setShowConnectEmailModal] = useState(false)
 
   // Cargar templates, recipients y relaciones al abrir el modal
   useEffect(() => {
@@ -205,8 +208,28 @@ export function PulseMessageSenderOpportunity({
       loadTemplates()
       loadRecipients()
       loadOpportunityRelations()
+      checkUserEmailConnection()
     }
   }, [isOpen])
+
+  // Función para verificar si el usuario tiene email conectado
+  const checkUserEmailConnection = async () => {
+    if (!userInfo?.id) return
+    
+    try {
+      setCheckingEmail(true)
+      const response = await fetch(`/api/pulse/user-email-integration?userId=${userInfo.id}`)
+      if (!response.ok) throw new Error("Error al verificar conexión de email")
+      
+      const data = await response.json()
+      setHasPersonalEmail(data.hasIntegration || false)
+    } catch (error) {
+      console.error("Error verificando email:", error)
+      setHasPersonalEmail(false)
+    } finally {
+      setCheckingEmail(false)
+    }
+  }
 
   // Función para cargar las relaciones de la oportunidad (tech_company, prospect, partner)
   const loadOpportunityRelations = async () => {
@@ -529,6 +552,12 @@ export function PulseMessageSenderOpportunity({
       return
     }
 
+    // Validar si eligió enviar como personal pero no tiene email conectado
+    if (channel === "email" && senderMode === "personal" && !hasPersonalEmail) {
+      setShowConnectEmailModal(true)
+      return
+    }
+
     setSending(true)
     try {
       // Si es WhatsApp personal, abrir en nueva ventana
@@ -556,6 +585,7 @@ export function PulseMessageSenderOpportunity({
         body_content: message,
         send_mode: senderMode,
         channel: channel,
+        senderMode: senderMode,
         recipients: [],
         variables_values: variableValues,
       })
@@ -631,6 +661,45 @@ export function PulseMessageSenderOpportunity({
                     </Select>
                   </div>
                 </div>
+
+                {/* REMITENTE - Solo para Email */}
+                {channel === "email" && (
+                  <div className="space-y-3 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <label className="block text-sm font-bold text-slate-900">Enviar como *</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setSenderMode("personal")}
+                        className={`text-sm font-semibold px-4 py-3 rounded border-2 transition-all ${
+                          senderMode === "personal"
+                            ? "bg-blue-600 text-white border-blue-600"
+                            : "bg-white text-slate-700 border-slate-300 hover:border-blue-300"
+                        }`}
+                      >
+                        {hasPersonalEmail && senderMode === "personal" ? "✓ " : ""}Tu Email Personal
+                        {!hasPersonalEmail && senderMode === "personal" && (
+                          <span className="text-xs block mt-1 font-normal">(conectar primero)</span>
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSenderMode("system")}
+                        className={`text-sm font-semibold px-4 py-3 rounded border-2 transition-all ${
+                          senderMode === "system"
+                            ? "bg-blue-600 text-white border-blue-600"
+                            : "bg-white text-slate-700 border-slate-300 hover:border-blue-300"
+                        }`}
+                      >
+                        Sistema CRM
+                      </button>
+                    </div>
+                    <p className="text-xs text-slate-600 mt-2">
+                      {senderMode === "personal"
+                        ? "Se enviará desde tu email personal. Requiere conexión previa."
+                        : "Se enviará desde el sistema con pie de página automático."}
+                    </p>
+                  </div>
+                )}
 
                 {/* DESTINATARIOS */}
                 <div className="space-y-3 bg-slate-50 border border-slate-200 rounded-lg p-6">
@@ -1096,6 +1165,50 @@ export function PulseMessageSenderOpportunity({
             {sending ? "Enviando..." : "Enviar"}
             <Send className="h-4 w-4 ml-2" />
           </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+
+    {/* Modal para conectar email personal */}
+    <Dialog open={showConnectEmailModal} onOpenChange={setShowConnectEmailModal}>
+      <DialogContent className="max-w-md">
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900">Conectar Email Personal</h2>
+            <p className="text-sm text-slate-600 mt-1">
+              Para enviar desde tu cuenta personal, primero necesitas conectar tu email.
+            </p>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-900">
+            <p className="font-semibold mb-2">Soportamos:</p>
+            <ul className="list-disc list-inside space-y-1">
+              <li>Gmail</li>
+              <li>Outlook</li>
+              <li>Otros proveedores con OAuth</li>
+            </ul>
+          </div>
+
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setShowConnectEmailModal(false)}
+              className="flex-1 border-slate-300"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => {
+                // TODO: Implementar OAuth flow
+                toast({
+                  description: "Funcionalidad en desarrollo",
+                })
+              }}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Conectar Email
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
