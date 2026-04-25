@@ -1,25 +1,16 @@
-import { createServerClient } from "@supabase/ssr"
-import { cookies } from "next/headers"
+import { createClient } from "@supabase/supabase-js"
 import { NextRequest, NextResponse } from "next/server"
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
+)
 
 export async function GET(request: NextRequest) {
   try {
     const techCompanyId = request.nextUrl.searchParams.get("techCompanyId")
     const prospectId = request.nextUrl.searchParams.get("prospectId")
     const partnerId = request.nextUrl.searchParams.get("partnerId")
-
-    const cookieStore = cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-        },
-      }
-    )
 
     const result: Record<string, any> = {}
 
@@ -33,9 +24,7 @@ export async function GET(request: NextRequest) {
 
       console.log("[v0] tech_company query:", { techCompanyId, data, error })
 
-      if (error) {
-        console.error("Error fetching tech_company:", error)
-      } else if (data && data.length > 0) {
+      if (!error && data && data.length > 0) {
         result.tech_company = data[0]
       }
     }
@@ -50,9 +39,7 @@ export async function GET(request: NextRequest) {
 
       console.log("[v0] prospect query:", { prospectId, data, error })
 
-      if (error) {
-        console.error("Error fetching prospect:", error)
-      } else if (data && data.length > 0) {
+      if (!error && data && data.length > 0) {
         result.prospect = data[0]
       }
     }
@@ -67,9 +54,7 @@ export async function GET(request: NextRequest) {
 
       console.log("[v0] partner query:", { partnerId, data, error })
 
-      if (error) {
-        console.error("Error fetching partner:", error)
-      } else if (data && data.length > 0) {
+      if (!error && data && data.length > 0) {
         result.partner = data[0]
       }
     }
