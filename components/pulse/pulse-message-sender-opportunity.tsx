@@ -267,14 +267,12 @@ export function PulseMessageSenderOpportunity({
           return
         }
 
-        // Esperar a que se cierre la ventana y verificar conexión
-        const interval = setInterval(() => {
-          if (popup.closed) {
-            clearInterval(interval)
-            setShowConnectEmailModal(false)
-            checkUserEmailConnection()
-          }
-        }, 500)
+        // Esperar 5 segundos y verificar si se guardó la conexión
+        // No usamos window.closed porque Google OAuth cambia el origen (COOP)
+        setTimeout(() => {
+          setShowConnectEmailModal(false)
+          checkUserEmailConnection()
+        }, 5000)
       }
     } catch (error) {
       toast({
