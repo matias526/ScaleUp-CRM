@@ -192,7 +192,7 @@ export function PulseMessageSenderOpportunity({
   const [recipientType, setRecipientType] = useState<"to" | "cc" | "bcc">("to")
   const [opportunityRelations, setOpportunityRelations] = useState<any>({})
   const [relationsLoading, setRelationsLoading] = useState(false)
-  const [sendMode, setSendMode] = useState<"personal" | "system">("personal")
+  const [senderMode, setSenderMode] = useState<"personal" | "system">("personal")
 
   // Cargar templates, recipients y relaciones al abrir el modal
   useEffect(() => {
@@ -376,8 +376,8 @@ export function PulseMessageSenderOpportunity({
       values.user_email = "[Sin usuario]"
     }
 
-    // Variables de emisor (cambian según sendMode)
-    if (sendMode === "personal") {
+    // Variables de emisor (cambian según senderMode)
+    if (senderMode === "personal") {
       values.sender_name = user?.first_name || ""
       values.sender_lastname = user?.last_name || ""
     } else {
@@ -395,7 +395,7 @@ export function PulseMessageSenderOpportunity({
     })
 
     return values
-  }, [contacts, endCustomer, opportunity, user, opportunityRelations, sendMode])
+  }, [contacts, endCustomer, opportunity, user, opportunityRelations, senderMode])
 
   const previewMessage = useMemo(() => {
     return replaceVariables(message, variableValues)
@@ -757,9 +757,9 @@ export function PulseMessageSenderOpportunity({
                   <div className="flex gap-3">
                     <button
                       type="button"
-                      onClick={() => setSendMode("personal")}
+                      onClick={() => setSenderMode("personal")}
                       className={`flex-1 px-4 py-2 rounded font-semibold text-sm transition-all ${
-                        sendMode === "personal"
+                        senderMode === "personal"
                           ? "bg-blue-600 text-white border border-blue-600"
                           : "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50"
                       }`}
@@ -768,9 +768,9 @@ export function PulseMessageSenderOpportunity({
                     </button>
                     <button
                       type="button"
-                      onClick={() => setSendMode("system")}
+                      onClick={() => setSenderMode("system")}
                       className={`flex-1 px-4 py-2 rounded font-semibold text-sm transition-all ${
-                        sendMode === "system"
+                        senderMode === "system"
                           ? "bg-slate-700 text-white border border-slate-700"
                           : "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50"
                       }`}
@@ -779,7 +779,7 @@ export function PulseMessageSenderOpportunity({
                     </button>
                   </div>
                   <p className="text-xs text-slate-600">
-                    {sendMode === "personal"
+                    {senderMode === "personal"
                       ? "El mensaje saldrá firmado con tu nombre"
                       : "El mensaje saldrá firmado por ScaleUp"}
                   </p>
