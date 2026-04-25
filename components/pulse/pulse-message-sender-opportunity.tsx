@@ -369,7 +369,7 @@ export function PulseMessageSenderOpportunity({
 
     // Variables de usuario
     if (user) {
-      values.user_name = `${user.first_name || ""} ${user.last_name || ""}`.trim()
+      values.user_name = `${user.firstName || ""} ${user.lastName || ""}`.trim()
       values.user_email = user.email || ""
     } else {
       values.user_name = "[Sin usuario]"
@@ -378,8 +378,8 @@ export function PulseMessageSenderOpportunity({
 
     // Variables de emisor (cambian según senderMode)
     if (senderMode === "personal") {
-      values.sender_name = user?.first_name || ""
-      values.sender_lastname = user?.last_name || ""
+      values.sender_name = user?.firstName || ""
+      values.sender_lastname = user?.lastName || ""
     } else {
       values.sender_name = "ScaleUp"
       values.sender_lastname = ""
