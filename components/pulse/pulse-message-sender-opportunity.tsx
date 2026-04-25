@@ -237,7 +237,10 @@ export function PulseMessageSenderOpportunity({
       const response = await fetch("/api/auth/email-oauth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ provider }),
+        body: JSON.stringify({ 
+          provider,
+          userId: userInfo?.id // Pasar el user_id
+        }),
       })
 
       if (!response.ok) throw new Error("Error al iniciar conexión")
