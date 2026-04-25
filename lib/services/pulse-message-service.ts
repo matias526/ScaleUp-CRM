@@ -195,10 +195,11 @@ async function logSentMessage(
 
     console.log("[v0] Intentando guardar mensaje en pulse_sent_messages_logs:", JSON.stringify(messageData, null, 2))
 
-    // Insertar en la tabla correcta
+    // Insertar en la tabla correcta y obtener el ID
     const { error: messageError, data: messageData_result } = await (supabase
       .from("pulse_sent_messages_logs" as any)
-      .insert([messageData]) as any)
+      .insert([messageData])
+      .select() as any)
 
     console.log("[v0] Respuesta de insert:", { messageError, data: messageData_result })
 
@@ -207,7 +208,35 @@ async function logSentMessage(
       throw messageError
     }
 
-    console.log("[v0] Mensaje registrado en BD")
+    // Obtener el ID del mensaje insertado
+    const logId = messageData_result?.[0]?.id
+    console.log("[v0] Mensaje registrado en BD con ID:", logId)
+
+    // Insertar attachments si existen
+    if (options.attachments && options.attachments.length > 0 && logId) {
+      console.log("[v0] Guardando", options.attachments.length, "attachments")
+      
+      const attachmentsData = options.attachments.map((att) => ({
+        log_id: logId,
+        attachment_id: att.id, // asumiendo que att tiene un id
+      }))
+
+      console.log("[v0] Datos de attachments a insertar:", JSON.stringify(attachmentsData, null, 2))
+
+      const { error: attachError, data: attachResult } = await (supabase
+        .from("pulse_sent_messages_attachments" as any)
+        .insert(attachmentsData)
+        .select() as any)
+
+      console.log("[v0] Respuesta de attachments:", { attachError, data: attachResult })
+
+      if (attachError) {
+        console.warn("[v0] Error al guardar attachments:", JSON.stringify(attachError, null, 2))
+        // No fallar por esto, solo advertir
+      } else {
+        console.log("[v0] Attachments guardados exitosamente")
+      }
+    }
   } catch (error) {
     console.error("[v0] Error al registrar mensaje:", JSON.stringify(error, null, 2))
   }
