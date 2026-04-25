@@ -961,10 +961,16 @@ export function PulseMessageSenderOpportunity({
                 <div className="space-y-3">
                   <label className="block text-sm font-bold text-slate-900">Mensaje *</label>
                   <SafeEditor
-                    value={message}
-                    onChange={setMessage}
+                    value={currentLanguage === "es" ? message_es : currentLanguage === "en" ? message_en : message_pt}
+                    onChange={(value) => {
+                      if (currentLanguage === "es") setMessage_es(value)
+                      else if (currentLanguage === "en") setMessage_en(value)
+                      else setMessage_pt(value)
+                    }}
                     placeholder="Escribe tu mensaje aquí..."
                   />
+                </div>
+                </div>
                 </div>
 
                 {/* ADJUNTOS */}
