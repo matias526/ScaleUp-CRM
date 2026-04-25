@@ -109,25 +109,39 @@ export async function GET(request: NextRequest) {
       is_connected: true,
     }
 
+    console.log("[v0] Datos a insertar:", JSON.stringify(insertData, null, 2))
+    console.log("[v0] Tipos:", {
+      user_id: typeof userId,
+      email: typeof userEmail,
+      access_token: typeof access_token,
+      refresh_token: typeof refresh_token,
+      token_expires_at: typeof insertData.token_expires_at,
+      is_connected: typeof insertData.is_connected,
+    })
+
     // Intentar insert
     let insertError = null
-    const { error: firstError } = await (supabase
+    const { error: firstError, data: insertedData } = await (supabase
       .from("user_email_integrations" as any)
       .insert([insertData]) as any)
 
+    console.log("[v0] Respuesta del insert:", { firstError, insertedData })
+
     // Si ya existe (unique constraint), hacer update
     if (firstError && firstError.code === "23505") {
-      const { error: updateError } = await (supabase
+      console.log("[v0] Conflicto de unique constraint, intentando update...")
+      const { error: updateError, data: updatedData } = await (supabase
         .from("user_email_integrations" as any)
         .update(insertData)
         .eq("user_id", userId)
         .eq("email", userEmail) as any)
+      console.log("[v0] Respuesta del update:", { updateError, updatedData })
       insertError = updateError
     } else {
       insertError = firstError
     }
 
-    console.log("[v0] Resultado del insert/update:", { insertError })
+    console.log("[v0] Resultado final del insert/update:", { insertError })
 
     if (insertError) {
       console.error("[v0] Error guardando integración de email:", insertError)
