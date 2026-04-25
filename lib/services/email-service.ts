@@ -9,10 +9,12 @@ export async function sendEmail(emailData: {
   replyTo?: string
   partnerName?: string
   techCompanyName?: string
+  senderMode?: "personal" | "system" // personal = desde cuenta del usuario, system = desde Resend
 }): Promise<{ success: boolean; message?: string; data?: any }> {
   try {
     console.log("Preparando envío de email a:", emailData.to)
     console.log("Asunto:", emailData.subject)
+    console.log("Modo de envío:", emailData.senderMode || "system")
 
     // Validar que haya destinatarios válidos
     if (!emailData.to || !Array.isArray(emailData.to) || emailData.to.length === 0) {

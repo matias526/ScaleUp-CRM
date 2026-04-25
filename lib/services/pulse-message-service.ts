@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase/client"
 import { sendEmail } from "@/lib/services/email-service"
 import { replaceVariables, VariableValues } from "@/lib/pulse/pulse-message-variables"
+import { getSystemEmailFooter, type SupportedLanguage } from "@/lib/constants/pulse-system-messages"
 import { v4 as uuidv4 } from "uuid"
 
 export interface PulseMessageRecipient {
@@ -16,6 +17,8 @@ export interface PulseMessageSendOptions {
   recipients: PulseMessageRecipient[]
   scheduled_at?: string | null
   send_mode: "individual" | "group" // individual = uno a uno, group = To/CC/BCC
+  channel: "email" | "whatsapp"
+  senderMode?: "personal" | "system" // personal = desde cuenta del usuario, system = desde Resend
   to_emails: string[]
   cc_emails?: string[]
   bcc_emails?: string[]
@@ -59,19 +62,30 @@ export async function sendPulseMessage(options: PulseMessageSendOptions): Promis
 async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ success: boolean; message?: string; data?: any }> {
   try {
     const subject = replaceVariables(options.subject, options.variables_values)
-    const body = replaceVariables(options.body_content, options.variables_values)
+    let body = replaceVariables(options.body_content, options.variables_values)
+
+    // Si es email del sistema, agregar footer automático
+    if (options.channel === "email" && options.senderMode === "system") {
+      // Por defecto usar español, pero idealmente sería el idioma del template
+      const language = (options.variables_values?.preferred_language || "es") as SupportedLanguage
+      body = body + getSystemEmailFooter(language)
+    }
 
     let emailResult: any = null
 
     // Modo grupo: un email con To/CC/BCC
     if (options.send_mode === "group") {
       console.log("[v0] Enviando en modo grupo")
+      
+      // Si es personal, necesitaría enviar desde la cuenta del usuario (TODO: implementar)
+      // Por ahora, usar el servicio de email estándar
       emailResult = await sendEmail({
         to: options.to_emails,
         cc: options.cc_emails?.filter((e) => e.trim()),
         bcc: options.bcc_emails?.filter((e) => e.trim()),
         subject,
         html: convertMarkdownToHtml(body),
+        senderMode: options.senderMode || "system",
       })
 
       if (!emailResult.success) {
@@ -89,6 +103,7 @@ async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ succe
           to: [recipient.email],
           subject,
           html: convertMarkdownToHtml(body),
+          senderMode: options.senderMode || "system",
         })
         results.push(individualResult)
 

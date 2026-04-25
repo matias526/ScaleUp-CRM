@@ -531,6 +531,20 @@ export function PulseMessageSenderOpportunity({
 
     setSending(true)
     try {
+      // Si es WhatsApp personal, abrir en nueva ventana
+      if (channel === "whatsapp" && senderMode === "personal") {
+        // Para WhatsApp, usar solo el primer destinatario por ahora
+        const phoneNumber = toEmails[0] // Asumir que es un número de WhatsApp
+        const encodedMessage = encodeURIComponent(message)
+        window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, "_blank")
+        toast({
+          description: "Ventana de WhatsApp abierta. Por favor envía el mensaje manualmente.",
+        })
+        onClose()
+        return
+      }
+
+      // Para emails, usar el servicio de envío
       await sendPulseMessage({
         template_id: selectedTemplate,
         opportunity_id: opportunity.id,
@@ -540,7 +554,8 @@ export function PulseMessageSenderOpportunity({
         bcc_emails: bccEmails,
         subject,
         body_content: message,
-        send_mode: sendMode,
+        send_mode: senderMode,
+        channel: channel,
         recipients: [],
         variables_values: variableValues,
       })
