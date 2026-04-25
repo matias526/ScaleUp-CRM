@@ -181,25 +181,32 @@ async function logSentMessage(
   try {
     const message_id = uuidv4()
 
-    // Insertar el mensaje enviado
-    const { error: messageError } = await supabase.from("pulse_sent_messages").insert([
-      {
-        id: message_id,
-        template_id: options.template_id,
-        opportunity_id: options.opportunity_id,
-        user_id: options.user_id,
-        subject,
-        body_content: body,
-        send_mode: options.send_mode,
-        status,
-        scheduled_at: options.scheduled_at,
-        sent_at: status === "sent" ? new Date().toISOString() : null,
-        recipients_count: options.recipients.length,
-        email_result: emailResult,
-      },
-    ])
+    const messageData = {
+      id: message_id,
+      template_id: options.template_id,
+      opportunity_id: options.opportunity_id,
+      user_id: options.user_id,
+      subject,
+      body_content: body,
+      send_mode: options.send_mode,
+      status,
+      scheduled_at: options.scheduled_at,
+      sent_at: status === "sent" ? new Date().toISOString() : null,
+      recipients_count: options.recipients.length,
+      email_result: emailResult,
+    }
 
-    if (messageError) throw messageError
+    console.log("[v0] Intentando guardar mensaje:", JSON.stringify(messageData, null, 2))
+
+    // Insertar el mensaje enviado
+    const { error: messageError, data: messageData_result } = await supabase.from("pulse_sent_messages").insert([messageData])
+
+    console.log("[v0] Respuesta de insert:", { messageError, data: messageData_result })
+
+    if (messageError) {
+      console.error("[v0] Error detallado:", JSON.stringify(messageError, null, 2))
+      throw messageError
+    }
 
     // Insertar adjuntos si existen
     if (options.attachments && options.attachments.length > 0) {
@@ -216,7 +223,7 @@ async function logSentMessage(
 
     console.log("[v0] Mensaje registrado en BD:", message_id)
   } catch (error) {
-    console.error("[v0] Error al registrar mensaje:", error)
+    console.error("[v0] Error al registrar mensaje:", JSON.stringify(error, null, 2))
   }
 }
 
