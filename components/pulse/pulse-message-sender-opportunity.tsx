@@ -27,14 +27,14 @@ const newlinesToBr = (text: string): string => {
   return text.replaceAll("\n", "[BR]")
 }
 
-// Función para renderizar el contenido con tags [B], [I], [U] y variables
+// Función para renderizar el contenido con tags [IMG], [B], [I], [U] y variables
 const renderFormattedContent = (content: string): React.ReactNode[] => {
   const parts: React.ReactNode[] = []
   let lastIndex = 0
   let componentCounter = 0
 
-  // Regex para procesar [B], [I], [U] y {{variables}}
-  const regex = /\[B\](.*?)\[\/B\]|\[I\](.*?)\[\/I\]|\[U\](.*?)\[\/U\]|\{\{([^}]*)\}\}/g
+  // Regex para procesar [IMG], [B], [I], [U] y {{variables}} (en orden de prioridad)
+  const regex = /\[IMG\](.*?)\[\/IMG\]|\[B\](.*?)\[\/B\]|\[I\](.*?)\[\/I\]|\[U\](.*?)\[\/U\]|\{\{([^}]*)\}\}/g
   let match
 
   while ((match = regex.exec(content)) !== null) {
@@ -46,29 +46,50 @@ const renderFormattedContent = (content: string): React.ReactNode[] => {
     }
 
     if (match[1] !== undefined) {
+      // [IMG]url[/IMG]
+      const imgUrl = match[1]
+      const imgKey = `img-${componentCounter++}`
+
+      parts.push(
+        <img
+          key={imgKey}
+          src={imgUrl}
+          alt="Contenido"
+          className="max-w-full max-h-80 rounded my-2 block shadow-sm border border-slate-100"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement
+            if (target.dataset.errorHandled) return
+            target.dataset.errorHandled = "true"
+            target.src = "https://placehold.co/400x200?text=Imagen+Expirada"
+            target.className = "max-w-full h-20 rounded my-2 block opacity-40 grayscale"
+            console.warn("[v0] Imagen blob expirada omitida:", imgUrl)
+          }}
+        />
+      )
+    } else if (match[2] !== undefined) {
       // [B]text[/B]
       parts.push(
         <strong key={elementKey} className="font-bold">
-          {match[1]}
+          {match[2]}
         </strong>
       )
-    } else if (match[2] !== undefined) {
+    } else if (match[3] !== undefined) {
       // [I]text[/I]
       parts.push(
         <em key={elementKey} className="italic">
-          {match[2]}
+          {match[3]}
         </em>
       )
-    } else if (match[3] !== undefined) {
+    } else if (match[4] !== undefined) {
       // [U]text[/U]
       parts.push(
         <u key={elementKey} className="underline">
-          {match[3]}
+          {match[4]}
         </u>
       )
-    } else if (match[4] !== undefined) {
+    } else if (match[5] !== undefined) {
       // {{variable}}
-      const variableName = match[4]
+      const variableName = match[5]
       parts.push(
         <span
           key={elementKey}
