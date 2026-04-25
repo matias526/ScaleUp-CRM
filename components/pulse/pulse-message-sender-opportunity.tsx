@@ -260,29 +260,6 @@ export function PulseMessageSenderOpportunity({
       )
   }, [loadedTemplates, language])
 
-  const variableValues = useMemo(() => {
-    const firstContact = contacts[0]
-    return {
-      contact_name: firstContact?.name || "",
-      contact_email: firstContact?.email || "",
-      contact_phone: firstContact?.phone || "",
-      contact_position: firstContact?.position || "",
-      company_name: endCustomer?.name || "",
-      company_industry: endCustomer?.industry || "",
-      company_city: endCustomer?.city || "",
-      company_country: endCustomer?.country || "",
-      opportunity_name: opportunity?.name || "",
-      opportunity_stage: opportunity?.stage || "",
-      opportunity_value: opportunity?.value || "",
-      opportunity_probability: opportunity?.probability || "",
-      opportunity_description: opportunity?.description || "",
-      user_name: user ? `${user.first_name} ${user.last_name}` : "",
-      user_email: user?.email || "",
-      today_date: new Date().toLocaleDateString("es-ES"),
-      current_time: new Date().toLocaleTimeString("es-ES"),
-    }
-  }, [contacts, endCustomer, opportunity, user])
-
   // Construir objeto con valores de variables disponibles
   const variableValues = useMemo(() => {
     const values: Record<string, string | number> = {}
