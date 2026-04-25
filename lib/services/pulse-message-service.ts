@@ -86,6 +86,7 @@ async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ succe
         subject,
         html: convertMarkdownToHtml(body),
         senderMode: options.senderMode || "system",
+        userId: options.user_id,
       })
 
       if (!emailResult.success) {
@@ -104,6 +105,7 @@ async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ succe
           subject,
           html: convertMarkdownToHtml(body),
           senderMode: options.senderMode || "system",
+          userId: options.user_id,
         })
         results.push(individualResult)
 

@@ -1,4 +1,3 @@
-// Función para enviar emails usando Resend
 export async function sendEmail(emailData: {
   to: string[]
   cc?: string[]
@@ -10,15 +9,17 @@ export async function sendEmail(emailData: {
   partnerName?: string
   techCompanyName?: string
   senderMode?: "personal" | "system" // personal = desde cuenta del usuario, system = desde Resend
+  userId?: string // requerido si senderMode === "personal"
 }): Promise<{ success: boolean; message?: string; data?: any }> {
   try {
-    console.log("Preparando envío de email a:", emailData.to)
-    console.log("Asunto:", emailData.subject)
-    console.log("Modo de envío:", emailData.senderMode || "system")
+    console.log("[v0] Preparando envío de email a:", emailData.to)
+    console.log("[v0] Asunto:", emailData.subject)
+    console.log("[v0] Modo de envío:", emailData.senderMode || "system")
+    console.log("[v0] UserId:", emailData.userId)
 
     // Validar que haya destinatarios válidos
     if (!emailData.to || !Array.isArray(emailData.to) || emailData.to.length === 0) {
-      console.error("No se proporcionaron destinatarios válidos")
+      console.error("[v0] No se proporcionaron destinatarios válidos")
       return {
         success: false,
         message: "No se proporcionaron destinatarios válidos",
@@ -29,14 +30,37 @@ export async function sendEmail(emailData: {
     const validRecipients = emailData.to.filter((email) => email && typeof email === "string" && email.trim() !== "")
 
     if (validRecipients.length === 0) {
-      console.error("No hay destinatarios válidos después de filtrar")
+      console.error("[v0] No hay destinatarios válidos después de filtrar")
       return {
         success: false,
         message: "No hay destinatarios válidos",
       }
     }
 
-    // Usar el email por defecto si no se proporciona
+    // Si es envío personal, usar Gmail API
+    if (emailData.senderMode === "personal") {
+      console.log("[v0] Usando Gmail API para envío personal")
+      
+      if (!emailData.userId) {
+        return {
+          success: false,
+          message: "userId es requerido para envío personal",
+        }
+      }
+
+      return await sendEmailViaGmail({
+        to: validRecipients,
+        cc: emailData.cc,
+        bcc: emailData.bcc,
+        subject: emailData.subject,
+        html: emailData.html,
+        replyTo: emailData.replyTo,
+        userId: emailData.userId,
+      })
+    }
+
+    // Si no, usar Resend (sistema)
+    console.log("[v0] Usando Resend para envío del sistema")
     const from = emailData.from || process.env.NEXT_PUBLIC_EMAIL_FROM || "ScaleUp CRM <no-reply@scaleup-global.com>"
 
     // Enviar el email usando la API route
@@ -58,18 +82,66 @@ export async function sendEmail(emailData: {
 
     if (!response.ok) {
       const errorData = await response.json()
-      console.error("Error en la respuesta de la API:", errorData)
+      console.error("[v0] Error en la respuesta de la API:", errorData)
       throw new Error(errorData.message || "Error al enviar el email")
     }
 
     const result = await response.json()
-    console.log("Email enviado correctamente:", result)
+    console.log("[v0] Email enviado correctamente:", result)
     return { success: true, data: result.data }
   } catch (error) {
-    console.error("Error general al enviar email:", error)
+    console.error("[v0] Error general al enviar email:", error)
     return {
       success: false,
       message: error instanceof Error ? error.message : "Error al enviar el email",
+    }
+  }
+}
+
+// Función para enviar email via Gmail API
+async function sendEmailViaGmail(emailData: {
+  to: string[]
+  cc?: string[]
+  bcc?: string[]
+  subject: string
+  html: string
+  replyTo?: string
+  userId: string
+}): Promise<{ success: boolean; message?: string; data?: any }> {
+  try {
+    console.log("[v0] Iniciando envío via Gmail para user:", emailData.userId)
+
+    // Llamar al endpoint de Gmail
+    const response = await fetch("/api/send-email-gmail", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        to: emailData.to,
+        cc: emailData.cc,
+        bcc: emailData.bcc,
+        subject: emailData.subject,
+        html: emailData.html,
+        replyTo: emailData.replyTo,
+        userId: emailData.userId,
+      }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      console.error("[v0] Error enviando via Gmail:", errorData)
+      throw new Error(errorData.message || "Error al enviar email via Gmail")
+    }
+
+    const result = await response.json()
+    console.log("[v0] Email enviado via Gmail correctamente:", result)
+    return { success: true, data: result.data }
+  } catch (error) {
+    console.error("[v0] Error al enviar via Gmail:", error)
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Error al enviar email via Gmail",
     }
   }
 }
