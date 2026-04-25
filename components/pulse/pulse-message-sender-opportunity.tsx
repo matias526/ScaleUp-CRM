@@ -17,6 +17,73 @@ import { useTranslations } from "@/hooks/use-translations"
 import { DICT_LANG_CONTACTS } from "@/lib/constants/dict-lang-contacts"
 import SafeEditor from "@/components/pulse/safe-editor"
 
+// Función para renderizar el contenido con tags [B], [I], [U] y variables
+const renderFormattedContent = (content: string): React.ReactNode[] => {
+  const parts: React.ReactNode[] = []
+  let lastIndex = 0
+  let componentCounter = 0
+
+  // Regex para procesar [B], [I], [U] y {{variables}}
+  const regex = /\[B\](.*?)\[\/B\]|\[I\](.*?)\[\/I\]|\[U\](.*?)\[\/U\]|\{\{([^}]*)\}\}/g
+  let match
+
+  while ((match = regex.exec(content)) !== null) {
+    const elementKey = `elem-${componentCounter++}`
+
+    // Agregar texto plano antes del match
+    if (match.index > lastIndex) {
+      parts.push(content.substring(lastIndex, match.index))
+    }
+
+    if (match[1] !== undefined) {
+      // [B]text[/B]
+      parts.push(
+        <strong key={elementKey} className="font-bold">
+          {match[1]}
+        </strong>
+      )
+    } else if (match[2] !== undefined) {
+      // [I]text[/I]
+      parts.push(
+        <em key={elementKey} className="italic">
+          {match[2]}
+        </em>
+      )
+    } else if (match[3] !== undefined) {
+      // [U]text[/U]
+      parts.push(
+        <u key={elementKey} className="underline">
+          {match[3]}
+        </u>
+      )
+    } else if (match[4] !== undefined) {
+      // {{variable}}
+      const variableName = match[4]
+      parts.push(
+        <span
+          key={elementKey}
+          className="bg-blue-100 text-blue-700 px-1 rounded font-mono text-xs whitespace-nowrap"
+          title="Campo dinámico que se reemplazará al enviar"
+        >
+          {"{{" + variableName + "}}"}
+        </span>
+      )
+    }
+
+    lastIndex = regex.lastIndex
+  }
+
+  // Agregar texto restante
+  if (lastIndex < content.length) {
+    const remaining = content.substring(lastIndex)
+    if (remaining) {
+      parts.push(remaining)
+    }
+  }
+
+  return parts.length > 0 ? parts : [content]
+}
+
 interface Contact {
   id: string
   name: string
@@ -675,8 +742,8 @@ export function PulseMessageSenderOpportunity({
                         <p className="font-semibold text-slate-900 break-words">{previewSubject || "(sin asunto)"}</p>
                       </div>
                       <div className="border-t border-slate-200 pt-3">
-                        <div className="bg-slate-50 border border-slate-200 rounded p-3 min-h-32">
-                          <p className="text-xs text-slate-700 whitespace-pre-wrap break-words">{previewMessage || "(mensaje vacío)"}</p>
+                        <div className="bg-slate-50 border border-slate-200 rounded p-3 min-h-32 text-xs text-slate-700 whitespace-pre-wrap break-words space-y-1">
+                          {renderFormattedContent(previewMessage) || "(mensaje vacío)"}
                         </div>
                       </div>
                       {selectedAttachments.length > 0 && (
@@ -699,8 +766,8 @@ export function PulseMessageSenderOpportunity({
                 {channel === "whatsapp" && (
                   <Card className="bg-green-50 border border-green-200 rounded-lg overflow-hidden p-4">
                     <div className="space-y-2">
-                      <div className="bg-green-500 rounded-lg p-3 max-w-xs ml-auto">
-                        <p className="text-sm text-white break-words font-medium">{previewMessage || "(mensaje vacío)"}</p>
+                      <div className="bg-green-500 rounded-lg p-3 max-w-xs ml-auto text-sm text-white break-words font-medium">
+                        {renderFormattedContent(previewMessage) || "(mensaje vacío)"}
                         <div className="flex justify-end items-center gap-1 mt-2">
                           <p className="text-xs text-green-100">{new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</p>
                           <svg className="h-4 w-4 text-green-200" fill="currentColor" viewBox="0 0 20 20">
