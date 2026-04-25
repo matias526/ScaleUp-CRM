@@ -605,7 +605,9 @@ export function PulseMessageSenderOpportunity({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <>
+      {/* Dialog principal de envío */}
+      <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-6xl h-[90vh] p-0 gap-0 bg-white rounded-lg shadow-xl">
         {/* HEADER - ESTILO CREAR OPORTUNIDAD */}
         <div className="bg-blue-50 border-b border-blue-200 px-8 py-6">
@@ -1212,5 +1214,6 @@ export function PulseMessageSenderOpportunity({
         </div>
       </DialogContent>
     </Dialog>
+    </>
   )
 }
