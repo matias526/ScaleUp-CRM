@@ -11,10 +11,6 @@ export async function GET(request: NextRequest) {
     const state = request.nextUrl.searchParams.get("state")
     const error = request.nextUrl.searchParams.get("error")
 
-    // Obtener el userId y state de las cookies
-    const userId = request.cookies.get("oauth_user_id")?.value
-    const savedState = request.cookies.get("oauth_state")?.value
-
     // Si el usuario rechazó la autorización
     if (error) {
       return NextResponse.redirect(
@@ -28,18 +24,26 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Validar state para CSRF protection
-    if (!state || !savedState || state !== savedState) {
-      console.error("[v0] State mismatch - potential CSRF attack")
+    if (!state) {
       return NextResponse.redirect(
-        `${request.nextUrl.origin}?email_oauth_error=state_mismatch`
+        `${request.nextUrl.origin}?email_oauth_error=no_state`
       )
     }
 
-    if (!userId) {
-      console.error("[v0] userId no encontrado en cookie")
+    // Decodificar state para obtener userId
+    let userId: string
+    try {
+      const decodedState = Buffer.from(state, "base64").toString("utf-8")
+      const [userIdFromState] = decodedState.split(":")
+      userId = userIdFromState
+      
+      if (!userId) {
+        throw new Error("userId no encontrado en state")
+      }
+    } catch (decodeError) {
+      console.error("[v0] Error decodificando state:", decodeError)
       return NextResponse.redirect(
-        `${request.nextUrl.origin}?email_oauth_error=no_user_id`
+        `${request.nextUrl.origin}?email_oauth_error=invalid_state`
       )
     }
 
@@ -110,14 +114,10 @@ export async function GET(request: NextRequest) {
 
     console.log("[v0] OAuth exitoso para user:", userId, "email:", userEmail)
 
-    // Crear response y limpiar cookies
-    const response = NextResponse.redirect(
+    // Redirigir de vuelta al frontend con éxito
+    return NextResponse.redirect(
       `${request.nextUrl.origin}?email_oauth_success=true`
     )
-    response.cookies.delete("oauth_user_id")
-    response.cookies.delete("oauth_state")
-
-    return response
   } catch (error) {
     console.error("[v0] Error en email OAuth callback:", error)
     return NextResponse.redirect(
@@ -125,13 +125,6 @@ export async function GET(request: NextRequest) {
     )
   }
 }
-
-
-    if (!code) {
-      return NextResponse.redirect(
-        `${request.nextUrl.origin}?email_oauth_error=no_code`
-      )
-    }
 
     // Intercambiar código por tokens
     const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {

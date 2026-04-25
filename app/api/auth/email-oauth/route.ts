@@ -34,7 +34,11 @@ export async function POST(request: NextRequest) {
         "https://www.googleapis.com/auth/userinfo.profile",
       ]
 
-      const state = Math.random().toString(36).substring(7)
+      // Codificar userId en el state parameter
+      const randomState = Math.random().toString(36).substring(7)
+      const stateData = `${userId}:${randomState}`
+      const encodedState = Buffer.from(stateData).toString("base64")
+
       const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth")
       authUrl.searchParams.set("client_id", clientId)
       authUrl.searchParams.set("redirect_uri", redirectUri)
@@ -42,29 +46,12 @@ export async function POST(request: NextRequest) {
       authUrl.searchParams.set("scope", scopes.join(" "))
       authUrl.searchParams.set("access_type", "offline")
       authUrl.searchParams.set("prompt", "consent")
-      authUrl.searchParams.set("state", state)
+      authUrl.searchParams.set("state", encodedState)
 
-      // Guardar userId en una cookie temporal
-      const response = NextResponse.json({
+      return NextResponse.json({
         success: true,
         authUrl: authUrl.toString(),
       })
-
-      response.cookies.set("oauth_user_id", userId, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 600, // 10 minutos
-      })
-
-      response.cookies.set("oauth_state", state, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 600, // 10 minutos
-      })
-
-      return response
     }
 
     return NextResponse.json(
