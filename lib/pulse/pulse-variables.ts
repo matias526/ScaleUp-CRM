@@ -5,6 +5,7 @@ export const PULSE_VARIABLES = {
     { label: "Monto Oportunidad", tag: "{{opportunity_amount}}" },
     { label: "Nombre Tech Company", tag: "{{tech_company_name}}" },
     { label: "Nombre Prospect Partner", tag: "{{prospect_partner_name}}" },
+    { label: "Nombre Partner", tag: "{{partner_name}}" },
   ],
   destinatario: [
     { label: "Nombre (Receptor)", tag: "{{recipient_first_name}}" },
@@ -13,6 +14,7 @@ export const PULSE_VARIABLES = {
   ],
   emisor: [
     { label: "Nombre (Remitente)", tag: "{{sender_name}}" },
+    { label: "Apellido (Remitente)", tag: "{{sender_lastname}}" },
     { label: "Empresa (Remitente)", tag: "{{sender_company}}" },
   ],
 }
