@@ -16,6 +16,7 @@ interface SafeEditorProps {
 export default function SafeEditor({ value, onChange, placeholder, disabled, onAddImage }: SafeEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [activeCategory, setActiveCategory] = useState<"entidad" | "destinatario" | "emisor">("entidad")
 
   // 1. MANTENGO TU FUNCIÓN DE SELECCIÓN
   const handleSelection = () => {
@@ -104,8 +105,9 @@ export default function SafeEditor({ value, onChange, placeholder, disabled, onA
   return (
     <div className="flex flex-col w-full border rounded-md overflow-hidden border-slate-300 shadow-none">
       {/* TOOLBAR */}
-      <div className="flex items-center gap-2 p-3 bg-slate-50 border-b border-slate-300">
-        <div className="flex gap-1 border-r pr-2 border-slate-300">
+      <div className="flex items-center gap-3 p-3 bg-slate-50 border-b border-slate-300">
+        {/* Format buttons */}
+        <div className="flex gap-1 border-r pr-3 border-slate-300">
           <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-600 hover:text-slate-900 hover:bg-slate-100" onClick={(e) => { e.preventDefault(); e.stopPropagation(); wrapText("[B]", "[/B]"); }}>
             <Bold className="h-4 w-4" />
           </Button>
@@ -124,15 +126,50 @@ export default function SafeEditor({ value, onChange, placeholder, disabled, onA
             </>
           )}
         </div>
+
+        {/* Category buttons */}
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveCategory("entidad")}
+            className={`text-xs font-semibold px-3 py-2 rounded transition-all ${
+              activeCategory === "entidad"
+                ? "bg-slate-700 text-white"
+                : "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50"
+            }`}
+          >
+            ENTIDAD
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveCategory("destinatario")}
+            className={`text-xs font-semibold px-3 py-2 rounded transition-all ${
+              activeCategory === "destinatario"
+                ? "bg-slate-700 text-white"
+                : "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50"
+            }`}
+          >
+            DESTINATARIO
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveCategory("emisor")}
+            className={`text-xs font-semibold px-3 py-2 rounded transition-all ${
+              activeCategory === "emisor"
+                ? "bg-slate-700 text-white"
+                : "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50"
+            }`}
+          >
+            EMISOR
+          </button>
+        </div>
       </div>
 
-      {/* VARIABLES BY CATEGORY */}
-      <div className="space-y-3 p-3 bg-slate-50 border-b border-slate-300">
-        {/* ENTIDAD */}
-        <div className="space-y-2">
-          <p className="text-xs font-semibold text-slate-600 uppercase">ENTIDAD:</p>
-          <div className="flex gap-2 flex-wrap">
-            {PULSE_VARIABLES.entidad.map((v) => (
+      {/* VARIABLES - Dynamic based on activeCategory */}
+      <div className="p-3 bg-slate-50 border-b border-slate-300">
+        <div className="flex gap-2 flex-wrap">
+          {activeCategory === "entidad" &&
+            PULSE_VARIABLES.entidad.map((v) => (
               <button
                 key={v.tag}
                 type="button"
@@ -143,14 +180,8 @@ export default function SafeEditor({ value, onChange, placeholder, disabled, onA
                 {v.tag}
               </button>
             ))}
-          </div>
-        </div>
-
-        {/* DESTINATARIO */}
-        <div className="space-y-2">
-          <p className="text-xs font-semibold text-slate-600 uppercase">DESTINATARIO:</p>
-          <div className="flex gap-2 flex-wrap">
-            {PULSE_VARIABLES.destinatario.map((v) => (
+          {activeCategory === "destinatario" &&
+            PULSE_VARIABLES.destinatario.map((v) => (
               <button
                 key={v.tag}
                 type="button"
@@ -161,14 +192,8 @@ export default function SafeEditor({ value, onChange, placeholder, disabled, onA
                 {v.tag}
               </button>
             ))}
-          </div>
-        </div>
-
-        {/* EMISOR */}
-        <div className="space-y-2">
-          <p className="text-xs font-semibold text-slate-600 uppercase">EMISOR:</p>
-          <div className="flex gap-2 flex-wrap">
-            {PULSE_VARIABLES.emisor.map((v) => (
+          {activeCategory === "emisor" &&
+            PULSE_VARIABLES.emisor.map((v) => (
               <button
                 key={v.tag}
                 type="button"
@@ -179,7 +204,6 @@ export default function SafeEditor({ value, onChange, placeholder, disabled, onA
                 {v.tag}
               </button>
             ))}
-          </div>
         </div>
       </div>
 
