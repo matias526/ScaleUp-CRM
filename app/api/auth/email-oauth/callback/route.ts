@@ -146,16 +146,30 @@ export async function GET(request: NextRequest) {
     if (insertError) {
       console.error("[v0] Error guardando integración de email:", insertError)
       
-      // Devolver HTML que cierra la ventana con error
+      // Devolver HTML con error detallado
       return new NextResponse(
         `
           <html>
+            <head>
+              <title>OAuth Callback - Error</title>
+              <style>
+                body { font-family: monospace; padding: 20px; background: #fff5f5; }
+                .error { color: red; }
+                .info { color: #333; }
+                pre { background: #ffe0e0; padding: 15px; border-radius: 5px; overflow-x: auto; border: 1px solid red; }
+                h1 { color: red; }
+              </style>
+            </head>
             <body>
-              <script>
-                localStorage.setItem('email_oauth_error', 'save_failed: ${insertError.message}');
-                window.close();
-              </script>
-              <p>Error al guardar la integración. Ventana cerrándose...</p>
+              <h1>✗ Error al guardar integración de email</h1>
+              <h2 class="error">Error details:</h2>
+              <pre>${JSON.stringify(insertError, null, 2)}</pre>
+              <h2 class="info">Datos intentados:</h2>
+              <pre>${JSON.stringify({
+                user_id: userId,
+                email: userEmail,
+                provider: "google",
+              }, null, 2)}</pre>
             </body>
           </html>
         `,
@@ -168,15 +182,35 @@ export async function GET(request: NextRequest) {
 
     console.log("[v0] OAuth exitoso para user:", userId, "email:", userEmail)
 
-    // Devolver HTML que cierra la ventana del popup
+    // Devolver HTML con toda la información de debug
     return new NextResponse(
       `
         <html>
+          <head>
+            <title>OAuth Callback - Debug</title>
+            <style>
+              body { font-family: monospace; padding: 20px; background: #f5f5f5; }
+              .success { color: green; }
+              .error { color: red; }
+              .info { color: #333; }
+              pre { background: white; padding: 15px; border-radius: 5px; overflow-x: auto; }
+              h1 { color: #333; }
+            </style>
+          </head>
           <body>
+            <h1 class="success">✓ OAuth exitoso!</h1>
+            <h2 class="info">Datos guardados:</h2>
+            <pre>${JSON.stringify({
+              userId,
+              userEmail,
+              provider: "google",
+              token_expires_at: new Date(Date.now() + expires_in * 1000).toISOString(),
+              is_connected: true,
+            }, null, 2)}</pre>
+            <p class="info">La ventana se cerrará en 3 segundos...</p>
             <script>
-              window.close();
+              setTimeout(() => window.close(), 3000);
             </script>
-            <p>Ventana cerrándose...</p>
           </body>
         </html>
       `,
@@ -188,16 +222,24 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("[v0] Error en email OAuth callback:", error)
     
-    // Devolver HTML que cierra la ventana con error
+    // Devolver HTML con error de servidor
     return new NextResponse(
       `
         <html>
+          <head>
+            <title>OAuth Callback - Server Error</title>
+            <style>
+              body { font-family: monospace; padding: 20px; background: #fff5f5; }
+              .error { color: red; }
+              pre { background: #ffe0e0; padding: 15px; border-radius: 5px; overflow-x: auto; border: 1px solid red; }
+              h1 { color: red; }
+            </style>
+          </head>
           <body>
-            <script>
-              localStorage.setItem('email_oauth_error', 'server_error');
-              window.close();
-            </script>
-            <p>Error en la autenticación. Ventana cerrándose...</p>
+            <h1>✗ Error del servidor</h1>
+            <h2 class="error">Error:</h2>
+            <pre>${error instanceof Error ? error.message : JSON.stringify(error, null, 2)}</pre>
+            <pre>${error instanceof Error ? error.stack : ""}</pre>
           </body>
         </html>
       `,
