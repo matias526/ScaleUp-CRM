@@ -239,11 +239,14 @@ export function PulseMessageSenderOpportunity({
         const response = await fetch(
           `/api/pulse/opportunity-relations?${params.toString()}`
         )
+        console.log("[v0] DEBUG - Respuesta del API (status):", response.status)
+        
         if (!response.ok) throw new Error("Error al cargar relaciones")
 
         const data = await response.json()
+        console.log("[v0] DEBUG - Respuesta del API (data completa):", data)
         setOpportunityRelations(data || {})
-        console.log("[v0] DEBUG - Relaciones cargadas:", data)
+        console.log("[v0] DEBUG - Relaciones guardadas en state:", data)
       }
     } catch (error) {
       console.error("Error cargando relaciones:", error)
