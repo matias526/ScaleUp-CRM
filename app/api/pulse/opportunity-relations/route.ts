@@ -29,12 +29,14 @@ export async function GET(request: NextRequest) {
         .from("tech_companies")
         .select("id, name")
         .eq("id", techCompanyId)
-        .single()
+        .limit(1)
+
+      console.log("[v0] tech_company query:", { techCompanyId, data, error })
 
       if (error) {
         console.error("Error fetching tech_company:", error)
-      } else {
-        result.tech_company = data
+      } else if (data && data.length > 0) {
+        result.tech_company = data[0]
       }
     }
 
@@ -44,12 +46,14 @@ export async function GET(request: NextRequest) {
         .from("prospects")
         .select("id, name")
         .eq("id", prospectId)
-        .single()
+        .limit(1)
+
+      console.log("[v0] prospect query:", { prospectId, data, error })
 
       if (error) {
         console.error("Error fetching prospect:", error)
-      } else {
-        result.prospect = data
+      } else if (data && data.length > 0) {
+        result.prospect = data[0]
       }
     }
 
@@ -59,15 +63,18 @@ export async function GET(request: NextRequest) {
         .from("partners")
         .select("id, name")
         .eq("id", partnerId)
-        .single()
+        .limit(1)
+
+      console.log("[v0] partner query:", { partnerId, data, error })
 
       if (error) {
         console.error("Error fetching partner:", error)
-      } else {
-        result.partner = data
+      } else if (data && data.length > 0) {
+        result.partner = data[0]
       }
     }
 
+    console.log("[v0] opportunity-relations result:", result)
     return NextResponse.json(result)
   } catch (error) {
     console.error("Error in opportunity-relations API:", error)
