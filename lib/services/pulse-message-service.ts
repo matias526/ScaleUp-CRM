@@ -179,27 +179,26 @@ async function logSentMessage(
   status: string = "sent"
 ): Promise<void> {
   try {
-    const message_id = uuidv4()
-
+    // Mapear a la estructura real de pulse_sent_messages_logs
     const messageData = {
-      id: message_id,
-      template_id: options.template_id,
       opportunity_id: options.opportunity_id,
-      user_id: options.user_id,
-      subject,
-      body_content: body,
-      send_mode: options.send_mode,
+      contact_id: null,
+      sender_id: options.user_id,
+      channel: options.channel || "email",
+      sender_type: options.senderMode === "personal" ? "personal_email" : "system",
+      final_subject: subject,
+      final_body: body,
       status,
-      scheduled_at: options.scheduled_at,
+      error_message: null,
       sent_at: status === "sent" ? new Date().toISOString() : null,
-      recipients_count: options.recipients.length,
-      email_result: emailResult,
     }
 
-    console.log("[v0] Intentando guardar mensaje:", JSON.stringify(messageData, null, 2))
+    console.log("[v0] Intentando guardar mensaje en pulse_sent_messages_logs:", JSON.stringify(messageData, null, 2))
 
-    // Insertar el mensaje enviado
-    const { error: messageError, data: messageData_result } = await supabase.from("pulse_sent_messages").insert([messageData])
+    // Insertar en la tabla correcta
+    const { error: messageError, data: messageData_result } = await (supabase
+      .from("pulse_sent_messages_logs" as any)
+      .insert([messageData]) as any)
 
     console.log("[v0] Respuesta de insert:", { messageError, data: messageData_result })
 
@@ -208,20 +207,7 @@ async function logSentMessage(
       throw messageError
     }
 
-    // Insertar adjuntos si existen
-    if (options.attachments && options.attachments.length > 0) {
-      const attachmentsData = options.attachments.map((att) => ({
-        message_id,
-        file_url: att.url,
-        filename: att.filename,
-      }))
-
-      const { error: attachError } = await supabase.from("pulse_sent_messages_attachments").insert(attachmentsData)
-
-      if (attachError) console.warn("[v0] Error al guardar adjuntos:", attachError)
-    }
-
-    console.log("[v0] Mensaje registrado en BD:", message_id)
+    console.log("[v0] Mensaje registrado en BD")
   } catch (error) {
     console.error("[v0] Error al registrar mensaje:", JSON.stringify(error, null, 2))
   }
