@@ -18,14 +18,17 @@ export async function POST(request: NextRequest) {
     if (provider === "google") {
       // Construir URL de OAuth de Google
       const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID
-      const redirectUri = process.env.OAUTH_REDIRECT_URI
 
-      if (!clientId || !redirectUri) {
+      if (!clientId) {
         return NextResponse.json(
-          { success: false, error: "Variables de entorno no configuradas" },
+          { success: false, error: "GOOGLE_OAUTH_CLIENT_ID no configurado" },
           { status: 500 }
         )
       }
+
+      // Construir redirect_uri dinámicamente basado en el origen actual
+      const origin = request.nextUrl.origin
+      const redirectUri = `${origin}/api/auth/email-oauth/callback`
 
       const scopes = [
         "https://www.googleapis.com/auth/gmail.send",
