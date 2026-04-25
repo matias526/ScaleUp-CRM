@@ -637,7 +637,11 @@ export function PulseMessageSenderOpportunity({
         send_mode: senderMode,
         channel: channel,
         senderMode: senderMode,
-        recipients: [],
+        recipients: toEmails.map((email) => ({
+          contact_id: "",
+          email,
+          name: "",
+        })),
         variables_values: variableValues,
       })
 
