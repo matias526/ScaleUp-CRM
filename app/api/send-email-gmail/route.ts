@@ -116,6 +116,16 @@ export async function POST(request: NextRequest) {
     console.log("[v0] Token válido:", accessToken?.substring(0, 20) + "...")
 
     // Construir el mensaje MIME
+    console.log("[v0] Constructing MIME message with params:", {
+      to,
+      cc,
+      bcc,
+      subject: subject?.substring(0, 50),
+      from: userEmail,
+      replyTo,
+      htmlLength: html?.length,
+    })
+
     const mimeMessage = buildMimeMessage({
       to,
       cc,
@@ -126,10 +136,18 @@ export async function POST(request: NextRequest) {
       replyTo,
     })
 
-    console.log("[v0] Mensaje MIME construido, longitud:", mimeMessage.length)
+    console.log("[v0] MIME message built, length:", mimeMessage.length)
+    console.log("[v0] MIME preview (first 300 chars):")
+    console.log(mimeMessage.substring(0, 300))
+    
+    // Convertir a base64
+    const base64Message = Buffer.from(mimeMessage).toString("base64")
+    console.log("[v0] Base64 encoded, length:", base64Message.length)
 
     // Enviar via Gmail API
-    console.log("[v0] Enviando a través de Gmail API...")
+    console.log("[v0] Calling Gmail API at: https://www.googleapis.com/gmail/v1/users/me/messages/send")
+    console.log("[v0] Authorization header:", `Bearer ${accessToken?.substring(0, 20)}...`)
+    
     const gmailResponse = await fetch("https://www.googleapis.com/gmail/v1/users/me/messages/send", {
       method: "POST",
       headers: {
@@ -137,23 +155,37 @@ export async function POST(request: NextRequest) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        raw: Buffer.from(mimeMessage).toString("base64"),
+        raw: base64Message,
       }),
     })
 
-    console.log("[v0] Respuesta de Gmail API:", gmailResponse.status, gmailResponse.statusText)
+    console.log("[v0] Gmail API response:", gmailResponse.status, gmailResponse.statusText)
+    
+    const responseText = await gmailResponse.text()
+    console.log("[v0] Gmail API response body:", responseText)
 
     if (!gmailResponse.ok) {
-      const errorData = await gmailResponse.json()
-      console.error("[v0] ERROR de Gmail API:", errorData)
+      let errorData
+      try {
+        errorData = JSON.parse(responseText)
+      } catch {
+        errorData = { raw: responseText }
+      }
+      console.error("[v0] ERROR de Gmail API:", JSON.stringify(errorData, null, 2))
       return NextResponse.json({
         success: false,
-        message: `Error de Gmail: ${errorData.error?.message || "Error desconocido"}`,
+        message: `Error de Gmail: ${errorData.error?.message || errorData.raw || "Error desconocido"}`,
         error: errorData,
       }, { status: 400 })
     }
 
-    const result = await gmailResponse.json()
+    let result
+    try {
+      result = JSON.parse(responseText)
+    } catch {
+      result = { raw: responseText }
+    }
+    
     console.log("[v0] Email enviado exitosamente. Message ID:", result.id)
     console.log("[v0] === FIN ENVÍO EXITOSO ===")
 
@@ -191,6 +223,15 @@ function buildMimeMessage(data: {
   from: string
   replyTo?: string
 }): string {
+  console.log("[v0] buildMimeMessage called with:", {
+    to: data.to,
+    cc: data.cc,
+    bcc: data.bcc,
+    subject: data.subject?.substring(0, 50),
+    from: data.from,
+    replyTo: data.replyTo,
+  })
+
   const headers = [
     `From: ${data.from}`,
     `To: ${data.to.join(", ")}`,
@@ -208,6 +249,9 @@ function buildMimeMessage(data: {
   }
 
   const mimeMessage = headers.join("\r\n") + "\r\n\r\n" + data.html
+
+  console.log("[v0] Headers constructed:")
+  headers.forEach((h, i) => console.log(`  [${i}]: ${h}`))
 
   return mimeMessage
 }

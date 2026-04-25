@@ -73,12 +73,14 @@ async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ succe
 
     let emailResult: any = null
 
+    console.log("[v0] send_mode:", options.send_mode)
+    console.log("[v0] recipients:", options.recipients.length)
+    console.log("[v0] to_emails:", options.to_emails?.length)
+
     // Modo grupo: un email con To/CC/BCC
     if (options.send_mode === "group") {
       console.log("[v0] Enviando en modo grupo")
       
-      // Si es personal, necesitaría enviar desde la cuenta del usuario (TODO: implementar)
-      // Por ahora, usar el servicio de email estándar
       emailResult = await sendEmail({
         to: options.to_emails,
         cc: options.cc_emails?.filter((e) => e.trim()),
@@ -89,13 +91,14 @@ async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ succe
         userId: options.user_id,
       })
 
+      console.log("[v0] Resultado de envío en grupo:", emailResult)
+
       if (!emailResult.success) {
         throw new Error(emailResult.message || "Error al enviar email")
       }
-    }
-
+    } 
     // Modo individual: un email por cada destinatario
-    if (options.send_mode === "individual") {
+    else if (options.send_mode === "individual") {
       console.log("[v0] Enviando en modo individual a", options.recipients.length, "destinatarios")
       
       const results = []
@@ -118,6 +121,8 @@ async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ succe
         success: results.some((r) => r.success),
         message: `Enviados: ${results.filter((r) => r.success).length}/${results.length}`,
       }
+    } else {
+      console.warn("[v0] send_mode no reconocido:", options.send_mode)
     }
 
     // Registrar en BD
