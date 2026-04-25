@@ -95,6 +95,7 @@ export async function GET(request: NextRequest) {
 
     const userInfo = await userInfoResponse.json()
     const userEmail = userInfo.email
+    console.log("[v0] Preparando guardar integración para user:", userId, "email:", userEmail)
 
     // Guardar los tokens en la BD
     const { error: insertError } = await supabase
@@ -112,6 +113,8 @@ export async function GET(request: NextRequest) {
         onConflict: "user_id"
       })
 
+    console.log("[v0] Resultado del upsert:", { insertError })
+
     if (insertError) {
       console.error("[v0] Error guardando integración de email:", insertError)
       return NextResponse.redirect(
@@ -121,14 +124,43 @@ export async function GET(request: NextRequest) {
 
     console.log("[v0] OAuth exitoso para user:", userId, "email:", userEmail)
 
-    // Redirigir de vuelta al frontend con éxito
-    return NextResponse.redirect(
-      `${request.nextUrl.origin}?email_oauth_success=true`
+    // Devolver HTML que cierra la ventana del popup
+    return new NextResponse(
+      `
+        <html>
+          <body>
+            <script>
+              window.close();
+            </script>
+            <p>Ventana cerrándose...</p>
+          </body>
+        </html>
+      `,
+      {
+        status: 200,
+        headers: { "Content-Type": "text/html" },
+      }
     )
   } catch (error) {
     console.error("[v0] Error en email OAuth callback:", error)
-    return NextResponse.redirect(
-      `${request.nextUrl.origin}?email_oauth_error=server_error`
+    
+    // Devolver HTML que cierra la ventana con error
+    return new NextResponse(
+      `
+        <html>
+          <body>
+            <script>
+              localStorage.setItem('email_oauth_error', 'server_error');
+              window.close();
+            </script>
+            <p>Error en la autenticación. Ventana cerrándose...</p>
+          </body>
+        </html>
+      `,
+      {
+        status: 500,
+        headers: { "Content-Type": "text/html" },
+      }
     )
   }
 }
