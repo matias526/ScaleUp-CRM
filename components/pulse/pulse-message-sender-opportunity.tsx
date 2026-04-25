@@ -915,6 +915,7 @@ export function PulseMessageSenderOpportunity({
                     value={message}
                     onChange={setMessage}
                     placeholder="Escribe tu mensaje aquí..."
+                    onAddImage={(url) => setMessage(message + `\n[IMG]${url}[/IMG]`)}
                   />
                 </div>
 
