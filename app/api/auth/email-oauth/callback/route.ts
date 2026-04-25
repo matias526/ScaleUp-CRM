@@ -106,9 +106,8 @@ export async function GET(request: NextRequest) {
         email: userEmail,
         access_token: access_token,
         refresh_token: refresh_token,
-        expires_at: new Date(Date.now() + expires_in * 1000).toISOString(),
-        connected_at: new Date().toISOString(),
-        is_active: true,
+        token_expires_at: new Date(Date.now() + expires_in * 1000).toISOString(),
+        is_connected: true,
       }, {
         onConflict: "user_id"
       }) as any)

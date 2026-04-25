@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
       .from("user_email_integrations" as any)
       .select("id")
       .eq("user_id", userId)
-      .eq("is_active", true)
+      .eq("is_connected", true)
       .limit(1) as any)
 
     console.log("[v0] Resultado query:", { data, error })
