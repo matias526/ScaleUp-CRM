@@ -170,7 +170,7 @@ export function PulseMessageSenderOpportunity({
   isOpen,
   onClose,
 }: PulseMessageSenderOpportunityProps) {
-  const { user } = useAuth()
+  const { userInfo } = useAuth()
   const { language } = useTranslations(DICT_LANG_CONTACTS)
   const [channel, setChannel] = useState<"email" | "whatsapp">("email")
   const [selectedTemplate, setSelectedTemplate] = useState("")
@@ -368,9 +368,9 @@ export function PulseMessageSenderOpportunity({
     }
 
     // Variables de usuario
-    if (user) {
-      values.user_name = `${user.firstName || ""} ${user.lastName || ""}`.trim()
-      values.user_email = user.email || ""
+    if (userInfo) {
+      values.user_name = `${userInfo.firstName || ""} ${userInfo.lastName || ""}`.trim()
+      values.user_email = userInfo.email || ""
     } else {
       values.user_name = "[Sin usuario]"
       values.user_email = "[Sin usuario]"
@@ -378,8 +378,8 @@ export function PulseMessageSenderOpportunity({
 
     // Variables de emisor (cambian según senderMode)
     if (senderMode === "personal") {
-      values.sender_name = user?.firstName || ""
-      values.sender_lastname = user?.lastName || ""
+      values.sender_name = userInfo?.firstName || ""
+      values.sender_lastname = userInfo?.lastName || ""
     } else {
       values.sender_name = "ScaleUp"
       values.sender_lastname = ""
@@ -395,7 +395,7 @@ export function PulseMessageSenderOpportunity({
     })
 
     return values
-  }, [contacts, endCustomer, opportunity, user, opportunityRelations, senderMode])
+  }, [contacts, endCustomer, opportunity, userInfo, opportunityRelations, senderMode])
 
   const previewMessage = useMemo(() => {
     return replaceVariables(message, variableValues)
@@ -504,15 +504,15 @@ export function PulseMessageSenderOpportunity({
       await sendPulseMessage({
         template_id: selectedTemplate,
         opportunity_id: opportunity.id,
-        channel,
+        user_id: userInfo?.id || "",
         to_emails: toEmails,
         cc_emails: ccEmails,
         bcc_emails: bccEmails,
         subject,
         body_content: message,
         send_mode: sendMode,
-        schedule_date: scheduleDate ? new Date(scheduleDate) : null,
-        schedule_time: scheduleTime,
+        recipients: [],
+        variables_values: variableValues,
       })
 
       toast({
