@@ -7,9 +7,16 @@ import { supabase } from "@/lib/supabase/client"
  */
 export async function GET(request: NextRequest) {
   try {
+    console.log("[v0] Callback OAuth iniciado")
+    console.log("[v0] URL:", request.nextUrl.toString())
+    
     const code = request.nextUrl.searchParams.get("code")
     const state = request.nextUrl.searchParams.get("state")
     const error = request.nextUrl.searchParams.get("error")
+
+    console.log("[v0] Code:", code?.substring(0, 20) + "...")
+    console.log("[v0] State:", state)
+    console.log("[v0] Error:", error)
 
     // Si el usuario rechazó la autorización
     if (error) {
