@@ -10,39 +10,6 @@ export async function GET(request: NextRequest) {
     console.log("[v0] Callback OAuth iniciado")
     console.log("[v0] URL:", request.nextUrl.toString())
     
-    // DEVOLVER HTML DE VERIFICACION INMEDIATA
-    return new NextResponse(
-      `
-        <html>
-          <head>
-            <title>OAuth Callback - Verificación</title>
-            <style>
-              body { font-family: monospace; padding: 20px; background: #f0f0ff; }
-              .info { color: #0066cc; }
-              pre { background: white; padding: 15px; border-radius: 5px; overflow-x: auto; border: 2px solid #0066cc; }
-              h1 { color: #0066cc; }
-            </style>
-          </head>
-          <body>
-            <h1>✓ CALLBACK CALLBACK CALLBACK</h1>
-            <h2 class="info">Se ejecutó correctamente el endpoint</h2>
-            <h3>URL recibida:</h3>
-            <pre>${request.nextUrl.toString()}</pre>
-            <h3>Parámetros:</h3>
-            <pre>${JSON.stringify({
-              code: request.nextUrl.searchParams.get("code")?.substring(0, 30) + "...",
-              state: request.nextUrl.searchParams.get("state"),
-              error: request.nextUrl.searchParams.get("error"),
-            }, null, 2)}</pre>
-          </body>
-        </html>
-      `,
-      {
-        status: 200,
-        headers: { "Content-Type": "text/html" },
-      }
-    )
-    
     const code = request.nextUrl.searchParams.get("code")
     const state = request.nextUrl.searchParams.get("state")
     const error = request.nextUrl.searchParams.get("error")
