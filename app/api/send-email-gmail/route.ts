@@ -49,10 +49,69 @@ export async function POST(request: NextRequest) {
     }
 
     const emailIntegration = integration[0]
-    const accessToken = emailIntegration.access_token
+    let accessToken = emailIntegration.access_token
+    const refreshToken = emailIntegration.refresh_token
     const userEmail = emailIntegration.email
+    const tokenExpiresAt = emailIntegration.token_expires_at
 
     console.log("[v0] Token obtenido. Email:", userEmail)
+    console.log("[v0] Token expira en:", tokenExpiresAt)
+    
+    // Verificar si el token expiró
+    if (tokenExpiresAt && new Date(tokenExpiresAt) < new Date()) {
+      console.log("[v0] Token expirado, refrescando...")
+      
+      if (!refreshToken) {
+        console.error("[v0] ERROR: No hay refresh_token disponible")
+        return NextResponse.json({
+          success: false,
+          message: "Token expirado y no se puede refrescar. Por favor conecta tu email nuevamente.",
+        }, { status: 401 })
+      }
+
+      // Refrescar el token
+      const refreshResponse = await fetch("https://oauth2.googleapis.com/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          client_id: process.env.GOOGLE_OAUTH_CLIENT_ID,
+          client_secret: process.env.GOOGLE_OAUTH_CLIENT_SECRET,
+          refresh_token: refreshToken,
+          grant_type: "refresh_token",
+        }),
+      })
+
+      if (!refreshResponse.ok) {
+        const error = await refreshResponse.json()
+        console.error("[v0] Error refrescando token:", error)
+        return NextResponse.json({
+          success: false,
+          message: "Error al refrescar token de Google",
+          error,
+        }, { status: 401 })
+      }
+
+      const newTokenData = await refreshResponse.json()
+      accessToken = newTokenData.access_token
+      
+      console.log("[v0] Token refrescado exitosamente")
+      console.log("[v0] Nuevo token:", accessToken?.substring(0, 20) + "...")
+
+      // Actualizar el token en la BD
+      const { error: updateError } = await (supabase
+        .from("user_email_integrations" as any)
+        .update({
+          access_token: accessToken,
+          token_expires_at: new Date(Date.now() + newTokenData.expires_in * 1000).toISOString(),
+        })
+        .eq("user_id", userId) as any)
+
+      if (updateError) {
+        console.error("[v0] Error actualizando token en BD:", updateError)
+        // No fallar por esto, seguir intentando con el nuevo token
+      }
+    }
+
     console.log("[v0] Token válido:", accessToken?.substring(0, 20) + "...")
 
     // Construir el mensaje MIME
