@@ -1913,14 +1913,19 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
         <PulseMessageSenderOpportunity
           opportunity={{
             id: opportunity.id,
-            name: opportunity.name,
-            value: opportunity.value,
+            title: opportunity.title,
+            estimated_value: opportunity.estimated_value,
             probability: opportunity.probability,
             stage: opportunity.stage,
             description: opportunity.description,
             end_customer_id: opportunity.end_customer_id,
+            tech_company_id: opportunity.tech_company_id,
+            prospect_id: opportunity.prospect_id,
+            partner_id: opportunity.partner_id,
           }}
-          techCompanyId={opportunity.tech_company_id}
+          techCompanyData={opportunity.tech_companies}
+          prospectData={opportunity.prospects}
+          partnerData={opportunity.partners}
           contacts={opportunity.opportunity_contacts?.map((oc) => ({
             id: oc.contact?.id,
             name: oc.contact?.first_name + " " + oc.contact?.last_name,

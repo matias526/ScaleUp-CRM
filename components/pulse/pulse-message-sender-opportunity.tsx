@@ -143,8 +143,16 @@ interface EndCustomer {
 }
 
 interface PulseMessageSenderOpportunityProps {
-  opportunity: Opportunity
-  techCompanyId?: string
+  opportunity: Opportunity & {
+    tech_company_id?: string
+    prospect_id?: string
+    partner_id?: string
+    title?: string
+    estimated_value?: number
+  }
+  techCompanyData?: any
+  prospectData?: any
+  partnerData?: any
   contacts: Contact[]
   endCustomer?: EndCustomer
   templates: any[]
@@ -154,7 +162,9 @@ interface PulseMessageSenderOpportunityProps {
 
 export function PulseMessageSenderOpportunity({
   opportunity,
-  techCompanyId,
+  techCompanyData,
+  prospectData,
+  partnerData,
   contacts,
   endCustomer,
   isOpen,
@@ -191,12 +201,12 @@ export function PulseMessageSenderOpportunity({
 
   // Función para cargar recipients (users de tech_company + admins/BDD + contactos)
   const loadRecipients = async () => {
-    if (!techCompanyId || !opportunity.id) return
+    if (!opportunity.tech_company_id || !opportunity.id) return
 
     try {
       setRecipientsLoading(true)
       const response = await fetch(
-        `/api/pulse/recipients?techCompanyId=${techCompanyId}&opportunityId=${opportunity.id}`
+        `/api/pulse/recipients?techCompanyId=${opportunity.tech_company_id}&opportunityId=${opportunity.id}`
       )
       if (!response.ok) throw new Error("Error al cargar recipients")
 
@@ -293,11 +303,32 @@ export function PulseMessageSenderOpportunity({
     }
 
     // Variables de oportunidad
-    values.opportunity_name = opportunity?.name || ""
+    values.opportunity_name = opportunity?.title || ""
+    values.opportunity_amount = opportunity?.estimated_value || ""
     values.opportunity_stage = opportunity?.stage || ""
-    values.opportunity_value = opportunity?.value || ""
     values.opportunity_probability = opportunity?.probability || ""
     values.opportunity_description = opportunity?.description || ""
+
+    // Variables de tech_company
+    if (techCompanyData) {
+      values.tech_company_name = techCompanyData.name || ""
+    } else {
+      values.tech_company_name = "[Sin empresa técnica]"
+    }
+
+    // Variables de prospect
+    if (prospectData) {
+      values.prospect_partner_name = prospectData.name || ""
+    } else {
+      values.prospect_partner_name = "[Sin prospect]"
+    }
+
+    // Variables de partner
+    if (partnerData) {
+      values.partner_name = partnerData.name || ""
+    } else {
+      values.partner_name = "[Sin partner]"
+    }
 
     // Variables de usuario
     if (user) {
@@ -317,7 +348,7 @@ export function PulseMessageSenderOpportunity({
     })
 
     return values
-  }, [contacts, endCustomer, opportunity, user])
+  }, [contacts, endCustomer, opportunity, user, techCompanyData, prospectData, partnerData])
 
   const previewMessage = useMemo(() => {
     return replaceVariables(message, variableValues)
