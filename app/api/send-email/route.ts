@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
   try {
     console.log("[v0] === INICIO ENVÍO DE EMAIL ===")
     
-    const { to, cc, bcc, subject, html, from, replyTo } = await request.json()
+    const { to, cc, bcc, subject, html, from, replyTo, attachments } = await request.json()
 
     console.log("[v0] Datos recibidos:", { 
       to, 
@@ -15,7 +15,8 @@ export async function POST(request: NextRequest) {
       bcc, 
       subject: subject?.substring(0, 50), 
       from,
-      htmlLength: html?.length 
+      htmlLength: html?.length,
+      attachmentsCount: attachments?.length || 0
     })
 
     // Validar que tenemos la API key
@@ -59,6 +60,20 @@ export async function POST(request: NextRequest) {
     if (validBcc.length > 0) {
       emailData.bcc = validBcc
       console.log("[v0] BCC agregados:", validBcc)
+    }
+
+    // Agregar attachments si hay
+    if (attachments && attachments.length > 0) {
+      console.log("[v0] Procesando", attachments.length, "adjuntos...")
+      const processedAttachments = attachments.map((att: any) => {
+        console.log("[v0] Adjunto:", { filename: att.filename, urlLength: att.url?.length })
+        return {
+          filename: att.filename,
+          path: att.url, // Resend espera 'path' para URLs remotas
+        }
+      })
+      emailData.attachments = processedAttachments
+      console.log("[v0] Adjuntos procesados para Resend ✓")
     }
 
     console.log("[v0] Payload final para Resend:", {
