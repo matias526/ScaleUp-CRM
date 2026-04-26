@@ -551,6 +551,7 @@ export function PulseMessageSenderOpportunity({
         addEmailToGroup(userRecipient.email, {
           first_name: userRecipient.first_name || "",
           last_name: userRecipient.last_name || "",
+          phone: userRecipient.phone || "",
         })
       }
     }
@@ -667,11 +668,15 @@ export function PulseMessageSenderOpportunity({
         send_mode: sendMode,
         channel: channel,
         senderMode: senderMode,
-        recipients: toEmails.map((email) => ({
-          contact_id: "",
-          email,
-          name: "",
-        })),
+        recipients: toEmails.map((email) => {
+          const recipient = selectedRecipients.find((r) => r.email === email)
+          return {
+            contact_id: "",
+            email,
+            name: `${recipient?.first_name || ""} ${recipient?.last_name || ""}`.trim(),
+            phone: recipient?.phone || "",
+          }
+        }),
         variables_values: variableValues,
       })
 
