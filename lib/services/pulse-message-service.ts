@@ -99,6 +99,10 @@ async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ succe
           html: bodyHtmlFinal,
           senderMode: options.senderMode || "system",
           userId: options.user_id,
+          attachments: options.attachments?.map((att: any) => ({
+            filename: att.file_name || att.filename,
+            url: att.file_url || att.url,
+          })),
         })
 
         console.log("[v0] Resultado de envío en grupo:", emailResult)
@@ -121,6 +125,10 @@ async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ succe
             html: bodyHtmlFinal,
             senderMode: options.senderMode || "system",
             userId: options.user_id,
+            attachments: options.attachments?.map((att: any) => ({
+              filename: att.file_name || att.filename,
+              url: att.file_url || att.url,
+            })),
           })
           results.push(individualResult)
 

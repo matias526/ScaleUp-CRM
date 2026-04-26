@@ -17,6 +17,7 @@ import { toast } from "@/components/ui/use-toast"
 import { useTranslations } from "@/hooks/use-translations"
 import { DICT_LANG_CONTACTS } from "@/lib/constants/dict-lang-contacts"
 import SafeEditor from "@/components/pulse/safe-editor"
+import { FileUpload } from "@/components/file-upload"
 
 // Convertir [BR] a saltos de línea reales para edición
 const brToNewlines = (text: string): string => {
@@ -190,6 +191,7 @@ export function PulseMessageSenderOpportunity({
   const [loadedTemplates, setLoadedTemplates] = useState<any[]>([])
   const [templatesLoading, setTemplatesLoading] = useState(false)
   const [selectedAttachments, setSelectedAttachments] = useState<any[]>([])
+  const [newAttachments, setNewAttachments] = useState<any[]>([])
   const [recipients, setRecipients] = useState<any[]>([])
   const [recipientsLoading, setRecipientsLoading] = useState(false)
   const [manualEmail, setManualEmail] = useState("")
@@ -695,6 +697,13 @@ export function PulseMessageSenderOpportunity({
           }),
         ],
         variables_values: variableValues,
+        attachments: [
+          ...selectedAttachments, // Attachments del template
+          ...newAttachments.map((att: any) => ({
+            ...att,
+            file_content: att.file, // FormData será manejado en el servicio
+          })),
+        ],
       })
 
       toast({
@@ -1113,11 +1122,73 @@ export function PulseMessageSenderOpportunity({
                     )}
 
                     {/* Dropzone para agregar más adjuntos */}
-                    <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all bg-white">
-                      <Upload className="h-6 w-6 text-slate-400 mx-auto mb-2" />
-                      <p className="text-sm text-slate-600">Arrastra archivos aquí o haz clic para seleccionar</p>
-                      <p className="text-xs text-slate-500 mt-1">Máximo 10MB por archivo</p>
-                    </div>
+                    <FileUpload
+                      maxSizeMB={10}
+                      allowedFileTypes={["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "jpg", "jpeg", "png", "gif", "zip"]}
+                      onUpload={async (file: File) => {
+                        try {
+                          // Crear objeto con información del archivo
+                          const newAttachment = {
+                            id: Date.now().toString(),
+                            file_name: file.name,
+                            file_size: file.size,
+                            file_url: URL.createObjectURL(file),
+                            file_path: file.name,
+                            file: file, // Guardar el archivo para enviarlo después
+                            is_new: true,
+                          }
+                          setNewAttachments([...newAttachments, newAttachment])
+                          toast({
+                            description: `Archivo "${file.name}" agregado exitosamente`,
+                          })
+                        } catch (error) {
+                          toast({
+                            description: "Error al agregar el archivo",
+                            variant: "destructive",
+                          })
+                        }
+                      }}
+                    >
+                      <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all bg-white">
+                        <Upload className="h-6 w-6 text-slate-400 mx-auto mb-2" />
+                        <p className="text-sm text-slate-600">Arrastra archivos aquí o haz clic para seleccionar</p>
+                        <p className="text-xs text-slate-500 mt-1">Máximo 10MB por archivo</p>
+                      </div>
+                    </FileUpload>
+
+                    {/* Mostrar adjuntos nuevos agregados */}
+                    {newAttachments.length > 0 && (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-4">
+                        <p className="text-sm font-semibold text-green-900 mb-3">Adjuntos agregados:</p>
+                        <div className="space-y-2">
+                          {newAttachments.map((attachment: any) => (
+                            <div
+                              key={attachment.id}
+                              className="flex items-center justify-between bg-white border border-green-100 rounded p-3"
+                            >
+                              <div className="flex items-center gap-2">
+                                <Upload className="h-4 w-4 text-green-600" />
+                                <div className="text-sm">
+                                  <p className="font-medium text-slate-900">{attachment.file_name}</p>
+                                  <p className="text-xs text-slate-500">
+                                    {attachment.file_size ? `${(attachment.file_size / 1024).toFixed(2)} KB` : "Tamaño desconocido"}
+                                  </p>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setNewAttachments(newAttachments.filter((a: any) => a.id !== attachment.id))
+                                }}
+                                className="text-xs text-red-600 hover:text-red-800 font-semibold"
+                              >
+                                Remover
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* PROGRAMACIÓN */}
