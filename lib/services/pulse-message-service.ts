@@ -57,12 +57,51 @@ export async function sendPulseMessage(options: PulseMessageSendOptions): Promis
 }
 
 /**
+ * Agrega una nota a la oportunidad con el resumen del mensaje
+ */
+async function addNoteToOpportunity(
+  options: PulseMessageSendOptions,
+  subject: string,
+  body: string
+): Promise<void> {
+  try {
+    // Convertir el body a HTML si aún tiene tags
+    const finalBody = convertMarkdownToHtml(body)
+    
+    // Crear contenido de la nota con asunto y body procesado
+    const content = `<strong>Pulse Message:</strong> ${subject}\n\n${finalBody}`
+
+    console.log("[v0] Agregando nota a oportunidad:", options.opportunity_id)
+
+    const { error } = await supabase.from("notes").insert([
+      {
+        opportunity_id: options.opportunity_id,
+        user_id: options.user_id,
+        content,
+        is_private: false,
+      },
+    ])
+
+    if (error) {
+      console.warn("[v0] Error al agregar nota:", error)
+    } else {
+      console.log("[v0] Nota agregada a la oportunidad")
+    }
+  } catch (error) {
+    console.error("[v0] Error en addNoteToOpportunity:", error)
+  }
+}
+
+/**
  * Envía el mensaje inmediatamente
  */
 async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ success: boolean; message?: string; data?: any }> {
   try {
     const subject = replaceVariables(options.subject, options.variables_values)
     let body = replaceVariables(options.body_content, options.variables_values)
+
+    console.log("[v0] Body después de replaceVariables (primeros 200 chars):")
+    console.log(body.substring(0, 200))
 
     // Si es email del sistema, agregar footer automático
     if (options.channel === "email" && options.senderMode === "system") {
@@ -76,6 +115,10 @@ async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ succe
     console.log("[v0] send_mode:", options.send_mode)
     console.log("[v0] recipients:", options.recipients.length)
     console.log("[v0] to_emails:", options.to_emails?.length)
+    console.log("[v0] Antes de convertMarkdownToHtml, body contiene [B]:", body.includes("[B]"))
+    console.log("[v0] Antes de convertMarkdownToHtml, body contiene [I]:", body.includes("[I]"))
+    console.log("[v0] Antes de convertMarkdownToHtml, body contiene [U]:", body.includes("[U]"))
+    console.log("[v0] Antes de convertMarkdownToHtml, body contiene [IMG]:", body.includes("[IMG]"))
 
     // Modo grupo: un email con To/CC/BCC
     if (options.send_mode === "group") {
@@ -128,8 +171,8 @@ async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ succe
     // Registrar en BD
     await logSentMessage(options, subject, body, emailResult)
 
-    // Agregar nota a la oportunidad
-    await addNoteToOpportunity(options)
+    // Agregar nota a la oportunidad con el body procesado (variables reemplazadas y tags convertidos)
+    await addNoteToOpportunity(options, subject, body)
 
     return {
       success: true,
