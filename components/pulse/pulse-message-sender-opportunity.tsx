@@ -705,12 +705,12 @@ export function PulseMessageSenderOpportunity({
             <div className="w-3/5 border-r border-slate-200 overflow-y-auto">
               <ScrollArea className="h-full">
                 <div className="p-8 space-y-6">
-                  {/* CANAL Y TEMPLATE - GRID 2 COL */}
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-3">
-                      <label className="block text-sm font-bold text-slate-900">Canal *</label>
+                  {/* CANAL, MODO DE ENVÍO Y TEMPLATE - GRID 3 COL */}
+                  <div className="grid grid-cols-4 gap-4">
+                    <div className="space-y-2">
+                      <label className="block text-xs font-bold text-slate-900">Canal *</label>
                       <Select value={channel} onValueChange={(val) => setChannel(val as any)}>
-                        <SelectTrigger className="h-10 border border-slate-300 rounded-lg text-sm">
+                        <SelectTrigger className="h-9 border border-slate-300 rounded-lg text-sm">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -730,10 +730,23 @@ export function PulseMessageSenderOpportunity({
                       </Select>
                     </div>
 
-                    <div className="space-y-3">
-                      <label className="block text-sm font-bold text-slate-900">Template (Opcional)</label>
+                    <div className="space-y-2">
+                      <label className="block text-xs font-bold text-slate-900">Modo *</label>
+                      <Select value={sendMode} onValueChange={(val) => setSendMode(val as any)}>
+                        <SelectTrigger className="h-9 border border-slate-300 rounded-lg text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="group">Grupal</SelectItem>
+                          <SelectItem value="individual">Individual</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="col-span-2 space-y-2">
+                      <label className="block text-xs font-bold text-slate-900">Template (Opcional)</label>
                       <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
-                        <SelectTrigger className="h-10 border border-slate-300 rounded-lg text-sm">
+                        <SelectTrigger className="h-9 border border-slate-300 rounded-lg text-sm">
                           <SelectValue placeholder={templatesLoading ? "Cargando..." : "Seleccionar template"} />
                         </SelectTrigger>
                         <SelectContent>
@@ -750,61 +763,53 @@ export function PulseMessageSenderOpportunity({
 
                   {/* REMITENTE - Solo para Email */}
                   {channel === "email" && (
-                    <div className="space-y-3 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <label className="block text-sm font-bold text-slate-900">Enviar como *</label>
-                      <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <label className="block text-xs font-bold text-slate-900">Enviar como *</label>
+                      <div className="flex gap-2">
                         <button
                           type="button"
                           onClick={() => setSenderMode("personal")}
-                          className={`text-sm font-semibold px-4 py-3 rounded border-2 transition-all ${senderMode === "personal"
-                              ? "bg-blue-600 text-white border-blue-600"
-                              : "bg-white text-slate-700 border-slate-300 hover:border-blue-300"
+                          className={`text-xs font-semibold px-3 py-2 rounded transition-all ${senderMode === "personal"
+                              ? "bg-blue-100 text-blue-700 border border-blue-300"
+                              : "bg-white text-slate-600 border border-slate-300 hover:border-blue-200"
                             }`}
                         >
-                          {hasPersonalEmail && senderMode === "personal" ? "✓ " : ""}Tu Email Personal
-                          {!hasPersonalEmail && senderMode === "personal" && (
-                            <span className="text-xs block mt-1 font-normal">(conectar primero)</span>
-                          )}
+                          Tu Email {hasPersonalEmail && senderMode === "personal" ? "✓" : ""}
                         </button>
                         <button
                           type="button"
                           onClick={() => setSenderMode("system")}
-                          className={`text-sm font-semibold px-4 py-3 rounded border-2 transition-all ${senderMode === "system"
-                              ? "bg-blue-600 text-white border-blue-600"
-                              : "bg-white text-slate-700 border-slate-300 hover:border-blue-300"
+                          className={`text-xs font-semibold px-3 py-2 rounded transition-all ${senderMode === "system"
+                              ? "bg-blue-100 text-blue-700 border border-blue-300"
+                              : "bg-white text-slate-600 border border-slate-300 hover:border-blue-200"
                             }`}
                         >
                           Sistema CRM
                         </button>
                       </div>
-                      <p className="text-xs text-slate-600 mt-2">
-                        {senderMode === "personal"
-                          ? "Se enviará desde tu email personal. Requiere conexión previa."
-                          : "Se enviará desde el sistema con pie de página automático."}
-                      </p>
                     </div>
                   )}
 
                   {/* DESTINATARIOS */}
-                  <div className="space-y-3 bg-slate-50 border border-slate-200 rounded-lg p-6">
-                    <label className="block text-sm font-bold text-slate-900">Destinatarios *</label>
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold text-slate-900">Destinatarios *</label>
 
-                    {/* Botones para seleccionar To/CC/BCC */}
-                    <div className="flex gap-2 border-b border-slate-200 pb-3">
+                    {/* Botones para seleccionar To/CC/BCC - en una línea */}
+                    <div className="flex gap-2">
                       <button
                         type="button"
                         onClick={() => setRecipientType("to")}
-                        className={`px-3 py-2 rounded text-sm font-semibold transition-all ${recipientType === "to"
+                        className={`px-2 py-1 rounded text-xs font-semibold transition-all ${recipientType === "to"
                           ? "bg-blue-600 text-white"
                           : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100"
                           }`}
                       >
-                        Para (To)
+                        Para
                       </button>
                       <button
                         type="button"
                         onClick={() => setRecipientType("cc")}
-                        className={`px-3 py-2 rounded text-sm font-semibold transition-all ${recipientType === "cc"
+                        className={`px-2 py-1 rounded text-xs font-semibold transition-all ${recipientType === "cc"
                           ? "bg-amber-600 text-white"
                           : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100"
                           }`}
@@ -814,7 +819,7 @@ export function PulseMessageSenderOpportunity({
                       <button
                         type="button"
                         onClick={() => setRecipientType("bcc")}
-                        className={`px-3 py-2 rounded text-sm font-semibold transition-all ${recipientType === "bcc"
+                        className={`px-2 py-1 rounded text-xs font-semibold transition-all ${recipientType === "bcc"
                           ? "bg-slate-600 text-white"
                           : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100"
                           }`}
@@ -823,12 +828,14 @@ export function PulseMessageSenderOpportunity({
                       </button>
                     </div>
 
-                    {/* Select de opciones disponibles */}
-                    <Select onValueChange={handleAddContact}>
-                      <SelectTrigger className="h-10 border border-slate-300 rounded-lg text-sm bg-white">
-                        <SelectValue placeholder="+ Agregar destinatario" />
-                      </SelectTrigger>
-                      <SelectContent>
+                    {/* Select y botón agregar en una línea */}
+                    <div className="flex gap-2 items-end">
+                      <div className="flex-1">
+                        <Select onValueChange={handleAddContact}>
+                          <SelectTrigger className="h-9 border border-slate-300 rounded-lg text-sm bg-white">
+                            <SelectValue placeholder="+ Agregar destinatario" />
+                          </SelectTrigger>
+                          <SelectContent>
                         {/* Contactos de la oportunidad */}
                         {contacts.length > 0 && (
                           <>
@@ -932,117 +939,104 @@ export function PulseMessageSenderOpportunity({
                     )}
                   </div>
 
-                  {/* MODO DE ENVÍO */}
-                  <div className="space-y-3">
-                    <label className="block text-sm font-bold text-slate-900">Modo de Envío *</label>
-                    <Select value={sendMode} onValueChange={(val) => setSendMode(val as any)}>
-                      <SelectTrigger className="h-10 border border-slate-300 rounded-lg text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="group">Un email grupal (To/CC/BCC)</SelectItem>
-                        <SelectItem value="individual">Emails individuales (uno a uno)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  {/* ASUNTO Y VARIABLES - EN UNA LÍNEA */}
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold text-slate-900">Asunto *</label>
+                    <div className="flex gap-2 items-start">
+                      <Input
+                        value={subject}
+                        onChange={(e) => setSubject(e.target.value)}
+                        placeholder="Ej: Propuesta especial para {{company_name}}"
+                        className="h-9 border border-slate-300 rounded-lg text-sm flex-1"
+                      />
 
-                  {/* ASUNTO */}
-                  <div className="space-y-3">
-                    <label className="block text-sm font-bold text-slate-900">Asunto *</label>
-                    <Input
-                      value={subject}
-                      onChange={(e) => setSubject(e.target.value)}
-                      placeholder="Ej: Propuesta especial para {{company_name}}"
-                      className="h-10 border border-slate-300 rounded-lg text-sm"
-                    />
+                      {/* Dropdown buttons compactos */}
+                      <div className="flex gap-1">
+                        {/* ENTIDAD Dropdown */}
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={() => setOpenSubjectDropdown(openSubjectDropdown === "entidad" ? null : "entidad")}
+                            className="text-xs font-semibold px-2 py-2 rounded bg-slate-700 text-white hover:bg-slate-800 transition-all whitespace-nowrap"
+                          >
+                            ENT
+                          </button>
+                          {openSubjectDropdown === "entidad" && (
+                            <div className="absolute top-full mt-1 right-0 bg-white border border-slate-300 rounded shadow-lg z-10 min-w-max">
+                              {PULSE_VARIABLES.entidad.map((v) => (
+                                <button
+                                  key={v.tag}
+                                  type="button"
+                                  onClick={() => {
+                                    setSubject(subject + v.tag)
+                                    setOpenSubjectDropdown(null)
+                                  }}
+                                  className="block w-full text-left text-xs px-3 py-1.5 hover:bg-slate-100 transition-all border-b border-slate-100 last:border-b-0"
+                                >
+                                  {v.label}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
 
-                    {/* Dropdown buttons */}
-                    <div className="flex gap-2 relative">
-                      {/* ENTIDAD Dropdown */}
-                      <div className="relative">
-                        <button
-                          type="button"
-                          onClick={() => setOpenSubjectDropdown(openSubjectDropdown === "entidad" ? null : "entidad")}
-                          className="text-xs font-semibold px-3 py-2 rounded bg-slate-700 text-white hover:bg-slate-800 transition-all"
-                        >
-                          ENTIDAD
-                        </button>
-                        {openSubjectDropdown === "entidad" && (
-                          <div className="absolute top-full mt-1 left-0 bg-white border border-slate-300 rounded shadow-lg z-10 min-w-max">
-                            {PULSE_VARIABLES.entidad.map((v) => (
-                              <button
-                                key={v.tag}
-                                type="button"
-                                onClick={() => {
-                                  setSubject(subject + v.tag)
-                                  setOpenSubjectDropdown(null)
-                                }}
-                                className="block w-full text-left text-xs px-4 py-2 hover:bg-slate-100 transition-all border-b border-slate-100 last:border-b-0"
-                              >
-                                {v.label}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                        {/* DESTINATARIO Dropdown */}
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={() => setOpenSubjectDropdown(openSubjectDropdown === "destinatario" ? null : "destinatario")}
+                            className="text-xs font-semibold px-2 py-2 rounded bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 transition-all whitespace-nowrap"
+                          >
+                            DES
+                          </button>
+                          {openSubjectDropdown === "destinatario" && (
+                            <div className="absolute top-full mt-1 right-0 bg-white border border-slate-300 rounded shadow-lg z-10 min-w-max">
+                              {PULSE_VARIABLES.destinatario.map((v) => (
+                                <button
+                                  key={v.tag}
+                                  type="button"
+                                  onClick={() => {
+                                    setSubject(subject + v.tag)
+                                    setOpenSubjectDropdown(null)
+                                  }}
+                                  className="block w-full text-left text-xs px-3 py-1.5 hover:bg-blue-50 transition-all border-b border-slate-100 last:border-b-0 text-blue-700"
+                                >
+                                  {v.label}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
 
-                      {/* DESTINATARIO Dropdown */}
-                      <div className="relative">
-                        <button
-                          type="button"
-                          onClick={() => setOpenSubjectDropdown(openSubjectDropdown === "destinatario" ? null : "destinatario")}
-                          className="text-xs font-semibold px-3 py-2 rounded bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 transition-all"
-                        >
-                          DESTINATARIO
-                        </button>
-                        {openSubjectDropdown === "destinatario" && (
-                          <div className="absolute top-full mt-1 left-0 bg-white border border-slate-300 rounded shadow-lg z-10 min-w-max">
-                            {PULSE_VARIABLES.destinatario.map((v) => (
-                              <button
-                                key={v.tag}
-                                type="button"
-                                onClick={() => {
-                                  setSubject(subject + v.tag)
-                                  setOpenSubjectDropdown(null)
-                                }}
-                                className="block w-full text-left text-xs px-4 py-2 hover:bg-blue-50 transition-all border-b border-slate-100 last:border-b-0 text-blue-700"
-                              >
-                                {v.label}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* EMISOR Dropdown */}
-                      <div className="relative">
-                        <button
-                          type="button"
-                          onClick={() => setOpenSubjectDropdown(openSubjectDropdown === "emisor" ? null : "emisor")}
-                          className="text-xs font-semibold px-3 py-2 rounded bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 transition-all"
-                        >
-                          EMISOR
-                        </button>
-                        {openSubjectDropdown === "emisor" && (
-                          <div className="absolute top-full mt-1 left-0 bg-white border border-slate-300 rounded shadow-lg z-10 min-w-max">
-                            {PULSE_VARIABLES.emisor.map((v) => (
-                              <button
-                                key={v.tag}
-                                type="button"
-                                onClick={() => {
-                                  setSubject(subject + v.tag)
-                                  setOpenSubjectDropdown(null)
-                                }}
-                                className="block w-full text-left text-xs px-4 py-2 hover:bg-green-50 transition-all border-b border-slate-100 last:border-b-0 text-green-700"
-                              >
-                                {v.label}
-                              </button>
-                            ))}
-                          </div>
-                        )}
+                        {/* EMISOR Dropdown */}
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={() => setOpenSubjectDropdown(openSubjectDropdown === "emisor" ? null : "emisor")}
+                            className="text-xs font-semibold px-2 py-2 rounded bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 transition-all whitespace-nowrap"
+                          >
+                            EMI
+                          </button>
+                          {openSubjectDropdown === "emisor" && (
+                            <div className="absolute top-full mt-1 right-0 bg-white border border-slate-300 rounded shadow-lg z-10 min-w-max">
+                              {PULSE_VARIABLES.emisor.map((v) => (
+                                <button
+                                  key={v.tag}
+                                  type="button"
+                                  onClick={() => {
+                                    setSubject(subject + v.tag)
+                                    setOpenSubjectDropdown(null)
+                                  }}
+                                  className="block w-full text-left text-xs px-3 py-1.5 hover:bg-green-50 transition-all border-b border-slate-100 last:border-b-0 text-green-700"
+                                >
+                                  {v.label}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
                   {/* MENSAJE */}
                   <div className="space-y-3">
