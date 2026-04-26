@@ -641,7 +641,9 @@ export function PulseMessageSenderOpportunity({
           return
         }
 
-        const encodedMessage = encodeURIComponent(message)
+        // Reemplazar variables antes de enviar
+        const messageWithVariables = replaceVariables(message, variableValues)
+        const encodedMessage = encodeURIComponent(messageWithVariables)
         window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, "_blank")
         toast({
           description: "Ventana de WhatsApp abierta. Por favor envía el mensaje manualmente.",
