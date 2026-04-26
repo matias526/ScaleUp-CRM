@@ -29,7 +29,8 @@ export async function GET(request: NextRequest) {
             id,
             email,
             first_name,
-            last_name
+            last_name,
+            phone
           )
         `
         )
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
     // 2. Traer usuarios de la TechCompany (solo activos, sin filtrar por role)
     const { data: techCompanyUsers, error: techCompanyError } = await supabase
       .from("users")
-      .select("id, email, first_name, last_name")
+      .select("id, email, first_name, last_name, phone")
       .eq("tech_company_id", techCompanyId)
       .eq("is_active", true)
 
@@ -57,7 +58,7 @@ export async function GET(request: NextRequest) {
     if (partnerId) {
       const { data: partnerUsersData, error: partnerUsersError } = await supabase
         .from("users")
-        .select("id, email, first_name, last_name")
+        .select("id, email, first_name, last_name, phone")
         .eq("partner_id", partnerId)
         .eq("is_active", true)
 
@@ -86,7 +87,7 @@ export async function GET(request: NextRequest) {
     if (adminBddRoleIds.length > 0) {
       const { data: adminUsersData, error: adminUsersError } = await supabase
         .from("users")
-        .select("id, email, first_name, last_name")
+        .select("id, email, first_name, last_name, phone")
         .in("role_id", adminBddRoleIds)
         .eq("is_active", true)
 
