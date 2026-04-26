@@ -710,9 +710,13 @@ export function PulseMessageSenderOpportunity({
         ],
         variables_values: variableValues,
         attachments: [
-          ...selectedAttachments, // Attachments del template
+          ...selectedAttachments.map((att: any) => ({
+            filename: att.file_name || att.filename,
+            url: att.file_url || att.url,
+          })),
           ...newAttachments.map((att: any) => ({
-            ...att,
+            filename: att.file_name || att.filename,
+            url: att.file_url || att.url,
             file_content: att.file, // FormData será manejado en el servicio
           })),
         ],
