@@ -64,8 +64,13 @@ async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ succe
     const subject = replaceVariables(options.subject, options.variables_values)
     let body = replaceVariables(options.body_content, options.variables_values)
 
-    console.log("[v0] Body después de replaceVariables (primeros 200 chars):")
-    console.log(body.substring(0, 200))
+    console.log("[v0] ====== DEBUG FLUJO ======")
+    console.log("[v0] Paso 1: Body después de replaceVariables:")
+    console.log(body.substring(0, 300))
+    console.log("[v0] ¿Contiene [B]?", body.includes("[B]"))
+    console.log("[v0] ¿Contiene [I]?", body.includes("[I]"))
+    console.log("[v0] ¿Contiene [U]?", body.includes("[U]"))
+    console.log("[v0] ¿Contiene [IMG]?", body.includes("[IMG]"))
 
     // Si es email del sistema, agregar footer automático
     if (options.channel === "email" && options.senderMode === "system") {
@@ -74,26 +79,29 @@ async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ succe
       body = body + getSystemEmailFooter(language)
     }
 
+    // CONVERTIR TAGS A HTML UNA SOLA VEZ
+    console.log("[v0] Paso 2: Llamando convertMarkdownToHtml...")
+    const bodyHtml = convertMarkdownToHtml(body)
+    
+    console.log("[v0] Paso 3: Body después de convertMarkdownToHtml (primeros 500 chars):")
+    console.log(bodyHtml.substring(0, 500))
+
     let emailResult: any = null
 
-    console.log("[v0] send_mode:", options.send_mode)
+    console.log("[v0] Paso 4: send_mode:", options.send_mode)
     console.log("[v0] recipients:", options.recipients.length)
     console.log("[v0] to_emails:", options.to_emails?.length)
-    console.log("[v0] Antes de convertMarkdownToHtml, body contiene [B]:", body.includes("[B]"))
-    console.log("[v0] Antes de convertMarkdownToHtml, body contiene [I]:", body.includes("[I]"))
-    console.log("[v0] Antes de convertMarkdownToHtml, body contiene [U]:", body.includes("[U]"))
-    console.log("[v0] Antes de convertMarkdownToHtml, body contiene [IMG]:", body.includes("[IMG]"))
 
     // Modo grupo: un email con To/CC/BCC
     if (options.send_mode === "group") {
-      console.log("[v0] Enviando en modo grupo")
+      console.log("[v0] Modo grupo: enviando con HTML convertido")
       
       emailResult = await sendEmail({
         to: options.to_emails,
         cc: options.cc_emails?.filter((e) => e.trim()),
         bcc: options.bcc_emails?.filter((e) => e.trim()),
         subject,
-        html: convertMarkdownToHtml(body),
+        html: bodyHtml,
         senderMode: options.senderMode || "system",
         userId: options.user_id,
       })
@@ -106,14 +114,14 @@ async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ succe
     } 
     // Modo individual: un email por cada destinatario
     else if (options.send_mode === "individual") {
-      console.log("[v0] Enviando en modo individual a", options.recipients.length, "destinatarios")
+      console.log("[v0] Modo individual: enviando", options.recipients.length, "emails con HTML convertido")
       
       const results = []
       for (const recipient of options.recipients) {
         const individualResult = await sendEmail({
           to: [recipient.email],
           subject,
-          html: convertMarkdownToHtml(body),
+          html: bodyHtml,
           senderMode: options.senderMode || "system",
           userId: options.user_id,
         })
@@ -132,11 +140,11 @@ async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ succe
       console.warn("[v0] send_mode no reconocido:", options.send_mode)
     }
 
-    // Registrar en BD
-    await logSentMessage(options, subject, body, emailResult)
+    // Registrar en BD usando el body HTML convertido
+    await logSentMessage(options, subject, bodyHtml, emailResult)
 
-    // Agregar nota a la oportunidad con el body procesado (variables reemplazadas y tags convertidos)
-    await addNoteToOpportunity(options, subject, body)
+    // Agregar nota a la oportunidad usando el body HTML convertido
+    await addNoteToOpportunity(options, subject, bodyHtml)
 
     return {
       success: true,
@@ -186,15 +194,12 @@ async function scheduleMessage(options: PulseMessageSendOptions): Promise<{ succ
 async function logSentMessage(
   options: PulseMessageSendOptions,
   subject: string,
-  body: string,
+  bodyHtml: string,
   emailResult: any,
   status: string = "sent"
 ): Promise<void> {
   try {
-    // Convertir el body con tags a HTML antes de guardar
-    const finalHtmlBody = convertMarkdownToHtml(body)
-    
-    // Mapear a la estructura real de pulse_sent_messages_logs
+    // bodyHtml ya está convertido, solo mapear a la estructura real de pulse_sent_messages_logs
     const messageData = {
       opportunity_id: options.opportunity_id,
       contact_id: null,
@@ -202,13 +207,13 @@ async function logSentMessage(
       channel: options.channel || "email",
       sender_type: options.senderMode === "personal" ? "personal_email" : "system",
       final_subject: subject,
-      final_body: finalHtmlBody,
+      final_body: bodyHtml,
       status,
       error_message: null,
       sent_at: status === "sent" ? new Date().toISOString() : null,
     }
 
-    console.log("[v0] Intentando guardar mensaje en pulse_sent_messages_logs:", JSON.stringify(messageData, null, 2))
+    console.log("[v0] Guardando mensaje en BD con HTML convertido")
 
     // Insertar en la tabla correcta y obtener el ID
     const { error: messageError, data: messageData_result } = await (supabase
@@ -263,14 +268,13 @@ async function logSentMessage(
 async function addNoteToOpportunity(
   options: PulseMessageSendOptions,
   subject?: string,
-  body?: string
+  bodyHtml?: string
 ): Promise<void> {
   try {
-    // Si se proporciona body, convertir los tags a HTML
     let content: string
-    if (subject && body) {
-      const finalBody = convertMarkdownToHtml(body)
-      content = `<strong>Pulse Message:</strong> ${subject}\n\n${finalBody}`
+    if (subject && bodyHtml) {
+      // bodyHtml ya está convertido, solo construir la nota
+      content = `<strong>Pulse Message:</strong> ${subject}\n\n${bodyHtml}`
     } else {
       // Fallback a la lógica original si no hay subject/body
       const recipientNames = options.recipients.map((r) => r.name).join(", ")
