@@ -534,7 +534,9 @@ export function PulseMessageSenderOpportunity({
       // Es un contacto de la oportunidad
       const contactId = value.replace("contact-", "")
       const contact = contacts.find((c) => c.id === contactId)
+      console.log("[v0] Contact encontrado:", contact)
       if (contact && contact.email) {
+        console.log("[v0] Agregando contacto con phone:", contact.phone)
         addEmailToGroup(contact.email, {
           first_name: contact.name?.split(" ")[0] || "",
           last_name: contact.name?.split(" ").slice(1).join(" ") || "",
@@ -628,6 +630,10 @@ export function PulseMessageSenderOpportunity({
       if (channel === "whatsapp" && senderMode === "personal") {
         // Para WhatsApp, usar el número de teléfono del primer destinatario
         const firstRecipient = selectedRecipients[0]
+        console.log("[v0] FirstRecipient:", firstRecipient)
+        console.log("[v0] Phone:", firstRecipient?.phone)
+        console.log("[v0] Email (fallback):", toEmails[0])
+        
         const phoneNumber = firstRecipient?.phone || toEmails[0]
         
         if (!phoneNumber) {
