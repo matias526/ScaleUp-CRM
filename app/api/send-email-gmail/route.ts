@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
       htmlLength: html?.length,
     })
 
-    const mimeMessage = buildMimeMessage({
+    const mimeMessage = await buildMimeMessage({
       to,
       cc,
       bcc,
@@ -215,8 +215,8 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Función para construir un mensaje MIME
-function buildMimeMessage(data: {
+// Función para construir un mensaje MIME con attachments en Base64
+async function buildMimeMessage(data: {
   to: string[]
   cc?: string[]
   bcc?: string[]
@@ -225,7 +225,7 @@ function buildMimeMessage(data: {
   from: string
   replyTo?: string
   attachments?: Array<{ filename: string; url: string }>
-}): string {
+}): Promise<string> {
   console.log("[v0] buildMimeMessage called with:", {
     to: data.to,
     cc: data.cc,
@@ -251,6 +251,79 @@ function buildMimeMessage(data: {
   } else {
     headers.push("Content-Type: text/html; charset=UTF-8")
   }
+
+  if (data.cc && data.cc.length > 0) {
+    headers.push(`Cc: ${data.cc.join(", ")}`)
+  }
+
+  if (data.replyTo) {
+    headers.push(`Reply-To: ${data.replyTo}`)
+  }
+
+  let body = data.html
+
+  // Si hay attachments, construir multipart con Base64
+  if (data.attachments && data.attachments.length > 0) {
+    const parts: string[] = []
+
+    // Agregar el HTML como primera parte
+    parts.push(`--${boundary}`)
+    parts.push("Content-Type: text/html; charset=UTF-8")
+    parts.push("Content-Transfer-Encoding: 7bit")
+    parts.push("")
+    parts.push(data.html)
+
+    // Agregar cada attachment descargado y convertido a Base64
+    for (const attachment of data.attachments) {
+      console.log(`[v0] Descargando attachment: ${attachment.filename} desde ${attachment.url}`)
+      
+      try {
+        // Descargar el archivo
+        const response = await fetch(attachment.url)
+        
+        if (!response.ok) {
+          console.warn(`[v0] Error descargando ${attachment.filename}: ${response.status}`)
+          continue
+        }
+
+        // Convertir a Buffer y luego a Base64
+        const arrayBuffer = await response.arrayBuffer()
+        const buffer = Buffer.from(arrayBuffer)
+        const base64Content = buffer.toString('base64')
+
+        console.log(`[v0] Attachment convertido a Base64: ${attachment.filename} (${base64Content.length} caracteres)`)
+
+        // Agregar el attachment al MIME
+        parts.push(`--${boundary}`)
+        parts.push(`Content-Type: application/octet-stream; name="${attachment.filename}"`)
+        parts.push(`Content-Disposition: attachment; filename="${attachment.filename}"`)
+        parts.push("Content-Transfer-Encoding: base64")
+        parts.push("")
+        
+        // Agregar el contenido Base64 en líneas de máximo 76 caracteres (estándar MIME)
+        let base64Line = ""
+        for (let i = 0; i < base64Content.length; i += 76) {
+          parts.push(base64Content.substring(i, i + 76))
+        }
+        parts.push("")
+      } catch (error) {
+        console.warn(`[v0] Error procesando attachment ${attachment.filename}:`, error)
+        continue
+      }
+    }
+
+    // Cerrar el boundary
+    parts.push(`--${boundary}--`)
+    body = parts.join("\r\n")
+  }
+
+  const mimeMessage = headers.join("\r\n") + "\r\n\r\n" + body
+
+  console.log("[v0] Headers constructed:")
+  headers.forEach((h, i) => console.log(`  [${i}]: ${h}`))
+
+  return mimeMessage
+}
 
   if (data.cc && data.cc.length > 0) {
     headers.push(`Cc: ${data.cc.join(", ")}`)
