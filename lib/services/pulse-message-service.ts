@@ -324,7 +324,8 @@ async function logSentMessage(
 
       const attachmentsData = options.attachments.map((att) => ({
         log_id: logId,
-        attachment_id: att.id, // asumiendo que att tiene un id
+        file_name: att.filename,
+        file_url: att.url,
       }))
 
       console.log("[v0] Datos de attachments a insertar:", JSON.stringify(attachmentsData, null, 2))
