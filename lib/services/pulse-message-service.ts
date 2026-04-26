@@ -184,6 +184,9 @@ async function logSentMessage(
   status: string = "sent"
 ): Promise<void> {
   try {
+    // Convertir el body con tags a HTML antes de guardar
+    const finalHtmlBody = convertMarkdownToHtml(body)
+    
     // Mapear a la estructura real de pulse_sent_messages_logs
     const messageData = {
       opportunity_id: options.opportunity_id,
@@ -192,7 +195,7 @@ async function logSentMessage(
       channel: options.channel || "email",
       sender_type: options.senderMode === "personal" ? "personal_email" : "system",
       final_subject: subject,
-      final_body: body,
+      final_body: finalHtmlBody,
       status,
       error_message: null,
       sent_at: status === "sent" ? new Date().toISOString() : null,
@@ -275,22 +278,35 @@ async function addNoteToOpportunity(options: PulseMessageSendOptions): Promise<v
 }
 
 /**
- * Convierte markdown simple a HTML para el email
+ * Convierte tags de formato [B], [I], [U], [IMG], [BR] a HTML
  */
-function convertMarkdownToHtml(markdown: string): string {
-  let html = markdown
-
+function convertMarkdownToHtml(content: string): string {
+  console.log("[v0] Convirtiendo tags a HTML")
+  
+  let html = content
+  
+  // Reemplazar [BR] por saltos de línea
+  html = html.replaceAll("[BR]", "\n")
+  
+  // [IMG]url[/IMG] -> <img src="url" />
+  html = html.replace(/\[IMG\](.*?)\[\/IMG\]/g, '<img src="$1" style="max-width: 100%; border-radius: 5px; margin: 10px 0;" alt="Imagen" />')
+  
+  // [B]text[/B] -> <strong>text</strong>
+  html = html.replace(/\[B\](.*?)\[\/B\]/g, '<strong>$1</strong>')
+  
+  // [I]text[/I] -> <em>text</em>
+  html = html.replace(/\[I\](.*?)\[\/I\]/g, '<em>$1</em>')
+  
+  // [U]text[/U] -> <u>text</u>
+  html = html.replace(/\[U\](.*?)\[\/U\]/g, '<u>$1</u>')
+  
   // Convertir saltos de línea a <br>
   html = html.replace(/\n/g, "<br>")
-
-  // Convertir **bold** a <strong>
-  html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-
-  // Convertir *italic* a <em>
-  html = html.replace(/\*(.*?)\*/g, "<em>$1</em>")
-
+  
   // Convertir URLs a links
-  html = html.replace(/https?:\/\/[^\s]+/g, '<a href="$&" style="color: #2563eb;">$&</a>')
-
+  html = html.replace(/https?:\/\/[^\s<]+/g, '<a href="$&" style="color: #2563eb;">$&</a>')
+  
+  console.log("[v0] Tags convertidos exitosamente")
+  
   return `<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">${html}</div>`
 }
