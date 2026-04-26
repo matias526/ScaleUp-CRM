@@ -82,7 +82,8 @@ export async function POST(request: NextRequest) {
       cc: emailData.cc,
       bcc: emailData.bcc,
       subject: emailData.subject?.substring(0, 50),
-      htmlLength: emailData.html?.length
+      htmlLength: emailData.html?.length,
+      attachments: emailData.attachments
     })
 
     // Enviar email con Resend

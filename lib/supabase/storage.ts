@@ -37,7 +37,7 @@ export async function uploadNewsImage(
 // Función para subir attachments de mensajes y guardarlos en la BD
 export async function uploadMessageAttachment(
   file: File,
-  supabase: SupabaseClient<Database>,
+  supabase: any,
 ): Promise<{ success: boolean; attachmentId?: string; url?: string; error?: string }> {
   try {
     console.log("[v0] Iniciando upload de attachment:", file.name)
@@ -99,7 +99,7 @@ export async function uploadMessageAttachment(
 // Función para descargar attachment desde storage
 export async function getMessageAttachmentUrl(
   attachmentId: string,
-  supabase: SupabaseClient<Database>,
+  supabase: any,
 ): Promise<{ success: boolean; url?: string; filename?: string; error?: string }> {
   try {
     console.log("[v0] Obteniendo URL para attachment:", attachmentId)
