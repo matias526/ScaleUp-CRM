@@ -13,7 +13,7 @@ export function getSystemEmailFooter(language: SupportedLanguage): string {
 
 /**
  * Construye un email HTML profesional para Pulse Messages del sistema
- * Con encabezado con logo, contenido en caja gráfica y footer
+ * Usando el mismo formato que daily-email-service (encabezado azul, contenido limpio, footer)
  */
 export function buildSystemEmailHtml(
   subject: string,
@@ -21,95 +21,64 @@ export function buildSystemEmailHtml(
   language: SupportedLanguage = "es"
 ): string {
   const footerText = getSystemEmailFooter(language)
-  const logoUrl = "https://scaleup-global.com/logo.png" // Reemplazar con URL real del logo
+  const logoUrl = "https://crm.scaleup-global.com/images/scaleup-logo-white.png"
+
+  // Colores del esquema
+  const colors = {
+    primary: "#0055b8",
+    text: "#1f2937",
+    textMuted: "#6b7280",
+    border: "#e5e7eb",
+    background: "#f9fafb",
+    white: "#ffffff",
+  }
 
   return `
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      line-height: 1.6;
-      color: #333;
-      background-color: #f5f5f5;
-      margin: 0;
-      padding: 0;
-    }
-    .email-container {
-      background-color: #ffffff;
-      margin: 20px auto;
-      max-width: 600px;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      overflow: hidden;
-    }
-    .email-header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      padding: 30px;
-      text-align: center;
-      color: white;
-    }
-    .email-header img {
-      height: 40px;
-      margin-bottom: 15px;
-    }
-    .email-header h1 {
-      margin: 0;
-      font-size: 24px;
-      font-weight: 600;
-    }
-    .email-content {
-      padding: 40px;
-    }
-    .message-box {
-      background-color: #f9f9f9;
-      border-left: 4px solid #667eea;
-      padding: 20px;
-      border-radius: 4px;
-      margin: 20px 0;
-    }
-    .message-box p {
-      margin: 0;
-      line-height: 1.8;
-      color: #555;
-    }
-    .email-footer {
-      background-color: #f5f5f5;
-      padding: 20px;
-      text-align: center;
-      font-size: 12px;
-      color: #888;
-      border-top: 1px solid #e0e0e0;
-    }
-    .email-footer p {
-      margin: 5px 0;
-    }
-  </style>
 </head>
-<body>
-  <div class="email-container">
-    <!-- Header -->
-    <div class="email-header">
-      <img src="${logoUrl}" alt="ScaleUp Logo">
-      <h1>${escapeHtml(subject)}</h1>
-    </div>
-    
-    <!-- Content -->
-    <div class="email-content">
-      <div class="message-box">
-        ${content}
-      </div>
-    </div>
-    
-    <!-- Footer -->
-    <div class="email-footer">
-      <p>${escapeHtml(footerText)}</p>
-      <p>© ${new Date().getFullYear()} ScaleUp CRM. Todos los derechos reservados.</p>
-    </div>
-  </div>
+<body style="margin: 0; padding: 0; background-color: ${colors.background}; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td align="center" style="padding: 24px 16px;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px;">
+          <!-- Header -->
+          <tr>
+            <td style="background-color: ${colors.primary}; padding: 24px; border-radius: 8px 8px 0 0;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td>
+                    <div style="font-size: 24px; font-weight: 700; color: ${colors.white}; margin-bottom: 4px;">${escapeHtml(subject)}</div>
+                  </td>
+                  <td align="right" valign="top">
+                    <img src="${logoUrl}" alt="ScaleUp" style="height: 32px; width: auto;" />
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Content -->
+          <tr>
+            <td style="background-color: ${colors.white}; padding: 24px; border-radius: 0 0 8px 8px;">
+              <div style="font-size: 14px; line-height: 1.6; color: ${colors.text}; margin-bottom: 24px;">
+                ${content}
+              </div>
+              
+              <!-- Footer -->
+              <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid ${colors.border}; text-align: center; font-size: 12px; color: ${colors.textMuted};">
+                <p style="margin: 5px 0;">${footerText}</p>
+                <p style="margin: 5px 0;">© ${new Date().getFullYear()} ScaleUp CRM. Todos los derechos reservados.</p>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
   `.trim()
