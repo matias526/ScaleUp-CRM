@@ -855,11 +855,16 @@ export function PulseMessageSenderOpportunity({
                             <div className="px-2 py-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">
                               Contactos de la oportunidad
                             </div>
-                            {contacts.map((contact) => (
-                              <SelectItem key={`contact-${contact.id}`} value={`contact-${contact.id}`}>
-                                {contact.name} ({contact.email})
-                              </SelectItem>
-                            ))}
+                            {contacts.map((contact) => {
+                              console.log("[v0] === POSIBLE DESTINATARIO (CONTACTO) ===")
+                              console.log("[v0] Contact completo:", contact)
+                              console.log("[v0] Phone:", contact.phone)
+                              return (
+                                <SelectItem key={`contact-${contact.id}`} value={`contact-${contact.id}`}>
+                                  {contact.name} ({contact.email})
+                                </SelectItem>
+                              )
+                            })}
                           </>
                         )}
 
@@ -869,11 +874,16 @@ export function PulseMessageSenderOpportunity({
                             <div className="px-2 py-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">
                               Usuarios de la empresa
                             </div>
-                            {recipients.map((user) => (
-                              <SelectItem key={`user-${user.id}`} value={`user-${user.id}`}>
-                                {user.first_name} {user.last_name} ({user.email})
-                              </SelectItem>
-                            ))}
+                            {recipients.map((user) => {
+                              console.log("[v0] === POSIBLE DESTINATARIO (USUARIO) ===")
+                              console.log("[v0] User completo:", user)
+                              console.log("[v0] Phone:", user.phone)
+                              return (
+                                <SelectItem key={`user-${user.id}`} value={`user-${user.id}`}>
+                                  {user.first_name} {user.last_name} ({user.email})
+                                </SelectItem>
+                              )
+                            })}
                           </>
                         )}
                       </SelectContent>
