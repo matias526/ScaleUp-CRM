@@ -19,7 +19,7 @@ import { DICT_LANG_CONTACTS } from "@/lib/constants/dict-lang-contacts"
 import SafeEditor from "@/components/pulse/safe-editor"
 import { FileUpload } from "@/components/file-upload"
 import { uploadMessageAttachment } from "@/lib/supabase/storage"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { createClient } from "@/lib/supabase/client"
 
 // Convertir [BR] a saltos de línea reales para edición
 const brToNewlines = (text: string): string => {
@@ -1145,7 +1145,7 @@ export function PulseMessageSenderOpportunity({
                           setUploadingAttachment(true)
                           console.log("[v0] Iniciando upload de:", file.name)
 
-                          const supabase = createClientComponentClient()
+                          const supabase = createClient()
 
                           // Subir archivo a Supabase Storage y guardar en BD
                           const result = await uploadMessageAttachment(file, supabase)
