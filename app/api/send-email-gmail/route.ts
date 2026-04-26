@@ -325,40 +325,6 @@ async function buildMimeMessage(data: {
   return mimeMessage
 }
 
-  if (data.cc && data.cc.length > 0) {
-    headers.push(`Cc: ${data.cc.join(", ")}`)
-  }
-
-  if (data.replyTo) {
-    headers.push(`Reply-To: ${data.replyTo}`)
-  }
-
-  let body = data.html
-
-  // Si hay attachments, construir multipart
-  if (data.attachments && data.attachments.length > 0) {
-    const parts: string[] = []
-
-    // Agregar el HTML como primera parte
-    parts.push(`--${boundary}`)
-    parts.push("Content-Type: text/html; charset=UTF-8")
-    parts.push("Content-Transfer-Encoding: 7bit")
-    parts.push("")
-    parts.push(data.html)
-
-    // Agregar cada attachment
-    for (const attachment of data.attachments) {
-      console.log(`[v0] Adding attachment: ${attachment.filename}`)
-      parts.push(`--${boundary}`)
-      parts.push(`Content-Type: application/octet-stream; name="${attachment.filename}"`)
-      parts.push(`Content-Disposition: attachment; filename="${attachment.filename}"`)
-      parts.push("Content-Transfer-Encoding: base64")
-      parts.push("")
-      
-      // Nota: Para URLs externas con Gmail API, usualmente se deben descargar y convertir a base64
-      // Por ahora, incluimos la URL como referencia (esto requeriría lógica adicional)
-      parts.push(`[Attachments from URL: ${attachment.url}]`)
-    }
 
     parts.push(`--${boundary}--`)
     body = parts.join("\r\n")
