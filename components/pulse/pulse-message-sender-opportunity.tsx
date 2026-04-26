@@ -836,35 +836,37 @@ export function PulseMessageSenderOpportunity({
                             <SelectValue placeholder="+ Agregar destinatario" />
                           </SelectTrigger>
                           <SelectContent>
-                        {/* Contactos de la oportunidad */}
-                        {contacts.length > 0 && (
-                          <>
-                            <div className="px-2 py-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                              Contactos de la oportunidad
-                            </div>
-                            {contacts.map((contact) => (
-                              <SelectItem key={`contact-${contact.id}`} value={`contact-${contact.id}`}>
-                                {contact.name} ({contact.email})
-                              </SelectItem>
-                            ))}
-                          </>
-                        )}
+                            {/* Contactos de la oportunidad */}
+                            {contacts.length > 0 && (
+                              <>
+                                <div className="px-2 py-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                  Contactos de la oportunidad
+                                </div>
+                                {contacts.map((contact) => (
+                                  <SelectItem key={`contact-${contact.id}`} value={`contact-${contact.id}`}>
+                                    {contact.name} ({contact.email})
+                                  </SelectItem>
+                                ))}
+                              </>
+                            )}
 
-                        {/* Users de la TechCompany */}
-                        {recipients.length > 0 && (
-                          <>
-                            <div className="px-2 py-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                              Usuarios de la empresa
-                            </div>
-                            {recipients.map((user) => (
-                              <SelectItem key={`user-${user.id}`} value={`user-${user.id}`}>
-                                {user.first_name} {user.last_name} ({user.email})
-                              </SelectItem>
-                            ))}
-                          </>
-                        )}
-                      </SelectContent>
-                    </Select>
+                            {/* Users de la TechCompany */}
+                            {recipients.length > 0 && (
+                              <>
+                                <div className="px-2 py-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                  Usuarios de la empresa
+                                </div>
+                                {recipients.map((user) => (
+                                  <SelectItem key={`user-${user.id}`} value={`user-${user.id}`}>
+                                    {user.first_name} {user.last_name} ({user.email})
+                                  </SelectItem>
+                                ))}
+                              </>
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
 
                     {/* Input para agregar emails manuales */}
                     <div className="flex gap-2">
@@ -879,12 +881,12 @@ export function PulseMessageSenderOpportunity({
                           }
                         }}
                         placeholder="O escribe un email manual..."
-                        className="h-10 border border-slate-300 rounded-lg text-sm flex-1"
+                        className="h-9 border border-slate-300 rounded-lg text-sm flex-1"
                       />
                       <Button
                         type="button"
                         onClick={handleAddManualEmail}
-                        className="h-10 px-4 bg-slate-200 hover:bg-slate-300 text-slate-900 font-semibold rounded-lg text-sm"
+                        className="h-9 px-3 bg-slate-200 hover:bg-slate-300 text-slate-900 font-semibold rounded-lg text-sm"
                       >
                         +
                       </Button>
