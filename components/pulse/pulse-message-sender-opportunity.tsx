@@ -559,8 +559,13 @@ export function PulseMessageSenderOpportunity({
 
   const addEmailToGroup = (email: string, recipient?: { first_name: string; last_name: string; phone?: string }) => {
     if (recipientType === "to" && !toEmails.includes(email)) {
+      console.log("[v0] === ARMANDO DESTINATARIOS ===")
+      console.log("[v0] Email:", email)
+      console.log("[v0] Recipient completo:", recipient)
+      console.log("[v0] Phone del recipient:", recipient?.phone)
       setToEmails([...toEmails, email])
       if (recipient) {
+        console.log("[v0] Agregando a selectedRecipients:", { email, ...recipient })
         setSelectedRecipients([...selectedRecipients, { email, ...recipient }])
       }
     } else if (recipientType === "cc" && !ccEmails.includes(email)) {
@@ -631,6 +636,8 @@ export function PulseMessageSenderOpportunity({
       if (channel === "whatsapp" && senderMode === "personal") {
         // Para WhatsApp, usar el número de teléfono del primer destinatario
         const firstRecipient = selectedRecipients[0]
+        console.log("[v0] === ANTES DE ABRIR WA.ME ===")
+        console.log("[v0] selectedRecipients:", selectedRecipients)
         console.log("[v0] FirstRecipient:", firstRecipient)
         console.log("[v0] Phone:", firstRecipient?.phone)
         console.log("[v0] Email (fallback):", toEmails[0])
@@ -646,6 +653,7 @@ export function PulseMessageSenderOpportunity({
           return
         }
 
+        console.log("[v0] Abriendo WA.ME con número:", phoneNumber)
         const encodedMessage = encodeURIComponent(message)
         window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, "_blank")
         toast({
@@ -670,12 +678,18 @@ export function PulseMessageSenderOpportunity({
         senderMode: senderMode,
         recipients: toEmails.map((email) => {
           const recipient = selectedRecipients.find((r) => r.email === email)
-          return {
+          console.log("[v0] === SELECCIONANDO DESTINATARIOS PARA ENVÍO ===")
+          console.log("[v0] Email actual:", email)
+          console.log("[v0] Recipient encontrado:", recipient)
+          console.log("[v0] Phone del recipient:", recipient?.phone)
+          const finalRecipient = {
             contact_id: "",
             email,
             name: `${recipient?.first_name || ""} ${recipient?.last_name || ""}`.trim(),
             phone: recipient?.phone || "",
           }
+          console.log("[v0] Recipient final a enviar:", finalRecipient)
+          return finalRecipient
         }),
         variables_values: variableValues,
       })
