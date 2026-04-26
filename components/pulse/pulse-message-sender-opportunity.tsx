@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
@@ -740,6 +740,7 @@ export function PulseMessageSenderOpportunity({
       {/* Dialog principal de envío */}
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-6xl h-[90vh] p-0 gap-0 bg-white rounded-lg shadow-xl">
+          <DialogTitle className="sr-only">Enviar Mensaje</DialogTitle>
           {/* HEADER - ESTILO CREAR OPORTUNIDAD */}
           <div className="bg-blue-50 border-b border-blue-200 px-8 py-6">
             <h2 className="text-2xl font-bold text-blue-900">Enviar Mensaje</h2>
@@ -1356,6 +1357,7 @@ export function PulseMessageSenderOpportunity({
       {/* Modal para conectar email personal */}
       <Dialog open={showConnectEmailModal} onOpenChange={setShowConnectEmailModal}>
         <DialogContent className="max-w-md">
+          <DialogTitle className="sr-only">Conectar Email Personal</DialogTitle>
           <div className="space-y-4">
             <div>
               <h2 className="text-lg font-bold text-slate-900">Conectar Email Personal</h2>
