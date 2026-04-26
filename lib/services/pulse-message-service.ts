@@ -56,6 +56,7 @@ export async function sendPulseMessage(options: PulseMessageSendOptions): Promis
   }
 }
 
+
 /**
  * Envía el mensaje inmediatamente
  */
