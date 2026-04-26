@@ -18,6 +18,8 @@ import { useTranslations } from "@/hooks/use-translations"
 import { DICT_LANG_CONTACTS } from "@/lib/constants/dict-lang-contacts"
 import SafeEditor from "@/components/pulse/safe-editor"
 import { FileUpload } from "@/components/file-upload"
+import { uploadMessageAttachment } from "@/lib/supabase/storage"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 
 // Convertir [BR] a saltos de línea reales para edición
 const brToNewlines = (text: string): string => {
@@ -191,6 +193,8 @@ export function PulseMessageSenderOpportunity({
   const [templatesLoading, setTemplatesLoading] = useState(false)
   const [selectedAttachments, setSelectedAttachments] = useState<any[]>([])
   const [newAttachments, setNewAttachments] = useState<any[]>([])
+  const [uploadedAttachmentIds, setUploadedAttachmentIds] = useState<string[]>([])
+  const [uploadingAttachment, setUploadingAttachment] = useState(false)
   const [recipients, setRecipients] = useState<any[]>([])
   const [recipientsLoading, setRecipientsLoading] = useState(false)
   const [manualEmail, setManualEmail] = useState("")
@@ -709,16 +713,11 @@ export function PulseMessageSenderOpportunity({
           }),
         ],
         variables_values: variableValues,
-        attachments: [
-          ...selectedAttachments.map((att: any) => ({
-            filename: att.file_name || att.filename,
-            url: att.file_url || att.url,
-          })),
-          ...newAttachments.map((att: any) => ({
-            filename: att.file_name || att.filename,
-            url: att.file_url || att.url,
-            file_content: att.file, // FormData será manejado en el servicio
-          })),
+        attachment_ids: [
+          // IDs de attachments del template
+          ...selectedAttachments.map((att: any) => att.id),
+          // IDs de attachments nuevos (ya subidos a Supabase)
+          ...uploadedAttachmentIds,
         ],
       })
 
@@ -1143,25 +1142,50 @@ export function PulseMessageSenderOpportunity({
                       allowedFileTypes={["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "jpg", "jpeg", "png", "gif", "zip"]}
                       onUpload={async (file: File) => {
                         try {
-                          // Crear objeto con información del archivo
+                          setUploadingAttachment(true)
+                          console.log("[v0] Iniciando upload de:", file.name)
+
+                          const supabase = createClientComponentClient()
+
+                          // Subir archivo a Supabase Storage y guardar en BD
+                          const result = await uploadMessageAttachment(file, supabase)
+
+                          if (!result.success) {
+                            toast({
+                              description: `Error al subir ${file.name}: ${result.error}`,
+                              variant: "destructive",
+                            })
+                            setUploadingAttachment(false)
+                            return
+                          }
+
+                          console.log("[v0] Archivo subido exitosamente, ID:", result.attachmentId)
+
+                          // Guardar objeto con datos del archivo para mostrar
                           const newAttachment = {
-                            id: Date.now().toString(),
+                            id: result.attachmentId,
                             file_name: file.name,
                             file_size: file.size,
-                            file_url: URL.createObjectURL(file),
-                            file_path: file.name,
-                            file: file, // Guardar el archivo para enviarlo después
+                            file_url: result.url,
                             is_new: true,
+                            is_uploaded: true,
                           }
+
                           setNewAttachments([...newAttachments, newAttachment])
+                          setUploadedAttachmentIds([...uploadedAttachmentIds, result.attachmentId!])
+
                           toast({
-                            description: `Archivo "${file.name}" agregado exitosamente`,
+                            description: `Archivo "${file.name}" subido exitosamente`,
                           })
+
+                          setUploadingAttachment(false)
                         } catch (error) {
+                          console.error("[v0] Error en upload:", error)
                           toast({
-                            description: "Error al agregar el archivo",
+                            description: "Error al subir el archivo",
                             variant: "destructive",
                           })
+                          setUploadingAttachment(false)
                         }
                       }}
                     >
@@ -1169,6 +1193,7 @@ export function PulseMessageSenderOpportunity({
                         <Upload className="h-6 w-6 text-slate-400 mx-auto mb-2" />
                         <p className="text-sm text-slate-600">Arrastra archivos aquí o haz clic para seleccionar</p>
                         <p className="text-xs text-slate-500 mt-1">Máximo 10MB por archivo</p>
+                        {uploadingAttachment && <p className="text-xs text-blue-600 mt-2">Subiendo...</p>}
                       </div>
                     </FileUpload>
 

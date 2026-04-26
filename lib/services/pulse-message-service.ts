@@ -2,6 +2,7 @@ import { supabase } from "@/lib/supabase/client"
 import { sendEmail } from "@/lib/services/email-service"
 import { replaceVariables, VariableValues } from "@/lib/pulse/pulse-message-variables"
 import { getSystemEmailFooter, buildSystemEmailHtml, type SupportedLanguage } from "@/lib/constants/pulse-system-messages"
+import { getMessageAttachmentUrl } from "@/lib/supabase/storage"
 import { v4 as uuidv4 } from "uuid"
 
 export interface PulseMessageRecipient {
@@ -25,7 +26,7 @@ export interface PulseMessageSendOptions {
   subject: string
   body_content: string
   variables_values: VariableValues
-  attachments?: { url: string; filename: string }[]
+  attachment_ids?: string[] // IDs de attachments a enviar (se descargan desde BD)
 }
 
 /**
@@ -91,6 +92,23 @@ async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ succe
       if (options.send_mode === "group") {
         console.log("[v0] Modo grupo: enviando con HTML profesional")
 
+        // Descargar attachments por ID
+        const attachments = []
+        if (options.attachment_ids && options.attachment_ids.length > 0) {
+          console.log("[v0] Descargando", options.attachment_ids.length, "attachments")
+          for (const attId of options.attachment_ids) {
+            const attResult = await getMessageAttachmentUrl(attId, supabase)
+            if (attResult.success && attResult.url) {
+              attachments.push({
+                filename: attResult.filename || attId,
+                url: attResult.url,
+              })
+            } else {
+              console.warn(`[v0] Error descargando attachment ${attId}:`, attResult.error)
+            }
+          }
+        }
+
         emailResult = await sendEmail({
           to: options.to_emails,
           cc: options.cc_emails?.filter((e) => e.trim()),
@@ -99,10 +117,7 @@ async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ succe
           html: bodyHtmlFinal,
           senderMode: options.senderMode || "system",
           userId: options.user_id,
-          attachments: options.attachments?.map((att: any) => ({
-            filename: att.file_name || att.filename,
-            url: att.file_url || att.url,
-          })),
+          attachments: attachments.length > 0 ? attachments : undefined,
         })
 
         console.log("[v0] Resultado de envío en grupo:", emailResult)
@@ -115,6 +130,23 @@ async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ succe
       else if (options.send_mode === "individual") {
         console.log("[v0] Modo individual: enviando", options.recipients.length, "emails con HTML profesional")
 
+        // Descargar attachments por ID una sola vez
+        const attachments = []
+        if (options.attachment_ids && options.attachment_ids.length > 0) {
+          console.log("[v0] Descargando", options.attachment_ids.length, "attachments para envío individual")
+          for (const attId of options.attachment_ids) {
+            const attResult = await getMessageAttachmentUrl(attId, supabase)
+            if (attResult.success && attResult.url) {
+              attachments.push({
+                filename: attResult.filename || attId,
+                url: attResult.url,
+              })
+            } else {
+              console.warn(`[v0] Error descargando attachment ${attId}:`, attResult.error)
+            }
+          }
+        }
+
         const results = []
         for (const recipient of options.recipients) {
           const individualResult = await sendEmail({
@@ -125,10 +157,7 @@ async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ succe
             html: bodyHtmlFinal,
             senderMode: options.senderMode || "system",
             userId: options.user_id,
-            attachments: options.attachments?.map((att: any) => ({
-              filename: att.file_name || att.filename,
-              url: att.file_url || att.url,
-            })),
+            attachments: attachments.length > 0 ? attachments : undefined,
           })
           results.push(individualResult)
 
@@ -318,36 +347,13 @@ async function logSentMessage(
     const logId = messageData_result?.[0]?.id
     console.log("[v0] Mensaje registrado en BD con ID:", logId)
 
-    // Insertar attachments si existen
-    if (options.attachments && options.attachments.length > 0 && logId) {
-      console.log("[v0] Guardando", options.attachments.length, "attachments")
+    // Insertar relación de attachments si existen
+    if (options.attachment_ids && options.attachment_ids.length > 0 && logId) {
+      console.log("[v0] Relacionando", options.attachment_ids.length, "attachments con el mensaje enviado")
 
-      for (const att of options.attachments) {
+      for (const attachmentId of options.attachment_ids) {
         try {
-          // Paso 1: Insertar en pulse_message_attachments
-          const { data: attachmentData, error: attachmentError } = await (supabase
-            .from("pulse_message_attachments")
-            .insert({
-              file_name: att.filename,
-              file_url: att.url,
-              file_type: att.filename?.split(".").pop() || "unknown",
-            })
-            .select() as any)
-
-          if (attachmentError) {
-            console.warn(`[v0] Error al guardar archivo ${att.filename}:`, JSON.stringify(attachmentError, null, 2))
-            continue
-          }
-
-          if (!attachmentData || attachmentData.length === 0) {
-            console.warn(`[v0] No se obtuvo ID para el attachment ${att.filename}`)
-            continue
-          }
-
-          const attachmentId = attachmentData[0].id
-          console.log(`[v0] Attachment guardado: ${att.filename} (ID: ${attachmentId})`)
-
-          // Paso 2: Relacionar en pulse_sent_messages_attachments
+          // Relacionar en pulse_sent_messages_attachments
           const { error: linkError } = await (supabase
             .from("pulse_sent_messages_attachments")
             .insert({
@@ -357,18 +363,18 @@ async function logSentMessage(
             .select() as any)
 
           if (linkError) {
-            console.warn(`[v0] Error al relacionar attachment ${att.filename}:`, JSON.stringify(linkError, null, 2))
+            console.warn(`[v0] Error al relacionar attachment ${attachmentId}:`, JSON.stringify(linkError, null, 2))
             continue
           }
 
-          console.log(`[v0] Attachment ${att.filename} relacionado con el mensaje ✓`)
+          console.log(`[v0] Attachment ${attachmentId} relacionado con el mensaje ✓`)
         } catch (error) {
           console.warn("[v0] Error procesando attachment:", error)
           continue
         }
       }
 
-      console.log("[v0] Attachments procesados completamente")
+      console.log("[v0] Attachments relacionados completamente")
     }
   } catch (error) {
     console.error("[v0] Error al registrar mensaje:", JSON.stringify(error, null, 2))
