@@ -1,5 +1,5 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { NextRequest, NextResponse } from "next/server"
+import { createServerClient } from "@/lib/supabase/server"
 import { sendPulseMessage } from "@/lib/services/pulse-message-service"
 
 // Esta función se ejecutará cada 5 minutos para enviar mensajes programados
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     console.log("[CronJob-ScheduledMessages] ✅ Iniciando envío de mensajes programados")
     console.log(`[CronJob-ScheduledMessages] Fecha y hora: ${new Date().toISOString()}`)
 
-    const supabase = await createClient()
+    const supabase = createServerClient()
 
     // Buscar mensajes con estado "scheduled" y scheduled_at <= ahora
     const { data: scheduledMessages, error: fetchError } = await supabase
