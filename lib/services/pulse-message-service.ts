@@ -325,6 +325,11 @@ function stripHtmlKeepLinebreaks(htmlContent: string): string {
   
   return text
 }
+
+/**
+ * Convierte tags de formato [B], [I], [U], [IMG], [BR] a HTML
+ */
+function convertMarkdownToHtml(content: string): string {
   console.log("[v0] Convirtiendo tags a HTML")
   
   let html = content
