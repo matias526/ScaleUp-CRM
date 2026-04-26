@@ -632,7 +632,7 @@ export function PulseMessageSenderOpportunity({
         // Para WhatsApp, usar el número de teléfono del primer destinatario
         const firstRecipient = selectedRecipients[0]
         const phoneNumber = firstRecipient?.phone || toEmails[0]
-        
+
         if (!phoneNumber) {
           toast({
             description: "El destinatario no tiene número de teléfono registrado",
@@ -802,8 +802,8 @@ export function PulseMessageSenderOpportunity({
                           type="button"
                           onClick={() => setSenderMode("personal")}
                           className={`text-xs font-semibold px-3 py-2 rounded transition-all ${senderMode === "personal"
-                              ? "bg-blue-100 text-blue-700 border border-blue-300"
-                              : "bg-white text-slate-600 border border-slate-300 hover:border-blue-200"
+                            ? "bg-blue-100 text-blue-700 border border-blue-300"
+                            : "bg-white text-slate-600 border border-slate-300 hover:border-blue-200"
                             }`}
                         >
                           Tu Email {hasPersonalEmail && senderMode === "personal" ? "✓" : ""}
@@ -812,8 +812,8 @@ export function PulseMessageSenderOpportunity({
                           type="button"
                           onClick={() => setSenderMode("system")}
                           className={`text-xs font-semibold px-3 py-2 rounded transition-all ${senderMode === "system"
-                              ? "bg-blue-100 text-blue-700 border border-blue-300"
-                              : "bg-white text-slate-600 border border-slate-300 hover:border-blue-200"
+                            ? "bg-blue-100 text-blue-700 border border-blue-300"
+                            : "bg-white text-slate-600 border border-slate-300 hover:border-blue-200"
                             }`}
                         >
                           Sistema CRM
