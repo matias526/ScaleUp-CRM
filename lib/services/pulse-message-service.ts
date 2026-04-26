@@ -115,6 +115,8 @@ async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ succe
         for (const recipient of options.recipients) {
           const individualResult = await sendEmail({
             to: [recipient.email],
+            cc: options.cc_emails?.filter((e) => e.trim()),
+            bcc: options.bcc_emails?.filter((e) => e.trim()),
             subject,
             html: bodyHtmlFinal,
             senderMode: options.senderMode || "system",
@@ -229,15 +231,24 @@ async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ succe
  */
 async function scheduleMessage(options: PulseMessageSendOptions): Promise<{ success: boolean; message?: string }> {
   try {
-    console.log("[v0] Programando mensaje para:", options.scheduled_at)
+    if (!options.scheduled_at) {
+      return {
+        success: false,
+        message: "Debe especificar una fecha y hora de envío",
+      }
+    }
 
-    // TODO: Implementar lógica de programación
-    // Por ahora, solo guardamos en BD indicando que está programado
+    console.log("[v0] Programando mensaje para:", options.scheduled_at)
 
     const subject = replaceVariables(options.subject, options.variables_values)
     const body = replaceVariables(options.body_content, options.variables_values)
 
+    // Guardar el mensaje programado en la BD
     await logSentMessage(options, subject, body, null, "scheduled")
+
+    // TODO: Implementar un trigger/cron que revise la BD periódicamente
+    // y envíe los mensajes cuando llegue la hora programada.
+    // Por ahora solo guardamos en BD con estado "scheduled"
 
     return {
       success: true,

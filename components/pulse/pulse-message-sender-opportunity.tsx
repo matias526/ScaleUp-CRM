@@ -650,6 +650,8 @@ export function PulseMessageSenderOpportunity({
       }
 
       // Para emails, usar el servicio de envío
+      const scheduledAt = scheduleDate && scheduleTime ? `${scheduleDate}T${scheduleTime}:00` : undefined
+
       await sendPulseMessage({
         template_id: selectedTemplate,
         opportunity_id: opportunity.id,
@@ -662,15 +664,36 @@ export function PulseMessageSenderOpportunity({
         send_mode: sendMode,
         channel: channel,
         senderMode: senderMode,
-        recipients: toEmails.map((email) => {
-          const recipient = selectedRecipients.find((r) => r.email === email)
-          return {
-            contact_id: "",
-            email,
-            name: `${recipient?.first_name || ""} ${recipient?.last_name || ""}`.trim(),
-            phone: recipient?.phone || "",
-          }
-        }),
+        scheduled_at: scheduledAt,
+        recipients: [
+          ...toEmails.map((email) => {
+            const recipient = selectedRecipients.find((r) => r.email === email)
+            return {
+              contact_id: "",
+              email,
+              name: `${recipient?.first_name || ""} ${recipient?.last_name || ""}`.trim(),
+              phone: recipient?.phone || "",
+            }
+          }),
+          ...ccEmails.map((email) => {
+            const recipient = selectedRecipients.find((r) => r.email === email)
+            return {
+              contact_id: "",
+              email,
+              name: `${recipient?.first_name || ""} ${recipient?.last_name || ""}`.trim(),
+              phone: recipient?.phone || "",
+            }
+          }),
+          ...bccEmails.map((email) => {
+            const recipient = selectedRecipients.find((r) => r.email === email)
+            return {
+              contact_id: "",
+              email,
+              name: `${recipient?.first_name || ""} ${recipient?.last_name || ""}`.trim(),
+              phone: recipient?.phone || "",
+            }
+          }),
+        ],
         variables_values: variableValues,
       })
 
