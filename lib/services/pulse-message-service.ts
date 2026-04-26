@@ -77,9 +77,9 @@ async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ succe
       const language = (options.variables_values?.preferred_language || "es") as SupportedLanguage
       // Construir el email HTML completo con header, contenido en caja y footer
       const bodyHtmlFinal = buildSystemEmailHtml(subject, body, language)
-      
+
       console.log("[v0] Paso 2: Email del sistema - usando template profesional HTML")
-      
+
       let emailResult: any = null
 
       console.log("[v0] Paso 4: send_mode:", options.send_mode)
@@ -89,7 +89,7 @@ async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ succe
       // Modo grupo: un email con To/CC/BCC
       if (options.send_mode === "group") {
         console.log("[v0] Modo grupo: enviando con HTML profesional")
-        
+
         emailResult = await sendEmail({
           to: options.to_emails,
           cc: options.cc_emails?.filter((e) => e.trim()),
@@ -105,11 +105,11 @@ async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ succe
         if (!emailResult.success) {
           throw new Error(emailResult.message || "Error al enviar email")
         }
-      } 
+      }
       // Modo individual: un email por cada destinatario
       else if (options.send_mode === "individual") {
         console.log("[v0] Modo individual: enviando", options.recipients.length, "emails con HTML profesional")
-        
+
         const results = []
         for (const recipient of options.recipients) {
           const individualResult = await sendEmail({
@@ -145,7 +145,7 @@ async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ succe
     // CONVERTIR TAGS A HTML UNA SOLA VEZ
     console.log("[v0] Paso 2: Llamando convertMarkdownToHtml...")
     const bodyHtml = convertMarkdownToHtml(body)
-    
+
     console.log("[v0] Paso 3: Body después de convertMarkdownToHtml (primeros 500 chars):")
     console.log(bodyHtml.substring(0, 500))
 
@@ -158,7 +158,7 @@ async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ succe
     // Modo grupo: un email con To/CC/BCC
     if (options.send_mode === "group") {
       console.log("[v0] Modo grupo: enviando con HTML convertido")
-      
+
       emailResult = await sendEmail({
         to: options.to_emails,
         cc: options.cc_emails?.filter((e) => e.trim()),
@@ -174,11 +174,11 @@ async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ succe
       if (!emailResult.success) {
         throw new Error(emailResult.message || "Error al enviar email")
       }
-    } 
+    }
     // Modo individual: un email por cada destinatario
     else if (options.send_mode === "individual") {
       console.log("[v0] Modo individual: enviando", options.recipients.length, "emails con HTML convertido")
-      
+
       const results = []
       for (const recipient of options.recipients) {
         const individualResult = await sendEmail({
@@ -264,7 +264,7 @@ async function logSentMessage(
   try {
     // Limpiar HTML para guardar en BD: solo texto + saltos de línea
     const bodyClean = stripHtmlKeepLinebreaks(bodyHtml)
-    
+
     // Mapear a la estructura real de pulse_sent_messages_logs
     const messageData = {
       opportunity_id: options.opportunity_id,
@@ -301,7 +301,7 @@ async function logSentMessage(
     // Insertar attachments si existen
     if (options.attachments && options.attachments.length > 0 && logId) {
       console.log("[v0] Guardando", options.attachments.length, "attachments")
-      
+
       const attachmentsData = options.attachments.map((att) => ({
         log_id: logId,
         attachment_id: att.id, // asumiendo que att tiene un id
@@ -374,10 +374,10 @@ async function addNoteToOpportunity(
 function stripHtmlKeepLinebreaks(htmlContent: string): string {
   // Reemplazar <br> y <br /> por saltos de línea
   let text = htmlContent.replace(/<br\s*\/?>/gi, "\n")
-  
+
   // Eliminar todos los otros tags HTML
   text = text.replace(/<[^>]+>/g, "")
-  
+
   // Decodificar entidades HTML si las hay
   text = text
     .replace(/&lt;/g, "<")
@@ -385,7 +385,7 @@ function stripHtmlKeepLinebreaks(htmlContent: string): string {
     .replace(/&amp;/g, "&")
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
-  
+
   return text
 }
 
@@ -394,31 +394,31 @@ function stripHtmlKeepLinebreaks(htmlContent: string): string {
  */
 function convertMarkdownToHtml(content: string): string {
   console.log("[v0] Convirtiendo tags a HTML")
-  
+
   let html = content
-  
+
   // Reemplazar [BR] por saltos de línea
   html = html.replaceAll("[BR]", "\n")
-  
+
   // [IMG]url[/IMG] -> <img src="url" />
   html = html.replace(/\[IMG\](.*?)\[\/IMG\]/g, '<img src="$1" style="max-width: 100%; border-radius: 5px; margin: 10px 0;" alt="Imagen" />')
-  
+
   // [B]text[/B] -> <strong>text</strong>
   html = html.replace(/\[B\](.*?)\[\/B\]/g, '<strong>$1</strong>')
-  
+
   // [I]text[/I] -> <em>text</em>
   html = html.replace(/\[I\](.*?)\[\/I\]/g, '<em>$1</em>')
-  
+
   // [U]text[/U] -> <u>text</u>
   html = html.replace(/\[U\](.*?)\[\/U\]/g, '<u>$1</u>')
-  
+
   // Convertir saltos de línea a <br>
   html = html.replace(/\n/g, "<br>")
-  
+
   // Convertir URLs a links
   html = html.replace(/https?:\/\/[^\s<]+/g, '<a href="$&" style="color: #2563eb;">$&</a>')
-  
+
   console.log("[v0] Tags convertidos exitosamente")
-  
+
   return `<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">${html}</div>`
 }
