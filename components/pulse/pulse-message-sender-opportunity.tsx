@@ -179,7 +179,7 @@ export function PulseMessageSenderOpportunity({
   const [ccEmails, setCcEmails] = useState<string[]>([])
   const [bccEmails, setBccEmails] = useState<string[]>([])
   const [selectedRecipients, setSelectedRecipients] = useState<
-    Array<{ email: string; first_name: string; last_name: string }>
+    Array<{ email: string; phone?: string; first_name: string; last_name: string }>
   >([])
   const [subject, setSubject] = useState("")
   const [message, setMessage] = useState("")
@@ -538,6 +538,7 @@ export function PulseMessageSenderOpportunity({
         addEmailToGroup(contact.email, {
           first_name: contact.name?.split(" ")[0] || "",
           last_name: contact.name?.split(" ").slice(1).join(" ") || "",
+          phone: contact.phone || "",
         })
       }
     } else if (value.startsWith("user-")) {
@@ -553,7 +554,7 @@ export function PulseMessageSenderOpportunity({
     }
   }
 
-  const addEmailToGroup = (email: string, recipient?: { first_name: string; last_name: string }) => {
+  const addEmailToGroup = (email: string, recipient?: { first_name: string; last_name: string; phone?: string }) => {
     if (recipientType === "to" && !toEmails.includes(email)) {
       setToEmails([...toEmails, email])
       if (recipient) {
@@ -587,12 +588,24 @@ export function PulseMessageSenderOpportunity({
   }
 
   const handleSend = async () => {
-    if (!subject.trim() || !message.trim()) {
-      toast({
-        description: "Asunto y mensaje son requeridos",
-        variant: "destructive",
-      })
-      return
+    // Para WhatsApp, solo se requiere el mensaje (no el asunto)
+    if (channel === "whatsapp") {
+      if (!message.trim()) {
+        toast({
+          description: "El mensaje es requerido",
+          variant: "destructive",
+        })
+        return
+      }
+    } else {
+      // Para email, se requieren asunto y mensaje
+      if (!subject.trim() || !message.trim()) {
+        toast({
+          description: "Asunto y mensaje son requeridos",
+          variant: "destructive",
+        })
+        return
+      }
     }
 
     if (toEmails.length === 0) {
@@ -613,8 +626,19 @@ export function PulseMessageSenderOpportunity({
     try {
       // Si es WhatsApp personal, abrir en nueva ventana
       if (channel === "whatsapp" && senderMode === "personal") {
-        // Para WhatsApp, usar solo el primer destinatario por ahora
-        const phoneNumber = toEmails[0] // Asumir que es un número de WhatsApp
+        // Para WhatsApp, usar el número de teléfono del primer destinatario
+        const firstRecipient = selectedRecipients[0]
+        const phoneNumber = firstRecipient?.phone || toEmails[0]
+        
+        if (!phoneNumber) {
+          toast({
+            description: "El destinatario no tiene número de teléfono registrado",
+            variant: "destructive",
+          })
+          setSending(false)
+          return
+        }
+
         const encodedMessage = encodeURIComponent(message)
         window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, "_blank")
         toast({
