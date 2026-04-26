@@ -74,6 +74,12 @@ async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ succe
     console.log("[v0] ¿Contiene [U]?", body.includes("[U]"))
     console.log("[v0] ¿Contiene [IMG]?", body.includes("[IMG]"))
 
+    // Convertir tags de formato a HTML
+    body = convertMarkdownToHtml(body)
+
+    console.log("[v0] Paso 1.5: Body después de convertMarkdownToHtml")
+    console.log(body.substring(0, 300))
+
     // Si es email del sistema, construir HTML profesional con encabezado y footer
     if (options.channel === "email" && options.senderMode === "system") {
       const language = (options.variables_values?.preferred_language || "es") as SupportedLanguage
@@ -278,7 +284,10 @@ async function scheduleMessage(options: PulseMessageSendOptions): Promise<{ succ
     console.log("[v0] Programando mensaje para:", options.scheduled_at)
 
     const subject = replaceVariables(options.subject, options.variables_values)
-    const body = replaceVariables(options.body_content, options.variables_values)
+    let body = replaceVariables(options.body_content, options.variables_values)
+
+    // Convertir tags de formato a HTML
+    body = convertMarkdownToHtml(body)
 
     // Guardar el mensaje programado en la BD
     await logSentMessage(options, subject, body, null, "scheduled")
