@@ -177,25 +177,7 @@ export function OpportunityNotes({ opportunityId, currentUserId, isScaleUpMember
         return <div className="whitespace-pre-wrap">{note.content}</div>
       }
 
-      // Detectar si el contenido es HTML (comienza con < o contiene <strong>, <div>, etc.)
-      const isHtml = note.content.trim().startsWith("<") || 
-                     note.content.includes("<strong>") || 
-                     note.content.includes("<div") ||
-                     note.content.includes("<em>") ||
-                     note.content.includes("<u>") ||
-                     note.content.includes("<br>")
-
-      // Si es HTML (por ejemplo, de un Pulse Message), renderizarlo de forma segura
-      if (isHtml) {
-        return (
-          <div 
-            className="prose prose-sm max-w-none"
-            dangerouslySetInnerHTML={{ __html: note.content }}
-          />
-        )
-      }
-
-      // Si no es HTML, usar ReactMarkdown
+      // Renderizar con ReactMarkdown (notas son ahora texto limpio sin HTML)
       return (
         <div className="markdown-wrapper">
           <ReactMarkdown>{note.content}</ReactMarkdown>

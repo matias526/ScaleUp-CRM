@@ -199,7 +199,10 @@ async function logSentMessage(
   status: string = "sent"
 ): Promise<void> {
   try {
-    // bodyHtml ya está convertido, solo mapear a la estructura real de pulse_sent_messages_logs
+    // Limpiar HTML para guardar en BD: solo texto + saltos de línea
+    const bodyClean = stripHtmlKeepLinebreaks(bodyHtml)
+    
+    // Mapear a la estructura real de pulse_sent_messages_logs
     const messageData = {
       opportunity_id: options.opportunity_id,
       contact_id: null,
@@ -207,13 +210,13 @@ async function logSentMessage(
       channel: options.channel || "email",
       sender_type: options.senderMode === "personal" ? "personal_email" : "system",
       final_subject: subject,
-      final_body: bodyHtml,
+      final_body: bodyClean,
       status,
       error_message: null,
       sent_at: status === "sent" ? new Date().toISOString() : null,
     }
 
-    console.log("[v0] Guardando mensaje en BD con HTML convertido")
+    console.log("[v0] Guardando mensaje en BD con contenido limpio (sin HTML)")
 
     // Insertar en la tabla correcta y obtener el ID
     const { error: messageError, data: messageData_result } = await (supabase
@@ -273,8 +276,9 @@ async function addNoteToOpportunity(
   try {
     let content: string
     if (subject && bodyHtml) {
-      // bodyHtml ya está convertido, solo construir la nota
-      content = `<strong>Pulse Message:</strong> ${subject}\n\n${bodyHtml}`
+      // Limpiar HTML: solo texto + saltos de línea (no renderizar HTML en notas)
+      const bodyClean = stripHtmlKeepLinebreaks(bodyHtml)
+      content = `Pulse Message: ${subject}\n\n${bodyClean}`
     } else {
       // Fallback a la lógica original si no hay subject/body
       const recipientNames = options.recipients.map((r) => r.name).join(", ")
@@ -301,9 +305,26 @@ async function addNoteToOpportunity(
 }
 
 /**
- * Convierte tags de formato [B], [I], [U], [IMG], [BR] a HTML
+ * Limpia el HTML dejando solo el texto y convierte <br> a saltos de línea
+ * Usado SOLO para guardar en notas, no para emails
  */
-function convertMarkdownToHtml(content: string): string {
+function stripHtmlKeepLinebreaks(htmlContent: string): string {
+  // Reemplazar <br> y <br /> por saltos de línea
+  let text = htmlContent.replace(/<br\s*\/?>/gi, "\n")
+  
+  // Eliminar todos los otros tags HTML
+  text = text.replace(/<[^>]+>/g, "")
+  
+  // Decodificar entidades HTML si las hay
+  text = text
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+  
+  return text
+}
   console.log("[v0] Convirtiendo tags a HTML")
   
   let html = content
