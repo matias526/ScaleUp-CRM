@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase/server"
 
-/**
- * Endpoint para enviar emails vía Gmail API
- */
 export async function POST(request: NextRequest) {
   try {
     console.log("[v0] === INICIO ENVÍO DE EMAIL VIA GMAIL ===")
@@ -113,6 +110,7 @@ export async function POST(request: NextRequest) {
 
       if (updateError) {
         console.error("[v0] Error actualizando token en BD:", updateError)
+        // No fallar por esto, seguir intentando con el nuevo token
       }
     }
 
@@ -144,17 +142,13 @@ export async function POST(request: NextRequest) {
     console.log("[v0] MIME preview (first 300 chars):")
     console.log(mimeMessage.substring(0, 300))
 
-    // Convertir a base64url (Gmail API requiere este formato específico)
-    const base64Message = Buffer.from(mimeMessage)
-      .toString("base64")
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_")
-      .replace(/=+$/, "")
-
-    console.log("[v0] Base64 encoded (safe), length:", base64Message.length)
+    // Convertir a base64
+    const base64Message = Buffer.from(mimeMessage).toString("base64")
+    console.log("[v0] Base64 encoded, length:", base64Message.length)
 
     // Enviar via Gmail API
     console.log("[v0] Calling Gmail API at: https://www.googleapis.com/gmail/v1/users/me/messages/send")
+    console.log("[v0] Authorization header:", `Bearer ${accessToken?.substring(0, 20)}...`)
 
     const gmailResponse = await fetch("https://www.googleapis.com/gmail/v1/users/me/messages/send", {
       method: "POST",
@@ -221,7 +215,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Función para construir un mensaje MIME compatible con adjuntos reales
+// Función para construir un mensaje MIME con attachments en Base64
 async function buildMimeMessage(data: {
   to: string[]
   cc?: string[]
@@ -243,7 +237,6 @@ async function buildMimeMessage(data: {
   })
 
   const boundary = "==boundary_" + Math.random().toString(36).substr(2, 9)
-  const nl = "\r\n"
 
   const headers = [
     `From: ${data.from}`,
@@ -252,6 +245,7 @@ async function buildMimeMessage(data: {
     "MIME-Version: 1.0",
   ]
 
+  // Si hay attachments, usar multipart/mixed, sino text/html
   if (data.attachments && data.attachments.length > 0) {
     headers.push(`Content-Type: multipart/mixed; boundary="${boundary}"`)
   } else {
@@ -262,57 +256,71 @@ async function buildMimeMessage(data: {
     headers.push(`Cc: ${data.cc.join(", ")}`)
   }
 
-  if (data.bcc && data.bcc.length > 0) {
-    headers.push(`Bcc: ${data.bcc.join(", ")}`)
-  }
-
   if (data.replyTo) {
     headers.push(`Reply-To: ${data.replyTo}`)
   }
 
-  let fullMessage = headers.join(nl) + nl + nl
+  let body = data.html
 
+  // Si hay attachments, construir multipart con Base64
   if (data.attachments && data.attachments.length > 0) {
-    let body = `--${boundary}${nl}`
-    body += `Content-Type: text/html; charset=UTF-8${nl}`
-    body += `Content-Transfer-Encoding: 7bit${nl}${nl}`
-    body += `${data.html}${nl}${nl}`
+    const parts: string[] = []
 
+    // Agregar el HTML como primera parte
+    parts.push(`--${boundary}`)
+    parts.push("Content-Type: text/html; charset=UTF-8")
+    parts.push("Content-Transfer-Encoding: 7bit")
+    parts.push("")
+    parts.push(data.html)
+
+    // Agregar cada attachment descargado y convertido a Base64
     for (const attachment of data.attachments) {
-      console.log(`[v0] Procesando attachment: ${attachment.filename}`)
+      console.log(`[v0] Descargando attachment: ${attachment.filename} desde ${attachment.url}`)
+
       try {
+        // Descargar el archivo
         const response = await fetch(attachment.url)
+
         if (!response.ok) {
-          console.warn(`[v0] No se pudo descargar el archivo: ${attachment.filename}`)
+          console.warn(`[v0] Error descargando ${attachment.filename}: ${response.status}`)
           continue
         }
 
+        // Convertir a Buffer y luego a Base64
         const arrayBuffer = await response.arrayBuffer()
-        const base64Content = Buffer.from(arrayBuffer).toString("base64")
+        const buffer = Buffer.from(arrayBuffer)
+        const base64Content = buffer.toString('base64')
 
-        body += `--${boundary}${nl}`
-        body += `Content-Type: application/octet-stream; name="${attachment.filename}"${nl}`
-        body += `Content-Disposition: attachment; filename="${attachment.filename}"${nl}`
-        body += `Content-Transfer-Encoding: base64${nl}${nl}`
+        console.log(`[v0] Attachment convertido a Base64: ${attachment.filename} (${base64Content.length} caracteres)`)
 
-        // Formatear base64 en líneas de 76 caracteres
+        // Agregar el attachment al MIME
+        parts.push(`--${boundary}`)
+        parts.push(`Content-Type: application/octet-stream; name="${attachment.filename}"`)
+        parts.push(`Content-Disposition: attachment; filename="${attachment.filename}"`)
+        parts.push("Content-Transfer-Encoding: base64")
+        parts.push("")
+
+        // Agregar el contenido Base64 en líneas de máximo 76 caracteres (estándar MIME)
+        let base64Line = ""
         for (let i = 0; i < base64Content.length; i += 76) {
-          body += base64Content.substring(i, i + 76) + nl
+          parts.push(base64Content.substring(i, i + 76))
         }
-        body += nl
+        parts.push("")
       } catch (error) {
-        console.error(`[v0] Error descargando adjunto ${attachment.filename}:`, error)
+        console.warn(`[v0] Error procesando attachment ${attachment.filename}:`, error)
+        continue
       }
     }
 
-    body += `--${boundary}--`
-    fullMessage += body
-  } else {
-    fullMessage += data.html
+    // Cerrar el boundary
+    parts.push(`--${boundary}--`)
+    body = parts.join("\r\n")
   }
 
-  console.log("[v0] Headers constructed:")
-  headers.forEach((h, i) => console.log(`   [${i}]: ${h}`))
+  const mimeMessage = headers.join("\r\n") + "\r\n\r\n" + body
 
-  return fullMessage
+  console.log("[v0] Headers constructed:")
+  headers.forEach((h, i) => console.log(`  [${i}]: ${h}`))
+
+  return mimeMessage
 }
