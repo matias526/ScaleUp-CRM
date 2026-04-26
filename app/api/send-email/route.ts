@@ -6,14 +6,14 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 export async function POST(request: NextRequest) {
   try {
     console.log("[v0] === INICIO ENVÍO DE EMAIL ===")
-    
+
     const { to, cc, bcc, subject, html, from, replyTo, attachments } = await request.json()
 
-    console.log("[v0] Datos recibidos:", { 
-      to, 
-      cc, 
-      bcc, 
-      subject: subject?.substring(0, 50), 
+    console.log("[v0] Datos recibidos:", {
+      to,
+      cc,
+      bcc,
+      subject: subject?.substring(0, 50),
       from,
       htmlLength: html?.length,
       attachmentsCount: attachments?.length || 0
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
     const result = await resend.emails.send(emailData)
 
     console.log("[v0] Respuesta de Resend:", result)
-    
+
     if (result.error) {
       console.error("[v0] ERROR en respuesta de Resend:", result.error)
       return NextResponse.json({
@@ -100,7 +100,6 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    console.log("[v0] Email enviado correctamente. ID:", result.id)
     console.log("[v0] === FIN ENVÍO EXITOSO ===")
 
     return NextResponse.json({
