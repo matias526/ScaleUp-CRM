@@ -322,27 +322,53 @@ async function logSentMessage(
     if (options.attachments && options.attachments.length > 0 && logId) {
       console.log("[v0] Guardando", options.attachments.length, "attachments")
 
-      const attachmentsData = options.attachments.map((att) => ({
-        log_id: logId,
-        file_name: att.filename,
-        file_url: att.url,
-      }))
+      for (const att of options.attachments) {
+        try {
+          // Paso 1: Insertar en pulse_message_attachments
+          const { data: attachmentData, error: attachmentError } = await (supabase
+            .from("pulse_message_attachments")
+            .insert({
+              file_name: att.filename,
+              file_url: att.url,
+              file_type: att.filename?.split(".").pop() || "unknown",
+            })
+            .select() as any)
 
-      console.log("[v0] Datos de attachments a insertar:", JSON.stringify(attachmentsData, null, 2))
+          if (attachmentError) {
+            console.warn(`[v0] Error al guardar archivo ${att.filename}:`, JSON.stringify(attachmentError, null, 2))
+            continue
+          }
 
-      const { error: attachError, data: attachResult } = await (supabase
-        .from("pulse_sent_messages_attachments" as any)
-        .insert(attachmentsData)
-        .select() as any)
+          if (!attachmentData || attachmentData.length === 0) {
+            console.warn(`[v0] No se obtuvo ID para el attachment ${att.filename}`)
+            continue
+          }
 
-      console.log("[v0] Respuesta de attachments:", { attachError, data: attachResult })
+          const attachmentId = attachmentData[0].id
+          console.log(`[v0] Attachment guardado: ${att.filename} (ID: ${attachmentId})`)
 
-      if (attachError) {
-        console.warn("[v0] Error al guardar attachments:", JSON.stringify(attachError, null, 2))
-        // No fallar por esto, solo advertir
-      } else {
-        console.log("[v0] Attachments guardados exitosamente")
+          // Paso 2: Relacionar en pulse_sent_messages_attachments
+          const { error: linkError } = await (supabase
+            .from("pulse_sent_messages_attachments")
+            .insert({
+              log_id: logId,
+              attachment_id: attachmentId,
+            })
+            .select() as any)
+
+          if (linkError) {
+            console.warn(`[v0] Error al relacionar attachment ${att.filename}:`, JSON.stringify(linkError, null, 2))
+            continue
+          }
+
+          console.log(`[v0] Attachment ${att.filename} relacionado con el mensaje ✓`)
+        } catch (error) {
+          console.warn("[v0] Error procesando attachment:", error)
+          continue
+        }
       }
+
+      console.log("[v0] Attachments procesados completamente")
     }
   } catch (error) {
     console.error("[v0] Error al registrar mensaje:", JSON.stringify(error, null, 2))
