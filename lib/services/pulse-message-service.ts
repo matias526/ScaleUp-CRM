@@ -1,7 +1,7 @@
 import { supabase } from "@/lib/supabase/client"
 import { sendEmail } from "@/lib/services/email-service"
 import { replaceVariables, VariableValues } from "@/lib/pulse/pulse-message-variables"
-import { getSystemEmailFooter, type SupportedLanguage } from "@/lib/constants/pulse-system-messages"
+import { getSystemEmailFooter, buildSystemEmailHtml, type SupportedLanguage } from "@/lib/constants/pulse-system-messages"
 import { v4 as uuidv4 } from "uuid"
 
 export interface PulseMessageRecipient {
@@ -72,13 +72,76 @@ async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ succe
     console.log("[v0] ¿Contiene [U]?", body.includes("[U]"))
     console.log("[v0] ¿Contiene [IMG]?", body.includes("[IMG]"))
 
-    // Si es email del sistema, agregar footer automático
+    // Si es email del sistema, construir HTML profesional con encabezado y footer
     if (options.channel === "email" && options.senderMode === "system") {
-      // Por defecto usar español, pero idealmente sería el idioma del template
       const language = (options.variables_values?.preferred_language || "es") as SupportedLanguage
-      body = body + getSystemEmailFooter(language)
+      // Construir el email HTML completo con header, contenido en caja y footer
+      const bodyHtmlFinal = buildSystemEmailHtml(subject, body, language)
+      
+      console.log("[v0] Paso 2: Email del sistema - usando template profesional HTML")
+      
+      let emailResult: any = null
+
+      console.log("[v0] Paso 4: send_mode:", options.send_mode)
+      console.log("[v0] recipients:", options.recipients.length)
+      console.log("[v0] to_emails:", options.to_emails?.length)
+
+      // Modo grupo: un email con To/CC/BCC
+      if (options.send_mode === "group") {
+        console.log("[v0] Modo grupo: enviando con HTML profesional")
+        
+        emailResult = await sendEmail({
+          to: options.to_emails,
+          cc: options.cc_emails?.filter((e) => e.trim()),
+          bcc: options.bcc_emails?.filter((e) => e.trim()),
+          subject,
+          html: bodyHtmlFinal,
+          senderMode: options.senderMode || "system",
+          userId: options.user_id,
+        })
+
+        console.log("[v0] Resultado de envío en grupo:", emailResult)
+
+        if (!emailResult.success) {
+          throw new Error(emailResult.message || "Error al enviar email")
+        }
+      } 
+      // Modo individual: un email por cada destinatario
+      else if (options.send_mode === "individual") {
+        console.log("[v0] Modo individual: enviando", options.recipients.length, "emails con HTML profesional")
+        
+        const results = []
+        for (const recipient of options.recipients) {
+          const individualResult = await sendEmail({
+            to: [recipient.email],
+            subject,
+            html: bodyHtmlFinal,
+            senderMode: options.senderMode || "system",
+            userId: options.user_id,
+          })
+          results.push(individualResult)
+
+          if (!individualResult.success) {
+            console.warn(`[v0] Error al enviar a ${recipient.email}:`, individualResult.message)
+          }
+        }
+
+        emailResult = {
+          success: results.some((r) => r.success),
+          message: `Enviados: ${results.filter((r) => r.success).length}/${results.length}`,
+        }
+      }
+
+      // Registrar en BD usando el body original (sin HTML profesional) para mantener limpio
+      await logSentMessage(options, subject, body, emailResult)
+
+      // Agregar nota a la oportunidad
+      await addNoteToOpportunity(options, subject, body)
+
+      return emailResult
     }
 
+    // Para emails personales, usar el flujo normal (sin template profesional)
     // CONVERTIR TAGS A HTML UNA SOLA VEZ
     console.log("[v0] Paso 2: Llamando convertMarkdownToHtml...")
     const bodyHtml = convertMarkdownToHtml(body)
