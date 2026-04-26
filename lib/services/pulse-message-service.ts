@@ -57,42 +57,6 @@ export async function sendPulseMessage(options: PulseMessageSendOptions): Promis
 }
 
 /**
- * Agrega una nota a la oportunidad con el resumen del mensaje
- */
-async function addNoteToOpportunity(
-  options: PulseMessageSendOptions,
-  subject: string,
-  body: string
-): Promise<void> {
-  try {
-    // Convertir el body a HTML si aún tiene tags
-    const finalBody = convertMarkdownToHtml(body)
-    
-    // Crear contenido de la nota con asunto y body procesado
-    const content = `<strong>Pulse Message:</strong> ${subject}\n\n${finalBody}`
-
-    console.log("[v0] Agregando nota a oportunidad:", options.opportunity_id)
-
-    const { error } = await supabase.from("notes").insert([
-      {
-        opportunity_id: options.opportunity_id,
-        user_id: options.user_id,
-        content,
-        is_private: false,
-      },
-    ])
-
-    if (error) {
-      console.warn("[v0] Error al agregar nota:", error)
-    } else {
-      console.log("[v0] Nota agregada a la oportunidad")
-    }
-  } catch (error) {
-    console.error("[v0] Error en addNoteToOpportunity:", error)
-  }
-}
-
-/**
  * Envía el mensaje inmediatamente
  */
 async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ success: boolean; message?: string; data?: any }> {
@@ -296,10 +260,22 @@ async function logSentMessage(
 /**
  * Agrega una nota a la oportunidad con el resumen del mensaje
  */
-async function addNoteToOpportunity(options: PulseMessageSendOptions): Promise<void> {
+async function addNoteToOpportunity(
+  options: PulseMessageSendOptions,
+  subject?: string,
+  body?: string
+): Promise<void> {
   try {
-    const recipientNames = options.recipients.map((r) => r.name).join(", ")
-    const content = `Mensaje Pulse enviado a: ${recipientNames}\nAsunto: ${options.subject}\nModo: ${options.send_mode === "group" ? "Grupal" : "Individual"}`
+    // Si se proporciona body, convertir los tags a HTML
+    let content: string
+    if (subject && body) {
+      const finalBody = convertMarkdownToHtml(body)
+      content = `<strong>Pulse Message:</strong> ${subject}\n\n${finalBody}`
+    } else {
+      // Fallback a la lógica original si no hay subject/body
+      const recipientNames = options.recipients.map((r) => r.name).join(", ")
+      content = `Mensaje Pulse enviado a: ${recipientNames}\nAsunto: ${options.subject}\nModo: ${options.send_mode === "group" ? "Grupal" : "Individual"}`
+    }
 
     const { error } = await supabase.from("notes").insert([
       {
