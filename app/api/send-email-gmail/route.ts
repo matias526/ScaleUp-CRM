@@ -324,16 +324,3 @@ async function buildMimeMessage(data: {
 
   return mimeMessage
 }
-
-
-    parts.push(`--${boundary}--`)
-    body = parts.join("\r\n")
-  }
-
-  const mimeMessage = headers.join("\r\n") + "\r\n\r\n" + body
-
-  console.log("[v0] Headers constructed:")
-  headers.forEach((h, i) => console.log(`  [${i}]: ${h}`))
-
-  return mimeMessage
-}
