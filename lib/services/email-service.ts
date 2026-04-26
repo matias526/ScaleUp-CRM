@@ -10,6 +10,7 @@ export async function sendEmail(emailData: {
   techCompanyName?: string
   senderMode?: "personal" | "system" // personal = desde cuenta del usuario, system = desde Resend
   userId?: string // requerido si senderMode === "personal"
+  attachments?: Array<{ filename: string; url: string }>
 }): Promise<{ success: boolean; message?: string; data?: any }> {
   try {
     console.log("[v0] Preparando envío de email a:", emailData.to)
@@ -56,6 +57,7 @@ export async function sendEmail(emailData: {
         html: emailData.html,
         replyTo: emailData.replyTo,
         userId: emailData.userId,
+        attachments: emailData.attachments,
       })
     }
 
@@ -77,6 +79,7 @@ export async function sendEmail(emailData: {
         html: emailData.html,
         from,
         replyTo: emailData.replyTo,
+        attachments: emailData.attachments,
       }),
     })
 
@@ -107,6 +110,7 @@ async function sendEmailViaGmail(emailData: {
   html: string
   replyTo?: string
   userId: string
+  attachments?: Array<{ filename: string; url: string }>
 }): Promise<{ success: boolean; message?: string; data?: any }> {
   try {
     console.log("[v0] Iniciando envío via Gmail para user:", emailData.userId)
@@ -125,6 +129,7 @@ async function sendEmailViaGmail(emailData: {
         html: emailData.html,
         replyTo: emailData.replyTo,
         userId: emailData.userId,
+        attachments: emailData.attachments,
       }),
     })
 
