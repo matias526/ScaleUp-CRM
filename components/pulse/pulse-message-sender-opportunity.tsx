@@ -641,9 +641,20 @@ export function PulseMessageSenderOpportunity({
           return
         }
 
-        // Reemplazar variables antes de enviar
-        const messageWithVariables = replaceVariables(message, variableValues)
-        const encodedMessage = encodeURIComponent(messageWithVariables)
+        // Reemplazar variables
+        let messageForWhatsApp = replaceVariables(message, variableValues)
+
+        // Convertir tags de formato a formato de WhatsApp
+        // [B]text[/B] -> *text* (bold en WhatsApp)
+        messageForWhatsApp = messageForWhatsApp.replace(/\[B\](.*?)\[\/B\]/g, "*$1*")
+        // [I]text[/I] -> _text_ (italic en WhatsApp)
+        messageForWhatsApp = messageForWhatsApp.replace(/\[I\](.*?)\[\/I\]/g, "_$1_")
+        // [U]text[/U] -> ~text~ (strikethrough - WhatsApp no soporta underline, así que usamos strikethrough)
+        messageForWhatsApp = messageForWhatsApp.replace(/\[U\](.*?)\[\/U\]/g, "~$1~")
+        // [BR] -> salto de línea
+        messageForWhatsApp = messageForWhatsApp.replace(/\[BR\]/g, "\n")
+
+        const encodedMessage = encodeURIComponent(messageForWhatsApp)
         window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, "_blank")
         toast({
           description: "Ventana de WhatsApp abierta. Por favor envía el mensaje manualmente.",
