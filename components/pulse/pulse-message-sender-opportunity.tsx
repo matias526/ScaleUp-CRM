@@ -103,7 +103,6 @@ const renderFormattedContent = (
         </u>
       )
     }
-
     lastIndex = regex.lastIndex
   }
 
