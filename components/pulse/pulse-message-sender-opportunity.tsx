@@ -1039,6 +1039,7 @@ export function PulseMessageSenderOpportunity({
                         </div>
                       </div>
                     </div>
+                  </div>
 
                   {/* MENSAJE */}
                   <div className="space-y-3">
