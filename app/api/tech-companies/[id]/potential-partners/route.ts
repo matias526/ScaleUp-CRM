@@ -2,12 +2,16 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase/server"
 import { cookies } from "next/headers"
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> } // Declaramos que es una Promesa
+) {
   try {
     const cookieStore = await cookies()
     const supabase = createServerClient()
 
-    const techCompanyId = params.id
+    const resolvedParams = await params;
+    const techCompanyId = resolvedParams.id;
     const { searchParams } = new URL(request.url)
     const stagesParam = searchParams.get("stages")
     const stages = stagesParam ? stagesParam.split(",") : []
