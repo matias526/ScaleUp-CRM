@@ -236,6 +236,7 @@ async function buildMimeMessage(data: {
     attachmentsCount: data.attachments?.length || 0,
   })
 
+
   const boundary = "==boundary_" + Math.random().toString(36).substr(2, 9)
 
   const headers = [
