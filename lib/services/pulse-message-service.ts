@@ -434,7 +434,7 @@ async function addNoteToOpportunity(
         opportunity_id: options.opportunity_id,
         user_id: options.user_id,
         content,
-        is_private: false,
+        is_private: true,
       },
     ])
 
