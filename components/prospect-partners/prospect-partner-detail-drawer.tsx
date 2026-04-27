@@ -129,16 +129,6 @@ export function ProspectPartnerDetailDrawer({ partner, open, onOpenChange }: Pro
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-gray-900">{t("prospect_partners.drawer.generalInfo")}</h3>
 
-              {partner.code && (
-                <div className="flex items-start gap-3">
-                  <Zap className="h-5 w-5 text-gray-400 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1">
-                    <p className="text-xs text-gray-500 font-medium">{t("prospect_partners.code")}</p>
-                    <p className="text-sm font-medium">{partner.code}</p>
-                  </div>
-                </div>
-              )}
-
               {partner.website && (
                 <div className="flex items-start gap-3">
                   <Globe className="h-5 w-5 text-gray-400 mt-0.5 flex-shrink-0" />

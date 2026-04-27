@@ -37,7 +37,6 @@ export function ProspectPartnerFormModal({ open, onOpenChange, initialData, onSu
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
-    code: "",
     website: "",
     address: "",
     lead_source: "",
@@ -49,7 +48,6 @@ export function ProspectPartnerFormModal({ open, onOpenChange, initialData, onSu
     if (initialData) {
       setFormData({
         name: initialData.name || "",
-        code: initialData.code || "",
         website: initialData.website || "",
         address: initialData.address || "",
         lead_source: initialData.lead_source || "",
@@ -58,7 +56,6 @@ export function ProspectPartnerFormModal({ open, onOpenChange, initialData, onSu
     } else {
       setFormData({
         name: "",
-        code: "",
         website: "",
         address: "",
         lead_source: "",
@@ -152,16 +149,6 @@ export function ProspectPartnerFormModal({ open, onOpenChange, initialData, onSu
           </div>
 
           <div>
-            <Label htmlFor="code">{t("prospect_partners.form.label.code")}</Label>
-            <Input
-              id="code"
-              value={formData.code}
-              onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-              placeholder="Código opcional"
-            />
-          </div>
-
-          <div>
             <Label htmlFor="website">{t("prospect_partners.form.label.website")}</Label>
             <Input
               id="website"
@@ -183,7 +170,7 @@ export function ProspectPartnerFormModal({ open, onOpenChange, initialData, onSu
               </SelectTrigger>
               <SelectContent>
                 {countries.map((country) => (
-                  <SelectItem key={country.id} value={country.code}>
+                  <SelectItem key={country.id} value={country.id}>
                     {country.name}
                   </SelectItem>
                 ))}
