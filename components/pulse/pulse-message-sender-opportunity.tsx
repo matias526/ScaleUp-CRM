@@ -663,21 +663,25 @@ export function PulseMessageSenderOpportunity({
 
         // Agregar nota a la oportunidad
         try {
-          await addNoteToOpportunity({
-            opportunity_id: opportunity.id,
-            user_id: userInfo?.id || "",
-            subject: "Mensaje WhatsApp Enviado",
-            body_content: message,
-            channel: "whatsapp",
-            senderMode: "personal",
-            send_mode: "individual",
-            recipients: selectedRecipients,
-            to_emails: toEmails,
-            cc_emails: [],
-            bcc_emails: [],
-            variables_values: variableValues,
-            attachment_ids: [],
-          } as any, "Mensaje WhatsApp Enviado", messageForWhatsApp)
+          await addNoteToOpportunity(
+            {
+              opportunity_id: opportunity.id,
+              user_id: userInfo?.id || "",
+              subject: "Mensaje WhatsApp Enviado",
+              body_content: message,
+              channel: "whatsapp",
+              senderMode: "personal",
+              send_mode: "individual",
+              recipients: selectedRecipients,
+              to_emails: toEmails,
+              cc_emails: [],
+              bcc_emails: [],
+              variables_values: variableValues,
+              attachment_ids: [],
+            } as any,
+            "Mensaje WhatsApp Enviado",
+            messageForWhatsApp
+          )
 
           toast({
             description: "Mensaje WhatsApp enviado y nota agregada a la oportunidad.",
