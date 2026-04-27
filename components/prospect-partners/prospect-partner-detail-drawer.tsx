@@ -248,7 +248,7 @@ export function ProspectPartnerDetailDrawer({ partner, open, onOpenChange }: Pro
                         }
                       }}
                     >
-                      <p className="font-medium text-sm text-blue-600 hover:underline">{opp.name}</p>
+                      <p className="font-medium text-sm text-blue-600 hover:underline">{opp.title}</p>
                       <div className="flex justify-between items-center mt-1">
                         <Badge variant="outline" className="text-xs">
                           {opp.status}
