@@ -1,18 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase/server"
-import { google } from "googleapis"
-
-const oauth2Client = new google.auth.OAuth2(
-  process.env.GOOGLE_CLIENT_ID!,
-  process.env.GOOGLE_CLIENT_SECRET!,
-  process.env.GOOGLE_REDIRECT_URI!,
-)
 
 export async function POST(request: NextRequest) {
   try {
     console.log("[v0] === INICIO ENVÍO DE EMAIL VIA GMAIL ===")
 
-    const { to, cc, bcc, subject, html, replyTo, userId, attachment_ids } = await request.json()
+    const { to, cc, bcc, subject, html, replyTo, userId, attachments } = await request.json()
 
     console.log("[v0] Datos recibidos:", {
       to,
@@ -21,94 +14,119 @@ export async function POST(request: NextRequest) {
       subject: subject?.substring(0, 50),
       userId,
       htmlLength: html?.length,
-      attachmentIdsCount: attachment_ids?.length || 0,
+      attachmentsCount: attachments?.length || 0
     })
 
+    // Validar userId
     if (!userId) {
-      return NextResponse.json(
-        { success: false, message: "userId es requerido" },
-        { status: 400 },
-      )
+      console.error("[v0] ERROR: userId no proporcionado")
+      return NextResponse.json({ success: false, message: "userId requerido" }, { status: 400 })
     }
 
+    // Obtener el access_token de la BD usando servidor client
+    console.log("[v0] Buscando token para user:", userId)
     const supabase = createServerClient()
-
-    // Obtener tokens de usuario
-    console.log("[v0] Obteniendo tokens para usuario:", userId)
-    const { data: userData, error: userError } = await (supabase
-      .from("user_gmail_tokens")
-      .select("refresh_token, access_token, expiry_date")
+    const { data: integration, error: queryError } = await (supabase
+      .from("user_email_integrations" as any)
+      .select("*")
       .eq("user_id", userId)
-      .single() as any)
+      .eq("is_connected", true)
+      .limit(1) as any)
 
-    if (userError || !userData) {
-      console.error("[v0] Error obteniendo tokens:", userError)
-      return NextResponse.json(
-        { success: false, message: "No hay tokens de Gmail para este usuario" },
-        { status: 401 },
-      )
+    if (queryError) {
+      console.error("[v0] Error consultando BD:", queryError)
+      return NextResponse.json({
+        success: false,
+        message: "Error al obtener integración de email",
+        error: queryError
+      }, { status: 500 })
     }
 
-    console.log("[v0] Tokens encontrados, configurando OAuth2")
-
-    // Configurar OAuth2 con tokens
-    oauth2Client.setCredentials({
-      refresh_token: userData.refresh_token,
-      access_token: userData.access_token,
-      expiry_date: userData.expiry_date ? new Date(userData.expiry_date).getTime() : undefined,
-    })
-
-    // Si el token está expirado, refrescar
-    const { credentials } = await oauth2Client.refreshAccessToken()
-    console.log("[v0] Tokens refrescados/validados")
-
-    // Obtener email del usuario
-    const { data: userProfile } = await (supabase
-      .auth.admin.getUserById(userId) as any)
-    const userEmail = userProfile?.user?.email
-
-    if (!userEmail) {
-      return NextResponse.json(
-        { success: false, message: "No se encontró email del usuario" },
-        { status: 400 },
-      )
+    if (!integration || integration.length === 0) {
+      console.error("[v0] No hay integración de email para este usuario")
+      return NextResponse.json({
+        success: false,
+        message: "No hay integración de email conectada para este usuario"
+      }, { status: 400 })
     }
 
-    console.log("[v0] Email del usuario:", userEmail)
+    const emailIntegration = integration[0]
+    let accessToken = emailIntegration.access_token
+    const refreshToken = emailIntegration.refresh_token
+    const userEmail = emailIntegration.email
+    const tokenExpiresAt = emailIntegration.token_expires_at
 
-    // Descargar attachments si hay IDs
-    const attachments = []
-    if (attachment_ids && attachment_ids.length > 0) {
-      console.log("[v0] Descargando", attachment_ids.length, "attachments")
+    console.log("[v0] Token obtenido. Email:", userEmail)
+    console.log("[v0] Token expira en:", tokenExpiresAt)
 
-      for (const attId of attachment_ids) {
-        try {
-          const { data: attachmentData, error: attError } = await (supabase
-            .from("pulse_message_attachments")
-            .select("file_url, file_name")
-            .eq("id", attId)
-            .single() as any)
+    // Verificar si el token expiró
+    if (tokenExpiresAt && new Date(tokenExpiresAt) < new Date()) {
+      console.log("[v0] Token expirado, refrescando...")
 
-          if (attError || !attachmentData) {
-            console.warn(`[v0] Error obteniendo attachment ${attId}:`, attError)
-            continue
-          }
-
-          attachments.push({
-            filename: attachmentData.file_name,
-            url: attachmentData.file_url,
-          })
-        } catch (error) {
-          console.warn("[v0] Error procesando attachment ID:", attId, error)
-          continue
-        }
+      if (!refreshToken) {
+        console.error("[v0] ERROR: No hay refresh_token disponible")
+        return NextResponse.json({
+          success: false,
+          message: "Token expirado y no se puede refrescar. Por favor conecta tu email nuevamente.",
+        }, { status: 401 })
       }
 
-      console.log("[v0] Attachments obtenidos:", attachments.length)
+      // Refrescar el token
+      const refreshResponse = await fetch("https://oauth2.googleapis.com/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          client_id: process.env.GOOGLE_OAUTH_CLIENT_ID,
+          client_secret: process.env.GOOGLE_OAUTH_CLIENT_SECRET,
+          refresh_token: refreshToken,
+          grant_type: "refresh_token",
+        }),
+      })
+
+      if (!refreshResponse.ok) {
+        const error = await refreshResponse.json()
+        console.error("[v0] Error refrescando token:", error)
+        return NextResponse.json({
+          success: false,
+          message: "Error al refrescar token de Google",
+          error,
+        }, { status: 401 })
+      }
+
+      const newTokenData = await refreshResponse.json()
+      accessToken = newTokenData.access_token
+
+      console.log("[v0] Token refrescado exitosamente")
+      console.log("[v0] Nuevo token:", accessToken?.substring(0, 20) + "...")
+
+      // Actualizar el token en la BD
+      const { error: updateError } = await (supabase
+        .from("user_email_integrations" as any)
+        .update({
+          access_token: accessToken,
+          token_expires_at: new Date(Date.now() + newTokenData.expires_in * 1000).toISOString(),
+        })
+        .eq("user_id", userId) as any)
+
+      if (updateError) {
+        console.error("[v0] Error actualizando token en BD:", updateError)
+        // No fallar por esto, seguir intentando con el nuevo token
+      }
     }
 
+    console.log("[v0] Token válido:", accessToken?.substring(0, 20) + "...")
+
     // Construir el mensaje MIME
-    console.log("[v0] Constructing MIME message...")
+    console.log("[v0] Constructing MIME message with params:", {
+      to,
+      cc,
+      bcc,
+      subject: subject?.substring(0, 50),
+      from: userEmail,
+      replyTo,
+      htmlLength: html?.length,
+    })
+
     const mimeMessage = await buildMimeMessage({
       to,
       cc,
@@ -120,41 +138,77 @@ export async function POST(request: NextRequest) {
       attachments,
     })
 
-    console.log("[v0] MIME message construido, tamaño:", mimeMessage.length)
+    console.log("[v0] MIME message built, length:", mimeMessage.length)
+    console.log("[v0] MIME preview (first 300 chars):")
+    console.log(mimeMessage.substring(0, 300))
+
+    // Convertir a base64
+    const base64Message = Buffer.from(mimeMessage).toString("base64")
+    console.log("[v0] Base64 encoded, length:", base64Message.length)
 
     // Enviar via Gmail API
-    const gmail = google.gmail({ version: "v1", auth: oauth2Client })
+    console.log("[v0] Calling Gmail API at: https://www.googleapis.com/gmail/v1/users/me/messages/send")
+    console.log("[v0] Authorization header:", `Bearer ${accessToken?.substring(0, 20)}...`)
 
-    const encodedMessage = Buffer.from(mimeMessage).toString("base64").replace(/\+/g, "-").replace(/\//g, "_")
-
-    console.log("[v0] Enviando mensaje a Gmail API...")
-    const result = await gmail.users.messages.send({
-      userId: "me",
-      requestBody: {
-        raw: encodedMessage,
+    const gmailResponse = await fetch("https://www.googleapis.com/gmail/v1/users/me/messages/send", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
       },
+      body: JSON.stringify({
+        raw: base64Message,
+      }),
     })
 
-    console.log("[v0] Mensaje enviado exitosamente:", result.data.id)
+    console.log("[v0] Gmail API response:", gmailResponse.status, gmailResponse.statusText)
 
-    // Registrar relación de attachments si hay
-    if (attachment_ids && attachment_ids.length > 0) {
-      console.log("[v0] Registrando relación de attachments...")
-      // Aquí se registraría en pulse_sent_messages_attachments
-      // pero necesitaríamos un log_id que viene de otra parte
+    const responseText = await gmailResponse.text()
+    console.log("[v0] Gmail API response body:", responseText)
+
+    if (!gmailResponse.ok) {
+      let errorData
+      try {
+        errorData = JSON.parse(responseText)
+      } catch {
+        errorData = { raw: responseText }
+      }
+      console.error("[v0] ERROR de Gmail API:", JSON.stringify(errorData, null, 2))
+      return NextResponse.json({
+        success: false,
+        message: `Error de Gmail: ${errorData.error?.message || errorData.raw || "Error desconocido"}`,
+        error: errorData,
+      }, { status: 400 })
     }
+
+    let result
+    try {
+      result = JSON.parse(responseText)
+    } catch {
+      result = { raw: responseText }
+    }
+
+    console.log("[v0] Email enviado exitosamente. Message ID:", result.id)
+    console.log("[v0] === FIN ENVÍO EXITOSO ===")
 
     return NextResponse.json({
       success: true,
-      message: "Email enviado via Gmail",
-      messageId: result.data.id,
+      message: "Email enviado correctamente via Gmail",
+      data: result,
     })
   } catch (error) {
-    console.error("[v0] Error en send-email-gmail:", error)
+    console.error("[v0] === ERROR EN ENVÍO VIA GMAIL ===")
+    console.error("[v0] Error:", error)
+    if (error instanceof Error) {
+      console.error("[v0] Mensaje:", error.message)
+      console.error("[v0] Stack:", error.stack)
+    }
+
     return NextResponse.json(
       {
         success: false,
-        message: error instanceof Error ? error.message : "Error al enviar email",
+        message: error instanceof Error ? error.message : "Error al enviar email via Gmail",
+        error: error instanceof Error ? error.stack : String(error),
       },
       { status: 500 },
     )
@@ -235,7 +289,7 @@ async function buildMimeMessage(data: {
         // Convertir a Buffer y luego a Base64
         const arrayBuffer = await response.arrayBuffer()
         const buffer = Buffer.from(arrayBuffer)
-        const base64Content = buffer.toString("base64")
+        const base64Content = buffer.toString('base64')
 
         console.log(`[v0] Attachment convertido a Base64: ${attachment.filename} (${base64Content.length} caracteres)`)
 
@@ -247,6 +301,7 @@ async function buildMimeMessage(data: {
         parts.push("")
 
         // Agregar el contenido Base64 en líneas de máximo 76 caracteres (estándar MIME)
+        let base64Line = ""
         for (let i = 0; i < base64Content.length; i += 76) {
           parts.push(base64Content.substring(i, i + 76))
         }
