@@ -276,7 +276,7 @@ export default function OpportunityCreateForm() {
     country: z.string().optional(),
     assigned_to: z.string().optional().nullable(),
     partner_responsible_id: z.string().optional().nullable(),
-    is_prospect: z.boolean().optional(),
+    opportunity_tech_fields: z.record(z.any()).optional().default({}),
   })
 
   type FormValues = z.infer<typeof formSchema>
@@ -750,969 +750,968 @@ export default function OpportunityCreateForm() {
       {/* Narrow Container for Entire Form */}
       <div className="max-w-2xl mx-auto w-full">
         <Card>
-        <CardHeader className="pb-6 bg-primary/10">
-          {/* Header Title and Description */}
-          <div className="mb-6">
-            <CardTitle className="text-2xl mb-2 text-gray-900">{t("opportunities.header.title") || "Crear nueva oportunidad"}</CardTitle>
-            <p className="text-gray-600 text-sm">{t("opportunities.header.description") || "Completa el formulario para crear una nueva oportunidad de negocio"}</p>
-          </div>
-
-          {/* Progress Bar Section */}
-          <div className="mb-6">
-            {/* Progress bar with percentage */}
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-medium text-gray-700">{t("opportunities.header.progress") || "Progreso"}</span>
-              <span className="text-sm font-semibold text-blue-600">{Math.round((currentStep / totalSteps) * 100)}%</span>
+          <CardHeader className="pb-6 bg-primary/10">
+            {/* Header Title and Description */}
+            <div className="mb-6">
+              <CardTitle className="text-2xl mb-2 text-gray-900">{t("opportunities.header.title") || "Crear nueva oportunidad"}</CardTitle>
+              <p className="text-gray-600 text-sm">{t("opportunities.header.description") || "Completa el formulario para crear una nueva oportunidad de negocio"}</p>
             </div>
-            
-            {/* Linear Progress Bar */}
-            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-blue-600 transition-all duration-300"
-                style={{ width: `${(currentStep / totalSteps) * 100}%` }}
-              />
-            </div>
-          </div>
 
-          {/* Current Step Title and Dots Indicator */}
-          <div className="flex items-center justify-between">
-            {/* Step Title with Circle Number */}
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white font-semibold text-sm">
-                {currentStep}
+            {/* Progress Bar Section */}
+            <div className="mb-6">
+              {/* Progress bar with percentage */}
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium text-gray-700">{t("opportunities.header.progress") || "Progreso"}</span>
+                <span className="text-sm font-semibold text-blue-600">{Math.round((currentStep / totalSteps) * 100)}%</span>
               </div>
-              <span className="text-base font-semibold text-gray-900">
-                {currentStep === 1 ? t("opportunities.step.1_name") || "Información básica"
-                  : currentStep === 2 ? t("opportunities.step.2_name") || "Empresas involucradas"
-                    : currentStep === 3 ? t("opportunities.step.3_name") || "Cliente y detalles financieros"
-                      : currentStep === 4 ? t("opportunities.step.4_name") || "Campos técnicos"
-                        : t("opportunities.step.5_name") || "Confirmación"}
-              </span>
-            </div>
 
-            {/* Dots Indicator for Total Steps */}
-            <div className="flex items-center gap-1.5">
-              {Array.from({ length: totalSteps }).map((_, index) => (
+              {/* Linear Progress Bar */}
+              <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
                 <div
-                  key={index}
-                  className={`h-2 w-2 rounded-full transition-all ${
-                    index + 1 <= currentStep ? "bg-blue-600" : "bg-gray-300"
-                  }`}
+                  className="h-full bg-blue-600 transition-all duration-300"
+                  style={{ width: `${(currentStep / totalSteps) * 100}%` }}
                 />
-              ))}
+              </div>
             </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={(e) => {
-              e.preventDefault(); // Evita el envío automático del navegador
-              if (currentStep === 5 && isConfirming) {
-                form.handleSubmit(onSubmit)(e);
-                setIsConfirming(false); // Lo reseteamos por seguridad
-              }
-            }}
-              className="space-y-6">
-              
-              {/* Centered Content Container */}
-              <div className="max-w-2xl mx-auto px-4 w-full">
-              {/* ===== PASO 1: INFORMACIÓN BÁSICA ===== */}
-              {currentStep === 1 && (
-                <div className="space-y-6 mt-6">
 
-                  {/* Título */}
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-medium">{t("opportunities.form.title")} *</FormLabel>
-                        <FormControl>
-                          <Input placeholder={t("opportunities.form.title")} className="border-gray-200 rounded-xl bg-white hover:border-gray-300 transition-colors" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Descripción */}
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-medium">{t("opportunities.form.description")}</FormLabel>
-                        <FormControl>
-                          <Textarea placeholder={t("opportunities.form.description")} className="min-h-24 border-gray-200 rounded-xl bg-white hover:border-gray-300 transition-colors" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Es Partner Prospecto (Solo para ScaleUp) */}
-                  {isScaleUpUser && (
-                    <FormField
-                      control={form.control}
-                      name="is_prospect"
-                      render={({ field }) => (
-                        <FormItem className="flex items-center justify-between rounded-xl border border-gray-200 p-4 bg-white hover:border-gray-300 transition-colors">
-                          <div className="space-y-0.5">
-                            <FormLabel className="text-base cursor-pointer font-medium">{t("opportunities.prospect.is_prospect")}</FormLabel>
-                            <p className="text-sm text-gray-500">{t("opportunities.prospect.markProspect")}</p>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={(checked) => {
-                                field.onChange(checked)
-                                if (checked) {
-                                  setProspectDialogOpen(true)
-                                }
-                              }}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  )}
-
-                  {/* Resumen del Partner Prospecto */}
-                  {form.watch("is_prospect") && form.watch("prospect_partner_data")?.name && (
-                    <div className="rounded-lg bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 p-4 space-y-3">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Check className="h-5 w-5 text-green-600" />
-                        <span className="font-semibold text-gray-900">{t("opportunities.prospect.savedData")}</span>
-                      </div>
-
-                      {/* Grid con datos de empresa */}
-                      <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div className="bg-white rounded p-3">
-                          <p className="text-gray-600 font-medium text-xs">Empresa</p>
-                          <p className="text-gray-900 font-semibold">{form.watch("prospect_partner_data")?.name}</p>
-                        </div>
-                        <div className="bg-white rounded p-3">
-                          <p className="text-gray-600 font-medium text-xs">País</p>
-                          <p className="text-gray-900 font-semibold">
-                            {allCountries.find(c => c.id === form.watch("prospect_partner_data")?.main_country_id)?.name || "N/A"}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Datos de contacto */}
-                      <div className="bg-white rounded p-3">
-                        <p className="text-gray-600 font-medium text-xs mb-1">Contacto Principal</p>
-                        <p className="text-gray-900">
-                          {form.watch("prospect_contact_data")?.first_name} {form.watch("prospect_contact_data")?.last_name}
-                        </p>
-                        <p className="text-gray-600 text-xs">{form.watch("prospect_contact_data")?.email}</p>
-                      </div>
-
-                      {/* Botón para editar */}
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                        onClick={() => setProspectDialogOpen(true)}
-                      >
-                        Editar {t("opportunities.prospect.savedData").toLowerCase()}
-                      </Button>
-                    </div>
-                  )}
-
-                  {/* Etapa del Pipeline - OCULTA para usuarios Partner */}
-                  {isScaleUpUser && (
-                    <FormField
-                      control={form.control}
-                      name="pipeline_stage_id"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t("opportunities.form.stage")} *</FormLabel>
-                          <Select value={field.value} onValueChange={field.onChange}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder={t("opportunities.form.select_placeholder")} />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {stages.map((stage) => (
-                                <SelectItem key={stage.id} value={stage.id}>
-                                  {stage.code}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  )}
+            {/* Current Step Title and Dots Indicator */}
+            <div className="flex items-center justify-between">
+              {/* Step Title with Circle Number */}
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white font-semibold text-sm">
+                  {currentStep}
                 </div>
-              )}
+                <span className="text-base font-semibold text-gray-900">
+                  {currentStep === 1 ? t("opportunities.step.1_name") || "Información básica"
+                    : currentStep === 2 ? t("opportunities.step.2_name") || "Empresas involucradas"
+                      : currentStep === 3 ? t("opportunities.step.3_name") || "Cliente y detalles financieros"
+                        : currentStep === 4 ? t("opportunities.step.4_name") || "Campos técnicos"
+                          : t("opportunities.step.5_name") || "Confirmación"}
+                </span>
+              </div>
 
-              {/* ===== PASO 2: EMPRESAS INVOLUCRADAS ===== */}
-              {currentStep === 2 && (
-                <div className="space-y-6 mt-6">
-
-                  {/* Section Title: Company Data */}
-                  <div className="border-b pb-3">
-                    <h3 className="text-sm font-semibold text-gray-700">Datos de la Empresa</h3>
-                  </div>
-
-                  {/* Empresa Tecnológica */}
-                  <FormField
-                    control={form.control}
-                    name="tech_company_id"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("opportunities.form.tech_company")} *</FormLabel>
-                        <Select value={field.value} onValueChange={field.onChange}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={t("opportunities.form.select_placeholder")} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {techCompanies.map((company) => (
-                              <SelectItem key={company.id} value={company.id}>
-                                {company.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+              {/* Dots Indicator for Total Steps */}
+              <div className="flex items-center gap-1.5">
+                {Array.from({ length: totalSteps }).map((_, index) => (
+                  <div
+                    key={index}
+                    className={`h-2 w-2 rounded-full transition-all ${index + 1 <= currentStep ? "bg-blue-600" : "bg-gray-300"
+                      }`}
                   />
+                ))}
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={(e) => {
+                e.preventDefault(); // Evita el envío automático del navegador
+                if (currentStep === 5 && isConfirming) {
+                  form.handleSubmit(onSubmit)(e);
+                  setIsConfirming(false); // Lo reseteamos por seguridad
+                }
+              }}
+                className="space-y-6">
 
-                  {/* Partner - Oculto si es prospect o si es usuario Partner */}
-                  {!form.watch("is_prospect") && isScaleUpUser && (
-                    <FormField
-                      control={form.control}
-                      name="partner_id"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t("opportunities.form.partner")} ({t("common.optional")})</FormLabel>
-                          <Select value={field.value || "null"} onValueChange={(value) => {
-                            if (value === "null") {
-                              field.onChange(null)
-                            } else {
-                              field.onChange(value)
-                            }
-                          }}>
+                {/* Centered Content Container */}
+                <div className="max-w-2xl mx-auto px-4 w-full">
+                  {/* ===== PASO 1: INFORMACIÓN BÁSICA ===== */}
+                  {currentStep === 1 && (
+                    <div className="space-y-6 mt-6">
+
+                      {/* Título */}
+                      <FormField
+                        control={form.control}
+                        name="title"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium">{t("opportunities.form.title")} *</FormLabel>
                             <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder={t("opportunities.form.select_placeholder")} />
-                              </SelectTrigger>
+                              <Input placeholder={t("opportunities.form.title")} className="border-gray-200 rounded-xl bg-white hover:border-gray-300 transition-colors" {...field} />
                             </FormControl>
-                            <SelectContent>
-                              <SelectItem value="null">
-                                {t("opportunities.form.no_partner")}
-                              </SelectItem>
-                              {filteredPartners.length === 0 ? (
-                                <div className="p-2 text-sm text-gray-500 text-center">
-                                  {loadingPartners ? t("opportunities.form.loading") : t("opportunities.form.noPartnersAvailable")}
-                                </div>
-                              ) : (
-                                filteredPartners.map((partner) => (
-                                  <SelectItem key={partner.id} value={partner.id}>
-                                    {String(partner.name || partner.id)}
-                                  </SelectItem>
-                                ))
-                              )}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  )}
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                  {/* País - Siempre visible, filtrado por partner si existe */}
-                  <FormField
-                    control={form.control}
-                    name="country"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("opportunities.form.country")} {form.watch("partner_id") && "*"}</FormLabel>
-                        <Select value={field.value || ""} onValueChange={field.onChange}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={t("opportunities.form.select_placeholder")} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {partnerCountries.length === 0 ? (
-                              <div className="p-2 text-sm text-gray-500 text-center">
-                                {loadingCountries ? t("opportunities.form.loading") : t("opportunities.form.noCountriesAvailable")}
+                      {/* Descripción */}
+                      <FormField
+                        control={form.control}
+                        name="description"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium">{t("opportunities.form.description")}</FormLabel>
+                            <FormControl>
+                              <Textarea placeholder={t("opportunities.form.description")} className="min-h-24 border-gray-200 rounded-xl bg-white hover:border-gray-300 transition-colors" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Es Partner Prospecto (Solo para ScaleUp) */}
+                      {isScaleUpUser && (
+                        <FormField
+                          control={form.control}
+                          name="is_prospect"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center justify-between rounded-xl border border-gray-200 p-4 bg-white hover:border-gray-300 transition-colors">
+                              <div className="space-y-0.5">
+                                <FormLabel className="text-base cursor-pointer font-medium">{t("opportunities.prospect.is_prospect")}</FormLabel>
+                                <p className="text-sm text-gray-500">{t("opportunities.prospect.markProspect")}</p>
                               </div>
-                            ) : (
-                              partnerCountries.map((country) => (
-                                <SelectItem key={country.id} value={country.code}>
-                                  {String(country.name || country.code || country.id)}
-                                </SelectItem>
-                              ))
-                            )}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={(checked) => {
+                                    field.onChange(checked)
+                                    if (checked) {
+                                      setProspectDialogOpen(true)
+                                    }
+                                  }}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      )}
 
-                  {/* Section Title: Assignment */}
-                  {(isScaleUpUser || form.watch("partner_id")) && (
-                    <div className="border-b pb-3">
-                      <h3 className="text-sm font-semibold text-gray-700">Asignación y Responsables</h3>
+                      {/* Resumen del Partner Prospecto */}
+                      {form.watch("is_prospect") && form.watch("prospect_partner_data")?.name && (
+                        <div className="rounded-lg bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 p-4 space-y-3">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Check className="h-5 w-5 text-green-600" />
+                            <span className="font-semibold text-gray-900">{t("opportunities.prospect.savedData")}</span>
+                          </div>
+
+                          {/* Grid con datos de empresa */}
+                          <div className="grid grid-cols-2 gap-3 text-sm">
+                            <div className="bg-white rounded p-3">
+                              <p className="text-gray-600 font-medium text-xs">Empresa</p>
+                              <p className="text-gray-900 font-semibold">{form.watch("prospect_partner_data")?.name}</p>
+                            </div>
+                            <div className="bg-white rounded p-3">
+                              <p className="text-gray-600 font-medium text-xs">País</p>
+                              <p className="text-gray-900 font-semibold">
+                                {allCountries.find(c => c.id === form.watch("prospect_partner_data")?.main_country_id)?.name || "N/A"}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Datos de contacto */}
+                          <div className="bg-white rounded p-3">
+                            <p className="text-gray-600 font-medium text-xs mb-1">Contacto Principal</p>
+                            <p className="text-gray-900">
+                              {form.watch("prospect_contact_data")?.first_name} {form.watch("prospect_contact_data")?.last_name}
+                            </p>
+                            <p className="text-gray-600 text-xs">{form.watch("prospect_contact_data")?.email}</p>
+                          </div>
+
+                          {/* Botón para editar */}
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="w-full"
+                            onClick={() => setProspectDialogOpen(true)}
+                          >
+                            Editar {t("opportunities.prospect.savedData").toLowerCase()}
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* Etapa del Pipeline - OCULTA para usuarios Partner */}
+                      {isScaleUpUser && (
+                        <FormField
+                          control={form.control}
+                          name="pipeline_stage_id"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t("opportunities.form.stage")} *</FormLabel>
+                              <Select value={field.value} onValueChange={field.onChange}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder={t("opportunities.form.select_placeholder")} />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {stages.map((stage) => (
+                                    <SelectItem key={stage.id} value={stage.id}>
+                                      {stage.code}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
                     </div>
                   )}
 
-                  {/* Manager de ScaleUp - Solo si es usuario ScaleUp */}
-                  {isScaleUpUser && (
-                    <FormField
-                      control={form.control}
-                      name="assigned_to"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t("opportunities.form.assigned_to")} *</FormLabel>
-                          <Select value={field.value || ""} onValueChange={field.onChange}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder={t("opportunities.form.select_placeholder")} />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {scaleUpUsers.map((manager) => (
-                                <SelectItem key={manager.id} value={manager.id}>
-                                  {manager.first_name} {manager.last_name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
+                  {/* ===== PASO 2: EMPRESAS INVOLUCRADAS ===== */}
+                  {currentStep === 2 && (
+                    <div className="space-y-6 mt-6">
+
+                      {/* Section Title: Company Data */}
+                      <div className="border-b pb-3">
+                        <h3 className="text-sm font-semibold text-gray-700">Datos de la Empresa</h3>
+                      </div>
+
+                      {/* Empresa Tecnológica */}
+                      <FormField
+                        control={form.control}
+                        name="tech_company_id"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("opportunities.form.tech_company")} *</FormLabel>
+                            <Select value={field.value} onValueChange={field.onChange}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder={t("opportunities.form.select_placeholder")} />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {techCompanies.map((company) => (
+                                  <SelectItem key={company.id} value={company.id}>
+                                    {company.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Partner - Oculto si es prospect o si es usuario Partner */}
+                      {!form.watch("is_prospect") && isScaleUpUser && (
+                        <FormField
+                          control={form.control}
+                          name="partner_id"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t("opportunities.form.partner")} ({t("common.optional")})</FormLabel>
+                              <Select value={field.value || "null"} onValueChange={(value) => {
+                                if (value === "null") {
+                                  field.onChange(null)
+                                } else {
+                                  field.onChange(value)
+                                }
+                              }}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder={t("opportunities.form.select_placeholder")} />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="null">
+                                    {t("opportunities.form.no_partner")}
+                                  </SelectItem>
+                                  {filteredPartners.length === 0 ? (
+                                    <div className="p-2 text-sm text-gray-500 text-center">
+                                      {loadingPartners ? t("opportunities.form.loading") : t("opportunities.form.noPartnersAvailable")}
+                                    </div>
+                                  ) : (
+                                    filteredPartners.map((partner) => (
+                                      <SelectItem key={partner.id} value={partner.id}>
+                                        {String(partner.name || partner.id)}
+                                      </SelectItem>
+                                    ))
+                                  )}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                       )}
-                    />
-                  )}
 
-                  {/* Partner Responsible - Solo si hay partner seleccionado */}
-                  {form.watch("partner_id") && (
-                    <FormField
-                      control={form.control}
-                      name="partner_responsible_id"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t("opportunities.form.partner_responsible")} *</FormLabel>
-                          <Select value={field.value || ""} onValueChange={field.onChange}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder={t("opportunities.form.select_placeholder")} />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {partnerUsers.length === 0 ? (
-                                <div className="p-2 text-sm text-gray-500 text-center">
-                                  {loadingPartnerUsers ? t("opportunities.form.loading") : t("opportunities.form.noUsersAvailable")}
-                                </div>
-                              ) : (
-                                partnerUsers.map((user) => {
-                                  const firstName = typeof user?.first_name === 'string' ? user.first_name : ''
-                                  const lastName = typeof user?.last_name === 'string' ? user.last_name : ''
-                                  const displayName = `${firstName} ${lastName}`.trim() || user?.id
-                                  return (
-                                    <SelectItem key={user.id} value={user.id}>
-                                      {displayName}
-                                    </SelectItem>
-                                  )
-                                })
-                              )}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  )}
-                </div>
-              )}
-
-              {/* ===== PASO 3: CLIENTE Y DETALLES FINANCIEROS ===== */}
-              {currentStep === 3 && (
-                <div className="space-y-6 mt-6">
-
-                  {/* End Customer - AUTOCOMPLETE CON BÚSQUEDA */}
-                  <FormField
-                    control={form.control}
-                    name="end_customer_id"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("opportunities.form.end_customer")} {!isScaleUpUser && "*"}</FormLabel>
-                        <FormControl>
-                          <div className="space-y-2">
-                            <Input
-                              placeholder={t("opportunities.form.searchPlaceholder")}
-                              value={endCustomerSearchQuery}
-                              onChange={(e) => {
-                                setEndCustomerSearchQuery(e.target.value)
-                                // Filtrar en base a la búsqueda
-                                const filtered = filteredEndCustomers.filter(c =>
-                                  String(c.name || "").toLowerCase().includes(e.target.value.toLowerCase())
-                                )
-                                setSearchResults(filtered)
-                              }}
-                              onFocus={() => {
-                                setSearchResults(filteredEndCustomers)
-                              }}
-                            />
-
-                            {/* Resultados de búsqueda */}
-                            {endCustomerSearchQuery && (
-                              <div className="border rounded-md p-2 max-h-48 overflow-y-auto space-y-1">
-                                {searchResults.length === 0 ? (
-                                  <div className="text-sm text-gray-500 p-2">
-                                    {t("opportunities.form.noCustomersFound").replace("{query}", endCustomerSearchQuery)}
+                      {/* País - Siempre visible, filtrado por partner si existe */}
+                      <FormField
+                        control={form.control}
+                        name="country"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("opportunities.form.country")} {form.watch("partner_id") && "*"}</FormLabel>
+                            <Select value={field.value || ""} onValueChange={field.onChange}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder={t("opportunities.form.select_placeholder")} />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {partnerCountries.length === 0 ? (
+                                  <div className="p-2 text-sm text-gray-500 text-center">
+                                    {loadingCountries ? t("opportunities.form.loading") : t("opportunities.form.noCountriesAvailable")}
                                   </div>
                                 ) : (
-                                  searchResults.map((customer) => (
-                                    <button
-                                      key={customer.id}
-                                      type="button"
-                                      className="w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                                      onClick={() => {
-                                        field.onChange(customer.id)
-                                        setEndCustomerSearchQuery(customer.name)
-                                        setSearchResults([])
-                                      }}
-                                    >
-                                      {customer.name}
-                                    </button>
+                                  partnerCountries.map((country) => (
+                                    <SelectItem key={country.id} value={country.code}>
+                                      {String(country.name || country.code || country.id)}
+                                    </SelectItem>
                                   ))
                                 )}
-                              </div>
-                            )}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                            {/* Botón Crear Cliente */}
-                            {endCustomerSearchQuery && searchResults.length === 0 && (
-                              <Button
-                                type="button"
-                                variant="outline"
-                                className="w-full"
-                                onClick={() => {
-                                  setNewEndCustomerData({
-                                    ...newEndCustomerData,
-                                    name: endCustomerSearchQuery
-                                  })
-                                  setNewEndCustomerDialogOpen(true)
-                                }}
-                              >
-                                + Crear "{endCustomerSearchQuery}"
-                              </Button>
-                            )}
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                        {!isScaleUpUser && <p className="text-sm text-red-600">Campo obligatorio para usuarios Partner</p>}
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Estimated Value - Only for ScaleUp users */}
-                  {isScaleUpUser && (
-                    <FormField
-                      control={form.control}
-                      name="estimated_value"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t("opportunities.form.estimated_value")} (USD)</FormLabel>
-                          <FormControl>
-                            <Input type="number" placeholder="0.00" step="0.01" {...field} value={field.value ?? ""} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+                      {/* Section Title: Assignment */}
+                      {(isScaleUpUser || form.watch("partner_id")) && (
+                        <div className="border-b pb-3">
+                          <h3 className="text-sm font-semibold text-gray-700">Asignación y Responsables</h3>
+                        </div>
                       )}
-                    />
-                  )}
 
-                  {/* Estimated Close Date */}
-                  <FormField
-                    control={form.control}
-                    name="estimated_close_date"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("opportunities.form.estimated_close_date")}</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} value={field.value ? new Date(field.value).toISOString().split('T')[0] : ""} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              )}
+                      {/* Manager de ScaleUp - Solo si es usuario ScaleUp */}
+                      {isScaleUpUser && (
+                        <FormField
+                          control={form.control}
+                          name="assigned_to"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t("opportunities.form.assigned_to")} *</FormLabel>
+                              <Select value={field.value || ""} onValueChange={field.onChange}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder={t("opportunities.form.select_placeholder")} />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {scaleUpUsers.map((manager) => (
+                                    <SelectItem key={manager.id} value={manager.id}>
+                                      {manager.first_name} {manager.last_name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
 
-              {/* ===== PASO 4: CAMPOS TÉCNICOS ===== */}
-              {currentStep === 4 && (
-                <div className="space-y-6 mt-6">
-
-                  {loadingTechFields ? (
-                    <p className="text-gray-500">{t("opportunities.form.loading")}</p>
-                  ) : techFields.length === 0 ? (
-                    <p className="text-gray-500">No hay campos técnicos definidos para esta empresa</p>
-                  ) : (
-                    <div className="space-y-5">
-                      {techFields.map((field: any) => {
-                        const fieldKey = `opportunity_tech_fields.${field.id}`
-                        const { register, watch, formState: { errors } } = form
-                        const fieldValue = watch(fieldKey as any)
-                        const hasError = Boolean((errors as any)?.opportunity_tech_fields?.[field.id])
-
-                        return (
-                          <div key={field.id} className={`border rounded-lg p-4 space-y-2 ${field.is_required ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}>
-                            <label className="text-sm font-medium flex items-center gap-2">
-                              {field.field_name}
-                              {field.is_required && <span className="text-red-600 font-bold">*</span>}
-                            </label>
-                            <p className="text-xs text-gray-500">{field.field_type}</p>
-
-                            {/* TEXT FIELD */}
-                            {field.field_type === "text" && (
-                              <>
-                                <Input
-                                  placeholder={t("opportunities.form.inputPlaceholder").replace("{field}", field.field_name.toLowerCase())}
-                                  {...register(fieldKey as any, {
-                                    required: field.is_required ? t("opportunities.form.mandatoryField") : false,
-                                  })}
-                                  className={hasError ? "border-red-500" : ""}
-                                />
-                                {hasError && <p className="text-xs text-red-600">{(errors as any)?.opportunity_tech_fields?.[field.id]?.message}</p>}
-                              </>
-                            )}
-
-                            {/* NUMBER FIELD */}
-                            {field.field_type === "number" && (
-                              <>
-                                <Input
-                                  type="number"
-                                  placeholder={t("opportunities.form.inputPlaceholder").replace("{field}", field.field_name.toLowerCase())}
-                                  {...register(fieldKey as any, {
-                                    required: field.is_required ? t("opportunities.form.mandatoryField") : false,
-                                    valueAsNumber: true,
-                                  })}
-                                  className={hasError ? "border-red-500" : ""}
-                                />
-                                {hasError && <p className="text-xs text-red-600">{(errors as any)?.opportunity_tech_fields?.[field.id]?.message}</p>}
-                              </>
-                            )}
-
-                            {/* DATE FIELD */}
-                            {field.field_type === "date" && (
-                              <>
-                                <Input
-                                  type="date"
-                                  {...register(fieldKey as any, {
-                                    required: field.is_required ? `${field.field_name} es obligatorio` : false,
-                                  })}
-                                  className={hasError ? "border-red-500" : ""}
-                                />
-                                {hasError && <p className="text-xs text-red-600">{(errors as any)?.opportunity_tech_fields?.[field.id]?.message}</p>}
-                              </>
-                            )}
-
-                            {/* BOOLEAN FIELD */}
-                            {field.field_type === "boolean" && (
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="checkbox"
-                                  id={`field-${field.id}`}
-                                  {...register(fieldKey as any, {
-                                    required: false,
-                                  })}
-                                  className="w-4 h-4"
-                                />
-                                <label htmlFor={`field-${field.id}`} className="text-sm cursor-pointer">
-                                  {field.field_name}
-                                </label>
-                              </div>
-                            )}
-
-                            {/* SELECT FIELD */}
-                            {field.field_type === "select" && field.options && (
-                              <div className="space-y-2">
-                                <select
-                                  {...register(fieldKey as any, {
-                                    required: field.is_required ? t("opportunities.form.mandatoryField") : false,
-                                  })}
-                                  className={`w-full px-3 py-2 border rounded-md text-sm ${hasError ? "border-red-500" : "border-gray-300"}`}
-                                >
-                                  <option value="">{t("opportunities.form.selectOption").replace("{field}", field.field_name.toLowerCase())}</option>
-                                  {field.options.map((option: any, idx: number) => {
-                                    const optionValue = typeof option === 'string' ? option : option.value
-                                    const optionLabel = typeof option === 'string' ? option : option.label
-                                    return (
-                                      <option key={`${field.id}-${idx}-${optionValue}`} value={optionValue}>
-                                        {optionLabel}
-                                      </option>
-                                    )
-                                  })}
-                                </select>
-                                {hasError && <p className="text-xs text-red-600">{(errors as any)?.opportunity_tech_fields?.[field.id]?.message}</p>}
-                              </div>
-                            )}
-
-                            {/* MULTISELECT FIELD */}
-                            {field.field_type === "multiselect" && field.options && (
-                              <div className="space-y-2">
-                                {field.options.map((option: any, idx: number) => {
-                                  const optionValue = typeof option === 'string' ? option : option.value
-                                  const optionLabel = typeof option === 'string' ? option : option.label
-                                  const isChecked = Array.isArray(fieldValue) ? fieldValue.includes(optionValue) : false
-
-                                  return (
-                                    <div key={`${field.id}-${idx}-${optionValue}`} className="flex items-center gap-2">
-                                      <input
-                                        type="checkbox"
-                                        id={`multiselect-${field.id}-${idx}`}
-                                        checked={isChecked}
-                                        onChange={(e) => {
-                                          const currentValues = Array.isArray(fieldValue) ? [...fieldValue] : []
-                                          if (e.target.checked) {
-                                            currentValues.push(optionValue)
-                                          } else {
-                                            const index = currentValues.indexOf(optionValue)
-                                            if (index > -1) currentValues.splice(index, 1)
-                                          }
-                                          form.setValue(fieldKey as any, currentValues)
-                                        }}
-                                        className="w-4 h-4"
-                                      />
-                                      <label htmlFor={`multiselect-${field.id}-${idx}`} className="text-sm cursor-pointer">
-                                        {optionLabel}
-                                      </label>
+                      {/* Partner Responsible - Solo si hay partner seleccionado */}
+                      {form.watch("partner_id") && (
+                        <FormField
+                          control={form.control}
+                          name="partner_responsible_id"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t("opportunities.form.partner_responsible")} *</FormLabel>
+                              <Select value={field.value || ""} onValueChange={field.onChange}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder={t("opportunities.form.select_placeholder")} />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {partnerUsers.length === 0 ? (
+                                    <div className="p-2 text-sm text-gray-500 text-center">
+                                      {loadingPartnerUsers ? t("opportunities.form.loading") : t("opportunities.form.noUsersAvailable")}
                                     </div>
-                                  )
-                                })}
-                                {hasError && <p className="text-xs text-red-600">{(errors as any)?.opportunity_tech_fields?.[field.id]?.message}</p>}
+                                  ) : (
+                                    partnerUsers.map((user) => {
+                                      const firstName = typeof user?.first_name === 'string' ? user.first_name : ''
+                                      const lastName = typeof user?.last_name === 'string' ? user.last_name : ''
+                                      const displayName = `${firstName} ${lastName}`.trim() || user?.id
+                                      return (
+                                        <SelectItem key={user.id} value={user.id}>
+                                          {displayName}
+                                        </SelectItem>
+                                      )
+                                    })
+                                  )}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  {/* ===== PASO 3: CLIENTE Y DETALLES FINANCIEROS ===== */}
+                  {currentStep === 3 && (
+                    <div className="space-y-6 mt-6">
+
+                      {/* End Customer - AUTOCOMPLETE CON BÚSQUEDA */}
+                      <FormField
+                        control={form.control}
+                        name="end_customer_id"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("opportunities.form.end_customer")} {!isScaleUpUser && "*"}</FormLabel>
+                            <FormControl>
+                              <div className="space-y-2">
+                                <Input
+                                  placeholder={t("opportunities.form.searchPlaceholder")}
+                                  value={endCustomerSearchQuery}
+                                  onChange={(e) => {
+                                    setEndCustomerSearchQuery(e.target.value)
+                                    // Filtrar en base a la búsqueda
+                                    const filtered = filteredEndCustomers.filter(c =>
+                                      String(c.name || "").toLowerCase().includes(e.target.value.toLowerCase())
+                                    )
+                                    setSearchResults(filtered)
+                                  }}
+                                  onFocus={() => {
+                                    setSearchResults(filteredEndCustomers)
+                                  }}
+                                />
+
+                                {/* Resultados de búsqueda */}
+                                {endCustomerSearchQuery && (
+                                  <div className="border rounded-md p-2 max-h-48 overflow-y-auto space-y-1">
+                                    {searchResults.length === 0 ? (
+                                      <div className="text-sm text-gray-500 p-2">
+                                        {t("opportunities.form.noCustomersFound").replace("{query}", endCustomerSearchQuery)}
+                                      </div>
+                                    ) : (
+                                      searchResults.map((customer) => (
+                                        <button
+                                          key={customer.id}
+                                          type="button"
+                                          className="w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
+                                          onClick={() => {
+                                            field.onChange(customer.id)
+                                            setEndCustomerSearchQuery(customer.name)
+                                            setSearchResults([])
+                                          }}
+                                        >
+                                          {customer.name}
+                                        </button>
+                                      ))
+                                    )}
+                                  </div>
+                                )}
+
+                                {/* Botón Crear Cliente */}
+                                {endCustomerSearchQuery && searchResults.length === 0 && (
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="w-full"
+                                    onClick={() => {
+                                      setNewEndCustomerData({
+                                        ...newEndCustomerData,
+                                        name: endCustomerSearchQuery
+                                      })
+                                      setNewEndCustomerDialogOpen(true)
+                                    }}
+                                  >
+                                    + Crear "{endCustomerSearchQuery}"
+                                  </Button>
+                                )}
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                            {!isScaleUpUser && <p className="text-sm text-red-600">Campo obligatorio para usuarios Partner</p>}
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Estimated Value - Only for ScaleUp users */}
+                      {isScaleUpUser && (
+                        <FormField
+                          control={form.control}
+                          name="estimated_value"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t("opportunities.form.estimated_value")} (USD)</FormLabel>
+                              <FormControl>
+                                <Input type="number" placeholder="0.00" step="0.01" {...field} value={field.value ?? ""} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+
+                      {/* Estimated Close Date */}
+                      <FormField
+                        control={form.control}
+                        name="estimated_close_date"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("opportunities.form.estimated_close_date")}</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} value={field.value ? new Date(field.value).toISOString().split('T')[0] : ""} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
+
+                  {/* ===== PASO 4: CAMPOS TÉCNICOS ===== */}
+                  {currentStep === 4 && (
+                    <div className="space-y-6 mt-6">
+
+                      {loadingTechFields ? (
+                        <p className="text-gray-500">{t("opportunities.form.loading")}</p>
+                      ) : techFields.length === 0 ? (
+                        <p className="text-gray-500">No hay campos técnicos definidos para esta empresa</p>
+                      ) : (
+                        <div className="space-y-5">
+                          {techFields.map((field: any) => {
+                            const fieldKey = `opportunity_tech_fields.${field.id}`
+                            const { register, watch, formState: { errors } } = form
+                            const fieldValue = watch(fieldKey as any)
+                            const hasError = Boolean((errors as any)?.opportunity_tech_fields?.[field.id])
+
+                            return (
+                              <div key={field.id} className={`border rounded-lg p-4 space-y-2 ${field.is_required ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}>
+                                <label className="text-sm font-medium flex items-center gap-2">
+                                  {field.field_name}
+                                  {field.is_required && <span className="text-red-600 font-bold">*</span>}
+                                </label>
+                                <p className="text-xs text-gray-500">{field.field_type}</p>
+
+                                {/* TEXT FIELD */}
+                                {field.field_type === "text" && (
+                                  <>
+                                    <Input
+                                      placeholder={t("opportunities.form.inputPlaceholder").replace("{field}", field.field_name.toLowerCase())}
+                                      {...register(fieldKey as any, {
+                                        required: field.is_required ? t("opportunities.form.mandatoryField") : false,
+                                      })}
+                                      className={hasError ? "border-red-500" : ""}
+                                    />
+                                    {hasError && <p className="text-xs text-red-600">{(errors as any)?.opportunity_tech_fields?.[field.id]?.message}</p>}
+                                  </>
+                                )}
+
+                                {/* NUMBER FIELD */}
+                                {field.field_type === "number" && (
+                                  <>
+                                    <Input
+                                      type="number"
+                                      placeholder={t("opportunities.form.inputPlaceholder").replace("{field}", field.field_name.toLowerCase())}
+                                      {...register(fieldKey as any, {
+                                        required: field.is_required ? t("opportunities.form.mandatoryField") : false,
+                                        valueAsNumber: true,
+                                      })}
+                                      className={hasError ? "border-red-500" : ""}
+                                    />
+                                    {hasError && <p className="text-xs text-red-600">{(errors as any)?.opportunity_tech_fields?.[field.id]?.message}</p>}
+                                  </>
+                                )}
+
+                                {/* DATE FIELD */}
+                                {field.field_type === "date" && (
+                                  <>
+                                    <Input
+                                      type="date"
+                                      {...register(fieldKey as any, {
+                                        required: field.is_required ? `${field.field_name} es obligatorio` : false,
+                                      })}
+                                      className={hasError ? "border-red-500" : ""}
+                                    />
+                                    {hasError && <p className="text-xs text-red-600">{(errors as any)?.opportunity_tech_fields?.[field.id]?.message}</p>}
+                                  </>
+                                )}
+
+                                {/* BOOLEAN FIELD */}
+                                {field.field_type === "boolean" && (
+                                  <div className="flex items-center gap-2">
+                                    <input
+                                      type="checkbox"
+                                      id={`field-${field.id}`}
+                                      {...register(fieldKey as any, {
+                                        required: false,
+                                      })}
+                                      className="w-4 h-4"
+                                    />
+                                    <label htmlFor={`field-${field.id}`} className="text-sm cursor-pointer">
+                                      {field.field_name}
+                                    </label>
+                                  </div>
+                                )}
+
+                                {/* SELECT FIELD */}
+                                {field.field_type === "select" && field.options && (
+                                  <div className="space-y-2">
+                                    <select
+                                      {...register(fieldKey as any, {
+                                        required: field.is_required ? t("opportunities.form.mandatoryField") : false,
+                                      })}
+                                      className={`w-full px-3 py-2 border rounded-md text-sm ${hasError ? "border-red-500" : "border-gray-300"}`}
+                                    >
+                                      <option value="">{t("opportunities.form.selectOption").replace("{field}", field.field_name.toLowerCase())}</option>
+                                      {field.options.map((option: any, idx: number) => {
+                                        const optionValue = typeof option === 'string' ? option : option.value
+                                        const optionLabel = typeof option === 'string' ? option : option.label
+                                        return (
+                                          <option key={`${field.id}-${idx}-${optionValue}`} value={optionValue}>
+                                            {optionLabel}
+                                          </option>
+                                        )
+                                      })}
+                                    </select>
+                                    {hasError && <p className="text-xs text-red-600">{(errors as any)?.opportunity_tech_fields?.[field.id]?.message}</p>}
+                                  </div>
+                                )}
+
+                                {/* MULTISELECT FIELD */}
+                                {field.field_type === "multiselect" && field.options && (
+                                  <div className="space-y-2">
+                                    {field.options.map((option: any, idx: number) => {
+                                      const optionValue = typeof option === 'string' ? option : option.value
+                                      const optionLabel = typeof option === 'string' ? option : option.label
+                                      const isChecked = Array.isArray(fieldValue) ? fieldValue.includes(optionValue) : false
+
+                                      return (
+                                        <div key={`${field.id}-${idx}-${optionValue}`} className="flex items-center gap-2">
+                                          <input
+                                            type="checkbox"
+                                            id={`multiselect-${field.id}-${idx}`}
+                                            checked={isChecked}
+                                            onChange={(e) => {
+                                              const currentValues = Array.isArray(fieldValue) ? [...fieldValue] : []
+                                              if (e.target.checked) {
+                                                currentValues.push(optionValue)
+                                              } else {
+                                                const index = currentValues.indexOf(optionValue)
+                                                if (index > -1) currentValues.splice(index, 1)
+                                              }
+                                              form.setValue(fieldKey as any, currentValues)
+                                            }}
+                                            className="w-4 h-4"
+                                          />
+                                          <label htmlFor={`multiselect-${field.id}-${idx}`} className="text-sm cursor-pointer">
+                                            {optionLabel}
+                                          </label>
+                                        </div>
+                                      )
+                                    })}
+                                    {hasError && <p className="text-xs text-red-600">{(errors as any)?.opportunity_tech_fields?.[field.id]?.message}</p>}
+                                  </div>
+                                )}
+
+                                {/* FILE FIELD */}
+                                {field.field_type === "file" && (
+                                  <>
+                                    <Input
+                                      type="file"
+                                      {...register(fieldKey as any, {
+                                        required: field.is_required ? `${field.field_name} es obligatorio` : false,
+                                      })}
+                                      className={hasError ? "border-red-500" : ""}
+                                    />
+                                    {hasError && <p className="text-xs text-red-600">{(errors as any)?.opportunity_tech_fields?.[field.id]?.message}</p>}
+                                  </>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* ===== PASO 5: CONFIRMACIÓN ===== */}
+                  {currentStep === 5 && (
+                    <div className="space-y-6 mt-6">
+                      {/* Summary Title */}
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">{t("opportunities.form.summaryTitle")}</h3>
+                        <p className="text-sm text-gray-500 mt-1">{t("opportunities.form.summaryDescription")}</p>
+                      </div>
+
+                      {/* Main Data Grid - Clean List Style: 3 Columns */}
+                      <div className="grid grid-cols-3 gap-8">
+                        {/* Title */}
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Layout className="h-4 w-4 text-gray-400" />
+                            <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.form.summary.title")}</p>
+                          </div>
+                          <p className="text-sm font-semibold text-gray-900">{form.watch("title") || <span className="text-gray-400">N/A</span>}</p>
+                        </div>
+
+                        {/* Stage */}
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Layers className="h-4 w-4 text-gray-400" />
+                            <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.form.summary.stage")}</p>
+                          </div>
+                          <p className="text-sm font-semibold text-gray-900">{stages.find(s => s.id === form.watch("pipeline_stage_id"))?.code || <span className="text-gray-400">N/A</span>}</p>
+                        </div>
+
+                        {/* Tech Company */}
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Building2 className="h-4 w-4 text-gray-400" />
+                            <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.form.summary.techCompany")}</p>
+                          </div>
+                          <p className="text-sm font-semibold text-gray-900">{techCompanies.find(c => c.id === form.watch("tech_company_id"))?.name || <span className="text-gray-400">N/A</span>}</p>
+                        </div>
+
+                        {/* Partner */}
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Users className="h-4 w-4 text-gray-400" />
+                            <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.form.summary.partner")}</p>
+                          </div>
+                          <p className="text-sm font-semibold text-gray-900">{form.watch("partner_id") ? (filteredPartners.find(p => p.id === form.watch("partner_id"))?.name || <span className="text-gray-400">N/A</span>) : <span className="text-gray-400">N/A</span>}</p>
+                        </div>
+
+                        {/* Country */}
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Globe className="h-4 w-4 text-gray-400" />
+                            <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.form.summary.country")}</p>
+                          </div>
+                          <p className="text-sm font-semibold text-gray-900">{form.watch("country") || <span className="text-gray-400">N/A</span>}</p>
+                        </div>
+
+                        {/* Customer */}
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-gray-400" />
+                            <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.form.summary.customer")}</p>
+                          </div>
+                          <p className="text-sm font-semibold text-gray-900">{form.watch("end_customer_id") ? (filteredEndCustomers.find(c => c.id === form.watch("end_customer_id"))?.name || <span className="text-gray-400">N/A</span>) : <span className="text-gray-400">N/A</span>}</p>
+                        </div>
+                      </div>
+
+                      {/* Value and Close Date - Elegant Franja - Only for ScaleUp users */}
+                      {isScaleUpUser && (
+                        <div className="grid grid-cols-2 gap-6 py-6 border-t border-b border-gray-100">
+                          {/* Estimated Value - Green Badge */}
+                          <div className="flex items-center gap-4">
+                            <div className="flex-shrink-0">
+                              <div className="flex items-center justify-center h-12 w-12 rounded-lg bg-emerald-100">
+                                <DollarSign className="h-6 w-6 text-emerald-600" />
+                              </div>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.form.summary.value")}</p>
+                              <p className="text-xl font-bold text-emerald-600 mt-1">USD {form.watch("estimated_value") || "0"}</p>
+                            </div>
+                          </div>
+
+                          {/* Close Date */}
+                          <div className="flex items-center gap-4">
+                            <div className="flex-shrink-0">
+                              <Calendar className="h-4 w-4 text-gray-400" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.form.summary.closeDate")}</p>
+                              <p className="text-sm font-semibold text-gray-900 mt-1">{form.watch("estimated_close_date") || <span className="text-gray-400">N/A</span>}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Close Date Only - For Partner users */}
+                      {!isScaleUpUser && (
+                        <div className="py-6 border-t border-b border-gray-100">
+                          <div className="flex items-center gap-4">
+                            <div className="flex-shrink-0">
+                              <Calendar className="h-4 w-4 text-gray-400" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.form.summary.closeDate")}</p>
+                              <p className="text-sm font-semibold text-gray-900 mt-1">{form.watch("estimated_close_date") || <span className="text-gray-400">N/A</span>}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Prospect Section - Card Blanca with Border */}
+                      {form.watch("is_prospect") && form.watch("prospect_partner_data")?.name && (
+                        <div className="border-l-4 border-blue-400 bg-white rounded-lg p-5 space-y-4">
+                          <h4 className="font-semibold text-sm flex items-center gap-2 text-gray-900">
+                            <Building2 className="h-4 w-4 text-blue-600" />
+                            {t("opportunities.prospect.title")}
+                          </h4>
+
+                          <div className="grid grid-cols-2 gap-6">
+                            <div className="space-y-1">
+                              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.prospect.company_name")}</p>
+                              <p className="text-sm font-medium text-gray-900">{form.watch("prospect_partner_data")?.name}</p>
+                            </div>
+                            {form.watch("prospect_partner_data")?.website && (
+                              <div className="space-y-1">
+                                <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.prospect.website")}</p>
+                                <p className="text-sm font-medium text-gray-900 truncate">{form.watch("prospect_partner_data")?.website}</p>
                               </div>
                             )}
-
-                            {/* FILE FIELD */}
-                            {field.field_type === "file" && (
-                              <>
-                                <Input
-                                  type="file"
-                                  {...register(fieldKey as any, {
-                                    required: field.is_required ? `${field.field_name} es obligatorio` : false,
-                                  })}
-                                  className={hasError ? "border-red-500" : ""}
-                                />
-                                {hasError && <p className="text-xs text-red-600">{(errors as any)?.opportunity_tech_fields?.[field.id]?.message}</p>}
-                              </>
-                            )}
+                            <div className="space-y-1">
+                              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.prospect.country")}</p>
+                              <p className="text-sm font-medium text-gray-900">{allCountries.find(c => c.id === form.watch("prospect_partner_data")?.main_country_id)?.name || "N/A"}</p>
+                            </div>
                           </div>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
-              )}
 
-              {/* ===== PASO 5: CONFIRMACIÓN ===== */}
-              {currentStep === 5 && (
-                <div className="space-y-6 mt-6">
-                  {/* Summary Title */}
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">{t("opportunities.form.summaryTitle")}</h3>
-                    <p className="text-sm text-gray-500 mt-1">{t("opportunities.form.summaryDescription")}</p>
-                  </div>
-
-                  {/* Main Data Grid - Clean List Style: 3 Columns */}
-                  <div className="grid grid-cols-3 gap-8">
-                    {/* Title */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Layout className="h-4 w-4 text-gray-400" />
-                        <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.form.summary.title")}</p>
-                      </div>
-                      <p className="text-sm font-semibold text-gray-900">{form.watch("title") || <span className="text-gray-400">N/A</span>}</p>
-                    </div>
-
-                    {/* Stage */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Layers className="h-4 w-4 text-gray-400" />
-                        <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.form.summary.stage")}</p>
-                      </div>
-                      <p className="text-sm font-semibold text-gray-900">{stages.find(s => s.id === form.watch("pipeline_stage_id"))?.code || <span className="text-gray-400">N/A</span>}</p>
-                    </div>
-
-                    {/* Tech Company */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Building2 className="h-4 w-4 text-gray-400" />
-                        <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.form.summary.techCompany")}</p>
-                      </div>
-                      <p className="text-sm font-semibold text-gray-900">{techCompanies.find(c => c.id === form.watch("tech_company_id"))?.name || <span className="text-gray-400">N/A</span>}</p>
-                    </div>
-
-                    {/* Partner */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-gray-400" />
-                        <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.form.summary.partner")}</p>
-                      </div>
-                      <p className="text-sm font-semibold text-gray-900">{form.watch("partner_id") ? (filteredPartners.find(p => p.id === form.watch("partner_id"))?.name || <span className="text-gray-400">N/A</span>) : <span className="text-gray-400">N/A</span>}</p>
-                    </div>
-
-                    {/* Country */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Globe className="h-4 w-4 text-gray-400" />
-                        <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.form.summary.country")}</p>
-                      </div>
-                      <p className="text-sm font-semibold text-gray-900">{form.watch("country") || <span className="text-gray-400">N/A</span>}</p>
-                    </div>
-
-                    {/* Customer */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-gray-400" />
-                        <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.form.summary.customer")}</p>
-                      </div>
-                      <p className="text-sm font-semibold text-gray-900">{form.watch("end_customer_id") ? (filteredEndCustomers.find(c => c.id === form.watch("end_customer_id"))?.name || <span className="text-gray-400">N/A</span>) : <span className="text-gray-400">N/A</span>}</p>
-                    </div>
-                  </div>
-
-                  {/* Value and Close Date - Elegant Franja - Only for ScaleUp users */}
-                  {isScaleUpUser && (
-                    <div className="grid grid-cols-2 gap-6 py-6 border-t border-b border-gray-100">
-                      {/* Estimated Value - Green Badge */}
-                      <div className="flex items-center gap-4">
-                        <div className="flex-shrink-0">
-                          <div className="flex items-center justify-center h-12 w-12 rounded-lg bg-emerald-100">
-                            <DollarSign className="h-6 w-6 text-emerald-600" />
+                          {/* Contact Section */}
+                          <div className="pt-4 border-t border-gray-100">
+                            <h5 className="font-semibold text-sm flex items-center gap-2 text-gray-900 mb-4">
+                              <Users className="h-4 w-4 text-blue-600" />
+                              {t("opportunities.prospect.contact_info")}
+                            </h5>
+                            <div className="grid grid-cols-2 gap-6">
+                              <div className="space-y-1">
+                                <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.prospect.first_name")}</p>
+                                <p className="text-sm font-medium text-gray-900">{form.watch("prospect_contact_data")?.first_name} {form.watch("prospect_contact_data")?.last_name}</p>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.prospect.email")}</p>
+                                <p className="text-sm font-medium text-gray-900 truncate">{form.watch("prospect_contact_data")?.email}</p>
+                              </div>
+                              {form.watch("prospect_contact_data")?.phone && (
+                                <div className="space-y-1">
+                                  <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.prospect.phone")}</p>
+                                  <p className="text-sm font-medium text-gray-900">{form.watch("prospect_contact_data")?.phone}</p>
+                                </div>
+                              )}
+                              <div className="space-y-1">
+                                <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.prospect.preferred_language")}</p>
+                                <p className="text-sm font-medium text-gray-900">{form.watch("prospect_contact_data")?.preferred_language?.toUpperCase()}</p>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                        <div>
-                          <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.form.summary.value")}</p>
-                          <p className="text-xl font-bold text-emerald-600 mt-1">USD {form.watch("estimated_value") || "0"}</p>
-                        </div>
-                      </div>
+                      )}
 
-                      {/* Close Date */}
-                      <div className="flex items-center gap-4">
-                        <div className="flex-shrink-0">
-                          <Calendar className="h-4 w-4 text-gray-400" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.form.summary.closeDate")}</p>
-                          <p className="text-sm font-semibold text-gray-900 mt-1">{form.watch("estimated_close_date") || <span className="text-gray-400">N/A</span>}</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                      {/* Tech Fields Section - Card Blanca with Border */}
+                      {hasTechFields && techFields.some((field: any) => {
+                        const fieldKey = `opportunity_tech_fields.${field.id}`
+                        const value = form.getValues(fieldKey as any)
+                        return value !== undefined && value !== null && value !== "" && !(Array.isArray(value) && value.length === 0)
+                      }) && (
+                          <div className="border-l-4 border-purple-400 bg-white rounded-lg p-5">
+                            <h4 className="font-semibold text-sm flex items-center gap-2 text-gray-900 mb-4">
+                              <FileText className="h-4 w-4 text-purple-600" />
+                              {t("opportunities.form.tech_fields")}
+                            </h4>
+                            <div className="grid grid-cols-2 gap-6">
+                              {techFields.map((field: any) => {
+                                const fieldKey = `opportunity_tech_fields.${field.id}`
+                                const value = form.getValues(fieldKey as any)
+                                if (value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0)) return null
 
-                  {/* Close Date Only - For Partner users */}
-                  {!isScaleUpUser && (
-                    <div className="py-6 border-t border-b border-gray-100">
-                      <div className="flex items-center gap-4">
-                        <div className="flex-shrink-0">
-                          <Calendar className="h-4 w-4 text-gray-400" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.form.summary.closeDate")}</p>
-                          <p className="text-sm font-semibold text-gray-900 mt-1">{form.watch("estimated_close_date") || <span className="text-gray-400">N/A</span>}</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                                let displayValue = Array.isArray(value) ? value.join(", ") : String(value)
 
-                  {/* Prospect Section - Card Blanca with Border */}
-                  {form.watch("is_prospect") && form.watch("prospect_partner_data")?.name && (
-                    <div className="border-l-4 border-blue-400 bg-white rounded-lg p-5 space-y-4">
-                      <h4 className="font-semibold text-sm flex items-center gap-2 text-gray-900">
-                        <Building2 className="h-4 w-4 text-blue-600" />
-                        {t("opportunities.prospect.title")}
-                      </h4>
-                      
-                      <div className="grid grid-cols-2 gap-6">
-                        <div className="space-y-1">
-                          <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.prospect.company_name")}</p>
-                          <p className="text-sm font-medium text-gray-900">{form.watch("prospect_partner_data")?.name}</p>
-                        </div>
-                        {form.watch("prospect_partner_data")?.website && (
-                          <div className="space-y-1">
-                            <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.prospect.website")}</p>
-                            <p className="text-sm font-medium text-gray-900 truncate">{form.watch("prospect_partner_data")?.website}</p>
+                                return (
+                                  <div key={field.id} className="space-y-1">
+                                    <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{field.field_name}</p>
+                                    <p className="text-sm font-medium text-gray-900 line-clamp-2">{displayValue}</p>
+                                  </div>
+                                )
+                              })}
+                            </div>
                           </div>
                         )}
-                        <div className="space-y-1">
-                          <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.prospect.country")}</p>
-                          <p className="text-sm font-medium text-gray-900">{allCountries.find(c => c.id === form.watch("prospect_partner_data")?.main_country_id)?.name || "N/A"}</p>
-                        </div>
-                      </div>
-
-                      {/* Contact Section */}
-                      <div className="pt-4 border-t border-gray-100">
-                        <h5 className="font-semibold text-sm flex items-center gap-2 text-gray-900 mb-4">
-                          <Users className="h-4 w-4 text-blue-600" />
-                          {t("opportunities.prospect.contact_info")}
-                        </h5>
-                        <div className="grid grid-cols-2 gap-6">
-                          <div className="space-y-1">
-                            <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.prospect.first_name")}</p>
-                            <p className="text-sm font-medium text-gray-900">{form.watch("prospect_contact_data")?.first_name} {form.watch("prospect_contact_data")?.last_name}</p>
-                          </div>
-                          <div className="space-y-1">
-                            <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.prospect.email")}</p>
-                            <p className="text-sm font-medium text-gray-900 truncate">{form.watch("prospect_contact_data")?.email}</p>
-                          </div>
-                          {form.watch("prospect_contact_data")?.phone && (
-                            <div className="space-y-1">
-                              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.prospect.phone")}</p>
-                              <p className="text-sm font-medium text-gray-900">{form.watch("prospect_contact_data")?.phone}</p>
-                            </div>
-                          )}
-                          <div className="space-y-1">
-                            <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("opportunities.prospect.preferred_language")}</p>
-                            <p className="text-sm font-medium text-gray-900">{form.watch("prospect_contact_data")?.preferred_language?.toUpperCase()}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Tech Fields Section - Card Blanca with Border */}
-                  {hasTechFields && techFields.some((field: any) => {
-                    const fieldKey = `opportunity_tech_fields.${field.id}`
-                    const value = form.getValues(fieldKey as any)
-                    return value !== undefined && value !== null && value !== "" && !(Array.isArray(value) && value.length === 0)
-                  }) && (
-                    <div className="border-l-4 border-purple-400 bg-white rounded-lg p-5">
-                      <h4 className="font-semibold text-sm flex items-center gap-2 text-gray-900 mb-4">
-                        <FileText className="h-4 w-4 text-purple-600" />
-                        {t("opportunities.form.tech_fields")}
-                      </h4>
-                      <div className="grid grid-cols-2 gap-6">
-                        {techFields.map((field: any) => {
-                          const fieldKey = `opportunity_tech_fields.${field.id}`
-                          const value = form.getValues(fieldKey as any)
-                          if (value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0)) return null
-
-                          let displayValue = Array.isArray(value) ? value.join(", ") : String(value)
-
-                          return (
-                            <div key={field.id} className="space-y-1">
-                              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{field.field_name}</p>
-                              <p className="text-sm font-medium text-gray-900 line-clamp-2">{displayValue}</p>
-                            </div>
-                          )
-                        })}
-                      </div>
                     </div>
                   )}
                 </div>
-              )}
-              </div>
-              {/* End Centered Content Container */}
+                {/* End Centered Content Container */}
 
-              {/* Navigation Buttons */}
-              <div className="flex justify-between gap-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    let newStep = Math.max(1, currentStep - 1)
-                    // Saltar Paso 4 si no hay campos técnicos
-                    if (newStep === 4 && !hasTechFields) {
-                      newStep = 3
-                    }
-                    setCurrentStep(newStep)
-                  }}
-                  disabled={currentStep === 1}
-                >
-                  {t("common.previous")}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => router.back()}
-                >
-                  {t("common.cancel")}
-                </Button>
-                {currentStep < totalSteps ? (
+                {/* Navigation Buttons */}
+                <div className="flex justify-between gap-4">
                   <Button
                     type="button"
-                    disabled={loadingScaleUpManager}
-                    onClick={async () => {
-                      // Definir campos a validar por paso
-                      const fieldsToValidate: any[] = []
-                      if (currentStep === 1) fieldsToValidate.push("title", "pipeline_stage_id")
-                      if (currentStep === 2) {
-                        fieldsToValidate.push("tech_company_id", "country")
-                        if (isScaleUpUser) fieldsToValidate.push("assigned_to")
+                    variant="outline"
+                    onClick={() => {
+                      let newStep = Math.max(1, currentStep - 1)
+                      // Saltar Paso 4 si no hay campos técnicos
+                      if (newStep === 4 && !hasTechFields) {
+                        newStep = 3
                       }
-                      if (currentStep === 3 && isScaleUpUser) fieldsToValidate.push("end_customer_id")
-
-                      const isValid = fieldsToValidate.length > 0 ? await form.trigger(fieldsToValidate) : true
-
-                      if (isValid) {
-                        // ✅ MANUAL VALIDATION: End Customer obligatorio solo para Partner users en Paso 3
-                        if (currentStep === 3 && !isScaleUpUser) {
-                          const endCustomerId = form.getValues("end_customer_id")
-                          if (!endCustomerId) {
-                            form.setError("end_customer_id", {
-                              type: "manual",
-                              message: t("common.errors.required") || "Este campo es obligatorio"
-                            })
-                            return
-                          }
-                        }
-
-                        // SI ES EL PASO DE TECH FIELDS (Paso 4) -> Validar manualmente
-                        if (currentStep === 4 && hasTechFields) {
-                          let hasTechError = false
-                          techFields.forEach((field: any) => {
-                            if (field.is_required) {
-                              const val = form.getValues(`opportunity_tech_fields.${field.id}` as any)
-                              if (!val || (Array.isArray(val) && val.length === 0)) {
-                                form.setError(`opportunity_tech_fields.${field.id}` as any, {
-                                  type: "manual",
-                                  message: t("opportunities.form.mandatoryField")
-                                })
-                                hasTechError = true
-                              }
-                            }
-                          })
-                          if (hasTechError) return
-                        }
-
-                        // SOLO AVANZAR EL PASO. No llamar a handleSubmit aquí.
-                        let nextStep = currentStep + 1
-                        // Si no hay campos técnicos, saltar del 3 directamente al 5 (Resumen)
-                        if (currentStep === 3 && !hasTechFields) nextStep = 5
-
-                        setCurrentStep(nextStep)
-                      }
+                      setCurrentStep(newStep)
                     }}
+                    disabled={currentStep === 1}
                   >
-                    {t("common.next")}
+                    {t("common.previous")}
                   </Button>
-                ) : (
                   <Button
-                    type="submit"
-                    disabled={loadingScaleUpManager}
-                    className="bg-green-600 hover:bg-green-700"
-                    onClick={() => setIsConfirming(true)}
+                    type="button"
+                    variant="outline"
+                    onClick={() => router.back()}
                   >
-                    {loadingScaleUpManager ? t("opportunities.form.creating") : t("opportunities.form.submit")}
+                    {t("common.cancel")}
                   </Button>
-                )}
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+                  {currentStep < totalSteps ? (
+                    <Button
+                      type="button"
+                      disabled={loadingScaleUpManager}
+                      onClick={async () => {
+                        // Definir campos a validar por paso
+                        const fieldsToValidate: any[] = []
+                        if (currentStep === 1) fieldsToValidate.push("title", "pipeline_stage_id")
+                        if (currentStep === 2) {
+                          fieldsToValidate.push("tech_company_id", "country")
+                          if (isScaleUpUser) fieldsToValidate.push("assigned_to")
+                        }
+                        if (currentStep === 3 && isScaleUpUser) fieldsToValidate.push("end_customer_id")
+
+                        const isValid = fieldsToValidate.length > 0 ? await form.trigger(fieldsToValidate) : true
+
+                        if (isValid) {
+                          // ✅ MANUAL VALIDATION: End Customer obligatorio solo para Partner users en Paso 3
+                          if (currentStep === 3 && !isScaleUpUser) {
+                            const endCustomerId = form.getValues("end_customer_id")
+                            if (!endCustomerId) {
+                              form.setError("end_customer_id", {
+                                type: "manual",
+                                message: t("common.errors.required") || "Este campo es obligatorio"
+                              })
+                              return
+                            }
+                          }
+
+                          // SI ES EL PASO DE TECH FIELDS (Paso 4) -> Validar manualmente
+                          if (currentStep === 4 && hasTechFields) {
+                            let hasTechError = false
+                            techFields.forEach((field: any) => {
+                              if (field.is_required) {
+                                const val = form.getValues(`opportunity_tech_fields.${field.id}` as any)
+                                if (!val || (Array.isArray(val) && val.length === 0)) {
+                                  form.setError(`opportunity_tech_fields.${field.id}` as any, {
+                                    type: "manual",
+                                    message: t("opportunities.form.mandatoryField")
+                                  })
+                                  hasTechError = true
+                                }
+                              }
+                            })
+                            if (hasTechError) return
+                          }
+
+                          // SOLO AVANZAR EL PASO. No llamar a handleSubmit aquí.
+                          let nextStep = currentStep + 1
+                          // Si no hay campos técnicos, saltar del 3 directamente al 5 (Resumen)
+                          if (currentStep === 3 && !hasTechFields) nextStep = 5
+
+                          setCurrentStep(nextStep)
+                        }
+                      }}
+                    >
+                      {t("common.next")}
+                    </Button>
+                  ) : (
+                    <Button
+                      type="submit"
+                      disabled={loadingScaleUpManager}
+                      className="bg-green-600 hover:bg-green-700"
+                      onClick={() => setIsConfirming(true)}
+                    >
+                      {loadingScaleUpManager ? t("opportunities.form.creating") : t("opportunities.form.submit")}
+                    </Button>
+                  )}
+                </div>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
       </div>
       {/* End Narrow Container */}
 
@@ -1864,9 +1863,9 @@ export default function OpportunityCreateForm() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="text-2xl">{t("opportunities.prospect.title")}</DialogTitle>
-              <p className="text-sm text-gray-500 mt-1">
-                {t(prospectStep === 1 ? "opportunities.prospect.step1" : "opportunities.prospect.step2")}
-              </p>
+            <p className="text-sm text-gray-500 mt-1">
+              {t(prospectStep === 1 ? "opportunities.prospect.step1" : "opportunities.prospect.step2")}
+            </p>
           </DialogHeader>
 
           {/* Progress Indicator */}
@@ -1931,9 +1930,9 @@ export default function OpportunityCreateForm() {
 
               {/* Action Buttons */}
               <div className="flex gap-3 pt-4">
-                  <Button variant="outline" onClick={() => setProspectDialogOpen(false)}>
-                    {t("common.cancel")}
-                  </Button>
+                <Button variant="outline" onClick={() => setProspectDialogOpen(false)}>
+                  {t("common.cancel")}
+                </Button>
                 <Button
                   disabled={!prospectPartnerData.name || !prospectPartnerData.main_country_id}
                   onClick={() => setProspectStep(2)}
