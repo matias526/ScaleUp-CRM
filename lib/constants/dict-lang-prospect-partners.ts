@@ -433,4 +433,16 @@ export const DICT_LANG_PROSPECT_PARTNERS = {
     en: "Save",
     pt: "Salvar",
   },
+
+  // Empty states for drawer
+  "prospect_partners.message.noContacts": {
+    es: "Sin contactos",
+    en: "No contacts",
+    pt: "Sem contatos",
+  },
+  "prospect_partners.message.noOpportunities": {
+    es: "Sin oportunidades",
+    en: "No opportunities",
+    pt: "Sem oportunidades",
+  },
 }

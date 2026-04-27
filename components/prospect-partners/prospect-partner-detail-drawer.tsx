@@ -9,6 +9,8 @@ import { ProspectPartnerService } from "@/lib/services/prospect-partner-service"
 import { useTranslations } from "@/hooks/use-translations"
 import { DICT_LANG_PROSPECT_PARTNERS } from "@/lib/constants/dict-lang-prospect-partners"
 import { useState, useEffect } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -233,8 +235,20 @@ export function ProspectPartnerDetailDrawer({ partner, open, onOpenChange }: Pro
               ) : (
                 <div className="space-y-2">
                   {opportunities.map((opp) => (
-                    <div key={opp.id} className="p-3 bg-gray-50 rounded-lg border">
-                      <p className="font-medium text-sm">{opp.title}</p>
+                    <div
+                      key={opp.id}
+                      className="p-3 bg-gray-50 rounded-lg border hover:bg-gray-100 cursor-pointer transition-colors"
+                      onClick={(e) => {
+                        if (e.ctrlKey || e.metaKey) {
+                          // Ctrl+Click o Cmd+Click: abre en nueva pestaña
+                          window.open(`/dashboard/opportunities/${opp.id}`, "_blank")
+                        } else {
+                          // Click normal: navega en la misma ventana
+                          window.location.href = `/dashboard/opportunities/${opp.id}`
+                        }
+                      }}
+                    >
+                      <p className="font-medium text-sm text-blue-600 hover:underline">{opp.name}</p>
                       <div className="flex justify-between items-center mt-1">
                         <Badge variant="outline" className="text-xs">
                           {opp.status}

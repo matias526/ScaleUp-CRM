@@ -178,8 +178,8 @@ export class ProspectPartnerService {
     try {
       const { data, error } = await supabase
         .from("opportunities")
-        .select("id, title, status, amount, created_at")
-        .eq("prospect_partner_id", prospectPartnerId)
+        .select("id, name, status, amount, created_at")
+        .eq("prospect_id", prospectPartnerId)
         .eq("is_active", true)
         .order("created_at", { ascending: false })
 
