@@ -70,15 +70,10 @@ export function ProspectPartnerFormModal({ open, onOpenChange, initialData, onSu
   useEffect(() => {
     const loadCountries = async () => {
       try {
-        const { data, error } = await (window as any).supabase
-          .from("countries")
-          .select("id, name")
-          .order("name")
-
-        if (error) throw error
-        setCountries(data || [])
+        const countriesData = await ProspectPartnerService.getAllCountries()
+        setCountries(countriesData)
       } catch (error) {
-        console.error("Error loading countries:", error)
+        console.error("[v0] Error loading countries:", error)
       }
     }
 
@@ -188,7 +183,7 @@ export function ProspectPartnerFormModal({ open, onOpenChange, initialData, onSu
               </SelectTrigger>
               <SelectContent>
                 {countries.map((country) => (
-                  <SelectItem key={country.id} value={country.id}>
+                  <SelectItem key={country.id} value={country.code}>
                     {country.name}
                   </SelectItem>
                 ))}

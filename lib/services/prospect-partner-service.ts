@@ -214,4 +214,27 @@ export class ProspectPartnerService {
       throw error
     }
   }
+
+  // Get all countries for dropdown selectors
+  static async getAllCountries(): Promise<{ id: string; name: string; code: string }[]> {
+    try {
+      console.log("[v0] Obteniendo todos los países")
+
+      const { data, error } = await supabase
+        .from("countries")
+        .select("id, name, code")
+        .order("name", { ascending: true })
+
+      if (error) {
+        console.error("[v0] Error al obtener países:", error)
+        return []
+      }
+
+      console.log(`[v0] Se encontraron ${data?.length || 0} países`)
+      return data || []
+    } catch (error) {
+      console.error("[v0] Error inesperado al obtener países:", error)
+      return []
+    }
+  }
 }

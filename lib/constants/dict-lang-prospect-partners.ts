@@ -5,6 +5,13 @@
  */
 
 export const DICT_LANG_PROSPECT_PARTNERS = {
+  // Simple title (used in various places)
+  "prospect_partners.title": {
+    es: "Socios Potenciales",
+    en: "Prospect Partners",
+    pt: "Parceiros Potenciais",
+  },
+
   // Page titles and descriptions
   "prospect_partners.page.title": {
     es: "Socios Potenciales",
@@ -18,6 +25,11 @@ export const DICT_LANG_PROSPECT_PARTNERS = {
   },
 
   // Search
+  "prospect_partners.search": {
+    es: "Buscar por nombre, código o website",
+    en: "Search by name, code or website",
+    pt: "Pesquisar por nome, código ou site",
+  },
   "prospect_partners.search.title": {
     es: "Buscar por nombre o sitio web...",
     en: "Search by name or website...",
