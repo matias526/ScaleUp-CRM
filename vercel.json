@@ -10,7 +10,7 @@
     },
     {
       "path": "/api/cron/send-scheduled-messages",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 5 * * *"
     }
   ],
   "functions": {
