@@ -253,8 +253,8 @@ export function ProspectPartnerDetailDrawer({ partner, open, onOpenChange }: Pro
                         <Badge variant="outline" className="text-xs">
                           {opp.status}
                         </Badge>
-                        {opp.amount && (
-                          <p className="text-xs font-semibold text-gray-600">${opp.amount}</p>
+                        {opp.estimated_value && (
+                          <p className="text-xs font-semibold text-gray-600">${opp.estimated_value}</p>
                         )}
                       </div>
                     </div>
