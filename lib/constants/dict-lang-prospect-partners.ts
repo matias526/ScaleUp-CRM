@@ -361,4 +361,61 @@ export const DICT_LANG_PROSPECT_PARTNERS = {
     en: "Clear Filters",
     pt: "Limpar Filtros",
   },
+
+  // Contact creation modal
+  "prospect_partners.contact.title.add": {
+    es: "Agregar Contacto",
+    en: "Add Contact",
+    pt: "Adicionar Contato",
+  },
+  "prospect_partners.contact.firstName": {
+    es: "Nombre",
+    en: "First Name",
+    pt: "Primeiro Nome",
+  },
+  "prospect_partners.contact.lastName": {
+    es: "Apellido",
+    en: "Last Name",
+    pt: "Sobrenome",
+  },
+  "prospect_partners.contact.email": {
+    es: "Email",
+    en: "Email",
+    pt: "Email",
+  },
+  "prospect_partners.contact.phone": {
+    es: "Teléfono",
+    en: "Phone",
+    pt: "Telefone",
+  },
+  "prospect_partners.contact.position": {
+    es: "Cargo",
+    en: "Position",
+    pt: "Cargo",
+  },
+  "prospect_partners.contact.department": {
+    es: "Departamento",
+    en: "Department",
+    pt: "Departamento",
+  },
+  "prospect_partners.contact.message.created": {
+    es: "Contacto creado exitosamente",
+    en: "Contact created successfully",
+    pt: "Contato criado com sucesso",
+  },
+  "prospect_partners.contact.message.error": {
+    es: "Error al crear el contacto",
+    en: "Error creating contact",
+    pt: "Erro ao criar contato",
+  },
+  "prospect_partners.contact.button.cancel": {
+    es: "Cancelar",
+    en: "Cancel",
+    pt: "Cancelar",
+  },
+  "prospect_partners.contact.button.save": {
+    es: "Guardar",
+    en: "Save",
+    pt: "Salvar",
+  },
 }

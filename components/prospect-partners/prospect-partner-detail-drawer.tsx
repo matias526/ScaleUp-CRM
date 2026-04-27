@@ -247,59 +247,93 @@ export function ProspectPartnerDetailDrawer({ partner, open, onOpenChange }: Pro
       <Dialog open={isAddContactModalOpen} onOpenChange={setIsAddContactModalOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{t("prospect_partners.contact.add")}</DialogTitle>
+            <DialogTitle>{t("prospect_partners.contact.title.add")}</DialogTitle>
           </DialogHeader>
 
-          <form onSubmit={handleAddContact} className="space-y-4">
-            <div>
-              <Label>{t("prospect_partners.contact.firstName")}</Label>
-              <Input
-                value={newContact.first_name}
-                onChange={(e) => setNewContact({ ...newContact, first_name: e.target.value })}
-                required
-              />
+          <form onSubmit={handleAddContact} className="space-y-5">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="first_name" className="text-sm font-medium">
+                  {t("prospect_partners.contact.firstName")} *
+                </Label>
+                <Input
+                  id="first_name"
+                  value={newContact.first_name}
+                  onChange={(e) => setNewContact({ ...newContact, first_name: e.target.value })}
+                  placeholder="Juan"
+                  required
+                  className="mt-1.5"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="last_name" className="text-sm font-medium">
+                  {t("prospect_partners.contact.lastName")} *
+                </Label>
+                <Input
+                  id="last_name"
+                  value={newContact.last_name}
+                  onChange={(e) => setNewContact({ ...newContact, last_name: e.target.value })}
+                  placeholder="Pérez"
+                  required
+                  className="mt-1.5"
+                />
+              </div>
             </div>
 
             <div>
-              <Label>{t("prospect_partners.contact.lastName")}</Label>
+              <Label htmlFor="email" className="text-sm font-medium">
+                {t("prospect_partners.contact.email")} *
+              </Label>
               <Input
-                value={newContact.last_name}
-                onChange={(e) => setNewContact({ ...newContact, last_name: e.target.value })}
-                required
-              />
-            </div>
-
-            <div>
-              <Label>{t("prospect_partners.contact.email")}</Label>
-              <Input
+                id="email"
                 type="email"
                 value={newContact.email}
                 onChange={(e) => setNewContact({ ...newContact, email: e.target.value })}
+                placeholder="juan@example.com"
                 required
+                className="mt-1.5"
               />
             </div>
 
-            <div>
-              <Label>{t("prospect_partners.contact.phone")}</Label>
-              <Input
-                value={newContact.phone}
-                onChange={(e) => setNewContact({ ...newContact, phone: e.target.value })}
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="phone" className="text-sm font-medium">
+                  {t("prospect_partners.contact.phone")}
+                </Label>
+                <Input
+                  id="phone"
+                  value={newContact.phone}
+                  onChange={(e) => setNewContact({ ...newContact, phone: e.target.value })}
+                  placeholder="+34 600 000 000"
+                  className="mt-1.5"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="position" className="text-sm font-medium">
+                  {t("prospect_partners.contact.position")}
+                </Label>
+                <Input
+                  id="position"
+                  value={newContact.position}
+                  onChange={(e) => setNewContact({ ...newContact, position: e.target.value })}
+                  placeholder="Director"
+                  className="mt-1.5"
+                />
+              </div>
             </div>
 
             <div>
-              <Label>{t("prospect_partners.contact.position")}</Label>
-              <Input
-                value={newContact.position}
-                onChange={(e) => setNewContact({ ...newContact, position: e.target.value })}
-              />
-            </div>
-
-            <div>
-              <Label>{t("prospect_partners.contact.department")}</Label>
-              <Select value={newContact.department || ""} onValueChange={(value) => setNewContact({ ...newContact, department: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar departamento..." />
+              <Label htmlFor="department" className="text-sm font-medium">
+                {t("prospect_partners.contact.department")}
+              </Label>
+              <Select
+                value={newContact.department || ""}
+                onValueChange={(value) => setNewContact({ ...newContact, department: value })}
+              >
+                <SelectTrigger id="department" className="mt-1.5">
+                  <SelectValue placeholder="Seleccionar departamento" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="sales">Sales</SelectItem>
@@ -314,9 +348,22 @@ export function ProspectPartnerDetailDrawer({ partner, open, onOpenChange }: Pro
               </Select>
             </div>
 
-            <div className="flex gap-3 justify-end pt-4">
-              <Button variant="outline" onClick={() => setIsAddContactModalOpen(false)}>
-                {t("prospect_partners.contact.cancel")}
+            <div className="flex gap-3 justify-end pt-2 border-t">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsAddContactModalOpen(false)}
+                className="mt-4"
+              >
+                {t("prospect_partners.contact.button.cancel")}
+              </Button>
+              <Button type="submit" disabled={isAddingContact} className="mt-4">
+                {isAddingContact ? "..." : t("prospect_partners.contact.button.save")}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
               </Button>
               <Button type="submit" disabled={isAddingContact}>
                 {isAddingContact ? "..." : t("prospect_partners.contact.save")}

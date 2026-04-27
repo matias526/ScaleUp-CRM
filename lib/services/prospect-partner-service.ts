@@ -200,7 +200,7 @@ export class ProspectPartnerService {
             phone: contact.phone,
             position: contact.position,
             department: contact.department,
-            prospect_partner_id: contact.prospect_id, // Map prospect_id from drawer to prospect_partner_id in DB
+            prospect_id: contact.prospect_id,
             is_active: true,
           },
         ])
