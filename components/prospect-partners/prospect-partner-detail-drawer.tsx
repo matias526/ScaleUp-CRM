@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
+import { Textarea } from "@/components/ui/textarea"
 
 interface ProspectPartnerDetailDrawerProps {
   partner: ProspectPartner | null
@@ -374,7 +375,7 @@ export function ProspectPartnerDetailDrawer({ partner, open, onOpenChange }: Pro
               <Label htmlFor="notes" className="text-sm font-medium">
                 {t("prospect_partners.contact.notes")}
               </Label>
-              <textarea
+              <Textarea
                 id="notes"
                 value={newContact.notes}
                 onChange={(e) => setNewContact({ ...newContact, notes: e.target.value })}
