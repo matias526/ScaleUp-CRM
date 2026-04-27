@@ -201,6 +201,23 @@ async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ succe
     console.log("[v0] recipients:", options.recipients.length)
     console.log("[v0] to_emails:", options.to_emails?.length)
 
+    // Descargar attachments por ID
+    const attachments = []
+    if (options.attachment_ids && options.attachment_ids.length > 0) {
+      console.log("[v0] Descargando", options.attachment_ids.length, "attachments")
+      for (const attId of options.attachment_ids) {
+        const attResult = await getMessageAttachmentUrl(attId, supabase)
+        if (attResult.success && attResult.url) {
+          attachments.push({
+            filename: attResult.filename || attId,
+            url: attResult.url,
+          })
+        } else {
+          console.warn(`[v0] Error descargando attachment ${attId}:`, attResult.error)
+        }
+      }
+    }
+
     // Modo grupo: un email con To/CC/BCC
     if (options.send_mode === "group") {
       console.log("[v0] Modo grupo: enviando con HTML convertido")
@@ -213,6 +230,7 @@ async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ succe
         html: bodyHtml,
         senderMode: options.senderMode || "system",
         userId: options.user_id,
+        attachments: attachments?.length > 0 ? attachments : undefined,
       })
 
       console.log("[v0] Resultado de envío en grupo:", emailResult)
@@ -233,6 +251,7 @@ async function sendMessageNow(options: PulseMessageSendOptions): Promise<{ succe
           html: bodyHtml,
           senderMode: options.senderMode || "system",
           userId: options.user_id,
+          attachments: attachments?.length > 0 ? attachments : undefined,
         })
         results.push(individualResult)
 
@@ -364,7 +383,7 @@ async function logSentMessage(
         try {
           // Relacionar en pulse_sent_messages_attachments
           const { error: linkError } = await (supabase
-            .from("pulse_sent_messages_attachments")
+            .from("pulse_sent_messages_attachments" as any)
             .insert({
               log_id: logId,
               attachment_id: attachmentId,
