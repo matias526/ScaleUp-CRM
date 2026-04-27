@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server"
+/*import { NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase/server"
 
 export async function POST(request: NextRequest) {
@@ -323,4 +323,4 @@ async function buildMimeMessage(data: {
   headers.forEach((h, i) => console.log(`  [${i}]: ${h}`))
 
   return mimeMessage
-}
+}*/
