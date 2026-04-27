@@ -139,7 +139,7 @@ export function FileUpload({
   const [isDragging, setIsDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  
+
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     e.stopPropagation()
@@ -220,8 +220,11 @@ export function FileUpload({
       if (uploadError) {
         console.error("Error al subir el archivo:", uploadError)
 
+        // Usamos (uploadError as any) para acceder a 'code' sin errores de TypeScript
+        const errorAny = uploadError as any
+
         // Verificar si el error es porque el bucket no existe
-        if (uploadError.message.includes("bucket") || uploadError.code === "404") {
+        if (uploadError.message.includes("bucket") || errorAny.code === "404") {
           setBucketMissing(true)
           throw new Error("El bucket de almacenamiento no existe. Contacte al administrador.")
         }
@@ -242,7 +245,7 @@ export function FileUpload({
       if (onChange) {
         onChange(filePath) // Cambiado de publicUrl a filePath para mantener consistencia
       }
-    } catch (err) {
+    } catch (err: any) { // Opción rápida: usar any
       console.error("Error completo al subir el archivo:", err)
       setError(err.message || "Error desconocido al subir el archivo")
     } finally {
@@ -281,7 +284,7 @@ export function FileUpload({
     return allowedFileTypes
       .map((ext) => {
         // Intentar obtener el tipo MIME correspondiente
-        const mimeType = MIME_TYPES_MAP[ext]
+        const mimeType = MIME_TYPES_MAP[ext as keyof typeof MIME_TYPES_MAP]
         // Si existe un tipo MIME, usarlo; de lo contrario, usar la extensión
         return mimeType || `.${ext}`
       })
@@ -333,9 +336,8 @@ export function FileUpload({
             accept={prepareAcceptAttribute()}
           />
           <div
-            className={`border border-dashed rounded-md p-4 text-center cursor-pointer hover:bg-gray-50 transition-colors ${
-              isDragging ? "border-primary bg-primary/10" : ""
-            }`}
+            className={`border border-dashed rounded-md p-4 text-center cursor-pointer hover:bg-gray-50 transition-colors ${isDragging ? "border-primary bg-primary/10" : ""
+              }`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
