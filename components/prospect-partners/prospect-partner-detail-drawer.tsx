@@ -100,6 +100,10 @@ export function ProspectPartnerDetailDrawer({ partner, open, onOpenChange }: Pro
         phone: "",
         position: "",
         department: "",
+        linkedin_url: "",
+        notes: "",
+        preferred_language: "es", // O el idioma por defecto que uses
+        prospect_id: "",
       })
 
       setIsAddContactModalOpen(false)
@@ -370,7 +374,7 @@ export function ProspectPartnerDetailDrawer({ partner, open, onOpenChange }: Pro
               <Label htmlFor="notes" className="text-sm font-medium">
                 {t("prospect_partners.contact.notes")}
               </Label>
-              <Textarea
+              <textarea
                 id="notes"
                 value={newContact.notes}
                 onChange={(e) => setNewContact({ ...newContact, notes: e.target.value })}
