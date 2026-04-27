@@ -412,7 +412,7 @@ async function logSentMessage(
 /**
  * Agrega una nota a la oportunidad con el resumen del mensaje
  */
-async function addNoteToOpportunity(
+export async function addNoteToOpportunity(
   options: PulseMessageSendOptions,
   subject?: string,
   bodyHtml?: string
