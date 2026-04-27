@@ -364,14 +364,6 @@ export function ProspectPartnerDetailDrawer({ partner, open, onOpenChange }: Pro
           </form>
         </DialogContent>
       </Dialog>
-              </Button>
-              <Button type="submit" disabled={isAddingContact}>
-                {isAddingContact ? "..." : t("prospect_partners.contact.save")}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
     </>
   )
 }
