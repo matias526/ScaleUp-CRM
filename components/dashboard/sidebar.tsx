@@ -30,6 +30,7 @@ const sidebarTranslations = {
     "sidebar.dashboard": "Dashboard",
     "sidebar.opportunities": "Opportunities",
     "sidebar.partners": "Partners",
+    "sidebar.prospect_partners": "Prospect Partners",
     "sidebar.contacts": "Contacts",
     "sidebar.tech_companies": "Tech Companies",
     "sidebar.users": "Users",
@@ -55,6 +56,7 @@ const sidebarTranslations = {
     "sidebar.dashboard": "Dashboard",
     "sidebar.opportunities": "Oportunidades",
     "sidebar.partners": "Socios",
+    "sidebar.prospect_partners": "Socios Potenciales",
     "sidebar.contacts": "Contactos",
     "sidebar.tech_companies": "Empresas Tech",
     "sidebar.users": "Usuarios",
@@ -80,6 +82,7 @@ const sidebarTranslations = {
     "sidebar.dashboard": "Dashboard",
     "sidebar.opportunities": "Oportunidades",
     "sidebar.partners": "Parceiros",
+    "sidebar.prospect_partners": "Parceiros Potenciais",
     "sidebar.contacts": "Contatos",
     "sidebar.tech_companies": "Empresas Tech",
     "sidebar.users": "Usuários",
@@ -95,7 +98,7 @@ const sidebarTranslations = {
     "sidebar.settings.translations": "Traduções",
     "sidebar.settings.supabase": "Configuração Supabase",
     "sidebar.knowledge_base": "Base de Conhecimento",
-    "sidebar.ai_knowledge_base": "Base de Conhecimiento IA",
+    "sidebar.ai_knowledge_base": "Base de Conocimiento IA",
     "sidebar.ai_knowledge_base.chat": "Chat com Mika",
     "sidebar.ai_knowledge_base.documents": "Documentos",
     "sidebar.ai_knowledge_base.feedback": "Feedback",
@@ -133,6 +136,7 @@ type SidebarItemType = {
   bddOnly?: boolean
   adminOrBdd?: boolean // Nuevo flag para elementos visibles por Admin O BDD
   adminOrMarketing?: boolean // Nuevo flag para elementos visibles por Admin O Marketing
+  adminOrBddOrMarketing?: boolean // Nuevo flag para elementos visibles por Admin O BDD O Marketing
   settingsSubItems?: { href: string; labelKey: string }[]
 }
 
@@ -213,6 +217,12 @@ export function Sidebar() {
       icon: Handshake,
       labelKey: "sidebar.partners",
       adminOnly: true,
+    },
+    {
+      href: "/dashboard/prospect-partners",
+      icon: Handshake,
+      labelKey: "sidebar.prospect_partners",
+      adminOrBddOrMarketing: true,
     },
     {
       href: "/dashboard/contacts",
@@ -316,6 +326,10 @@ export function Sidebar() {
   // Filtrar los elementos del sidebar según el rol del usuario
   const filteredSidebarItems = sidebarItems.filter((item) => {
     const shouldShow = (() => {
+      // Si el elemento es para Admin O BDD O Marketing, mostrar si el usuario es cualquiera de los tres
+      if (item.adminOrBddOrMarketing) {
+        return isAdmin || isBDD || isMarketing
+      }
       // Si el elemento es para admin O Marketing, mostrar si el usuario es cualquiera de los dos
       if (item.adminOrMarketing) {
         return isAdmin || isMarketing
@@ -337,6 +351,7 @@ export function Sidebar() {
 
     console.log("[v0] Sidebar - Item filter:", {
       labelKey: item.labelKey,
+      adminOrBddOrMarketing: item.adminOrBddOrMarketing,
       adminOrMarketing: item.adminOrMarketing,
       adminOrBdd: item.adminOrBdd,
       adminOnly: item.adminOnly,
