@@ -268,26 +268,19 @@ async function buildMimeMessage(data: {
 
     // PARTE 2: Los Adjuntos
     for (const attachment of data.attachments ?? []) {
-      // DENTRO DEL LOOP DE ATTACHMENTS
       try {
         console.log(`[v0] Intentando procesar: ${attachment.filename}`);
-        const response = await fetch(attachment.url);
+        const response = await fetch(attachment.url)
+
 
         if (!response.ok) {
           console.error(`[v0] Error al descargar archivo: ${response.status} ${response.statusText}`);
           continue;
         }
 
-        const arrayBuffer = await response.arrayBuffer();
+        const arrayBuffer = await response.arrayBuffer()
         console.log(`[v0] Archivo descargado. Tamaño: ${arrayBuffer.byteLength} bytes`);
 
-        // ... resto del código
-      }
-      try {
-        const response = await fetch(attachment.url)
-        if (!response.ok) continue
-
-        const arrayBuffer = await response.arrayBuffer()
         const buffer = Buffer.from(arrayBuffer)
         const base64Content = buffer.toString('base64')
 
