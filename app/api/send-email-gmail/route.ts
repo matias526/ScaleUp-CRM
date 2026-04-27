@@ -5,7 +5,17 @@ export async function POST(request: NextRequest) {
   try {
     console.log("[v0] === INICIO ENVÍO DE EMAIL VIA GMAIL ===")
 
-    const { to, cc, bcc, subject, html, replyTo, userId, attachments } = await request.json()
+    const body = await request.json() as any;
+    const { to, cc, bcc, subject, html, replyTo, userId, attachments } = body;
+
+    // AGREGA ESTE LOG ESPECÍFICO:
+    console.log("[v0] API GMAIL - Adjuntos recibidos en el body:", JSON.stringify(attachments, null, 2));
+
+    if (attachments && attachments.length > 0) {
+      console.log(`[v0] API GMAIL - Se detectaron ${attachments.length} adjuntos para procesar.`);
+    } else {
+      console.warn("[v0] API GMAIL - OJO: La lista de adjuntos llegó VACÍA a la API.");
+    }
 
     console.log("[v0] Datos recibidos:", {
       to,
