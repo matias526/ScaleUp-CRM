@@ -122,7 +122,7 @@ export default function PulseTemplateManager() {
       setLoading(true)
       console.log("[v0] Trayendo templates...")
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("pulse_message_templates")
         .select(
           `
@@ -167,7 +167,7 @@ export default function PulseTemplateManager() {
     try {
       console.log("[v0] Eliminando template:", deletingId)
 
-      const { error } = await supabase.from("pulse_message_templates").delete().eq("id", deletingId)
+      const { error } = await supabase.from("pulse_message_templates" as any).delete().eq("id", deletingId)
       if (error) throw error
 
       setTemplates(templates.filter((t) => t.id !== deletingId))
@@ -185,7 +185,7 @@ export default function PulseTemplateManager() {
       console.log("[v0] Copiando template:", template.id)
 
       // 1. Crear nuevo template
-      const { data: newTemplateData, error: templateError } = await supabase
+      const { data: newTemplateData, error: templateError } = await (supabase as any)
         .from("pulse_message_templates")
         .insert([
           {
@@ -208,7 +208,7 @@ export default function PulseTemplateManager() {
         body_content: tr.body_content,
       }))
 
-      const { error: translationsError } = await supabase
+      const { error: translationsError } = await (supabase as any)
         .from("pulse_message_template_translations")
         .insert(newTranslations)
 
