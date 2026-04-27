@@ -96,12 +96,12 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
     const goodIndicators = {
       closedOpportunities:
-        opportunities?.filter((opp) => opp.pipeline_stages?.code === "Won" && new Date(opp.updated_at) >= oneWeekAgo)
+        opportunities?.filter((opp) => opp.pipeline_stages?.[0]?.code === "Won" && new Date(opp.updated_at) >= oneWeekAgo)
           .length || 0,
 
       movedOpportunities:
         opportunities?.filter(
-          (opp) => new Date(opp.updated_at) >= oneWeekAgo && opp.pipeline_stages?.code !== "Pre-Lead",
+          (opp) => new Date(opp.updated_at) >= oneWeekAgo && opp.pipeline_stages?.[0]?.code !== "Pre-Lead",
         ).length || 0,
 
       newOpportunities: opportunities?.filter((opp) => new Date(opp.created_at) >= oneWeekAgo).length || 0,
@@ -115,13 +115,13 @@ export async function GET(request: Request, { params }: { params: { id: string }
         opportunities?.filter(
           (opp) =>
             new Date(opp.updated_at) < thirtyDaysAgo &&
-            opp.pipeline_stages?.code !== "Won" &&
-            opp.pipeline_stages?.code !== "Lost",
+            opp.pipeline_stages?.[0]?.code !== "Won" && // Agregamos [0]
+            opp.pipeline_stages?.[0]?.code !== "Lost",
         ).length || 0,
 
       oldOpportunities:
         opportunities?.filter(
-          (opp) => new Date(opp.created_at) < thirtyDaysAgo && opp.pipeline_stages?.code === "Pre-Lead",
+          (opp) => new Date(opp.created_at) < thirtyDaysAgo && opp.pipeline_stages?.[0]?.code === "Pre-Lead",
         ).length || 0,
 
       opportunitiesWithoutValue:
@@ -130,14 +130,14 @@ export async function GET(request: Request, { params }: { params: { id: string }
       opportunitiesWithoutCloseDate: opportunities?.filter((opp) => !opp.estimated_close_date).length || 0,
 
       lostOpportunities:
-        opportunities?.filter((opp) => opp.pipeline_stages?.code === "Lost" && new Date(opp.updated_at) >= oneWeekAgo)
+        opportunities?.filter((opp) => opp.pipeline_stages?.[0]?.code === "Lost" && new Date(opp.updated_at) >= oneWeekAgo)
           .length || 0,
     }
 
     const totalOpportunities = opportunities?.length || 0
     const totalValue = opportunities?.reduce((sum, opp) => sum + (opp.estimated_value || 0), 0) || 0
     const activeOpportunities =
-      opportunities?.filter((opp) => opp.pipeline_stages?.code !== "Won" && opp.pipeline_stages?.code !== "Lost")
+      opportunities?.filter((opp) => opp.pipeline_stages?.[0]?.code !== "Won" && opp.pipeline_stages?.[0]?.code !== "Lost")
         .length || 0
 
     const analysisPrompt = `
