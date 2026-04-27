@@ -10,7 +10,7 @@ import { Card } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Send, X, Upload, Mail, MessageCircle } from "lucide-react"
 import { useAuth } from "@/components/auth/auth-provider"
-import { sendPulseMessage } from "@/lib/services/pulse-message-service"
+import { sendPulseMessage, addNoteToOpportunity } from "@/lib/services/pulse-message-service"
 import { replaceVariables } from "@/lib/pulse/pulse-message-variables"
 import { PULSE_VARIABLES } from "@/lib/pulse/pulse-variables"
 import { toast } from "@/components/ui/use-toast"
@@ -660,9 +660,36 @@ export function PulseMessageSenderOpportunity({
 
         const encodedMessage = encodeURIComponent(messageForWhatsApp)
         window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, "_blank")
-        toast({
-          description: "Ventana de WhatsApp abierta. Por favor envía el mensaje manualmente.",
-        })
+
+        // Agregar nota a la oportunidad
+        try {
+          await addNoteToOpportunity({
+            opportunity_id: opportunity.id,
+            user_id: userInfo?.id || "",
+            subject: "Mensaje WhatsApp Enviado",
+            body_content: message,
+            channel: "whatsapp",
+            senderMode: "personal",
+            send_mode: "individual",
+            recipients: selectedRecipients,
+            to_emails: toEmails,
+            cc_emails: [],
+            bcc_emails: [],
+            variables_values: variableValues,
+            attachment_ids: [],
+          } as any, "Mensaje WhatsApp Enviado", messageForWhatsApp)
+
+          toast({
+            description: "Mensaje WhatsApp enviado y nota agregada a la oportunidad.",
+          })
+        } catch (error) {
+          console.error("[v0] Error al agregar nota de WhatsApp:", error)
+          toast({
+            description: "Ventana de WhatsApp abierta, pero no se pudo registrar la nota.",
+            variant: "destructive",
+          })
+        }
+
         onClose()
         return
       }
