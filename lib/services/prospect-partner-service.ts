@@ -180,7 +180,6 @@ export class ProspectPartnerService {
         .from("opportunities")
         .select("id, title, estimated_value, created_at")
         .eq("prospect_id", prospectPartnerId)
-        .eq("is_active", true)
         .order("created_at", { ascending: false })
 
       if (error) throw error
