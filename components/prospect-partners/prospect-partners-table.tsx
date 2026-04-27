@@ -59,7 +59,6 @@ export default function ProspectPartnersTable({ partners, onDelete, onView, onEd
           <TableHeader>
             <TableRow>
               <TableHead>{t("prospect_partners.name")}</TableHead>
-              <TableHead>{t("prospect_partners.code")}</TableHead>
               <TableHead>{t("prospect_partners.website")}</TableHead>
               <TableHead>{t("prospect_partners.leadSource")}</TableHead>
               <TableHead>{t("prospect_partners.status")}</TableHead>
@@ -69,7 +68,7 @@ export default function ProspectPartnersTable({ partners, onDelete, onView, onEd
           <TableBody>
             {partners.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-gray-500 py-8">
+                <TableCell colSpan={5} className="text-center text-gray-500 py-8">
                   {t("prospect_partners.message.loading")}
                 </TableCell>
               </TableRow>
@@ -77,7 +76,6 @@ export default function ProspectPartnersTable({ partners, onDelete, onView, onEd
               partners.map((partner) => (
                 <TableRow key={partner.id}>
                   <TableCell className="font-medium">{partner.name}</TableCell>
-                  <TableCell className="text-sm text-gray-600">{partner.code || "-"}</TableCell>
                   <TableCell className="text-sm">
                     {partner.website ? (
                       <a href={partner.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">

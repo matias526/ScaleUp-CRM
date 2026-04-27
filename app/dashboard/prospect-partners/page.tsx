@@ -15,6 +15,18 @@ import { ProspectPartnerService, type ProspectPartner, type ProspectPartnerFilte
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DICT_LANG_PROSPECT_PARTNERS } from "@/lib/constants/dict-lang-prospect-partners"
 
+// Lead sources mapping
+const LEAD_SOURCES = [
+  "internationalFair",
+  "linkedinCampaign",
+  "emailCampaign",
+  "academy",
+  "israelVisit",
+  "website",
+  "referral",
+  "other",
+]
+
 export default function ProspectPartnersPage() {
   const [partners, setPartners] = useState<ProspectPartner[]>([])
   const [searchTerm, setSearchTerm] = useState("")
@@ -130,12 +142,11 @@ export default function ProspectPartnersPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t("prospect_partners.filter.all")}</SelectItem>
-                  <SelectItem value="website">Website</SelectItem>
-                  <SelectItem value="referral">Referral</SelectItem>
-                  <SelectItem value="cold_call">Cold Call</SelectItem>
-                  <SelectItem value="trade_show">Trade Show</SelectItem>
-                  <SelectItem value="partnership">Partnership</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  {LEAD_SOURCES.map((source) => (
+                    <SelectItem key={source} value={source}>
+                      {t(`prospect_partners.leadSource.${source}`)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

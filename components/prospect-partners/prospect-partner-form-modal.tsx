@@ -12,6 +12,18 @@ import { ProspectPartnerService, type ProspectPartner } from "@/lib/services/pro
 import { useToast } from "@/components/ui/use-toast"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
+// Lead sources mapping
+const LEAD_SOURCES = [
+  "internationalFair",
+  "linkedinCampaign",
+  "emailCampaign",
+  "academy",
+  "israelVisit",
+  "website",
+  "referral",
+  "other",
+]
+
 interface ProspectPartnerFormModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -86,6 +98,14 @@ export function ProspectPartnerFormModal({ open, onOpenChange, initialData, onSu
       return
     }
 
+    if (!formData.lead_source) {
+      toast({
+        description: "La fuente de lead es requerida",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsLoading(true)
     try {
       if (initialData?.id) {
@@ -95,7 +115,9 @@ export function ProspectPartnerFormModal({ open, onOpenChange, initialData, onSu
       }
 
       toast({
-        description: t("prospect_partners.form.success"),
+        description: initialData
+          ? t("prospect_partners.message.updated")
+          : t("prospect_partners.message.created"),
       })
 
       onOpenChange(false)
@@ -103,7 +125,7 @@ export function ProspectPartnerFormModal({ open, onOpenChange, initialData, onSu
     } catch (error) {
       console.error("Error saving partner:", error)
       toast({
-        description: t("prospect_partners.form.error"),
+        description: t("prospect_partners.message.error"),
         variant: "destructive",
       })
     } finally {
@@ -116,45 +138,53 @@ export function ProspectPartnerFormModal({ open, onOpenChange, initialData, onSu
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {initialData ? t("prospect_partners.form.edit") : t("prospect_partners.form.title")}
+            {initialData
+              ? t("prospect_partners.form.title.edit")
+              : t("prospect_partners.form.title.create")}
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="name">{t("prospect_partners.form.name")}</Label>
+            <Label htmlFor="name">{t("prospect_partners.form.label.name")}</Label>
             <Input
               id="name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
+              placeholder="Nombre del socio"
             />
           </div>
 
           <div>
-            <Label htmlFor="code">{t("prospect_partners.form.code")}</Label>
+            <Label htmlFor="code">{t("prospect_partners.form.label.code")}</Label>
             <Input
               id="code"
               value={formData.code}
               onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+              placeholder="Código opcional"
             />
           </div>
 
           <div>
-            <Label htmlFor="website">{t("prospect_partners.form.website")}</Label>
+            <Label htmlFor="website">{t("prospect_partners.form.label.website")}</Label>
             <Input
               id="website"
               type="url"
               value={formData.website}
               onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+              placeholder="https://example.com"
             />
           </div>
 
           <div>
-            <Label htmlFor="country">{t("prospect_partners.form.country")}</Label>
-            <Select value={formData.main_country_id} onValueChange={(value) => setFormData({ ...formData, main_country_id: value })}>
+            <Label htmlFor="country">{t("prospect_partners.form.label.country")}</Label>
+            <Select
+              value={formData.main_country_id}
+              onValueChange={(value) => setFormData({ ...formData, main_country_id: value })}
+            >
               <SelectTrigger id="country">
-                <SelectValue placeholder={t("prospect_partners.form.country")} />
+                <SelectValue placeholder="Seleccionar país" />
               </SelectTrigger>
               <SelectContent>
                 {countries.map((country) => (
@@ -167,30 +197,41 @@ export function ProspectPartnerFormModal({ open, onOpenChange, initialData, onSu
           </div>
 
           <div>
-            <Label htmlFor="address">{t("prospect_partners.form.address")}</Label>
+            <Label htmlFor="address">{t("prospect_partners.form.label.address")}</Label>
             <Textarea
               id="address"
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
               rows={3}
+              placeholder="Dirección del socio"
             />
           </div>
 
           <div>
-            <Label htmlFor="leadSource">{t("prospect_partners.form.leadSource")}</Label>
-            <Input
-              id="leadSource"
+            <Label htmlFor="leadSource">{t("prospect_partners.form.label.leadSource")}</Label>
+            <Select
               value={formData.lead_source}
-              onChange={(e) => setFormData({ ...formData, lead_source: e.target.value })}
-            />
+              onValueChange={(value) => setFormData({ ...formData, lead_source: value })}
+            >
+              <SelectTrigger id="leadSource">
+                <SelectValue placeholder="Seleccionar fuente de lead" />
+              </SelectTrigger>
+              <SelectContent>
+                {LEAD_SOURCES.map((source) => (
+                  <SelectItem key={source} value={source}>
+                    {t(`prospect_partners.leadSource.${source}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex gap-3 justify-end pt-4">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
-              {t("prospect_partners.form.cancel")}
+              {t("prospect_partners.form.button.cancel")}
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? "..." : t("prospect_partners.form.save")}
+              {isLoading ? "..." : t("prospect_partners.form.button.save")}
             </Button>
           </div>
         </form>
