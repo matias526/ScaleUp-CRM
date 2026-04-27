@@ -29,6 +29,9 @@ export interface Contact {
   phone?: string
   position?: string
   department?: string
+  linkedin_url?: string
+  notes?: string
+  preferred_language?: string
   prospect_id?: string
 }
 
@@ -200,6 +203,9 @@ export class ProspectPartnerService {
             phone: contact.phone,
             position: contact.position,
             department: contact.department,
+            linkedin_url: contact.linkedin_url,
+            notes: contact.notes,
+            preferred_language: contact.preferred_language || "es",
             prospect_id: contact.prospect_id,
             is_active: true,
           },

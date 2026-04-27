@@ -398,6 +398,21 @@ export const DICT_LANG_PROSPECT_PARTNERS = {
     en: "Department",
     pt: "Departamento",
   },
+  "prospect_partners.contact.linkedinUrl": {
+    es: "LinkedIn URL",
+    en: "LinkedIn URL",
+    pt: "LinkedIn URL",
+  },
+  "prospect_partners.contact.notes": {
+    es: "Notas",
+    en: "Notes",
+    pt: "Notas",
+  },
+  "prospect_partners.contact.preferredLanguage": {
+    es: "Idioma Preferido",
+    en: "Preferred Language",
+    pt: "Idioma Preferido",
+  },
   "prospect_partners.contact.message.created": {
     es: "Contacto creado exitosamente",
     en: "Contact created successfully",

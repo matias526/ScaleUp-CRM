@@ -37,6 +37,10 @@ export function ProspectPartnerDetailDrawer({ partner, open, onOpenChange }: Pro
     phone: "",
     position: "",
     department: "",
+    linkedin_url: "",
+    notes: "",
+    preferred_language: "es",
+    prospect_id: partner?.id || "",
   })
 
   useEffect(() => {
@@ -344,6 +348,53 @@ export function ProspectPartnerDetailDrawer({ partner, open, onOpenChange }: Pro
                   <SelectItem value="hr">HR</SelectItem>
                   <SelectItem value="executive">Executive</SelectItem>
                   <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="linkedin_url" className="text-sm font-medium">
+                {t("prospect_partners.contact.linkedinUrl")}
+              </Label>
+              <Input
+                id="linkedin_url"
+                type="url"
+                value={newContact.linkedin_url}
+                onChange={(e) => setNewContact({ ...newContact, linkedin_url: e.target.value })}
+                placeholder="https://linkedin.com/in/..."
+                className="mt-1.5"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="notes" className="text-sm font-medium">
+                {t("prospect_partners.contact.notes")}
+              </Label>
+              <Textarea
+                id="notes"
+                value={newContact.notes}
+                onChange={(e) => setNewContact({ ...newContact, notes: e.target.value })}
+                placeholder="Notas sobre este contacto..."
+                rows={3}
+                className="mt-1.5"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="preferred_language" className="text-sm font-medium">
+                {t("prospect_partners.contact.preferredLanguage")}
+              </Label>
+              <Select
+                value={newContact.preferred_language || "es"}
+                onValueChange={(value) => setNewContact({ ...newContact, preferred_language: value })}
+              >
+                <SelectTrigger id="preferred_language" className="mt-1.5">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="es">Español</SelectItem>
+                  <SelectItem value="en">English</SelectItem>
+                  <SelectItem value="pt">Português</SelectItem>
                 </SelectContent>
               </Select>
             </div>
