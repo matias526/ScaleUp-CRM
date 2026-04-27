@@ -297,12 +297,11 @@ export function ProspectPartnerDetailDrawer({ partner, open, onOpenChange }: Pro
 
             <div>
               <Label>{t("prospect_partners.contact.department")}</Label>
-              <Select value={newContact.department} onValueChange={(value) => setNewContact({ ...newContact, department: value })}>
+              <Select value={newContact.department || ""} onValueChange={(value) => setNewContact({ ...newContact, department: value })}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Seleccionar departamento..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Seleccionar...</SelectItem>
                   <SelectItem value="sales">Sales</SelectItem>
                   <SelectItem value="technical">Technical</SelectItem>
                   <SelectItem value="marketing">Marketing</SelectItem>
