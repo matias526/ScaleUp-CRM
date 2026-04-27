@@ -46,7 +46,7 @@ export async function uploadMessageAttachment(
     const timestamp = Date.now()
     const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_")
     const filename = `pulse_${timestamp}_${originalName}`
-    const bucket = "pulse-message-attachments"
+    const bucket = "pulse-assets"
 
     // Subir a Supabase Storage
     const { data, error: uploadError } = await supabase.storage.from(bucket).upload(filename, file, {
