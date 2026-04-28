@@ -407,12 +407,37 @@ export const OpportunitiesKanban = ({
     if (filterStagnant) {
       const daysAgo = new Date()
       daysAgo.setDate(daysAgo.getDate() - stagnantDays)
-      result = result.filter(
-        (opp) =>
-          new Date(opp.updated_at) < daysAgo &&
+      result = result.filter((opp) => {
+        // Obtener la fecha más reciente de actualización considerando:
+        // 1. updated_at de la oportunidad
+        // 2. created_at de las tareas relacionadas
+        // 3. created_at de las notas relacionadas
+        const oppUpdatedAt = new Date(opp.updated_at)
+        let lastActivityDate = oppUpdatedAt
+
+        // Comprobar tareas
+        if (opp.tasks && Array.isArray(opp.tasks) && opp.tasks.length > 0) {
+          const latestTaskDate = new Date(
+            Math.max(...opp.tasks.map((task: any) => new Date(task.created_at || task.updated_at).getTime())),
+          )
+          lastActivityDate = latestTaskDate > lastActivityDate ? latestTaskDate : lastActivityDate
+        }
+
+        // Comprobar notas
+        if (opp.notes && Array.isArray(opp.notes) && opp.notes.length > 0) {
+          const latestNoteDate = new Date(
+            Math.max(...opp.notes.map((note: any) => new Date(note.created_at || note.updated_at).getTime())),
+          )
+          lastActivityDate = latestNoteDate > lastActivityDate ? latestNoteDate : lastActivityDate
+        }
+
+        // Filtrar si no tiene movimiento en los últimos X días y no está cerrada
+        return (
+          lastActivityDate < daysAgo &&
           opp.pipeline_stages?.[0]?.code !== "Won" &&
-          opp.pipeline_stages?.[0]?.code !== "Lost",
-      )
+          opp.pipeline_stages?.[0]?.code !== "Lost"
+        )
+      })
     }
 
     // Aplicar filtro de oportunidades antiguas
@@ -1021,11 +1046,6 @@ export const OpportunitiesKanban = ({
             </Select>
           )}
 
-          {/* Contador de oportunidades */}
-          <div className="text-sm text-muted-foreground ml-auto">
-            {filteredOpportunities.length} de {opportunities.length} oportunidades
-          </div>
-
           {/* Botón de más filtros */}
           <Popover open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
             <PopoverTrigger asChild>
@@ -1213,6 +1233,11 @@ export const OpportunitiesKanban = ({
               </div>
             </PopoverContent>
           </Popover>
+
+          {/* Contador de oportunidades */}
+          <div className="text-sm text-muted-foreground ml-auto">
+            {filteredOpportunities.length} de {opportunities.length} oportunidades
+          </div>
         </div>
       </div>
 
