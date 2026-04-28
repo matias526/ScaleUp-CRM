@@ -412,7 +412,7 @@ export const OpportunitiesKanban = ({
         // 1. updated_at de la oportunidad
         // 2. created_at de las tareas relacionadas
         // 3. created_at de las notas relacionadas
-        const oppUpdatedAt = new Date(opp.updated_at)
+        const oppUpdatedAt = new Date(opp.updated_at || 0)
         let lastActivityDate = oppUpdatedAt
 
         // Comprobar tareas
@@ -434,8 +434,8 @@ export const OpportunitiesKanban = ({
         // Filtrar si no tiene movimiento en los últimos X días y no está cerrada
         return (
           lastActivityDate < daysAgo &&
-          opp.pipeline_stages?.[0]?.code !== "Won" &&
-          opp.pipeline_stages?.[0]?.code !== "Lost"
+          opp.stage?.code !== "Won" &&
+          opp.stage?.code !== "Lost"
         )
       })
     }
@@ -444,7 +444,9 @@ export const OpportunitiesKanban = ({
     if (filterOldOpportunities) {
       const oneEightyDaysAgo = new Date()
       oneEightyDaysAgo.setDate(oneEightyDaysAgo.getDate() - 180)
-      result = result.filter((opp) => new Date(opp.created_at) < oneEightyDaysAgo)
+
+      // Usamos || 0 para que si created_at es null, TypeScript no se queje
+      result = result.filter((opp) => new Date(opp.created_at || 0) < oneEightyDaysAgo)
     }
 
     // Aplicar filtro de sin valor estimado

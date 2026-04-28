@@ -7,6 +7,8 @@ export type OpportunityWithRelations = Tables<"opportunities"> & {
   tech_company: Tables<"tech_companies"> | null
   partner: Tables<"partners"> | null
   end_customer: Tables<"end_customers"> | null
+  tasks: Tables<"tasks">[] | null
+  notes: Tables<"notes">[] | null
 }
 
 // Modificar la función getOpportunities para añadir logs detallados del query
@@ -291,14 +293,14 @@ export async function getUserRole(userId: string): Promise<string | null> {
       return null
     }
 
-    const { data, error } = await supabase.from("users").select("role_code").eq("id", userId).single()
+    const { data, error } = await supabase.from("users").select("role_id").eq("id", userId).single()
 
     if (error) {
       console.error(`Error al obtener rol del usuario ${userId}:`, error)
       return null
     }
 
-    return data?.role_code || null
+    return data?.role_id || null
   } catch (error) {
     console.error(`Error inesperado al obtener rol del usuario ${userId}:`, error)
     return null
@@ -577,17 +579,17 @@ export async function getScaleUpManager(techCompanyId: string, partnerId: string
 export async function getAllCountries(): Promise<{ id: string; name: string; code: string }[]> {
   try {
     console.log("Obteniendo todos los países")
-    
+
     const { data, error } = await supabase
       .from("countries")
       .select("id, name, code")
       .order("name", { ascending: true })
-    
+
     if (error) {
       console.error("Error al obtener países:", error)
       return []
     }
-    
+
     console.log(`Se encontraron ${data?.length || 0} países`)
     return data || []
   } catch (error) {
@@ -600,21 +602,21 @@ export async function getAllCountries(): Promise<{ id: string; name: string; cod
 export async function getEndCustomers(partnerId?: string): Promise<Tables<"end_customers">[]> {
   try {
     let query = supabase.from("end_customers").select("*").order("name", { ascending: true })
-    
+
     if (partnerId) {
       console.log(`Obteniendo clientes finales para el partner: ${partnerId}`)
       query = query.eq("partner_id", partnerId)
     } else {
       console.log("Obteniendo todos los clientes finales")
     }
-    
+
     const { data, error } = await query
-    
+
     if (error) {
       console.error("Error al obtener clientes finales:", error)
       return []
     }
-    
+
     console.log(`Se encontraron ${data?.length || 0} clientes finales`)
     return data || []
   } catch (error) {
@@ -633,18 +635,18 @@ export async function createEndCustomer(data: {
 }): Promise<Tables<"end_customers"> | null> {
   try {
     console.log("Creando nuevo cliente final:", data)
-    
+
     const { data: result, error } = await supabase
       .from("end_customers")
       .insert([data])
       .select()
       .single()
-    
+
     if (error) {
       console.error("Error al crear cliente final:", error)
       return null
     }
-    
+
     console.log("Cliente final creado exitosamente:", result)
     return result
   } catch (error) {
