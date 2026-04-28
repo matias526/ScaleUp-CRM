@@ -417,11 +417,9 @@ export const OpportunitiesKanban = ({
 
     // Aplicar filtro de oportunidades antiguas
     if (filterOldOpportunities) {
-      const thirtyDaysAgo = new Date()
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-      result = result.filter(
-        (opp) => new Date(opp.created_at) < thirtyDaysAgo && opp.pipeline_stages?.[0]?.code === "Pre-Lead",
-      )
+      const oneEightyDaysAgo = new Date()
+      oneEightyDaysAgo.setDate(oneEightyDaysAgo.getDate() - 180)
+      result = result.filter((opp) => new Date(opp.created_at) < oneEightyDaysAgo)
     }
 
     // Aplicar filtro de sin valor estimado
@@ -943,9 +941,10 @@ export const OpportunitiesKanban = ({
     <div className="space-y-4">
       {/* Barra de herramientas */}
       <div className="flex flex-col gap-3 bg-muted/40 p-3 rounded-lg">
-        {/* Primera fila: search y contador */}
-        <div className="flex gap-3 items-center">
-          <div className="relative w-64">
+        {/* Barra única: search, filtros principales y contador */}
+        <div className="flex gap-2 items-center flex-wrap">
+          {/* Search */}
+          <div className="relative w-56">
             <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Buscar oportunidades..."
@@ -965,19 +964,12 @@ export const OpportunitiesKanban = ({
             )}
           </div>
 
-          <div className="text-sm text-muted-foreground ml-auto">
-            {filteredOpportunities.length} de {opportunities.length} oportunidades
-          </div>
-        </div>
-
-        {/* Segunda fila: filtros principales y botón de más filtros */}
-        <div className="flex gap-2 items-center flex-wrap">
           {/* Filtro de Tech Company */}
           <Select
             value={filterTechCompany || "all"}
             onValueChange={(value) => setFilterTechCompany(value === "all" ? null : value)}
           >
-            <SelectTrigger className="w-48 h-9">
+            <SelectTrigger className="w-40 h-9">
               <SelectValue placeholder="Tech Companies" />
             </SelectTrigger>
             <SelectContent>
@@ -995,7 +987,7 @@ export const OpportunitiesKanban = ({
             value={filterPartner || "all"}
             onValueChange={(value) => setFilterPartner(value === "all" ? null : value)}
           >
-            <SelectTrigger className="w-48 h-9">
+            <SelectTrigger className="w-40 h-9">
               <SelectValue placeholder="Partners" />
             </SelectTrigger>
             <SelectContent>
@@ -1015,7 +1007,7 @@ export const OpportunitiesKanban = ({
               value={filterResponsible || "none"}
               onValueChange={(value) => setFilterResponsible(value === "none" ? null : value)}
             >
-              <SelectTrigger className="w-48 h-9">
+              <SelectTrigger className="w-40 h-9">
                 <SelectValue placeholder="Responsable" />
               </SelectTrigger>
               <SelectContent>
@@ -1028,6 +1020,11 @@ export const OpportunitiesKanban = ({
               </SelectContent>
             </Select>
           )}
+
+          {/* Contador de oportunidades */}
+          <div className="text-sm text-muted-foreground ml-auto">
+            {filteredOpportunities.length} de {opportunities.length} oportunidades
+          </div>
 
           {/* Botón de más filtros */}
           <Popover open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
@@ -1080,22 +1077,25 @@ export const OpportunitiesKanban = ({
                 </div>
 
                 {/* Nuevos filtros de oportunidades problemáticas */}
-                <div className="border-t pt-4 mt-4 space-y-3">
+                <div className="border-t pt-4 space-y-3">
                   <label className="text-sm font-semibold text-red-600">Filtros de Advertencia</label>
 
                   {/* Sin movimiento */}
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-medium">Sin movimiento</label>
+                    <div className="flex items-center gap-2">
                       <input
                         type="checkbox"
+                        id="filter-stagnant"
                         checked={filterStagnant}
                         onChange={(e) => setFilterStagnant(e.target.checked)}
                         className="cursor-pointer"
                       />
+                      <label htmlFor="filter-stagnant" className="text-sm font-medium cursor-pointer">
+                        Sin movimiento
+                      </label>
                     </div>
                     {filterStagnant && (
-                      <div className="space-y-1">
+                      <div className="space-y-1 ml-6">
                         <label className="text-xs text-gray-600">Días sin movimiento:</label>
                         <div className="flex items-center gap-2">
                           <input
@@ -1120,9 +1120,9 @@ export const OpportunitiesKanban = ({
                         onChange={(e) => setFilterOldOpportunities(e.target.checked)}
                         className="cursor-pointer"
                       />
-                      Oportunidades antiguas en Pre-Lead
+                      Oportunidades antiguas
                     </label>
-                    <p className="text-xs text-gray-500 ml-6">Más de 30 días sin cerrar</p>
+                    <p className="text-xs text-gray-500 ml-6">Más de 180 días desde creación</p>
                   </div>
 
                   {/* Sin valor estimado */}
