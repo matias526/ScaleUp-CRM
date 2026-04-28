@@ -63,6 +63,11 @@ export const DICT_LANG_OPPORTUNITIES = {
     en: "Partner",
     pt: "Partner",
   },
+  "opportunities.form.optional": {
+    es: "opcional",
+    en: "optional",
+    pt: "opcional",
+  },
   "opportunities.form.end_customer": {
     es: "Cliente",
     en: "Customer",
