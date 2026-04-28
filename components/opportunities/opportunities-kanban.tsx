@@ -405,40 +405,27 @@ export const OpportunitiesKanban = ({
 
     // Aplicar filtro de oportunidades sin movimiento (estancadas)
     if (filterStagnant) {
-      const daysAgo = new Date()
-      daysAgo.setDate(daysAgo.getDate() - stagnantDays)
-      const limitTime = daysAgo.getTime() // Fecha límite en milisegundos
+      const stagnantDaysMs = stagnantDays * 24 * 60 * 60 * 1000
+      const limitTime = Date.now() - stagnantDaysMs
 
-      result = result.filter((opp) => {
-        // 1. Fecha base: la última actualización de la oportunidad (o creación si no hay otra)
-        // Usamos || 0 para evitar errores con null y asegurar que siempre sea un número
+      result = result.filter((opp: any) => {
+        // 1. Empezamos con la fecha de la oportunidad
         let lastActivityTime = new Date(opp.updated_at || opp.created_at || 0).getTime()
 
-        // 2. Comprobar tareas: buscamos la fecha más reciente
-        if (opp.tasks && Array.isArray(opp.tasks) && opp.tasks.length > 0) {
-          const taskTimes = opp.tasks.map((t: any) =>
-            new Date(t.created_at || t.updated_at || 0).getTime()
-          )
-          const maxTaskTime = Math.max(...taskTimes)
-          if (maxTaskTime > lastActivityTime) lastActivityTime = maxTaskTime
-        }
+        // 2. Buscamos en las notas la más nueva
+        // Usamos ?. por si notes es null
+        const noteDates = opp.notes?.map((n: any) => new Date(n.created_at || 0).getTime()) || []
 
-        // 3. Comprobar notas: buscamos la fecha más reciente
-        if (opp.notes && Array.isArray(opp.notes) && opp.notes.length > 0) {
-          const noteTimes = opp.notes.map((n: any) =>
-            new Date(n.created_at || n.updated_at || 0).getTime()
-          )
-          const maxNoteTime = Math.max(...noteTimes)
-          if (maxNoteTime > lastActivityTime) lastActivityTime = maxNoteTime
-        }
+        // 3. Buscamos en las tareas la más nueva
+        const taskDates = opp.tasks?.map((t: any) => new Date(t.created_at || 0).getTime()) || []
 
-        // LÓGICA DE FILTRADO:
-        // Una oportunidad está "estancada" si su actividad más reciente (lastActivityTime)
-        // ocurrió ANTES de nuestro límite (limitTime).
-        // Si hubo una nota hoy, lastActivityTime será mayor que limitTime, y devolverá FALSE (se oculta).
+        // 4. Combinamos todo: la fecha de la opp, la nota más nueva y la tarea más nueva
+        // Math.max comparará todos los números y se quedará con el MAYOR (el más reciente)
+        lastActivityTime = Math.max(lastActivityTime, ...noteDates, ...taskDates)
+
+        // 5. ¿Es la actividad más nueva de todas más vieja que el límite?
         const isStagnant = lastActivityTime < limitTime
 
-        // Solo incluimos las que no están ganadas ni perdidas
         const isNotClosed = opp.stage?.code !== "Won" && opp.stage?.code !== "Lost"
 
         return isStagnant && isNotClosed
