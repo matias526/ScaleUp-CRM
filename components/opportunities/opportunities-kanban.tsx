@@ -942,9 +942,10 @@ export const OpportunitiesKanban = ({
   return (
     <div className="space-y-4">
       {/* Barra de herramientas */}
-      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between bg-muted/40 p-3 rounded-lg">
-        <div className="flex flex-1 w-full sm:w-auto gap-2">
-          <div className="relative flex-1">
+      <div className="flex flex-col gap-3 bg-muted/40 p-3 rounded-lg">
+        {/* Primera fila: search y contador */}
+        <div className="flex gap-3 items-center">
+          <div className="relative w-64">
             <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Buscar oportunidades..."
@@ -964,23 +965,92 @@ export const OpportunitiesKanban = ({
             )}
           </div>
 
+          <div className="text-sm text-muted-foreground ml-auto">
+            {filteredOpportunities.length} de {opportunities.length} oportunidades
+          </div>
+        </div>
+
+        {/* Segunda fila: filtros principales y botón de más filtros */}
+        <div className="flex gap-2 items-center flex-wrap">
+          {/* Filtro de Tech Company */}
+          <Select
+            value={filterTechCompany || "all"}
+            onValueChange={(value) => setFilterTechCompany(value === "all" ? null : value)}
+          >
+            <SelectTrigger className="w-48 h-9">
+              <SelectValue placeholder="Tech Companies" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las empresas</SelectItem>
+              {techCompanies.map((company: any) => (
+                <SelectItem key={company.id} value={company.id}>
+                  {company.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Filtro de Partner */}
+          <Select
+            value={filterPartner || "all"}
+            onValueChange={(value) => setFilterPartner(value === "all" ? null : value)}
+          >
+            <SelectTrigger className="w-48 h-9">
+              <SelectValue placeholder="Partners" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los partners</SelectItem>
+              <SelectItem value="no-partner">Sin Partner asociado</SelectItem>
+              {partners.map((partner: any) => (
+                <SelectItem key={partner.id} value={partner.id}>
+                  {partner.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Filtro de Responsable - solo si es Admin */}
+          {userRoleDebug === "Admin" && (
+            <Select
+              value={filterResponsible || "none"}
+              onValueChange={(value) => setFilterResponsible(value === "none" ? null : value)}
+            >
+              <SelectTrigger className="w-48 h-9">
+                <SelectValue placeholder="Responsable" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Todos los responsables</SelectItem>
+                {scaleupUsers.map((user) => (
+                  <SelectItem key={user.id} value={user.id}>
+                    {user.first_name} {user.last_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          {/* Botón de más filtros */}
           <Popover open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
             <PopoverTrigger asChild>
               <Button variant="outline" size="sm" className="h-9 bg-transparent">
-                <Filter className="h-4 w-4 mr-2" />
+                <Plus className="h-4 w-4 mr-1" />
                 Filtros
-                {(filterTechCompany ||
-                  filterPartner ||
-                  filterResponsible ||
-                  filterValidation ||
+                {(filterValidation ||
+                  filterStagnant ||
+                  filterOldOpportunities ||
+                  filterNoValue ||
+                  filterNoCloseDate ||
+                  selectedStages.length < allStages.length ||
                   sortBy !== "title" ||
                   sortDirection !== "asc") && (
                     <Badge variant="secondary" className="ml-2 h-5 px-1">
                       {[
-                        filterTechCompany ? 1 : 0,
-                        filterPartner ? 1 : 0,
-                        filterResponsible ? 1 : 0,
                         filterValidation ? 1 : 0,
+                        filterStagnant ? 1 : 0,
+                        filterOldOpportunities ? 1 : 0,
+                        filterNoValue ? 1 : 0,
+                        filterNoCloseDate ? 1 : 0,
+                        selectedStages.length < allStages.length ? 1 : 0,
                         sortBy !== "title" || sortDirection !== "asc" ? 1 : 0,
                       ].reduce((a, b) => a + b, 0)}
                     </Badge>
@@ -989,49 +1059,9 @@ export const OpportunitiesKanban = ({
             </PopoverTrigger>
             <PopoverContent className="w-80">
               <div className="space-y-4">
-                <h4 className="font-medium">Filtros y ordenación</h4>
+                <h4 className="font-medium">Filtros avanzados</h4>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Empresa tecnológica</label>
-                  <Select
-                    value={filterTechCompany || "all"}
-                    onValueChange={(value) => setFilterTechCompany(value === "all" ? null : value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Todas las empresas" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todas las empresas</SelectItem>
-                      {techCompanies.map((company: any) => (
-                        <SelectItem key={company.id} value={company.id}>
-                          {company.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Partner</label>
-                  <Select
-                    value={filterPartner || "all"}
-                    onValueChange={(value) => setFilterPartner(value === "all" ? null : value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Todos los partners" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos los partners</SelectItem>
-                      <SelectItem value="no-partner">Sin Partner asociado</SelectItem>
-                      {partners.map((partner: any) => (
-                        <SelectItem key={partner.id} value={partner.id}>
-                          {partner.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
+                {/* Filtro de validación */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Estado de validación</label>
                   <Select
@@ -1048,29 +1078,6 @@ export const OpportunitiesKanban = ({
                     </SelectContent>
                   </Select>
                 </div>
-
-                {/* Mostrar el filtro de responsables solo si el usuario es administrador */}
-                {userRoleDebug === "Admin" && (
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Responsable ScaleUp</label>
-                    <Select
-                      value={filterResponsible || "none"}
-                      onValueChange={(value) => setFilterResponsible(value === "none" ? null : value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Todos los responsables" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Todos los responsables</SelectItem>
-                        {scaleupUsers.map((user) => (
-                          <SelectItem key={user.id} value={user.id}>
-                            {user.first_name} {user.last_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
 
                 {/* Nuevos filtros de oportunidades problemáticas */}
                 <div className="border-t pt-4 mt-4 space-y-3">
@@ -1206,12 +1213,6 @@ export const OpportunitiesKanban = ({
               </div>
             </PopoverContent>
           </Popover>
-        </div>
-
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <div className="text-sm text-muted-foreground">
-            {filteredOpportunities.length} de {opportunities.length} oportunidades
-          </div>
         </div>
       </div>
 
