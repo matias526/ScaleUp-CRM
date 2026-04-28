@@ -992,7 +992,7 @@ export default function OpportunityCreateForm() {
                           name="partner_id"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>{t("opportunities.form.partner")} ({t("common.optional")})</FormLabel>
+                              <FormLabel>{t("opportunities.form.partner")} ({t("common.form.optional")})</FormLabel>
                               <Select value={field.value || "null"} onValueChange={(value) => {
                                 if (value === "null") {
                                   field.onChange(null)
