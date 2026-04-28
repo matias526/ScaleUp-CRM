@@ -998,7 +998,7 @@ export const OpportunitiesKanban = ({
               <SelectValue placeholder="Tech Companies" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas las empresas</SelectItem>
+              <SelectItem value="all">TechCompanies</SelectItem>
               {techCompanies.map((company: any) => (
                 <SelectItem key={company.id} value={company.id}>
                   {company.name}
@@ -1016,7 +1016,7 @@ export const OpportunitiesKanban = ({
               <SelectValue placeholder="Partners" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos los partners</SelectItem>
+              <SelectItem value="all">Partners</SelectItem>
               <SelectItem value="no-partner">Sin Partner asociado</SelectItem>
               {partners.map((partner: any) => (
                 <SelectItem key={partner.id} value={partner.id}>
@@ -1036,7 +1036,7 @@ export const OpportunitiesKanban = ({
                 <SelectValue placeholder="Responsable" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Todos los responsables</SelectItem>
+                <SelectItem value="none">Responsables</SelectItem>
                 {scaleupUsers.map((user) => (
                   <SelectItem key={user.id} value={user.id}>
                     {user.first_name} {user.last_name}
