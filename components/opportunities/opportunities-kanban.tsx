@@ -408,30 +408,39 @@ export const OpportunitiesKanban = ({
       const stagnantDaysMs = stagnantDays * 24 * 60 * 60 * 1000
       const limitTime = Date.now() - stagnantDaysMs
 
+      console.log("--- INICIO DE FILTRADO ---")
+      console.log("Fecha límite (hace 20 días):", new Date(limitTime).toLocaleString())
+
       result = result.filter((opp: any) => {
-        // 1. Empezamos con la fecha de la oportunidad
-        let lastActivityTime = new Date(opp.updated_at || opp.created_at || 0).getTime()
+        // 1. Recolectamos la fecha base
+        const oppDate = new Date(opp.updated_at || opp.created_at || 0).getTime()
 
-        // 2. Buscamos en las notas la más nueva
-        // Usamos ?. por si notes es null
-        const noteDates = opp.notes?.map((n: any) => new Date(n.created_at || 0).getTime()) || []
+        // 2. Extraemos fechas de notas y tareas
+        const noteDates = (opp.notes || []).map((n: any) => new Date(n.created_at || 0).getTime())
+        const taskDates = (opp.tasks || []).map((t: any) => new Date(t.created_at || 0).getTime())
 
-        // 3. Buscamos en las tareas la más nueva
-        const taskDates = opp.tasks?.map((t: any) => new Date(t.created_at || 0).getTime()) || []
+        // 3. Buscamos la más reciente de TODAS
+        const lastActivityTime = Math.max(oppDate, ...noteDates, ...taskDates)
 
-        // 4. Combinamos todo: la fecha de la opp, la nota más nueva y la tarea más nueva
-        // Math.max comparará todos los números y se quedará con el MAYOR (el más reciente)
-        lastActivityTime = Math.max(lastActivityTime, ...noteDates, ...taskDates)
-
-        // 5. ¿Es la actividad más nueva de todas más vieja que el límite?
         const isStagnant = lastActivityTime < limitTime
-
         const isNotClosed = opp.stage?.code !== "Won" && opp.stage?.code !== "Lost"
+
+        // --- LOGS DE CONTROL ---
+        console.group(`Analizando Opp: ${opp.name}`)
+        console.log("¿Tiene notas?:", opp.notes?.length || 0)
+        if (noteDates.length > 0) {
+          console.log("Fecha nota más nueva:", new Date(Math.max(...noteDates)).toLocaleString())
+        }
+        console.log("Actividad más reciente detectada (final):", new Date(lastActivityTime).toLocaleString())
+        console.log("¿Es anterior al límite? (isStagnant):", isStagnant)
+        console.log("¿Estado es abierto? (isNotClosed):", isNotClosed)
+        console.log("RESULTADO FINAL: ", isStagnant && isNotClosed ? "SE QUEDA (Estancada)" : "SE ELIMINA (Activa o Cerrada)")
+        console.groupEnd()
+        // -----------------------
 
         return isStagnant && isNotClosed
       })
     }
-
     // Aplicar filtro de oportunidades antiguas
     if (filterOldOpportunities) {
       const oneEightyDaysAgo = new Date()
