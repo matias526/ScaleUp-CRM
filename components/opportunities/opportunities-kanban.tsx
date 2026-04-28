@@ -105,6 +105,11 @@ export const OpportunitiesKanban = ({
   const [allStages, setAllStages] = useState<Tables<"pipeline_stages">[]>([])
   const [visibleStages, setVisibleStages] = useState<Tables<"pipeline_stages">[]>([])
   const [showSpecialStagesInDragArea, setShowSpecialStagesInDragArea] = useState(true)
+  const [filterStagnant, setFilterStagnant] = useState<boolean>(false)
+  const [filterOldOpportunities, setFilterOldOpportunities] = useState<boolean>(false)
+  const [filterNoValue, setFilterNoValue] = useState<boolean>(false)
+  const [filterNoCloseDate, setFilterNoCloseDate] = useState<boolean>(false)
+  const [stagnantDays, setStagnantDays] = useState<number>(20)
 
   // Extraer listas únicas de tech companies y partners para los filtros
   const techCompanies = useMemo(() => {
@@ -116,7 +121,8 @@ export const OpportunitiesKanban = ({
       ),
     ).map((company) => JSON.parse(company))
 
-    return uniqueCompanies
+    // Ordenar alfabéticamente
+    return uniqueCompanies.sort((a, b) => a.name.localeCompare(b.name))
   }, [opportunities])
 
   const partners = useMemo(() => {
@@ -128,7 +134,8 @@ export const OpportunitiesKanban = ({
       ),
     ).map((partner) => JSON.parse(partner))
 
-    return uniquePartners
+    // Ordenar alfabéticamente
+    return uniquePartners.sort((a, b) => a.name.localeCompare(b.name))
   }, [opportunities])
 
   // Cargar el usuario actual y los usuarios de ScaleUp
@@ -396,6 +403,37 @@ export const OpportunitiesKanban = ({
       }
     }
 
+    // Aplicar filtro de oportunidades sin movimiento (estancadas)
+    if (filterStagnant) {
+      const daysAgo = new Date()
+      daysAgo.setDate(daysAgo.getDate() - stagnantDays)
+      result = result.filter(
+        (opp) =>
+          new Date(opp.updated_at) < daysAgo &&
+          opp.pipeline_stages?.[0]?.code !== "Won" &&
+          opp.pipeline_stages?.[0]?.code !== "Lost",
+      )
+    }
+
+    // Aplicar filtro de oportunidades antiguas
+    if (filterOldOpportunities) {
+      const thirtyDaysAgo = new Date()
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+      result = result.filter(
+        (opp) => new Date(opp.created_at) < thirtyDaysAgo && opp.pipeline_stages?.[0]?.code === "Pre-Lead",
+      )
+    }
+
+    // Aplicar filtro de sin valor estimado
+    if (filterNoValue) {
+      result = result.filter((opp) => !opp.estimated_value || opp.estimated_value === 0)
+    }
+
+    // Aplicar filtro de sin fecha de cierre
+    if (filterNoCloseDate) {
+      result = result.filter((opp) => !opp.estimated_close_date)
+    }
+
     // Aplicar ordenación
     result.sort((a, b) => {
       let valueA, valueB
@@ -433,6 +471,11 @@ export const OpportunitiesKanban = ({
     filterPartner,
     filterResponsible,
     filterValidation,
+    filterStagnant,
+    filterOldOpportunities,
+    filterNoValue,
+    filterNoCloseDate,
+    stagnantDays,
     sortBy,
     sortDirection,
   ])
@@ -1028,6 +1071,79 @@ export const OpportunitiesKanban = ({
                     </Select>
                   </div>
                 )}
+
+                {/* Nuevos filtros de oportunidades problemáticas */}
+                <div className="border-t pt-4 mt-4 space-y-3">
+                  <label className="text-sm font-semibold text-red-600">Filtros de Advertencia</label>
+
+                  {/* Sin movimiento */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium">Sin movimiento</label>
+                      <input
+                        type="checkbox"
+                        checked={filterStagnant}
+                        onChange={(e) => setFilterStagnant(e.target.checked)}
+                        className="cursor-pointer"
+                      />
+                    </div>
+                    {filterStagnant && (
+                      <div className="space-y-1">
+                        <label className="text-xs text-gray-600">Días sin movimiento:</label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            min="1"
+                            value={stagnantDays}
+                            onChange={(e) => setStagnantDays(Math.max(1, parseInt(e.target.value) || 20))}
+                            className="border rounded px-2 py-1 text-sm w-20"
+                          />
+                          <span className="text-xs text-gray-500">días</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Oportunidades antiguas */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={filterOldOpportunities}
+                        onChange={(e) => setFilterOldOpportunities(e.target.checked)}
+                        className="cursor-pointer"
+                      />
+                      Oportunidades antiguas en Pre-Lead
+                    </label>
+                    <p className="text-xs text-gray-500 ml-6">Más de 30 días sin cerrar</p>
+                  </div>
+
+                  {/* Sin valor estimado */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={filterNoValue}
+                        onChange={(e) => setFilterNoValue(e.target.checked)}
+                        className="cursor-pointer"
+                      />
+                      Sin valor estimado
+                    </label>
+                  </div>
+
+                  {/* Sin fecha de cierre */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={filterNoCloseDate}
+                        onChange={(e) => setFilterNoCloseDate(e.target.checked)}
+                        className="cursor-pointer"
+                      />
+                      Sin fecha de cierre
+                    </label>
+                  </div>
+                </div>
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Estados de oportunidades</label>
