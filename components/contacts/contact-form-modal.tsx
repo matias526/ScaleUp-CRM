@@ -7,6 +7,7 @@ import { useTranslations } from "@/hooks/use-translations"
 import { type Contact, type ContactFormData, ContactService } from "@/lib/services/contact-service"
 import { TechCompanyService } from "@/lib/services/tech-company-service"
 import { PartnerService } from "@/lib/services/partner-service"
+import { ProspectPartnerService } from "@/lib/services/prospect-partner-service"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Input } from "@/components/ui/input"
@@ -29,6 +30,7 @@ const contactModalSchema = z.object({
   preferred_language: z.string().default("es"),
   tech_company_id: z.string().optional().or(z.literal("")),
   partner_id: z.string().optional().or(z.literal("")),
+  prospect_id: z.string().optional().or(z.literal("")),
   end_customer_id: z.string().optional().or(z.literal("")),
   user_id: z.string().optional().or(z.literal("")),
   notes: z.string().optional().or(z.literal("")),
@@ -82,15 +84,17 @@ export function ContactFormModal({
   const [showRelationships, setShowRelationships] = useState(false)
   const [techCompanies, setTechCompanies] = useState<{ id: string; label: string }[]>([])
   const [partners, setPartners] = useState<{ id: string; label: string }[]>([])
+  const [prospectPartners, setProspectPartners] = useState<{ id: string; label: string }[]>([])
   const isEditing = initialData && 'id' in initialData
 
   // Load relationship options
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [companies, partnersRes] = await Promise.all([
+        const [companies, partnersRes, prospectPartnersRes] = await Promise.all([
           TechCompanyService.getTechCompanies(),
           PartnerService.getPartners(1, 100),
+          ProspectPartnerService.getProspectPartners(1, 100),
         ])
 
         if (Array.isArray(companies)) {
@@ -100,6 +104,14 @@ export function ContactFormModal({
         if (partnersRes?.data && Array.isArray(partnersRes.data)) {
           setPartners(partnersRes.data.map((p) => ({ id: p.id, label: p.name })))
         }
+
+        let prospectPartnersArray = []
+        if (prospectPartnersRes?.data && Array.isArray(prospectPartnersRes.data)) {
+          prospectPartnersArray = prospectPartnersRes.data
+        } else if (Array.isArray(prospectPartnersRes)) {
+          prospectPartnersArray = prospectPartnersRes
+        }
+        setProspectPartners(prospectPartnersArray.map((p) => ({ id: p.id, label: p.name })))
       } catch (err) {
         console.error("Error loading relationships:", err)
       }
@@ -122,6 +134,7 @@ export function ContactFormModal({
       preferred_language: (initialData && 'preferred_language' in initialData ? initialData.preferred_language : null) || "es",
       tech_company_id: entityType === "tech-company" ? entityId : (initialData && 'tech_company_id' in initialData ? initialData.tech_company_id : null) || "",
       partner_id: entityType === "partner" ? entityId : (initialData && 'partner_id' in initialData ? initialData.partner_id : null) || "",
+      prospect_id: (initialData && 'prospect_id' in initialData ? initialData.prospect_id : null) || "",
       end_customer_id: (initialData && 'end_customer_id' in initialData ? initialData.end_customer_id : null) || "",
       linkedin_url: (initialData && 'linkedin_url' in initialData ? initialData.linkedin_url : null) || "",
       notes: (initialData && 'notes' in initialData ? initialData.notes : null) || "",
@@ -141,6 +154,7 @@ export function ContactFormModal({
         preferred_language: (initialData && 'preferred_language' in initialData ? initialData.preferred_language : null) || "es",
         tech_company_id: entityType === "tech-company" ? entityId : (initialData && 'tech_company_id' in initialData ? initialData.tech_company_id : null) || "",
         partner_id: entityType === "partner" ? entityId : (initialData && 'partner_id' in initialData ? initialData.partner_id : null) || "",
+        prospect_id: (initialData && 'prospect_id' in initialData ? initialData.prospect_id : null) || "",
         end_customer_id: (initialData && 'end_customer_id' in initialData ? initialData.end_customer_id : null) || "",
         linkedin_url: (initialData && 'linkedin_url' in initialData ? initialData.linkedin_url : null) || "",
         notes: (initialData && 'notes' in initialData ? initialData.notes : null) || "",
@@ -165,6 +179,7 @@ export function ContactFormModal({
         preferred_language: values.preferred_language,
         tech_company_id: values.tech_company_id || null,
         partner_id: values.partner_id || null,
+        prospect_id: values.prospect_id || null,
         end_customer_id: values.end_customer_id || null,
         linkedin_url: values.linkedin_url || null,
         notes: values.notes || null,
@@ -449,6 +464,44 @@ export function ContactFormModal({
                               {partners.map((partner) => (
                                 <SelectItem key={partner.id} value={partner.id}>
                                   {partner.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="prospect_id"
+                      render={({ field }) => (
+                        <FormItem>
+                          <div className="flex items-center justify-between">
+                            <FormLabel className="text-xs">{t("contacts.form.prospectPartner")}</FormLabel>
+                            {field.value && (
+                              <button
+                                type="button"
+                                onClick={() => field.onChange(null)}
+                                className="text-xs text-gray-400 hover:text-gray-600"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            )}
+                          </div>
+                          <Select 
+                            value={field.value || ""} 
+                            onValueChange={field.onChange}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="h-8">
+                                <SelectValue placeholder={t("contacts.filter.all")} />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {prospectPartners.map((prospect) => (
+                                <SelectItem key={prospect.id} value={prospect.id}>
+                                  {prospect.label}
                                 </SelectItem>
                               ))}
                             </SelectContent>

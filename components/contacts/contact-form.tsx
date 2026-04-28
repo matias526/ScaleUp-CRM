@@ -18,6 +18,7 @@ import { type Contact, type ContactFormData, ContactService } from "@/lib/servic
 import { UserService } from "@/lib/services/user-service"
 import { TechCompanyService } from "@/lib/services/tech-company-service"
 import { PartnerService } from "@/lib/services/partner-service"
+import { ProspectPartnerService } from "@/lib/services/prospect-partner-service"
 import { DICT_LANG_CONTACTS } from "@/lib/constants/dict-lang-contacts"
 
 // Validation schema
@@ -32,6 +33,7 @@ const contactSchema = z.object({
   user_id: z.string().optional().or(z.literal("")),
   tech_company_id: z.string().optional().or(z.literal("")),
   partner_id: z.string().optional().or(z.literal("")),
+  prospect_id: z.string().optional().or(z.literal("")),
   end_customer_id: z.string().optional().or(z.literal("")),
   linkedin_url: z.string().url("URL inválida").optional().or(z.literal("")),
   notes: z.string().optional().or(z.literal("")),
@@ -67,6 +69,7 @@ export function ContactForm({ initialData, onSuccess, showCancel = true }: Conta
   const [users, setUsers] = useState<{ id: string; label: string }[]>([])
   const [techCompanies, setTechCompanies] = useState<{ id: string; label: string }[]>([])
   const [partners, setPartners] = useState<{ id: string; label: string }[]>([])
+  const [prospectPartners, setProspectPartners] = useState<{ id: string; label: string }[]>([])
   const isEditing = !!initialData
 
   const form = useForm<z.infer<typeof contactSchema>>({
@@ -82,6 +85,7 @@ export function ContactForm({ initialData, onSuccess, showCancel = true }: Conta
       user_id: initialData?.user_id || "",
       tech_company_id: initialData?.tech_company_id || "",
       partner_id: initialData?.partner_id || "",
+      prospect_id: initialData?.prospect_id || "",
       end_customer_id: initialData?.end_customer_id || "",
       linkedin_url: initialData?.linkedin_url || "",
       notes: initialData?.notes || "",
@@ -162,6 +166,32 @@ export function ContactForm({ initialData, onSuccess, showCancel = true }: Conta
     loadPartners()
   }, [])
 
+  // Load prospect partners
+  useEffect(() => {
+    const loadProspectPartners = async () => {
+      try {
+        const response = await ProspectPartnerService.getProspectPartners(1, 100)
+        let prospect_partners_array = []
+        if (response && response.data && Array.isArray(response.data)) {
+          prospect_partners_array = response.data
+        } else if (Array.isArray(response)) {
+          prospect_partners_array = response
+        }
+
+        const formattedProspectPartners = prospect_partners_array.map((prospect) => ({
+          id: prospect.id,
+          label: prospect.name,
+        }))
+        setProspectPartners(formattedProspectPartners)
+      } catch (err) {
+        console.error("Error loading prospect partners:", err)
+        setProspectPartners([])
+      }
+    }
+
+    loadProspectPartners()
+  }, [])
+
   const onSubmit = useCallback(
     async (values: z.infer<typeof contactSchema>) => {
       setIsSubmitting(true)
@@ -179,6 +209,7 @@ export function ContactForm({ initialData, onSuccess, showCancel = true }: Conta
           user_id: values.user_id || null,
           tech_company_id: values.tech_company_id || null,
           partner_id: values.partner_id || null,
+          prospect_id: values.prospect_id || null,
           end_customer_id: values.end_customer_id || null,
           linkedin_url: values.linkedin_url || null,
           notes: values.notes || null,
@@ -494,6 +525,32 @@ export function ContactForm({ initialData, onSuccess, showCancel = true }: Conta
                           {partners.map((partner) => (
                             <SelectItem key={partner.id} value={partner.id}>
                               {partner.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>{t("contacts.form.optional")}</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="prospect_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("contacts.form.prospectPartner")}</FormLabel>
+                      <Select value={field.value || ""} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t("contacts.userCombobox.placeholder")} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {prospectPartners.map((prospect) => (
+                            <SelectItem key={prospect.id} value={prospect.id}>
+                              {prospect.label}
                             </SelectItem>
                           ))}
                         </SelectContent>

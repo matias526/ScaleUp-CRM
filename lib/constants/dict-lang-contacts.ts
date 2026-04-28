@@ -105,6 +105,11 @@ export const DICT_LANG_CONTACTS = {
     en: "Partner",
     pt: "Partner",
   },
+  "contacts.form.prospectPartner": {
+    es: "Prospect Partner",
+    en: "Prospect Partner",
+    pt: "Prospect Partner",
+  },
   "contacts.form.endCustomer": {
     es: "Cliente Final",
     en: "End Customer",
