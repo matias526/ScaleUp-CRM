@@ -106,6 +106,11 @@ export const DICT_LANG_PROSPECT_PARTNERS = {
     en: "Delete",
     pt: "Excluir",
   },
+  "prospect_partners.cancel": {
+    es: "Cancelar",
+    en: "Cancel",
+    pt: "Cancelar",
+  },
   "prospect_partners.view": {
     es: "Ver",
     en: "View",

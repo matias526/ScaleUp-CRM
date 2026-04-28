@@ -132,7 +132,7 @@ export default function ProspectPartnersTable({ partners, onDelete, onView, onEd
           <AlertDialogTitle>{t("prospect_partners.delete")}</AlertDialogTitle>
           <AlertDialogDescription>{t("prospect_partners.confirm.delete")}</AlertDialogDescription>
           <div className="flex gap-3 justify-end">
-            <AlertDialogCancel>{t("prospect_partners.form.cancel")}</AlertDialogCancel>
+            <AlertDialogCancel>{t("prospect_partners.cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDelete} disabled={isDeleting} className="bg-red-600 hover:bg-red-700">
               {t("prospect_partners.delete")}
             </AlertDialogAction>
