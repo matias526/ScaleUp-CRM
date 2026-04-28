@@ -534,4 +534,50 @@ export const DICT_LANG_OPPORTUNITIES = {
     en: "Step",
     pt: "Etapa",
   },
+  // Lead sources for prospect partner creation
+  "opportunities.prospect.leadSource": {
+    es: "Fuente de Lead",
+    en: "Lead Source",
+    pt: "Fonte de Lead",
+  },
+  "opportunities.leadSource.internationalFair": {
+    es: "Feria Internacional",
+    en: "International Fair",
+    pt: "Feira Internacional",
+  },
+  "opportunities.leadSource.linkedinCampaign": {
+    es: "Campaña LinkedIn",
+    en: "LinkedIn Campaign",
+    pt: "Campanha LinkedIn",
+  },
+  "opportunities.leadSource.emailCampaign": {
+    es: "Campaña por Email",
+    en: "Email Campaign",
+    pt: "Campanha por Email",
+  },
+  "opportunities.leadSource.academy": {
+    es: "Academia",
+    en: "Academy",
+    pt: "Academia",
+  },
+  "opportunities.leadSource.israelVisit": {
+    es: "Visita a Israel",
+    en: "Israel Visit",
+    pt: "Visita a Israel",
+  },
+  "opportunities.leadSource.website": {
+    es: "Sitio Web",
+    en: "Website",
+    pt: "Website",
+  },
+  "opportunities.leadSource.referral": {
+    es: "Referencia",
+    en: "Referral",
+    pt: "Referência",
+  },
+  "opportunities.leadSource.other": {
+    es: "Otro",
+    en: "Other",
+    pt: "Outro",
+  },
 }

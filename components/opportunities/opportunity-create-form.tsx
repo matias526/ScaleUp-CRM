@@ -77,6 +77,18 @@ const DEFAULT_ALLOWED_FILE_TYPES = [
 
 const NO_PARTNER_VALUE = "no_partner"
 
+// Lead sources mapping
+const LEAD_SOURCES = [
+  "internationalFair",
+  "linkedinCampaign",
+  "emailCampaign",
+  "academy",
+  "israelVisit",
+  "website",
+  "referral",
+  "other",
+]
+
 async function getPartnersByTechCompanyId(techCompanyId: string): Promise<Tables<"partners">[]> {
   try {
     if (!techCompanyId) return []
@@ -158,6 +170,7 @@ export default function OpportunityCreateForm() {
     name: "",
     website: "",
     main_country_id: "",
+    lead_source: "",
   })
   const [prospectContactData, setProspectContactData] = useState({
     first_name: "",
@@ -1928,13 +1941,32 @@ export default function OpportunityCreateForm() {
                 </Select>
               </div>
 
+              {/* Fuente de Lead */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{t("opportunities.prospect.leadSource")} *</label>
+                <Select value={prospectPartnerData.lead_source} onValueChange={(value) => {
+                  setProspectPartnerData({ ...prospectPartnerData, lead_source: value })
+                }}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t("opportunities.form.select_placeholder")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LEAD_SOURCES.map((source) => (
+                      <SelectItem key={source} value={source}>
+                        {t(`opportunities.leadSource.${source}`)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Action Buttons */}
               <div className="flex gap-3 pt-4">
                 <Button variant="outline" onClick={() => setProspectDialogOpen(false)}>
                   {t("common.cancel")}
                 </Button>
                 <Button
-                  disabled={!prospectPartnerData.name || !prospectPartnerData.main_country_id}
+                  disabled={!prospectPartnerData.name || !prospectPartnerData.main_country_id || !prospectPartnerData.lead_source}
                   onClick={() => setProspectStep(2)}
                   className="flex-1 bg-blue-600 hover:bg-blue-700"
                 >
