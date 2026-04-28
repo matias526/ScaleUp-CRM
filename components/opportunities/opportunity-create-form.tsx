@@ -275,6 +275,7 @@ export default function OpportunityCreateForm() {
       name: z.string().optional(),
       website: z.string().optional(),
       main_country_id: z.string().optional(),
+      lead_source: z.string().optional(),
     }).optional(),
     prospect_contact_data: z.object({
       first_name: z.string().optional(),
@@ -308,6 +309,7 @@ export default function OpportunityCreateForm() {
         name: "",
         website: "",
         main_country_id: "",
+        lead_source: "",
       },
       prospect_contact_data: {
         first_name: "",
@@ -568,6 +570,7 @@ export default function OpportunityCreateForm() {
                 name: data.prospect_partner_data.name,
                 website: data.prospect_partner_data.website || null,
                 main_country_id: data.prospect_partner_data.main_country_id,
+                lead_source: data.prospect_partner_data.lead_source,
               },
             ])
             .select("id")
