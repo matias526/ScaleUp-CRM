@@ -348,7 +348,7 @@ interface OpportunityDetailProps {
 
 export function OpportunityDetail({ opportunity: initialOpportunity }: OpportunityDetailProps) {
   const router = useRouter()
-  const { t } = useTranslations()
+  const { t } = useTranslations(DICT_LANG_OPPORTUNITIES)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [opportunity, setOpportunity] = useState<any>(initialOpportunity)
@@ -407,7 +407,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
   const [countries, setCountries] = useState<{ id: string; name: string }[]>([])
   const [showCreateNew, setShowCreateNew] = useState(false)
 
-  const { t } = useTranslations(DICT_LANG_OPPORTUNITIES)
+
 
   // Load countries for prospect partner form
   useEffect(() => {
