@@ -39,7 +39,6 @@ import {
 } from "@/components/ui/alert-dialog"
 import { toast } from "@/components/ui/use-toast"
 import { getOpportunityStages } from "@/lib/services/opportunity-service"
-import { AddProspectPartnerDialog } from "./add-prospect-partner-dialog"
 import {
   createStageChangeNote,
   createOpportunityValidationNote,
@@ -379,7 +378,6 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
   const [editingField, setEditingField] = useState(null)
   const [dateEditValue, setDateEditValue] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isNewPartnerDialogOpen, setIsNewPartnerDialogOpen] = useState(false)
 
   const handleDateStartEditing = (field, value) => {
     setEditingField(field)
@@ -723,13 +721,6 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
       if (error) throw error
 
       logDebug(`Campo ${field} actualizado correctamente`)
-
-      // Si se está marcando como nuevo partner (is_new_partner = true), abrir dialog para seleccionar prospect partner
-      if (field === "is_new_partner" && value === true) {
-        setIsNewPartnerDialogOpen(true)
-        setIsSaving(false)
-        return
-      }
 
       // Si se cambió la etapa, registrar el cambio en la reseña histórica
       if (
@@ -1954,19 +1945,6 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
           onClose={() => setShowPulseMessageSender(false)}
         />
       )}
-
-      {/* Dialog para agregar prospect partner a una oportunidad existente */}
-      <AddProspectPartnerDialog
-        open={isNewPartnerDialogOpen}
-        onOpenChange={setIsNewPartnerDialogOpen}
-        opportunityId={opportunity?.id}
-        onSuccess={() => {
-          // Recargar oportunidad después de guardar
-          if (opportunity?.id) {
-            loadOpportunity(opportunity.id)
-          }
-        }}
-      />
     </div>
   )
 }
