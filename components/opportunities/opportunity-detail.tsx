@@ -2482,7 +2482,8 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
 
                   // Si es un nuevo prospect partner, crear
                   if (!prospectPartnerId && prospectPartnerData.name) {
-                    const { data: newProspect } = await supabase
+                    console.log("[v0] Creating new prospect partner:", prospectPartnerData)
+                    const { data: newProspect, error: prospectError } = await supabase
                       .from("prospect_partners")
                       .insert([
                         {
@@ -2494,8 +2495,16 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                       ])
                       .select("id")
 
+                    if (prospectError) {
+                      console.error("[v0] Error creating prospect partner:", prospectError)
+                      throw prospectError
+                    }
+
                     if (newProspect && newProspect[0]) {
                       prospectPartnerId = newProspect[0].id
+                      console.log("[v0] New prospect partner created with ID:", prospectPartnerId)
+                    } else {
+                      throw new Error("No se pudo crear el prospect partner")
                     }
                   }
 
@@ -2503,7 +2512,8 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
 
                   // Si es un nuevo contacto, crear
                   if (!contactId && prospectContactData.first_name && prospectContactData.email) {
-                    const { data: newContact } = await supabase
+                    console.log("[v0] Creating new contact with prospect_id:", prospectPartnerId)
+                    const { data: newContact, error: contactError } = await supabase
                       .from("contacts")
                       .insert([
                         {
@@ -2518,14 +2528,24 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                       ])
                       .select("id")
 
+                    if (contactError) {
+                      console.error("[v0] Error creating contact:", contactError)
+                      throw contactError
+                    }
+
                     if (newContact && newContact[0]) {
                       contactId = newContact[0].id
+                      console.log("[v0] New contact created with ID:", contactId)
+                    } else {
+                      throw new Error("No se pudo crear el contacto")
                     }
                   }
 
+                  console.log("[v0] About to update opportunity with prospect_id:", prospectPartnerId, "and contact_id:", contactId)
+
                   // Update opportunity
                   if (prospectPartnerId && contactId && opportunity?.id) {
-                    const { error } = await supabase
+                    const { error: updateError } = await supabase
                       .from("opportunities")
                       .update({
                         prospect_id: prospectPartnerId,
@@ -2534,7 +2554,12 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                       })
                       .eq("id", opportunity.id)
 
-                    if (error) throw error
+                    if (updateError) {
+                      console.error("[v0] Error updating opportunity:", updateError)
+                      throw updateError
+                    }
+
+                    console.log("[v0] Opportunity updated successfully")
 
                     toast({
                       title: t("common.success"),
@@ -2545,12 +2570,19 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                     await loadOpportunity(opportunity.id)
 
                     setIsNewPartnerModalOpen(false)
+                  } else {
+                    console.error("[v0] Missing required values for update:", {
+                      prospectPartnerId,
+                      contactId,
+                      opportunityId: opportunity?.id,
+                    })
+                    throw new Error("No se pudieron validar los datos necesarios para guardar")
                   }
                 } catch (err) {
-                  console.error("Error saving relationship:", err)
+                  console.error("[v0] Error saving relationship:", err)
                   toast({
                     title: t("common.error"),
-                    description: t("common.errorOccurred"),
+                    description: err instanceof Error ? err.message : t("common.errorOccurred"),
                     variant: "destructive",
                   })
                 } finally {
