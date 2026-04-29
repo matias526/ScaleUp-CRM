@@ -384,6 +384,87 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
   const [selectedProspectPartner, setSelectedProspectPartner] = useState<any>(null)
   const [prospectPartnerContacts, setProspectPartnerContacts] = useState<any[]>([])
   const [selectedContact, setSelectedContact] = useState<any>(null)
+  const [prospectStep, setProspectStep] = useState(1) // 1: Company, 2: Contact
+  const [prospectPartnerData, setProspectPartnerData] = useState({
+    name: "",
+    website: "",
+    main_country_id: "",
+    lead_source: "",
+  })
+  const [prospectContactData, setProspectContactData] = useState({
+    first_name: "",
+    last_name: "",
+    email: "",
+    phone: "",
+    preferred_language: "es" as "es" | "en" | "pt",
+  })
+  const [prospectSearchQuery, setProspectSearchQuery] = useState("")
+  const [prospectSearchResults, setProspectSearchResults] = useState<any[]>([])
+  const [showProspectResults, setShowProspectResults] = useState(false)
+  const [countries, setCountries] = useState<{ id: string; name: string }[]>([])
+  const [showCreateNew, setShowCreateNew] = useState(false)
+
+  // Load countries for prospect partner form
+  useEffect(() => {
+    if (!isNewPartnerModalOpen) return
+
+    const loadCountries = async () => {
+      try {
+        const { data } = await supabase.from("countries").select("id, name").order("name")
+        if (data) setCountries(data)
+      } catch (err) {
+        console.error("Error loading countries:", err)
+      }
+    }
+
+    loadCountries()
+  }, [isNewPartnerModalOpen])
+
+  // Search prospect partners
+  useEffect(() => {
+    if (!prospectSearchQuery.trim()) {
+      setProspectSearchResults([])
+      setShowProspectResults(false)
+      return
+    }
+
+    const query = prospectSearchQuery.toLowerCase()
+    const filtered = existingProspectPartners.filter((p) => p.name.toLowerCase().includes(query))
+    setProspectSearchResults(filtered)
+    setShowProspectResults(true)
+  }, [prospectSearchQuery, existingProspectPartners])
+
+  // Handle selecting an existing prospect partner
+  const handleSelectExistingProspect = async (prospect: any) => {
+    setSelectedProspectPartner(prospect)
+    setProspectPartnerData({
+      name: prospect.name,
+      website: prospect.website || "",
+      main_country_id: prospect.main_country_id || "",
+      lead_source: prospect.lead_source || "",
+    })
+    setProspectSearchQuery("")
+    setShowProspectResults(false)
+    setShowCreateNew(false)
+
+    // Load contacts for this prospect partner
+    try {
+      const { data: contacts } = await supabase.from("contacts").select("*").eq("prospect_id", prospect.id)
+
+      if (contacts && contacts.length > 0) {
+        setProspectPartnerContacts(contacts)
+        setSelectedContact(contacts[0])
+      } else {
+        setProspectPartnerContacts([])
+        setSelectedContact(null)
+      }
+    } catch (err) {
+      console.error("Error loading contacts:", err)
+    }
+
+    // Move to step 2 automatically
+    setProspectStep(2)
+  }
 
   const handleDateStartEditing = (field, value) => {
     setEditingField(field)
@@ -727,6 +808,22 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
       if (error) throw error
 
       logDebug(`Campo ${field} actualizado correctamente`)
+
+      // Si se está marcando como nuevo partner (is_new_partner = true), abrir modal
+      if (field === "is_new_partner" && value === true) {
+        // Cargar prospect partners existentes
+        try {
+          const { data: prospects } = await ProspectPartnerService.getProspectPartners(1, 1000)
+          if (prospects && Array.isArray(prospects)) {
+            setExistingProspectPartners(prospects)
+          }
+        } catch (err) {
+          console.error("Error loading prospect partners:", err)
+        }
+        setIsNewPartnerModalOpen(true)
+        setIsSaving(false)
+        return
+      }
 
       // Si se está marcando como nuevo partner (is_new_partner = true), abrir modal para seleccionar prospect partner
       if (field === "is_new_partner" && value === true) {
@@ -2100,6 +2197,367 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                 }
               }}
               className="bg-blue-600 hover:bg-blue-700"
+            >
+              {isSaving ? t("common.saving") : t("common.save")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog para agregar prospect partner a una oportunidad existente */}
+      <Dialog open={isNewPartnerModalOpen} onOpenChange={(open) => {
+        setIsNewPartnerModalOpen(open)
+        if (!open) {
+          // Reset when closing
+          setProspectStep(1)
+          setProspectPartnerData({ name: "", website: "", main_country_id: "", lead_source: "" })
+          setProspectContactData({ first_name: "", last_name: "", email: "", phone: "", preferred_language: "es" })
+          setProspectSearchQuery("")
+          setShowCreateNew(false)
+          setSelectedProspectPartner(null)
+          setSelectedContact(null)
+          setProspectPartnerContacts([])
+        }
+      }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">{t("opportunities.prospect.title")}</DialogTitle>
+            <p className="text-sm text-gray-500 mt-1">
+              {t(prospectStep === 1 ? "opportunities.prospect.step1" : "opportunities.prospect.step2")}
+            </p>
+          </DialogHeader>
+
+          {/* Progress Indicator */}
+          <div className="flex gap-2 mb-6">
+            <div className={`flex-1 h-1 rounded-full transition-colors ${prospectStep >= 1 ? "bg-blue-600" : "bg-gray-200"}`} />
+            <div className={`flex-1 h-1 rounded-full transition-colors ${prospectStep >= 2 ? "bg-blue-600" : "bg-gray-200"}`} />
+          </div>
+
+          {/* Step 1: Company Info */}
+          {prospectStep === 1 && (
+            <div className="space-y-6">
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <div className="flex gap-3">
+                  <div>
+                    <h3 className="font-semibold text-blue-900">{t("opportunities.prospect.name")}</h3>
+                    <p className="text-sm text-blue-700">{t("opportunities.prospect.step1Description")}</p>
+                  </div>
+                </div>
+              </div>
+
+              {!showCreateNew ? (
+                <>
+                  {/* Búsqueda de prospect existente */}
+                  <div className="space-y-2 relative">
+                    <label className="text-sm font-medium">{t("opportunities.prospect.name")} *</label>
+                    <div className="relative">
+                      <Input
+                        placeholder={t("opportunities.prospect.searchOrCreate")}
+                        value={prospectSearchQuery}
+                        onChange={(e) => setProspectSearchQuery(e.target.value)}
+                        onFocus={() => prospectSearchQuery && setShowProspectResults(true)}
+                        className="text-base"
+                      />
+                      {prospectSearchQuery && showProspectResults && prospectSearchResults.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 mt-1 border border-gray-200 rounded-lg bg-white shadow-lg z-50 max-h-48 overflow-y-auto">
+                          {prospectSearchResults.map((prospect) => (
+                            <button
+                              key={prospect.id}
+                              type="button"
+                              onClick={() => handleSelectExistingProspect(prospect)}
+                              className="w-full text-left px-3 py-2 hover:bg-blue-50 border-b border-gray-100 last:border-b-0 transition-colors"
+                            >
+                              <div className="font-medium text-sm">{prospect.name}</div>
+                              <div className="text-xs text-gray-500">{prospect.website || "Sin website"}</div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {prospectSearchQuery && showProspectResults && prospectSearchResults.length === 0 && (
+                        <div className="absolute top-full left-0 right-0 mt-1 border border-gray-200 rounded-lg bg-white shadow-lg z-50 px-3 py-2">
+                          <p className="text-sm text-gray-500">{t("opportunities.prospect.noResults")}</p>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      {prospectSearchQuery ? t("opportunities.prospect.searchHint") : t("opportunities.prospect.createNewHint")}
+                    </p>
+                  </div>
+
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-300" />
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-2 bg-white text-gray-500">{t("common.or")}</span>
+                    </div>
+                  </div>
+
+                  <Button onClick={() => setShowCreateNew(true)} variant="outline" className="w-full">
+                    {t("opportunities.prospect.createNew")}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  {/* Crear nuevo prospect */}
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium">{t("opportunities.prospect.name")} *</label>
+                      <Input
+                        placeholder="Nombre de la empresa"
+                        value={prospectPartnerData.name}
+                        onChange={(e) => setProspectPartnerData({ ...prospectPartnerData, name: e.target.value })}
+                        className="mt-1"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium">{t("opportunities.prospect.website")}</label>
+                      <Input
+                        placeholder="https://ejemplo.com"
+                        value={prospectPartnerData.website}
+                        onChange={(e) => setProspectPartnerData({ ...prospectPartnerData, website: e.target.value })}
+                        className="mt-1"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium">{t("opportunities.prospect.country")}</label>
+                      <select
+                        value={prospectPartnerData.main_country_id}
+                        onChange={(e) => setProspectPartnerData({ ...prospectPartnerData, main_country_id: e.target.value })}
+                        className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      >
+                        <option value="">{t("common.select")}</option>
+                        {countries.map((country) => (
+                          <option key={country.id} value={country.id}>
+                            {country.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium">{t("opportunities.prospect.leadSource")}</label>
+                      <select
+                        value={prospectPartnerData.lead_source}
+                        onChange={(e) => setProspectPartnerData({ ...prospectPartnerData, lead_source: e.target.value })}
+                        className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      >
+                        <option value="">{t("common.select")}</option>
+                        <option value="direct">{t("opportunities.leadSource.direct")}</option>
+                        <option value="referral">{t("opportunities.leadSource.referral")}</option>
+                        <option value="event">{t("opportunities.leadSource.event")}</option>
+                        <option value="cold_call">{t("opportunities.leadSource.coldCall")}</option>
+                        <option value="linkedin">{t("opportunities.leadSource.linkedin")}</option>
+                        <option value="other">{t("opportunities.leadSource.other")}</option>
+                      </select>
+                    </div>
+
+                    <Button onClick={() => setShowCreateNew(false)} variant="outline" className="w-full">
+                      {t("common.back")}
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Step 2: Contact Selection/Creation */}
+          {prospectStep === 2 && (
+            <div className="space-y-6">
+              <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                <div className="flex gap-3">
+                  <div>
+                    <h3 className="font-semibold text-green-900">{t("opportunities.prospect.selectContact")}</h3>
+                    <p className="text-sm text-green-700">{t("opportunities.prospect.selectContactDescription")}</p>
+                  </div>
+                </div>
+              </div>
+
+              {prospectPartnerContacts.length > 0 && !showCreateNew ? (
+                <>
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium">{t("opportunities.prospect.selectContact")} *</label>
+                    <div className="space-y-2 border rounded-lg p-2">
+                      {prospectPartnerContacts.map((contact) => (
+                        <button
+                          key={contact.id}
+                          onClick={() => setSelectedContact(contact)}
+                          className={`w-full text-left px-3 py-2 rounded-lg border-2 transition-colors ${
+                            selectedContact?.id === contact.id
+                              ? "border-blue-500 bg-blue-50"
+                              : "border-transparent hover:bg-gray-50"
+                          }`}
+                        >
+                          <div className="font-medium text-sm">
+                            {contact.first_name} {contact.last_name}
+                          </div>
+                          <div className="text-xs text-gray-500">{contact.email}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-300" />
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-2 bg-white text-gray-500">{t("common.or")}</span>
+                    </div>
+                  </div>
+
+                  <Button onClick={() => setShowCreateNew(true)} variant="outline" className="w-full">
+                    {t("opportunities.prospect.createContact")}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  {/* Crear nuevo contacto */}
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium">{t("contacts.form.firstName")} *</label>
+                        <Input
+                          placeholder="Nombre"
+                          value={prospectContactData.first_name}
+                          onChange={(e) => setProspectContactData({ ...prospectContactData, first_name: e.target.value })}
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">{t("contacts.form.lastName")} *</label>
+                        <Input
+                          placeholder="Apellido"
+                          value={prospectContactData.last_name}
+                          onChange={(e) => setProspectContactData({ ...prospectContactData, last_name: e.target.value })}
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium">{t("contacts.form.email")} *</label>
+                      <Input
+                        type="email"
+                        placeholder="email@ejemplo.com"
+                        value={prospectContactData.email}
+                        onChange={(e) => setProspectContactData({ ...prospectContactData, email: e.target.value })}
+                        className="mt-1"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium">{t("contacts.form.phone")}</label>
+                      <Input
+                        placeholder="+1 (555) 000-0000"
+                        value={prospectContactData.phone}
+                        onChange={(e) => setProspectContactData({ ...prospectContactData, phone: e.target.value })}
+                        className="mt-1"
+                      />
+                    </div>
+
+                    {prospectPartnerContacts.length > 0 && (
+                      <Button onClick={() => setShowCreateNew(false)} variant="outline" className="w-full">
+                        {t("common.back")}
+                      </Button>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setIsNewPartnerModalOpen(false)}>
+              {t("common.cancel")}
+            </Button>
+            <Button
+              onClick={async () => {
+                try {
+                  setIsSaving(true)
+
+                  let prospectPartnerId = selectedProspectPartner?.id
+
+                  // Si es un nuevo prospect partner, crear
+                  if (!prospectPartnerId && prospectPartnerData.name) {
+                    const { data: newProspect } = await supabase
+                      .from("prospect_partners")
+                      .insert([
+                        {
+                          name: prospectPartnerData.name,
+                          website: prospectPartnerData.website || null,
+                          main_country_id: prospectPartnerData.main_country_id || null,
+                          lead_source: prospectPartnerData.lead_source || null,
+                        },
+                      ])
+                      .select("id")
+
+                    if (newProspect && newProspect[0]) {
+                      prospectPartnerId = newProspect[0].id
+                    }
+                  }
+
+                  let contactId = selectedContact?.id
+
+                  // Si es un nuevo contacto, crear
+                  if (!contactId && prospectContactData.first_name && prospectContactData.email) {
+                    const { data: newContact } = await supabase
+                      .from("contacts")
+                      .insert([
+                        {
+                          first_name: prospectContactData.first_name,
+                          last_name: prospectContactData.last_name,
+                          email: prospectContactData.email,
+                          phone: prospectContactData.phone || null,
+                          prospect_id: prospectPartnerId,
+                          department: "General",
+                          preferred_language: prospectContactData.preferred_language,
+                        },
+                      ])
+                      .select("id")
+
+                    if (newContact && newContact[0]) {
+                      contactId = newContact[0].id
+                    }
+                  }
+
+                  // Update opportunity
+                  if (prospectPartnerId && contactId && opportunity?.id) {
+                    const { error } = await supabase
+                      .from("opportunities")
+                      .update({
+                        prospect_id: prospectPartnerId,
+                        primary_contact_id: contactId,
+                        updated_at: new Date().toISOString(),
+                      })
+                      .eq("id", opportunity.id)
+
+                    if (error) throw error
+
+                    toast({
+                      title: t("common.success"),
+                      description: t("opportunities.prospect.relationshipSaved"),
+                    })
+
+                    // Reload opportunity
+                    await loadOpportunity(opportunity.id)
+
+                    setIsNewPartnerModalOpen(false)
+                  }
+                } catch (err) {
+                  console.error("Error saving relationship:", err)
+                  toast({
+                    title: t("common.error"),
+                    description: t("common.errorOccurred"),
+                    variant: "destructive",
+                  })
+                } finally {
+                  setIsSaving(false)
+                }
+              }}
+              disabled={!((selectedProspectPartner && selectedContact) || (prospectPartnerData.name && prospectContactData.email))}
             >
               {isSaving ? t("common.saving") : t("common.save")}
             </Button>
