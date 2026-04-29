@@ -2543,13 +2543,12 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
 
                   console.log("[v0] About to update opportunity with prospect_id:", prospectPartnerId, "and contact_id:", contactId)
 
-                  // Update opportunity
-                  if (prospectPartnerId && contactId && opportunity?.id) {
+                  // Update opportunity with prospect_id
+                  if (prospectPartnerId && opportunity?.id) {
                     const { error: updateError } = await supabase
                       .from("opportunities")
                       .update({
                         prospect_id: prospectPartnerId,
-                        primary_contact_id: contactId,
                         updated_at: new Date().toISOString(),
                       })
                       .eq("id", opportunity.id)
@@ -2559,8 +2558,46 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                       throw updateError
                     }
 
-                    console.log("[v0] Opportunity updated successfully")
+                    console.log("[v0] Opportunity updated with prospect_id successfully")
+                  }
 
+                  // Set contact as primary in opportunity_contacts
+                  if (contactId && opportunity?.id) {
+                    try {
+                      // First, set is_primary = false for all other contacts of this opportunity
+                      const { error: clearError } = await supabase
+                        .from("opportunity_contacts")
+                        .update({ is_primary: false })
+                        .eq("opportunity_id", opportunity.id)
+
+                      if (clearError) {
+                        console.warn("[v0] Warning setting other contacts as non-primary:", clearError)
+                      }
+
+                      // Then, insert or update this contact as primary
+                      const { error: primaryError } = await supabase
+                        .from("opportunity_contacts")
+                        .upsert([
+                          {
+                            opportunity_id: opportunity.id,
+                            contact_id: contactId,
+                            is_primary: true,
+                          },
+                        ])
+
+                      if (primaryError) {
+                        console.error("[v0] Error setting contact as primary:", primaryError)
+                        throw primaryError
+                      }
+
+                      console.log("[v0] Contact set as primary successfully")
+                    } catch (err) {
+                      console.error("[v0] Error managing opportunity_contacts:", err)
+                      throw err
+                    }
+                  }
+
+                  if (prospectPartnerId && contactId) {
                     toast({
                       title: t("common.success"),
                       description: t("opportunities.prospect.relationshipSaved"),
