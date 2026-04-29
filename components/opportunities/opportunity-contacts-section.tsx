@@ -184,7 +184,7 @@ export function OpportunityContactsSection({ opportunityId, onSendMessage }: Opp
                         <td className="py-3 px-3">
                           {contact.department ? (
                             <Badge variant="outline" className="text-xs">
-                              {contact.department ? t(`contacts.department.${contact.department}`) : ''}
+                              {t(`contacts.department.${contact.department}`) ? t(`contacts.department.${contact.department}`) : ''}
                             </Badge>
                           ) : (
                             <span className="text-gray-400">-</span>
