@@ -600,4 +600,29 @@ export const DICT_LANG_OPPORTUNITIES = {
     en: "No prospects found. Type the name of the new prospect.",
     pt: "Nenhum prospect encontrado. Digite o nome do novo prospect.",
   },
+  "opportunities.prospect.selectPartner": {
+    es: "Seleccionar Prospect Partner",
+    en: "Select Prospect Partner",
+    pt: "Selecionar Prospect Partner",
+  },
+  "opportunities.prospect.selectPartnerDescription": {
+    es: "Selecciona un prospect partner existente y su contacto para asociarlos a esta oportunidad",
+    en: "Select an existing prospect partner and their contact to associate with this opportunity",
+    pt: "Selecione um prospect partner existente e seu contato para associar a essa oportunidade",
+  },
+  "opportunities.prospect.selectContact": {
+    es: "Seleccionar Contacto",
+    en: "Select Contact",
+    pt: "Selecionar Contato",
+  },
+  "opportunities.prospect.noProspectsFound": {
+    es: "No hay prospects disponibles",
+    en: "No prospects available",
+    pt: "Nenhum prospect disponível",
+  },
+  "opportunities.prospect.relationshipSaved": {
+    es: "Relación guardada correctamente",
+    en: "Relationship saved successfully",
+    pt: "Relação salva com sucesso",
+  },
 }
