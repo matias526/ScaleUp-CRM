@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "@/components/ui/use-toast"
 import { useTranslations } from "@/hooks/use-translations"
-import { createBrowserClient } from "@/lib/supabase/client"
+import { supabase } from "@/lib/supabase/client"
 import { ProspectPartnerService } from "@/lib/services/prospect-partner-service"
 import { LEAD_SOURCES } from "@/lib/constants/lead-sources"
 
@@ -32,7 +32,6 @@ interface AddProspectPartnerDialogProps {
 
 export function AddProspectPartnerDialog({ open, onOpenChange, opportunityId, onSuccess }: AddProspectPartnerDialogProps) {
   const t = useTranslations()
-  const supabase = createBrowserClient()
   const [step, setStep] = useState(1) // 1: Company, 2: Contact
   const [isSaving, setIsSaving] = useState(false)
   const [existingProspectPartners, setExistingProspectPartners] = useState<any[]>([])
