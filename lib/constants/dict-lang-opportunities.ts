@@ -580,4 +580,24 @@ export const DICT_LANG_OPPORTUNITIES = {
     en: "Other",
     pt: "Outro",
   },
+  "opportunities.prospect.searchOrCreate": {
+    es: "Buscar prospect existente o crear nuevo",
+    en: "Search existing prospect or create new",
+    pt: "Pesquisar prospect existente ou criar novo",
+  },
+  "opportunities.prospect.searchHint": {
+    es: "Selecciona de la lista o crea uno nuevo",
+    en: "Select from list or create a new one",
+    pt: "Selecione da lista ou crie um novo",
+  },
+  "opportunities.prospect.createNewHint": {
+    es: "Empieza a escribir para buscar o crear un nuevo prospect partner",
+    en: "Start typing to search or create a new prospect partner",
+    pt: "Comece a digitar para pesquisar ou criar um novo prospect partner",
+  },
+  "opportunities.prospect.noResults": {
+    es: "No se encontraron prospects. Escribe el nombre del nuevo prospect.",
+    en: "No prospects found. Type the name of the new prospect.",
+    pt: "Nenhum prospect encontrado. Digite o nome do novo prospect.",
+  },
 }
