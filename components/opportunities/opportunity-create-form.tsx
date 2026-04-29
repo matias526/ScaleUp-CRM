@@ -29,7 +29,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-//import { toast } from "@/components/ui/use-toast"
 import { useToast } from "@/components/ui/use-toast"
 import { useAuth } from "@/components/auth/auth-provider"
 import { supabase } from "@/lib/supabase/client"
@@ -68,6 +67,7 @@ import { Label } from "@/components/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { getIndustries } from "@/lib/services/industry-service-client"
+import { ProspectPartnerService } from "@/lib/services/prospect-partner-service" // Ajusta la ruta según tu carpeta
 
 const DEFAULT_ALLOWED_FILE_TYPES = [
   "jpg", "jpeg", "png", "gif", "svg",
@@ -229,7 +229,6 @@ export default function OpportunityCreateForm() {
 
     // Load contacts for this prospect partner
     try {
-      const supabase = createBrowserClient()
       const { data: contacts } = await supabase
         .from("contacts")
         .select("*")
@@ -367,7 +366,7 @@ export default function OpportunityCreateForm() {
 
   type FormValues = z.infer<typeof formSchema>
 
-  const form = useForm<FormValues>({
+  const form = useForm<any>({
     resolver: zodResolver(formSchema),
     mode: "onSubmit",
     defaultValues: {
@@ -396,7 +395,7 @@ export default function OpportunityCreateForm() {
       country: "",
       assigned_to: null,
       partner_responsible_id: null,
-      opportunity_tech_fields: {},
+      opportunity_tech_fields: z.record(z.any()).default({}), // El .default({}) es clave
     },
   })
 
@@ -495,7 +494,7 @@ export default function OpportunityCreateForm() {
         setAllCountries(countries)
 
         // Load all end customers - usar getEndCustomersForPartner para Partner users
-        const customers = isScaleUpUser ? await getEndCustomers() : await getEndCustomersForPartner(partnerId)
+        const customers = isScaleUpUser ? await getEndCustomers() : await getEndCustomersForPartner(partnerId || "")
         setEndCustomers(customers)
 
         // Load industries for the modal
@@ -634,33 +633,36 @@ export default function OpportunityCreateForm() {
       // ✅ ATOMIC INSERTION: If is_prospect is true, insert prospect partner and contact first
       if (data.is_prospect && data.prospect_partner_data && data.prospect_contact_data) {
         try {
-          // 1. INSERT into prospect_partners
+          /// 1. INSERT into prospect_partners
           const { data: prospectPartnerResult, error: prospectError } = await supabase
             .from("prospect_partners")
-            .insert([
-              {
-                name: data.prospect_partner_data.name,
-                website: data.prospect_partner_data.website || null,
-                main_country_id: data.prospect_partner_data.main_country_id,
-                lead_source: data.prospect_partner_data.lead_source,
-              },
-            ])
-            .select("id")
+            .insert({
+              // Forzamos que si es undefined, mande un string vacío o el valor
+              name: data.prospect_partner_data?.name || "",
 
-          if (prospectError || !prospectPartnerResult || prospectPartnerResult.length === 0) {
+              // Estos pueden ser null o undefined porque tienen el "?" en la definición
+              website: data.prospect_partner_data?.website || null,
+              main_country_id: data.prospect_partner_data?.main_country_id || null,
+              lead_source: data.prospect_partner_data?.lead_source || null,
+            })
+            .select("id")
+            .single()
+
+
+          if (prospectError || !prospectPartnerResult) {
             throw new Error("Error creando partner prospecto: " + prospectError?.message)
           }
 
-          prospectPartnerId = prospectPartnerResult[0].id
+          prospectPartnerId = prospectPartnerResult.id
 
           // 2. INSERT into contacts with prospect_id
           const { data: contactResult, error: contactError } = await supabase
             .from("contacts")
             .insert([
               {
-                first_name: data.prospect_contact_data.first_name,
-                last_name: data.prospect_contact_data.last_name,
-                email: data.prospect_contact_data.email,
+                first_name: data.prospect_contact_data.first_name || "",
+                last_name: data.prospect_contact_data.last_name || "",
+                email: data.prospect_contact_data.email || "",
                 phone: data.prospect_contact_data.phone || null,
                 preferred_language: data.prospect_contact_data.preferred_language || "es",
                 prospect_id: prospectPartnerId,
@@ -717,62 +719,70 @@ export default function OpportunityCreateForm() {
         created_by: user?.id,
       }
 
-      // Preparar tech values desde form.getValues() en lugar de techFieldValues state
+      // 1. Definimos el array con el formato que la función createOpportunity espera
       const techValuesToSave: Array<{
         opportunity_tech_field_id: string
-        value_text?: string | null
-        value_numeric?: number | null
-        value_boolean?: boolean | null
-        value_date?: string | null
-        value_json?: any | null
+        value: any
+        valueType: string
       }> = []
 
-      // Iterar sobre los campos técnicos y extraer sus valores del form
+      // 2. Iterar sobre los campos técnicos y extraer sus valores del form
       techFields.forEach((field: any) => {
         const fieldKey = `opportunity_tech_fields.${field.id}`
         const value = form.getValues(fieldKey as any)
 
         console.log("[v0] Tech field:", field.field_name, "Type:", field.field_type, "Value:", value)
 
+        // Validamos que el valor exista y no sea un array vacío
         if (value !== undefined && value !== null && value !== "" && !(Array.isArray(value) && value.length === 0)) {
-          const techValue: any = {
-            opportunity_tech_field_id: field.id,
-          }
 
-          // Mapear el valor según el tipo de campo
+          let finalValue = value;
+          let valueType = "text"; // Por defecto
+
+          // Mapear el valor y asignar el valueType correcto para la función
           switch (field.field_type) {
             case "text":
-              techValue.value_text = String(value)
+            case "select":
+              finalValue = String(value)
+              valueType = "text"
               break
             case "number":
-              techValue.value_numeric = typeof value === "number" ? value : parseFloat(value)
+              finalValue = typeof value === "number" ? value : parseFloat(value)
+              valueType = "numeric"
               break
             case "date":
-              techValue.value_date = String(value)
+              finalValue = String(value)
+              valueType = "date"
               break
             case "boolean":
-              techValue.value_boolean = Boolean(value)
-              break
-            case "select":
-              techValue.value_text = String(value)
+              finalValue = Boolean(value)
+              valueType = "boolean"
               break
             case "multiselect":
-              techValue.value_json = Array.isArray(value) ? value : [value]
+              finalValue = Array.isArray(value) ? value : [value]
+              valueType = "json"
               break
             case "file":
-              // Los archivos se manejarán de forma especial (subir a storage)
-              techValue.value_json = { fileName: value?.name || null }
+              finalValue = { fileName: value?.name || null }
+              valueType = "json"
               break
+            default:
+              finalValue = value
+              valueType = "text"
           }
 
-          console.log("[v0] Tech value to save:", techValue)
-          techValuesToSave.push(techValue)
+          // Agregamos al array con las propiedades que la función REQUIERE (value y valueType)
+          techValuesToSave.push({
+            opportunity_tech_field_id: field.id,
+            value: finalValue,
+            valueType: valueType
+          })
         }
       })
 
       console.log("[v0] All tech values to save:", techValuesToSave)
 
-      // 3. INSERT into opportunities
+      // 3. INSERT into opportunities - Ahora techValuesToSave coincide con el tipo esperado
       const result = await createOpportunity(opportunityData, techValuesToSave, userRole)
 
       // 3.5 CREATE OPPORTUNITY_CONTACTS if prospect contact was created
