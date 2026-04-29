@@ -2589,7 +2589,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                     })
 
                     // Reload opportunity
-                    await loadOpportunity(opportunity.id)
+                    await window.location.reload();
 
                     setIsNewPartnerModalOpen(false)
                   } else {
