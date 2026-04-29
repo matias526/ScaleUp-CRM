@@ -73,6 +73,8 @@ import { es as esLocale, enUS, pt } from "date-fns/locale"
 import { EndCustomerInfoDialog } from "./end-customer-info-dialog"
 import { PulseMessageSenderOpportunity } from "@/components/pulse/pulse-message-sender-opportunity"
 
+const { t } = useTranslation(DICT_LANG_OPPORTUNITIES)
+
 // Función para obtener el objeto locale de date-fns
 const getDateFnsLocale = () => {
   const localeString = getLocaleString()
