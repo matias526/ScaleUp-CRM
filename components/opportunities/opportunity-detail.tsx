@@ -26,6 +26,7 @@ import {
   Pencil,
 } from "lucide-react"
 import { useTranslations } from "@/hooks/use-translations"
+import { DICT_LANG_OPPORTUNITIES } from "@/lib/constants/dict-lang-opportunities"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -2139,12 +2140,11 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
 
                 try {
                   setIsSaving(true)
-                  // Guardar prospect_id y primary_contact_id en la oportunidad
+                  // Guardar prospect_id en la oportunidad
                   const { error } = await supabase
                     .from("opportunities")
                     .update({
                       prospect_id: selectedProspectPartner.id,
-                      primary_contact_id: selectedContact.id,
                       updated_at: new Date().toISOString(),
                     })
                     .eq("id", opportunity?.id)
@@ -2367,8 +2367,8 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                           key={contact.id}
                           onClick={() => setSelectedContact(contact)}
                           className={`w-full text-left px-3 py-2 rounded-lg border-2 transition-colors ${selectedContact?.id === contact.id
-                              ? "border-blue-500 bg-blue-50"
-                              : "border-transparent hover:bg-gray-50"
+                            ? "border-blue-500 bg-blue-50"
+                            : "border-transparent hover:bg-gray-50"
                             }`}
                         >
                           <div className="font-medium text-sm">
