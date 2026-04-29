@@ -170,14 +170,8 @@ export function ContactForm({ initialData, onSuccess, showCancel = true }: Conta
   useEffect(() => {
     const loadProspectPartners = async () => {
       try {
-        const response = await ProspectPartnerService.getProspectPartners(1, 100)
-        let prospect_partners_array = []
-        if (response && response.data && Array.isArray(response.data)) {
-          prospect_partners_array = response.data
-        } else if (Array.isArray(response)) {
-          prospect_partners_array = response
-        }
-
+        const { data: prospect_partners_array } = await ProspectPartnerService.getProspectPartners(1, 1000)
+        
         const formattedProspectPartners = prospect_partners_array.map((prospect) => ({
           id: prospect.id,
           label: prospect.name,

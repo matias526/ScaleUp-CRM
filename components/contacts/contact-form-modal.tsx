@@ -93,8 +93,8 @@ export function ContactFormModal({
       try {
         const [companies, partnersRes, prospectPartnersRes] = await Promise.all([
           TechCompanyService.getTechCompanies(),
-          PartnerService.getPartners(1, 100),
-          ProspectPartnerService.getProspectPartners(1, 100),
+          PartnerService.getPartners(1, 1000),
+          ProspectPartnerService.getProspectPartners(1, 1000),
         ])
 
         if (Array.isArray(companies)) {
@@ -105,13 +105,9 @@ export function ContactFormModal({
           setPartners(partnersRes.data.map((p) => ({ id: p.id, label: p.name })))
         }
 
-        let prospectPartnersArray = []
         if (prospectPartnersRes?.data && Array.isArray(prospectPartnersRes.data)) {
-          prospectPartnersArray = prospectPartnersRes.data
-        } else if (Array.isArray(prospectPartnersRes)) {
-          prospectPartnersArray = prospectPartnersRes
+          setProspectPartners(prospectPartnersRes.data.map((p) => ({ id: p.id, label: p.name })))
         }
-        setProspectPartners(prospectPartnersArray.map((p) => ({ id: p.id, label: p.name })))
       } catch (err) {
         console.error("Error loading relationships:", err)
       }

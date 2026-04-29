@@ -188,9 +188,9 @@ export default function OpportunityCreateForm() {
   useEffect(() => {
     const loadProspectPartners = async () => {
       try {
-        const prospects = await ProspectPartnerService.getProspectPartners(1, 100)
-        if (prospects?.data && Array.isArray(prospects.data)) {
-          setExistingProspectPartners(prospects.data)
+        const { data: prospects } = await ProspectPartnerService.getProspectPartners(1, 1000)
+        if (prospects && Array.isArray(prospects)) {
+          setExistingProspectPartners(prospects)
         }
       } catch (err) {
         console.error("Error loading prospect partners:", err)
