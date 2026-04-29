@@ -73,7 +73,7 @@ import { es as esLocale, enUS, pt } from "date-fns/locale"
 import { EndCustomerInfoDialog } from "./end-customer-info-dialog"
 import { PulseMessageSenderOpportunity } from "@/components/pulse/pulse-message-sender-opportunity"
 
-const { t } = useTranslations(DICT_LANG_OPPORTUNITIES)
+
 
 // Función para obtener el objeto locale de date-fns
 const getDateFnsLocale = () => {
@@ -406,6 +406,8 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
   const [showProspectResults, setShowProspectResults] = useState(false)
   const [countries, setCountries] = useState<{ id: string; name: string }[]>([])
   const [showCreateNew, setShowCreateNew] = useState(false)
+
+  const { t } = useTranslations(DICT_LANG_OPPORTUNITIES)
 
   // Load countries for prospect partner form
   useEffect(() => {
