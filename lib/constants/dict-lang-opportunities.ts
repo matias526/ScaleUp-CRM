@@ -625,4 +625,29 @@ export const DICT_LANG_OPPORTUNITIES = {
     en: "Relationship saved successfully",
     pt: "Relação salva com sucesso",
   },
+  "opportunities.prospect.createNew": {
+    es: "Crear Nuevo",
+    en: "Create New",
+    pt: "Criar Novo",
+  },
+  "opportunities.prospect.website": {
+    es: "Sitio Web",
+    en: "Website",
+    pt: "Website",
+  },
+  "opportunities.prospect.country": {
+    es: "País",
+    en: "Country",
+    pt: "País",
+  },
+  "opportunities.prospect.selectContactDescription": {
+    es: "Selecciona un contacto existente o crea uno nuevo",
+    en: "Select an existing contact or create a new one",
+    pt: "Selecione um contato existente ou crie um novo",
+  },
+  "opportunities.prospect.createContact": {
+    es: "Crear Nuevo Contacto",
+    en: "Create New Contact",
+    pt: "Criar Novo Contato",
+  },
 }
