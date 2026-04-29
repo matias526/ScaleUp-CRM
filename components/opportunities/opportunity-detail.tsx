@@ -809,22 +809,6 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
 
       logDebug(`Campo ${field} actualizado correctamente`)
 
-      // Si se está marcando como nuevo partner (is_new_partner = true), abrir modal
-      if (field === "is_new_partner" && value === true) {
-        // Cargar prospect partners existentes
-        try {
-          const { data: prospects } = await ProspectPartnerService.getProspectPartners(1, 1000)
-          if (prospects && Array.isArray(prospects)) {
-            setExistingProspectPartners(prospects)
-          }
-        } catch (err) {
-          console.error("Error loading prospect partners:", err)
-        }
-        setIsNewPartnerModalOpen(true)
-        setIsSaving(false)
-        return
-      }
-
       // Si se está marcando como nuevo partner (is_new_partner = true), abrir modal para seleccionar prospect partner
       if (field === "is_new_partner" && value === true) {
         // Cargar prospect partners existentes
@@ -1389,7 +1373,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
               value={opportunity?.title}
               onSave={(value) => updateField("title", value)}
               isEditing={true}
-              onEdit={() => {}}
+              onEdit={() => { }}
               onCancel={() => cancelEditing("title")}
               placeholder="Título de la oportunidad"
             />
@@ -1445,7 +1429,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                       value={opportunity?.description}
                       onSave={(value) => updateField("description", value)}
                       isEditing={true}
-                      onEdit={() => {}}
+                      onEdit={() => { }}
                       onCancel={() => cancelEditing("description")}
                       placeholder="Descripción de la oportunidad"
                       multiline={true}
@@ -1591,7 +1575,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                         value={opportunity?.country}
                         onSave={(value) => updateField("country", value)}
                         isEditing={true}
-                        onEdit={() => {}}
+                        onEdit={() => { }}
                         onCancel={() => cancelEditing("country")}
                         placeholder="País"
                         type="select"
@@ -1606,7 +1590,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                         onSave={(value) => updateField("country", value)}
                         isEditing={false}
                         onEdit={() => startEditing("country")}
-                        onCancel={() => {}}
+                        onCancel={() => { }}
                         placeholder="No especificado"
                         type="select"
                         options={partnerCountries.map((country) => ({
@@ -1625,34 +1609,34 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                   {/* Estimated Value - Only for ScaleUp users */}
                   {(currentUser?.role_id === "3ddc89f1-1478-46b4-8a3f-8e42033a0b83" ||
                     currentUser?.role_id === "ff536fc8-8786-4be5-acf2-aee27b3d9924") && (
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500 mb-1 flex items-center">
-                        <DollarSign className="h-4 w-4 mr-1" />
-                        Valor estimado
-                      </h3>
-                      {editMode.estimated_value ? (
-                        <InlineEdit
-                          value={opportunity?.estimated_value}
-                          onSave={(value) => updateField("estimated_value", value)}
-                          isEditing={true}
-                          onEdit={() => {}}
-                          onCancel={() => cancelEditing("estimated_value")}
-                          type="number"
-                          placeholder="Valor estimado"
-                        />
-                      ) : (
-                        <InlineEdit
-                          value={opportunity?.estimated_value}
-                          onSave={(value) => updateField("estimated_value", value)}
-                          isEditing={false}
-                          onEdit={() => startEditing("estimated_value")}
-                          onCancel={() => {}}
-                          type="number"
-                          placeholder="No especificado"
-                        />
-                      )}
-                    </div>
-                  )}
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500 mb-1 flex items-center">
+                          <DollarSign className="h-4 w-4 mr-1" />
+                          Valor estimado
+                        </h3>
+                        {editMode.estimated_value ? (
+                          <InlineEdit
+                            value={opportunity?.estimated_value}
+                            onSave={(value) => updateField("estimated_value", value)}
+                            isEditing={true}
+                            onEdit={() => { }}
+                            onCancel={() => cancelEditing("estimated_value")}
+                            type="number"
+                            placeholder="Valor estimado"
+                          />
+                        ) : (
+                          <InlineEdit
+                            value={opportunity?.estimated_value}
+                            onSave={(value) => updateField("estimated_value", value)}
+                            isEditing={false}
+                            onEdit={() => startEditing("estimated_value")}
+                            onCancel={() => { }}
+                            type="number"
+                            placeholder="No especificado"
+                          />
+                        )}
+                      </div>
+                    )}
 
                   <div>
                     <h3 className="text-sm font-medium text-gray-500 mb-1 flex items-center">
@@ -1732,7 +1716,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                         value={opportunity?.pipeline_stage_id}
                         onSave={(value) => updateField("pipeline_stage_id", value)}
                         isEditing={true}
-                        onEdit={() => {}}
+                        onEdit={() => { }}
                         onCancel={() => cancelEditing("pipeline_stage_id")}
                         type="select"
                         options={stages.map((stage) => ({
@@ -1749,7 +1733,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                         onSave={(value) => updateField("pipeline_stage_id", value)}
                         isEditing={false}
                         onEdit={() => startEditing("pipeline_stage_id")}
-                        onCancel={() => {}}
+                        onCancel={() => { }}
                         type="select"
                         options={stages.map((stage) => ({
                           value: stage.id,
@@ -1919,7 +1903,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                             value={opportunity?.is_new_partner ? "true" : "false"}
                             onSave={(value) => updateField("is_new_partner", value === "true")}
                             isEditing={true}
-                            onEdit={() => {}}
+                            onEdit={() => { }}
                             onCancel={() => cancelEditing("is_new_partner")}
                             type="select"
                             options={[
@@ -1934,7 +1918,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                             onSave={(value) => updateField("is_new_partner", value === "true")}
                             isEditing={false}
                             onEdit={() => startEditing("is_new_partner")}
-                            onCancel={() => {}}
+                            onCancel={() => { }}
                             type="select"
                             options={[
                               { value: "true", label: "Sí" },
@@ -1993,8 +1977,8 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                 </div>
               </div>
             )}
-            <OpportunityContactsSection 
-              opportunityId={opportunity?.id} 
+            <OpportunityContactsSection
+              opportunityId={opportunity?.id}
               onSendMessage={() => setShowPulseMessageSender(true)}
             />
           </div>
@@ -2084,26 +2068,25 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                       key={prospect.id}
                       onClick={() => {
                         setSelectedProspectPartner(prospect)
-                        // Cargar contactos del prospect
-                        ;(async () => {
-                          try {
-                            const { data: contacts } = await supabase
-                              .from("contacts")
-                              .select("*")
-                              .eq("prospect_id", prospect.id)
+                          // Cargar contactos del prospect
+                          ; (async () => {
+                            try {
+                              const { data: contacts } = await supabase
+                                .from("contacts")
+                                .select("*")
+                                .eq("prospect_id", prospect.id)
 
-                            if (contacts && contacts.length > 0) {
-                              setProspectPartnerContacts(contacts)
-                              setSelectedContact(contacts[0])
+                              if (contacts && contacts.length > 0) {
+                                setProspectPartnerContacts(contacts)
+                                setSelectedContact(contacts[0])
+                              }
+                            } catch (err) {
+                              console.error("Error loading contacts:", err)
                             }
-                          } catch (err) {
-                            console.error("Error loading contacts:", err)
-                          }
-                        })()
+                          })()
                       }}
-                      className={`w-full text-left px-4 py-3 border-b last:border-b-0 hover:bg-blue-50 transition-colors ${
-                        selectedProspectPartner?.id === prospect.id ? "bg-blue-100" : ""
-                      }`}
+                      className={`w-full text-left px-4 py-3 border-b last:border-b-0 hover:bg-blue-50 transition-colors ${selectedProspectPartner?.id === prospect.id ? "bg-blue-100" : ""
+                        }`}
                     >
                       <div className="font-medium text-sm">{prospect.name}</div>
                       <div className="text-xs text-gray-500">{prospect.website || "Sin website"}</div>
@@ -2126,9 +2109,8 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                     <button
                       key={contact.id}
                       onClick={() => setSelectedContact(contact)}
-                      className={`w-full text-left px-4 py-3 border-b last:border-b-0 hover:bg-green-50 transition-colors ${
-                        selectedContact?.id === contact.id ? "bg-green-100" : ""
-                      }`}
+                      className={`w-full text-left px-4 py-3 border-b last:border-b-0 hover:bg-green-50 transition-colors ${selectedContact?.id === contact.id ? "bg-green-100" : ""
+                        }`}
                     >
                       <div className="font-medium text-sm">
                         {contact.first_name} {contact.last_name}
@@ -2384,11 +2366,10 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                         <button
                           key={contact.id}
                           onClick={() => setSelectedContact(contact)}
-                          className={`w-full text-left px-3 py-2 rounded-lg border-2 transition-colors ${
-                            selectedContact?.id === contact.id
+                          className={`w-full text-left px-3 py-2 rounded-lg border-2 transition-colors ${selectedContact?.id === contact.id
                               ? "border-blue-500 bg-blue-50"
                               : "border-transparent hover:bg-gray-50"
-                          }`}
+                            }`}
                         >
                           <div className="font-medium text-sm">
                             {contact.first_name} {contact.last_name}
