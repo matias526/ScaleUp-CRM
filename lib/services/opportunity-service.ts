@@ -21,7 +21,9 @@ export async function getOpportunities(userInfo?: any): Promise<OpportunityWithR
         stage:pipeline_stages(id, code, display_order),
         tech_company:tech_companies(id, name, logo_url),
         partner:partners(id, name, logo_url),
-        end_customer:end_customers(id, name)
+        end_customer:end_customers(id, name),
+        notes(id, created_at),
+        tasks(id, created_at)
       `)
 
     // Aplicar filtros según el rol del usuario
@@ -93,7 +95,9 @@ export async function getOpportunitiesClient(userInfo?: any): Promise<Opportunit
       stage:pipeline_stages(id, code, display_order),
       tech_company:tech_companies(id, name, logo_url),
       partner:partners(id, name, logo_url),
-      end_customer:end_customers(id, name)
+      end_customer:end_customers(id, name),
+      notes(id, created_at),
+      tasks(id, created_at)
     `)
 
     // Aplicar filtros según el rol del usuario
