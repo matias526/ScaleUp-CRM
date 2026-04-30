@@ -129,7 +129,7 @@ interface Contact {
 
 interface Opportunity {
   id: string
-  name: string
+  title: string
   value?: number
   probability?: number
   stage?: string
@@ -775,7 +775,7 @@ export function PulseMessageSenderOpportunity({
           {/* HEADER - ESTILO CREAR OPORTUNIDAD */}
           <div className="bg-blue-50 border-b border-blue-200 px-8 py-6">
             <h2 className="text-2xl font-bold text-blue-900">Enviar Mensaje</h2>
-            <p className="text-sm text-blue-600 mt-2">Configura y envía un mensaje a tus contactos. Oportunidad: {opportunity.name}</p>
+            <p className="text-sm text-blue-600 mt-2">Configura y envía un mensaje a tus contactos. Oportunidad: {opportunity.title}</p>
           </div>
 
           {/* CONTENIDO PRINCIPAL - DOS COLUMNAS */}

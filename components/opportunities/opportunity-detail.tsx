@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -101,12 +102,13 @@ const formatDollarValue = (value: number): string => {
 }
 
 // Componente simple para mostrar logs en pantalla
-function DebugPanel({ logs = [] }) {
-  const [localLogs, setLocalLogs] = useState(logs)
+function DebugPanel({ logs = [] }: { logs?: any[] }) {
+  // Aquí le decimos a TypeScript: "Este estado es un array de cualquier cosa"
+  const [localLogs, setLocalLogs] = useState<any[]>(logs)
   const [isVisible, setIsVisible] = useState(true)
 
   // Función para añadir un log
-  const addLog = (message) => {
+  const addLog = (message: string) => {
     console.log(message) // También mostrar en consola
     setLocalLogs((prev) => [...prev, { message, timestamp: new Date() }])
   }
@@ -165,6 +167,21 @@ function DebugPanel({ logs = [] }) {
   )
 }
 
+// 1. Definimos una "Interface" para decirle a TS qué esperar
+interface InlineEditProps {
+  value: any;
+  onSave: (newValue: any) => void;
+  isEditing: boolean;
+  onEdit: () => void;
+  onCancel: () => void;
+  type?: "text" | "number" | "select" | "date";
+  options?: { value: string; label: string }[];
+  placeholder?: string;
+  multiline?: boolean;
+  className?: string;
+  formatter?: (val: any) => any;
+}
+
 // Componente para edición inline de texto
 function InlineEdit({
   value,
@@ -178,10 +195,10 @@ function InlineEdit({
   multiline = false,
   className = "",
   formatter = (val) => val, // Añadir esta línea
-}) {
+}: InlineEditProps) {
   const [editValue, setEditValue] = useState(value)
   const [date, setDate] = useState(value ? new Date(value) : new Date())
-  const inputRef = useRef(null)
+  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null)
 
   // Enfocar el input cuando se activa la edición
   useEffect(() => {
@@ -208,7 +225,7 @@ function InlineEdit({
     }
   }
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !multiline) {
       handleSave()
     } else if (e.key === "Escape") {
@@ -278,7 +295,7 @@ function InlineEdit({
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0">
-            <CalendarComponent mode="single" selected={date} onSelect={setDate} initialFocus />
+            <CalendarComponent mode="single" selected={date} onSelect={(newDate) => {if (newDate) {setDate(newDate);}}} autoFocus />
           </PopoverContent>
         </Popover>
         <div className="flex space-x-1">
@@ -297,7 +314,7 @@ function InlineEdit({
     return (
       <div className="space-y-2">
         <Textarea
-          ref={inputRef}
+          ref={inputRef as any}
           value={editValue || ""}
           onChange={(e) => setEditValue(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -322,7 +339,7 @@ function InlineEdit({
   return (
     <div className="flex items-center space-x-2">
       <Input
-        ref={inputRef}
+        ref={inputRef as any}
         type={type}
         value={editValue || ""}
         onChange={(e) => setEditValue(e.target.value)}
@@ -379,7 +396,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
   const [isPartnerAssignDialogOpen, setIsPartnerAssignDialogOpen] = useState(false)
   const [selectedPartnerId, setSelectedPartnerId] = useState<string>("")
   const [showPulseMessageSender, setShowPulseMessageSender] = useState(false)
-  const [editingField, setEditingField] = useState(null)
+ const [editingField, setEditingField] = useState<string | null>(null)
   const [dateEditValue, setDateEditValue] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isNewPartnerModalOpen, setIsNewPartnerModalOpen] = useState(false)
@@ -471,7 +488,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
     setProspectStep(2)
   }
 
-  const handleDateStartEditing = (field, value) => {
+  const handleDateStartEditing = (field: string, value: any) => {
     setEditingField(field)
     setDateEditValue(value)
   }
@@ -497,10 +514,11 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
   const logDebug = (message: string) => {
     console.log(message)
     setDebugLogs((prev) => [...prev, { message, timestamp: new Date() }])
-    // Si la función global está disponible, usarla
-    if (typeof window !== "undefined" && window.addDebugLog) {
-      // @ts-ignore
-      window.addDebugLog(message)
+    // Usamos una constante para "engañar" al guardia de seguridad (TS)
+    const globalWindow = window as any;
+
+    if (typeof window !== "undefined" && globalWindow.addDebugLog) {
+      globalWindow.addDebugLog(message)
     }
   }
 
@@ -807,7 +825,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
 
       const { error } = await supabase
         .from("opportunities")
-        .update({ [field]: value, updated_at: new Date().toISOString() })
+        .update({ [field]: value, updated_at: new Date().toISOString() } as any)
         .eq("id", opportunity?.id)
 
       if (error) throw error
@@ -912,7 +930,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
         const selectedPartner = availablePartners.find((partner) => partner.id === value)
         if (selectedPartner) {
           // Actualizar el estado local de la oportunidad
-          setOpportunity((prev) => ({
+          setOpportunity((prev: any) => ({
             ...prev,
             partner_id: value,
             partner: selectedPartner,
@@ -951,13 +969,13 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
       if (field === "pipeline_stage_id") {
         // Si actualizamos la etapa, necesitamos actualizar también la información de la etapa
         const updatedStage = stages.find((stage) => stage.id === value)
-        setOpportunity((prev) => ({
+        setOpportunity((prev: any) => ({
           ...prev,
           [field]: value,
           stage: updatedStage || prev.stage,
         }))
       } else {
-        setOpportunity((prev) => ({ ...prev, [field]: value }))
+        setOpportunity((prev: any) => ({ ...prev, [field]: value }))
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error)
@@ -975,7 +993,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
 
   // Función para manejar cambios en los campos
   const handleChange = (field: string, value: any) => {
-    setOpportunity((prev) => ({ ...prev, [field]: value }))
+    setOpportunity((prev: any) => ({ ...prev, [field]: value }))
   }
 
   // Función para asignar responsable de ScaleUp
@@ -1119,7 +1137,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
       }
 
       // Actualizar el estado local
-      setOpportunity((prev) => ({
+      setOpportunity((prev: any) => ({
         ...prev,
         validation_status: "validated",
         validation_date: new Date().toISOString(),
@@ -1192,7 +1210,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
       }
 
       // Actualizar el estado local
-      setOpportunity((prev) => ({
+      setOpportunity((prev: any) => ({
         ...prev,
         validation_status: "rejected",
         validation_date: new Date().toISOString(),
@@ -1402,7 +1420,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
             <Badge variant="outline" className="bg-primary/10">
               {opportunity?.stage
                 ? opportunity.stage.code
-                  ? opportunity.stage.code.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
+                  ? opportunity.stage.code.replace(/_/g, " ").replace(/\b\w/g, (l: any) => l.toUpperCase())
                   : opportunity.stage.name
                 : "Sin etapa"}
             </Badge>
@@ -1537,7 +1555,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                                   availablePartners.map((partner) => (
                                     <SelectItem key={partner.id} value={partner.id}>
                                       <div className="flex items-center">
-                                        <OrganizationAvatar name={partner.name} imageUrl={partner.logo_url} size="xs" />
+                                        <OrganizationAvatar name={partner.name} imageUrl={partner.logo_url} size="sm" />
                                         <span className="ml-2">{partner.name}</span>
                                       </div>
                                     </SelectItem>
@@ -1727,7 +1745,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                         options={stages.map((stage) => ({
                           value: stage.id,
                           label: stage.code
-                            ? stage.code.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
+                            ? stage.code.replace(/_/g, " ").replace(/\b\w/g, (l: any) => l.toUpperCase())
                             : stage.name,
                         }))}
                         placeholder="Seleccionar etapa"
@@ -1743,7 +1761,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                         options={stages.map((stage) => ({
                           value: stage.id,
                           label: stage.code
-                            ? stage.code.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
+                            ? stage.code.replace(/_/g, " ").replace(/\b\w/g, (l: any) => l.toUpperCase())
                             : stage.name,
                         }))}
                         placeholder="Sin etapa"
@@ -1751,7 +1769,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                           const selectedStage = stages.find((stage) => stage.id === value)
                           return selectedStage
                             ? selectedStage.code
-                              ? selectedStage.code.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
+                              ? selectedStage.code.replace(/_/g, " ").replace(/\b\w/g, (l: any) => l.toUpperCase())
                               : selectedStage.name
                             : "Sin etapa"
                         }}
@@ -2034,7 +2052,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
           techCompanyData={opportunity.tech_companies}
           prospectData={opportunity.prospects}
           partnerData={opportunity.partners}
-          contacts={opportunity.opportunity_contacts?.map((oc) => ({
+          contacts={opportunity.opportunity_contacts?.map((oc: any) => ({
             id: oc.contact?.id,
             name: oc.contact?.first_name + " " + oc.contact?.last_name,
             email: oc.contact?.email,
