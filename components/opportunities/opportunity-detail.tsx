@@ -2306,7 +2306,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                         onChange={(e) => setProspectPartnerData({ ...prospectPartnerData, main_country_id: e.target.value })}
                         className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
                       >
-                        <option value="">{t("common.select")}</option>
+                        <option value="">{t("opportunities.form.selectOption")}</option>
                         {countries.map((country) => (
                           <option key={country.id} value={country.id}>
                             {country.name}
@@ -2322,7 +2322,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                         onChange={(e) => setProspectPartnerData({ ...prospectPartnerData, lead_source: e.target.value })}
                         className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
                       >
-                        <option value="">{t("common.select")}</option>
+                        <option value="">{t("opportunities.form.selectOption")}</option>
                         <option value="direct">{t("opportunities.leadSource.direct")}</option>
                         <option value="referral">{t("opportunities.leadSource.referral")}</option>
                         <option value="event">{t("opportunities.leadSource.event")}</option>
@@ -2333,7 +2333,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                     </div>
 
                     <Button onClick={() => setShowCreateNew(false)} variant="outline" className="w-full">
-                      {t("common.back")}
+                      {t("opportunities.prospect.back")}
                     </Button>
                   </div>
                 </>
@@ -2437,7 +2437,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
 
                     {prospectPartnerContacts.length > 0 && (
                       <Button onClick={() => setShowCreateNew(false)} variant="outline" className="w-full">
-                        {t("common.back")}
+                        {t("opportunities.prospect.back")}
                       </Button>
                     )}
                   </div>
