@@ -2270,14 +2270,6 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                     </p>
                   </div>
 
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-300" />
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-2 bg-white text-gray-500">{t("common.or")}</span>
-                    </div>
-                  </div>
 
                   <Button onClick={() => setShowCreateNew(true)} variant="outline" className="w-full">
                     {t("opportunities.prospect.createNew")}

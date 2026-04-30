@@ -625,4 +625,9 @@ export const DICT_LANG_OPPORTUNITIES = {
     en: "Relationship saved successfully",
     pt: "Relação salva com sucesso",
   },
+  "opportunities.prospect.createNew": {
+    es: "Crear un nuevo prospect partner",
+    en: "Create a new prospect partner",
+    pt: "Criar um novo prospect partner",
+  },
 }
