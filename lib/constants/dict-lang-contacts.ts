@@ -327,35 +327,10 @@ export const DICT_LANG_CONTACTS = {
     en: "of",
     pt: "de",
   },
-  "contacts.pagination.page": {
-    es: "Página",
-    en: "Page",
-    pt: "Página",
-  },
-  "contacts.pagination.of": {
-    es: "de",
-    en: "of",
-    pt: "de",
-  },
-  "contacts.form.linkedUser": {
-    es: "Usuario Vinculado",
-    en: "Linked User",
-    pt: "Usuário Vinculado",
-  },
   "contacts.form.linkedin": {
     es: "LinkedIn",
     en: "LinkedIn",
     pt: "LinkedIn",
-  },
-  "contacts.form.notes": {
-    es: "Notas",
-    en: "Notes",
-    pt: "Notas",
-  },
-  "contacts.form.section.relationships": {
-    es: "Relaciones",
-    en: "Relationships",
-    pt: "Relacionamentos",
   },
   // Placeholders
   "contacts.placeholder.enterNotes": {
@@ -406,6 +381,16 @@ export const DICT_LANG_CONTACTS = {
     es: "Añade un nuevo contacto rápidamente",
     en: "Add a new contact quickly",
     pt: "Adicione um novo contato rapidamente",
+  },
+  "contacts.modal.titleEdit": {
+    es: "Editar Contacto",
+    en: "Edit Contact",
+    pt: "Editar Contato",
+  },
+  "contacts.modal.descriptionEdit": {
+    es: "Edita un contacto rápidamente",
+    en: "Edit a contact quickly",
+    pt: "Edita um contato rapidamente",
   },
   "contacts.modal.cancel": {
     es: "Cancelar",
@@ -463,11 +448,6 @@ export const DICT_LANG_CONTACTS = {
     es: "https://linkedin.com/in/...",
     en: "https://linkedin.com/in/...",
     pt: "https://linkedin.com/in/...",
-  },
-  "contacts.placeholder.enterNotes": {
-    es: "Ingrese notas adicionales...",
-    en: "Enter additional notes...",
-    pt: "Digite notas adicionais...",
   },
 
   // Filters
