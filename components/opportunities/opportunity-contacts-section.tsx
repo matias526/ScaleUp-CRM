@@ -20,13 +20,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { ContactForm } from "@/components/contacts/contact-form"
 
 interface OpportunityContactsSectionProps {
   opportunityId: string
@@ -281,11 +274,19 @@ export function OpportunityContactsSection({ opportunityId, onSendMessage }: Opp
         </CardContent>
       </Card>
 
-      {/* Contact Form Modal */}
+      {/* Contact Form Modal for Adding */}
       <ContactFormModal
         open={showModal}
         onOpenChange={setShowModal}
         onSuccess={handleAddContact}
+      />
+
+      {/* Contact Form Modal for Editing */}
+      <ContactFormModal
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        initialData={contactToEdit}
+        onSuccess={handleEditContact}
       />
 
       {/* Remove Confirmation Dialog */}
@@ -306,25 +307,6 @@ export function OpportunityContactsSection({ opportunityId, onSendMessage }: Opp
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Edit Contact Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Editar Contacto</DialogTitle>
-          </DialogHeader>
-          {contactToEdit && (
-            <ContactForm
-              contact={contactToEdit}
-              onSuccess={handleEditContact}
-              onCancel={() => {
-                setShowEditDialog(false)
-                setContactToEdit(null)
-              }}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
     </>
   )
 }
