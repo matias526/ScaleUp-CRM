@@ -20,6 +20,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { ContactForm } from "@/components/contacts/contact-form"
 
 interface OpportunityContactsSectionProps {
   opportunityId: string
@@ -33,6 +40,8 @@ export function OpportunityContactsSection({ opportunityId, onSendMessage }: Opp
   const [showModal, setShowModal] = useState(false)
   const [contactToRemove, setContactToRemove] = useState<string | null>(null)
   const [contactToMessage, setContactToMessage] = useState<string | null>(null)
+  const [contactToEdit, setContactToEdit] = useState<any>(null)
+  const [showEditDialog, setShowEditDialog] = useState(false)
 
   // Load contacts
   useEffect(() => {
@@ -124,6 +133,26 @@ export function OpportunityContactsSection({ opportunityId, onSendMessage }: Opp
     }
   }
 
+  const handleEditContact = async (updatedContact: any) => {
+    try {
+      // Save contact changes
+      setShowEditDialog(false)
+      setContactToEdit(null)
+      await loadContacts()
+      toast({
+        title: "Éxito",
+        description: "Contacto actualizado correctamente",
+      })
+    } catch (error) {
+      console.error("Error updating contact:", error)
+      toast({
+        title: "Error",
+        description: "Error al actualizar el contacto",
+        variant: "destructive",
+      })
+    }
+  }
+
   return (
     <>
       <Card>
@@ -210,6 +239,10 @@ export function OpportunityContactsSection({ opportunityId, onSendMessage }: Opp
                             <Button
                               size="sm"
                               variant="ghost"
+                              onClick={() => {
+                                setContactToEdit(contact)
+                                setShowEditDialog(true)
+                              }}
                               title="Editar contacto"
                               className="h-8 w-8 p-0 text-gray-400 hover:text-blue-500"
                             >
@@ -273,6 +306,25 @@ export function OpportunityContactsSection({ opportunityId, onSendMessage }: Opp
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Edit Contact Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Editar Contacto</DialogTitle>
+          </DialogHeader>
+          {contactToEdit && (
+            <ContactForm
+              contact={contactToEdit}
+              onSuccess={handleEditContact}
+              onCancel={() => {
+                setShowEditDialog(false)
+                setContactToEdit(null)
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
