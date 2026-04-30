@@ -2184,7 +2184,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
               }}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              {isSaving ? t("common.saving") : t("common.save")}
+              {isSaving ? t("common.saving") : t("opportunities.prospect.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -2395,7 +2395,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="text-sm font-medium">{t("contacts.form.firstName")} *</label>
+                        <label className="text-sm font-medium">{t("opportunities.prospect.first_name")} *</label>
                         <Input
                           placeholder="Nombre"
                           value={prospectContactData.first_name}
@@ -2404,7 +2404,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                         />
                       </div>
                       <div>
-                        <label className="text-sm font-medium">{t("contacts.form.lastName")} *</label>
+                        <label className="text-sm font-medium">{t("opportunities.prospect.last_name")} *</label>
                         <Input
                           placeholder="Apellido"
                           value={prospectContactData.last_name}
@@ -2415,7 +2415,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium">{t("contacts.form.email")} *</label>
+                      <label className="text-sm font-medium">{t("opportunities.prospect.email")} *</label>
                       <Input
                         type="email"
                         placeholder="email@ejemplo.com"
@@ -2426,7 +2426,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium">{t("contacts.form.phone")}</label>
+                      <label className="text-sm font-medium">{t("opportunities.prospect.phone")}</label>
                       <Input
                         placeholder="+1 (555) 000-0000"
                         value={prospectContactData.phone}
@@ -2605,7 +2605,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
               }}
               disabled={!((selectedProspectPartner && selectedContact) || (prospectPartnerData.name && prospectContactData.email))}
             >
-              {isSaving ? t("common.saving") : t("common.save")}
+              {isSaving ? t("common.saving") : t("opportunities.prospect.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
