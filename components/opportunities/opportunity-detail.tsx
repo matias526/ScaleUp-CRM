@@ -2184,7 +2184,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
               }}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              {isSaving ? t("common.saving") : t("opportunities.prospect.save")}
+              {isSaving ? t("opportunities.prospect.saving") : t("opportunities.prospect.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -2348,7 +2348,6 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                 <div className="flex gap-3">
                   <div>
                     <h3 className="font-semibold text-green-900">{t("opportunities.prospect.selectContact")}</h3>
-                    <p className="text-sm text-green-700">{t("opportunities.prospect.selectContactDescription")}</p>
                   </div>
                 </div>
               </div>
@@ -2605,7 +2604,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
               }}
               disabled={!((selectedProspectPartner && selectedContact) || (prospectPartnerData.name && prospectContactData.email))}
             >
-              {isSaving ? t("common.saving") : t("opportunities.prospect.save")}
+              {isSaving ? t("opportunities.prospect.saving") : t("opportunities.prospect.save")}
             </Button>
           </DialogFooter>
         </DialogContent>

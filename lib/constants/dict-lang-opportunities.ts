@@ -326,6 +326,11 @@ export const DICT_LANG_OPPORTUNITIES = {
     en: "Save Prospect",
     pt: "Salvar Prospecto",
   },
+  "opportunities.prospect.saving": {
+    es: "Guardarndo...",
+    en: "Saveing...",
+    pt: "Salvando...",
+  },
   "opportunities.prospect.is_prospect": {
     es: "Es un Partner Prospecto",
     en: "Is a Prospect Partner",
