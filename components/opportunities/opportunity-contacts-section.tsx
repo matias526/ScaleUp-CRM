@@ -256,7 +256,7 @@ export function OpportunityContactsSection({ opportunityId, onSendMessage }: Opp
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => setContactToRemove(oc.id)}
+                              onClick={() => setContactToRemove(oc.contact_id)}
                               className="h-8 w-8 p-0 text-gray-400 hover:text-red-500"
                               title="Remover contacto"
                             >
