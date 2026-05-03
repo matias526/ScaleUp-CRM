@@ -408,12 +408,12 @@ export class WeeklyReportServiceV8 {
       ])
 
       // 8. Clasificar oportunidades
-      const inactiveStages = ["Freeze", "Lost", "Won"]
+      const inactiveStages = ["Freeze", "Lost"]
 
-      // Separar oportunidades activas de inactivas
-      const activeOpportunities = allOpportunities.filter(
-        (opp) => !inactiveStages.includes(opp.pipeline_stages?.code || ""),
-      )
+      // Separar oportunidades activas de inactivas (aquí sí podemos mantener Won como "no activa" para el conteo principal)
+const activeOpportunities = allOpportunities.filter(
+  (opp) => !["Freeze", "Lost", "Won"].includes(opp.pipeline_stages?.code || ""),
+)
 
       // Oportunidades que se movieron a Freeze/Lost esta semana
       const recentlyInactiveOpportunities = allOpportunities.filter((opp) => {
