@@ -102,7 +102,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
         .order("created_at", { ascending: false })
 
       if (error) throw error
-      setQuotes(data || [])
+      setQuotes((data as unknown as Quote[]) || [])
     } catch (err) {
       console.error("Error loading quotes:", err)
       toast({
@@ -191,19 +191,26 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
       const quoteNumber = `Q-${Date.now()}`
       const totals = calculateTotals(createFormData.items, 0, 0)
 
-      const { error } = await supabase.from("quotes").insert([
-        {
-          id: uuidv4(),
-          opportunity_id: opportunityId,
-          quote_number: quoteNumber,
-          quote_date: new Date().toISOString(),
-          status: "requested",
-          items: createFormData.items,
-          notes: createFormData.notes,
-          ...totals,
-          version: 1,
-        },
-      ])
+      // 1. Preparamos el objeto de forma explícita
+      const quoteToInsert = {
+        id: uuidv4(),
+        opportunity_id: opportunityId,
+        quote_number: quoteNumber,
+        quote_date: new Date().toISOString(),
+        status: "requested",
+        items: createFormData.items as any, // Cast a any para evitar el error de Json
+        notes: createFormData.notes,
+        subtotal_amount: totals.subtotal_amount,
+        general_discount_amount: totals.general_discount_amount || 0,
+        shipping_amount: totals.shipping_amount || 0,
+        total_amount: totals.total_amount,
+        version: 1,
+      }
+
+      // 2. Insertamos pasando el objeto directamente
+      const { error } = await supabase
+        .from("quotes")
+        .insert(quoteToInsert as any) // Forzamos el insert para saltar la validación estricta de tipos de Supabase
 
       if (error) throw error
 
@@ -242,40 +249,51 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
       let economicalUrl = selectedQuote.economical_quote_url
 
       // Upload technical file if provided
-      if (editFormData.technical_file) {
-        const { data, error } = await supabase.storage
-          .from("quotes")
-          .upload(
-            `${opportunityId}/${selectedQuote.id}/technical_${Date.now()}.pdf`,
-            editFormData.technical_file,
-            { upsert: true }
-          )
+if (editFormData.technical_file) {
+  const { data, error: uploadError } = await supabase.storage
+    .from("quotes")
+    .upload(
+      `${opportunityId}/${selectedQuote.id}/technical_${Date.now()}.pdf`,
+      editFormData.technical_file,
+      { upsert: true }
+    )
 
-        if (error) throw error
-        const { data: signedUrl } = await supabase.storage
-          .from("quotes")
-          .createSignedUrl(data.path, 86400 * 7) // 7 days
+  if (uploadError) throw uploadError
 
-        technicalUrl = signedUrl.signedUrl
-      }
+  // Obtenemos el Signed URL
+  const { data: signedData, error: signedError } = await supabase.storage
+    .from("quotes")
+    .createSignedUrl(data.path, 86400 * 7) // 7 days
+
+  if (signedError || !signedData) throw new Error("Error al generar la URL del archivo técnico")
+
+  technicalUrl = signedData.signedUrl
+}
 
       // Upload economical file if provided
-      if (editFormData.economical_file) {
-        const { data, error } = await supabase.storage
-          .from("quotes")
-          .upload(
-            `${opportunityId}/${selectedQuote.id}/economical_${Date.now()}.pdf`,
-            editFormData.economical_file,
-            { upsert: true }
-          )
+if (editFormData.economical_file) {
+  const { data: uploadData, error: uploadError } = await supabase.storage
+    .from("quotes")
+    .upload(
+      `${opportunityId}/${selectedQuote.id}/economical_${Date.now()}.pdf`,
+      editFormData.economical_file,
+      { upsert: true }
+    )
 
-        if (error) throw error
-        const { data: signedUrl } = await supabase.storage
-          .from("quotes")
-          .createSignedUrl(data.path, 86400 * 7) // 7 days
+  if (uploadError) throw uploadError
 
-        economicalUrl = signedUrl.signedUrl
-      }
+  // Generamos la URL firmada con validación
+  const { data: signedData, error: signedError } = await supabase.storage
+    .from("quotes")
+    .createSignedUrl(uploadData.path, 86400 * 7) // 7 days
+
+  // Aquí es donde matamos el error: validamos que exista signedData
+  if (signedError || !signedData) {
+    throw new Error("Error al generar la URL de la oferta económica")
+  }
+
+  economicalUrl = signedData.signedUrl
+}
 
       if (!economicalUrl) {
         toast({
@@ -292,19 +310,25 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
         editFormData.shipping_amount
       )
 
+      // 1. Construimos el objeto de actualización de forma clara
+      const updateData = {
+        items: editFormData.items as any, // Cast para evitar el error de Json
+        notes: editFormData.notes,
+        subtotal_amount: totals.subtotal_amount,
+        general_discount_amount: totals.general_discount_amount || 0,
+        shipping_amount: totals.shipping_amount || 0,
+        total_amount: totals.total_amount,
+        technical_quote_url: technicalUrl,
+        economical_quote_url: economicalUrl,
+        status: "offered" as const, // Forzamos el string exacto
+        updated_at: new Date().toISOString(),
+      }
+
+      // 2. Ejecutamos el update usando el objeto y un cast final
       const { error } = await supabase
         .from("quotes")
-        .update({
-          items: editFormData.items,
-          notes: editFormData.notes,
-          ...totals,
-          technical_quote_url: technicalUrl,
-          economical_quote_url: economicalUrl,
-          status: "offered",
-          updated_at: new Date().toISOString(),
-        })
+        .update(updateData as any) 
         .eq("id", selectedQuote.id)
-
       if (error) throw error
 
       toast({

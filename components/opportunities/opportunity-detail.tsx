@@ -366,6 +366,9 @@ interface OpportunityDetailProps {
 
 export function OpportunityDetail({ opportunity: initialOpportunity }: OpportunityDetailProps) {
   const router = useRouter()
+  // 1. OBTENER EL IDIOMA (Buscamos el lang del path de la URL)
+  // Como usas useTranslations, necesitamos saber qué idioma pasarle a OpportunityQuotes
+  const lang = (typeof window !== 'undefined' ? window.location.pathname.split('/')[1]?.toUpperCase() : 'es') as "es" | "en" | "pt";
   const { t } = useTranslations(DICT_LANG_OPPORTUNITIES)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -2011,7 +2014,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
           <OpportunityQuotes 
             opportunityId={opportunity?.id || ""} 
             lang={lang} 
-            userRole={userInfo?.role || ""}
+            userRole={currentUser?.role || ""}
           />
 
           {/* Tareas relacionadas */}
