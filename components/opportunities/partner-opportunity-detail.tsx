@@ -37,6 +37,7 @@ import { AddTaskDialog } from "@/components/follow-up-meetings/add-task-dialog"
 import { EditOpportunityDialog } from "@/components/follow-up-meetings/edit-opportunity-dialog"
 import type { OpportunityWithRelations } from "@/lib/services/opportunity-service"
 import { supabase } from "@/lib/supabase/client"
+import { OpportunityQuotes } from "./opportunity-quotes"
 
 interface PartnerOpportunityDetailProps {
   opportunity: OpportunityWithRelations
@@ -426,6 +427,13 @@ export function PartnerOpportunityDetail({ opportunity, onClose, onDataChange }:
               </div>
             </div>
           </div>
+
+          {/* Sección de Quotes */}
+          <OpportunityQuotes 
+            opportunityId={opportunity?.id || ""} 
+            lang={userInfo?.preferred_language || "es"}
+            userRole={userInfo?.role_code || ""}
+          />
 
           {/* Sección de tareas (debajo) */}
           <div className="mt-6 space-y-4">
