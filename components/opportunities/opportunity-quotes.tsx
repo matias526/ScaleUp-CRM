@@ -48,17 +48,11 @@ interface QuoteItem {
 interface OpportunityQuotesProps {
   opportunityId: string
   lang: "es" | "en" | "pt"
-  userRole: string
+  userRole: any // Role object with id and code
 }
 
 const ALLOWED_ROLES_REQUEST = ["Admin", "BDD", "PartnerUser"]
 const ALLOWED_ROLES_EDIT = ["Admin", "BDD", "TechUser"]
-const QUOTE_STATUS_BADGE: Record<string, { label: string; bgColor: string; textColor: string }> = {
-  requested: { label: "Solicitada", bgColor: "bg-blue-100", textColor: "text-blue-800" },
-  offered: { label: "Ofertada", bgColor: "bg-green-100", textColor: "text-green-800" },
-  accepted: { label: "Aceptada", bgColor: "bg-purple-100", textColor: "text-purple-800" },
-  rejected: { label: "Rechazada", bgColor: "bg-red-100", textColor: "text-red-800" },
-}
 
 export function OpportunityQuotes({ opportunityId, lang, userRole }: OpportunityQuotesProps) {
   const { t } = useTranslations(DICT_LANG_OPPORTUNITIES)
@@ -68,6 +62,9 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
   const [showEditModal, setShowEditModal] = useState(false)
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+
+  // Get role code from userRole object
+  const userRoleCode = typeof userRole === "object" && userRole?.code ? userRole.code : userRole
 
   // Create modal state
   const [createFormData, setCreateFormData] = useState({
@@ -102,12 +99,12 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
         .order("created_at", { ascending: false })
 
       if (error) throw error
-      setQuotes((data as unknown as Quote[]) || [])
-    } catch (err) {
-      console.error("Error loading quotes:", err)
+      setQuotes(data || [])
+    } catch (error) {
+      console.error("[v0] Error loading quotes:", error)
       toast({
-        title: "Error",
-        description: "No se pudieron cargar las quotes",
+        title: t("common.error"),
+        description: t("opportunities.quotes.errorCreate"),
         variant: "destructive",
       })
     } finally {
@@ -115,35 +112,27 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
     }
   }
 
-  const calculateLineTotal = (item: Partial<QuoteItem>): number => {
-    if (!item.quantity || !item.unit_price) return 0
-    const subtotal = item.quantity * item.unit_price
-    const discountPercent = item.discount_percent || 0
-    return subtotal * (1 - discountPercent / 100)
-  }
-
   const calculateTotals = (items: QuoteItem[], discountAmount: number, shippingAmount: number) => {
     const subtotal = items.reduce((sum, item) => sum + (item.line_total || 0), 0)
-    return {
-      subtotal_amount: subtotal,
-      general_discount_amount: discountAmount,
-      shipping_amount: shippingAmount,
-      total_amount: subtotal - discountAmount + shippingAmount,
-    }
+    const total = subtotal - discountAmount + shippingAmount
+    return { subtotal, total }
   }
 
-  const handleAddQuoteItem = () => {
+  const canRequestQuote = ALLOWED_ROLES_REQUEST.includes(userRoleCode)
+  const canEditQuote = ALLOWED_ROLES_EDIT.includes(userRoleCode)
+
+  const handleAddItem = () => {
     if (!createFormData.itemDescription.trim()) {
       toast({
-        title: "Error",
-        description: "Debes ingresar una descripción",
+        title: t("common.error"),
+        description: t("opportunities.quotes.errorEmptyDescription"),
         variant: "destructive",
       })
       return
     }
 
     const newItem: QuoteItem = {
-      sku: `SKU-${Date.now()}`,
+      sku: uuidv4(),
       description: createFormData.itemDescription,
       quantity: createFormData.itemQuantity,
       unit_price: 0,
@@ -161,25 +150,25 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
     })
   }
 
-  const handleRemoveQuoteItem = (index: number, isEdit: boolean = false) => {
-    if (isEdit) {
-      setEditFormData({
-        ...editFormData,
-        items: editFormData.items.filter((_, i) => i !== index),
-      })
-    } else {
-      setCreateFormData({
-        ...createFormData,
-        items: createFormData.items.filter((_, i) => i !== index),
-      })
-    }
+  const handleRemoveEditItem = (index: number) => {
+    setEditFormData({
+      ...editFormData,
+      items: editFormData.items.filter((_, i) => i !== index),
+    })
   }
 
-  const handleSaveQuote = async () => {
+  const handleRemoveCreateItem = (index: number) => {
+    setCreateFormData({
+      ...createFormData,
+      items: createFormData.items.filter((_, i) => i !== index),
+    })
+  }
+
+  const handleCreateQuote = async () => {
     if (createFormData.items.length === 0) {
       toast({
-        title: "Error",
-        description: "Debes agregar al menos un item",
+        title: t("common.error"),
+        description: t("opportunities.quotes.errorEmptyItems"),
         variant: "destructive",
       })
       return
@@ -187,51 +176,36 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
 
     try {
       setIsSaving(true)
-
-      const quoteNumber = `Q-${Date.now()}`
       const totals = calculateTotals(createFormData.items, 0, 0)
 
-      // 1. Preparamos el objeto de forma explícita
-      const quoteToInsert = {
-        id: uuidv4(),
-        opportunity_id: opportunityId,
-        quote_number: quoteNumber,
-        quote_date: new Date().toISOString(),
-        status: "requested",
-        items: createFormData.items as any, // Cast a any para evitar el error de Json
-        notes: createFormData.notes,
-        subtotal_amount: totals.subtotal_amount,
-        general_discount_amount: totals.general_discount_amount || 0,
-        shipping_amount: totals.shipping_amount || 0,
-        total_amount: totals.total_amount,
-        version: 1,
-      }
-
-      // 2. Insertamos pasando el objeto directamente
-      const { error } = await supabase
-        .from("quotes")
-        .insert(quoteToInsert as any) // Forzamos el insert para saltar la validación estricta de tipos de Supabase
+      const { error } = await supabase.from("quotes").insert([
+        {
+          opportunity_id: opportunityId,
+          quote_number: `Q-${Date.now()}`,
+          status: "requested",
+          items: createFormData.items,
+          notes: createFormData.notes,
+          subtotal_amount: totals.subtotal,
+          total_amount: totals.total,
+          version: 1,
+        },
+      ])
 
       if (error) throw error
 
       toast({
-        title: "Éxito",
-        description: "Quote solicitada correctamente",
+        title: t("common.success"),
+        description: t("opportunities.quotes.successCreate"),
       })
 
       setShowCreateModal(false)
-      setCreateFormData({
-        notes: "",
-        items: [],
-        itemDescription: "",
-        itemQuantity: 1,
-      })
+      setCreateFormData({ notes: "", items: [], itemDescription: "", itemQuantity: 1 })
       await loadQuotes()
-    } catch (err) {
-      console.error("Error saving quote:", err)
+    } catch (error) {
+      console.error("[v0] Error creating quote:", error)
       toast({
-        title: "Error",
-        description: "No se pudo guardar la quote",
+        title: t("common.error"),
+        description: t("opportunities.quotes.errorCreate"),
         variant: "destructive",
       })
     } finally {
@@ -239,110 +213,86 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
     }
   }
 
-  const handleSaveEditQuote = async () => {
+  const handleEditQuote = async () => {
     if (!selectedQuote) return
+
+    if (editFormData.items.length === 0) {
+      toast({
+        title: t("common.error"),
+        description: t("opportunities.quotes.errorEmptyItems"),
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!editFormData.economical_file && !selectedQuote.economical_quote_url) {
+      toast({
+        title: t("common.error"),
+        description: t("opportunities.quotes.errorMissingEconomical"),
+        variant: "destructive",
+      })
+      return
+    }
 
     try {
       setIsSaving(true)
+      const totals = calculateTotals(editFormData.items, editFormData.general_discount_amount, editFormData.shipping_amount)
 
       let technicalUrl = selectedQuote.technical_quote_url
       let economicalUrl = selectedQuote.economical_quote_url
 
       // Upload technical file if provided
-if (editFormData.technical_file) {
-  const { data, error: uploadError } = await supabase.storage
-    .from("quotes")
-    .upload(
-      `${opportunityId}/${selectedQuote.id}/technical_${Date.now()}.pdf`,
-      editFormData.technical_file,
-      { upsert: true }
-    )
+      if (editFormData.technical_file) {
+        const { data, error } = await supabase.storage
+          .from("quotes")
+          .upload(`technical/${selectedQuote.id}/${editFormData.technical_file.name}`, editFormData.technical_file)
 
-  if (uploadError) throw uploadError
-
-  // Obtenemos el Signed URL
-  const { data: signedData, error: signedError } = await supabase.storage
-    .from("quotes")
-    .createSignedUrl(data.path, 86400 * 7) // 7 days
-
-  if (signedError || !signedData) throw new Error("Error al generar la URL del archivo técnico")
-
-  technicalUrl = signedData.signedUrl
-}
+        if (error) throw error
+        technicalUrl = data.path
+      }
 
       // Upload economical file if provided
-if (editFormData.economical_file) {
-  const { data: uploadData, error: uploadError } = await supabase.storage
-    .from("quotes")
-    .upload(
-      `${opportunityId}/${selectedQuote.id}/economical_${Date.now()}.pdf`,
-      editFormData.economical_file,
-      { upsert: true }
-    )
+      if (editFormData.economical_file) {
+        const { data, error } = await supabase.storage
+          .from("quotes")
+          .upload(`economical/${selectedQuote.id}/${editFormData.economical_file.name}`, editFormData.economical_file)
 
-  if (uploadError) throw uploadError
-
-  // Generamos la URL firmada con validación
-  const { data: signedData, error: signedError } = await supabase.storage
-    .from("quotes")
-    .createSignedUrl(uploadData.path, 86400 * 7) // 7 days
-
-  // Aquí es donde matamos el error: validamos que exista signedData
-  if (signedError || !signedData) {
-    throw new Error("Error al generar la URL de la oferta económica")
-  }
-
-  economicalUrl = signedData.signedUrl
-}
-
-      if (!economicalUrl) {
-        toast({
-          title: "Error",
-          description: "La Oferta Económica es obligatoria",
-          variant: "destructive",
-        })
-        return
+        if (error) throw error
+        economicalUrl = data.path
       }
 
-      const totals = calculateTotals(
-        editFormData.items,
-        editFormData.general_discount_amount,
-        editFormData.shipping_amount
-      )
-
-      // 1. Construimos el objeto de actualización de forma clara
-      const updateData = {
-        items: editFormData.items as any, // Cast para evitar el error de Json
-        notes: editFormData.notes,
-        subtotal_amount: totals.subtotal_amount,
-        general_discount_amount: totals.general_discount_amount || 0,
-        shipping_amount: totals.shipping_amount || 0,
-        total_amount: totals.total_amount,
-        technical_quote_url: technicalUrl,
-        economical_quote_url: economicalUrl,
-        status: "offered" as const, // Forzamos el string exacto
-        updated_at: new Date().toISOString(),
-      }
-
-      // 2. Ejecutamos el update usando el objeto y un cast final
       const { error } = await supabase
         .from("quotes")
-        .update(updateData as any) 
+        .update({
+          status: "offered",
+          items: editFormData.items,
+          notes: editFormData.notes,
+          subtotal_amount: totals.subtotal,
+          general_discount_amount: editFormData.general_discount_amount,
+          shipping_amount: editFormData.shipping_amount,
+          total_amount: totals.total,
+          technical_quote_url: technicalUrl,
+          economical_quote_url: economicalUrl,
+          version: (selectedQuote.version || 0) + 1,
+          updated_at: new Date().toISOString(),
+        })
         .eq("id", selectedQuote.id)
+
       if (error) throw error
 
       toast({
-        title: "Éxito",
-        description: "Quote actualizada correctamente",
+        title: t("common.success"),
+        description: t("opportunities.quotes.successUpdate"),
       })
 
       setShowEditModal(false)
+      setSelectedQuote(null)
       await loadQuotes()
-    } catch (err) {
-      console.error("Error updating quote:", err)
+    } catch (error) {
+      console.error("[v0] Error updating quote:", error)
       toast({
-        title: "Error",
-        description: "No se pudo actualizar la quote",
+        title: t("common.error"),
+        description: t("opportunities.quotes.errorUpdate"),
         variant: "destructive",
       })
     } finally {
@@ -351,7 +301,7 @@ if (editFormData.economical_file) {
   }
 
   const handleDeleteQuote = async (quoteId: string) => {
-    if (!confirm("¿Estás seguro de que deseas eliminar esta quote?")) return
+    if (!confirm(t("common.confirmDelete") || "¿Estás seguro?")) return
 
     try {
       const { error } = await supabase.from("quotes").delete().eq("id", quoteId)
@@ -359,144 +309,132 @@ if (editFormData.economical_file) {
       if (error) throw error
 
       toast({
-        title: "Éxito",
-        description: "Quote eliminada correctamente",
+        title: t("common.success"),
+        description: t("opportunities.quotes.successDelete"),
       })
 
       await loadQuotes()
-    } catch (err) {
-      console.error("Error deleting quote:", err)
+    } catch (error) {
+      console.error("[v0] Error deleting quote:", error)
       toast({
-        title: "Error",
-        description: "No se pudo eliminar la quote",
+        title: t("common.error"),
+        description: t("opportunities.quotes.errorDelete"),
         variant: "destructive",
       })
     }
   }
 
-  const handleDownloadFile = async (fileUrl: string | null) => {
-    if (!fileUrl) return
-
-    try {
-      window.open(fileUrl, "_blank")
-    } catch (err) {
-      console.error("Error downloading file:", err)
-      toast({
-        title: "Error",
-        description: "No se pudo descargar el archivo",
-        variant: "destructive",
-      })
+  const getStatusBadge = (status: string | null) => {
+    const statusMap: Record<string, string> = {
+      requested: t("opportunities.quotes.status.requested"),
+      offered: t("opportunities.quotes.status.offered"),
+      accepted: t("opportunities.quotes.status.accepted"),
+      rejected: t("opportunities.quotes.status.rejected"),
     }
-  }
 
-  const formatCurrency = (value: number | null) => {
-    if (!value) return "$0.00"
-    return new Intl.NumberFormat("es-AR", {
-      style: "currency",
-      currency: "ARS",
-    }).format(value)
-  }
+    const badgeColors: Record<string, { bg: string; text: string }> = {
+      requested: { bg: "bg-blue-100", text: "text-blue-800" },
+      offered: { bg: "bg-green-100", text: "text-green-800" },
+      accepted: { bg: "bg-purple-100", text: "text-purple-800" },
+      rejected: { bg: "bg-red-100", text: "text-red-800" },
+    }
 
-  const formatDate = (date: string | null) => {
-    if (!date) return "-"
-    return new Date(date).toLocaleDateString("es-AR")
-  }
+    const colors = badgeColors[status || "requested"] || { bg: "bg-gray-100", text: "text-gray-800" }
 
-  const canRequestQuote = ALLOWED_ROLES_REQUEST.includes(userRole)
-  const canEditQuote = ALLOWED_ROLES_EDIT.includes(userRole)
+    return (
+      <Badge className={`${colors.bg} ${colors.text} border-0`}>
+        {statusMap[status || "requested"] || status}
+      </Badge>
+    )
+  }
 
   if (loading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Quotes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex justify-center py-8">Cargando quotes...</div>
-        </CardContent>
-      </Card>
-    )
+    return <div className="text-center py-4">{t("common.loading")}</div>
   }
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Quotes</CardTitle>
+        <CardTitle>{t("opportunities.quotes.title")}</CardTitle>
         {canRequestQuote && (
-          <Button onClick={() => setShowCreateModal(true)} size="sm" className="gap-2">
+          <Button size="sm" onClick={() => setShowCreateModal(true)} className="gap-2">
             <Plus className="h-4 w-4" />
-            Solicitar Quote
+            {t("opportunities.quotes.request")}
           </Button>
         )}
       </CardHeader>
       <CardContent>
         {quotes.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">No hay quotes disponibles</div>
+          <div className="text-center py-8 text-gray-500">{t("opportunities.quotes.noQuotes")}</div>
         ) : (
           <div className="space-y-3">
             {quotes.map((quote) => (
               <div key={quote.id} className="border rounded-lg p-4 flex items-center justify-between">
-                <div className="flex-grow">
+                <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <span className="font-medium">{quote.quote_number}</span>
-                    <Badge className={`${QUOTE_STATUS_BADGE[quote.status || "requested"]?.bgColor || "bg-gray-100"} ${QUOTE_STATUS_BADGE[quote.status || "requested"]?.textColor || "text-gray-800"}`}>
-                      {QUOTE_STATUS_BADGE[quote.status || "requested"]?.label || quote.status}
-                    </Badge>
+                    <span className="font-semibold">{quote.quote_number}</span>
+                    {getStatusBadge(quote.status)}
+                    <span className="text-sm text-gray-500">
+                      {quote.quote_date ? new Date(quote.quote_date).toLocaleDateString() : ""}
+                    </span>
                   </div>
-                  <div className="text-sm text-gray-600 flex gap-4">
-                    <span>Fecha: {formatDate(quote.quote_date)}</span>
-                    <span>Total: {formatCurrency(quote.total_amount)}</span>
+                  <div className="text-sm">
+                    <span className="font-medium">{t("opportunities.quotes.total")}:</span> ${quote.total_amount?.toFixed(2) || "0.00"}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {(quote.status === "offered" || quote.status === "accepted") && (
-                    <>
-                      {quote.technical_quote_url && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDownloadFile(quote.technical_quote_url)}
-                          title="Descargar Anexo Técnico"
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      )}
-                      {quote.economical_quote_url && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDownloadFile(quote.economical_quote_url)}
-                          title="Descargar Oferta Económica"
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </>
+                  {canEditQuote && quote.status === "requested" && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setSelectedQuote(quote)
+                        setEditFormData({
+                          items: quote.items || [],
+                          notes: quote.notes || "",
+                          general_discount_amount: quote.general_discount_amount || 0,
+                          shipping_amount: quote.shipping_amount || 0,
+                          technical_file: null,
+                          economical_file: null,
+                        })
+                        setShowEditModal(true)
+                      }}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
                   )}
-                  {quote.status === "requested" && canEditQuote && (
-                    <>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedQuote(quote)
-                          setEditFormData({
-                            items: quote.items || [],
-                            notes: quote.notes || "",
-                            general_discount_amount: quote.general_discount_amount || 0,
-                            shipping_amount: quote.shipping_amount || 0,
-                            technical_file: null,
-                            economical_file: null,
-                          })
-                          setShowEditModal(true)
-                        }}
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDeleteQuote(quote.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </>
+                  {quote.economical_quote_url && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => window.open(quote.economical_quote_url, "_blank")}
+                      className="h-8 w-8 p-0"
+                      title={t("opportunities.quotes.downloadEconomical")}
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {quote.technical_quote_url && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => window.open(quote.technical_quote_url, "_blank")}
+                      className="h-8 w-8 p-0"
+                      title={t("opportunities.quotes.downloadTechnical")}
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {canEditQuote && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleDeleteQuote(quote.id)}
+                      className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   )}
                 </div>
               </div>
@@ -509,20 +447,28 @@ if (editFormData.economical_file) {
       <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Solicitar Quote</DialogTitle>
+            <DialogTitle>{t("opportunities.quotes.createModalTitle")}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">Items</label>
-              <div className="space-y-2 mt-2">
+            {/* Items Section */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">{t("opportunities.quotes.itemsLabel")}</label>
+
+              <div className="space-y-2">
                 {createFormData.items.map((item, index) => (
                   <div key={index} className="border rounded p-2 flex items-center justify-between bg-gray-50">
-                    <span className="text-sm">{item.description}</span>
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">{item.description}</div>
+                      <div className="text-xs text-gray-500">
+                        {t("opportunities.quotes.itemQuantity")}: {item.quantity}
+                      </div>
+                    </div>
                     <Button
-                      variant="ghost"
                       size="sm"
-                      onClick={() => handleRemoveQuoteItem(index)}
+                      variant="ghost"
+                      onClick={() => handleRemoveCreateItem(index)}
+                      className="h-6 w-6 p-0"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -530,40 +476,44 @@ if (editFormData.economical_file) {
                 ))}
               </div>
 
-              <div className="flex gap-2 mt-3">
+              <div className="flex gap-2">
                 <Input
-                  placeholder="Descripción del item"
+                  placeholder={t("opportunities.quotes.itemDescription")}
                   value={createFormData.itemDescription}
                   onChange={(e) => setCreateFormData({ ...createFormData, itemDescription: e.target.value })}
+                  className="flex-1"
                 />
                 <Input
                   type="number"
-                  placeholder="Cantidad"
+                  placeholder={t("opportunities.quotes.itemQuantity")}
                   value={createFormData.itemQuantity}
                   onChange={(e) => setCreateFormData({ ...createFormData, itemQuantity: parseInt(e.target.value) || 1 })}
-                  className="w-24"
+                  className="w-20"
                 />
-                <Button onClick={handleAddQuoteItem}>Agregar</Button>
+                <Button onClick={handleAddItem} size="sm" variant="outline">
+                  {t("opportunities.quotes.addItem")}
+                </Button>
               </div>
             </div>
 
-            <div>
-              <label className="text-sm font-medium">Notas</label>
+            {/* Notes Section */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">{t("opportunities.quotes.notesLabel")}</label>
               <Textarea
-                placeholder="Notas de la quote..."
+                placeholder={t("opportunities.quotes.notesPlaceholder")}
                 value={createFormData.notes}
                 onChange={(e) => setCreateFormData({ ...createFormData, notes: e.target.value })}
-                className="mt-2"
+                rows={3}
               />
             </div>
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreateModal(false)}>
-              Cancelar
+              {t("opportunities.quotes.cancel")}
             </Button>
-            <Button onClick={handleSaveQuote} disabled={isSaving}>
-              {isSaving ? "Guardando..." : "Solicitar Quote"}
+            <Button onClick={handleCreateQuote} disabled={isSaving}>
+              {isSaving ? t("opportunities.quotes.saving") : t("opportunities.quotes.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -571,127 +521,184 @@ if (editFormData.economical_file) {
 
       {/* Edit Quote Modal */}
       <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Completar Datos de Quote</DialogTitle>
+            <DialogTitle>{t("opportunities.quotes.editModalTitle")}</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">Items</label>
-              <div className="space-y-2 mt-2 max-h-48 overflow-y-auto">
-                {editFormData.items.map((item, index) => (
-                  <div key={index} className="border rounded p-2 bg-gray-50">
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="text-sm font-medium">{item.description}</div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRemoveQuoteItem(index, true)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+          {selectedQuote && (
+            <div className="space-y-4">
+              {/* Items Table */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{t("opportunities.quotes.itemsLabel")}</label>
+                <div className="border rounded overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-100 border-b">
+                      <tr>
+                        <th className="text-left p-2">{t("opportunities.quotes.itemDescription")}</th>
+                        <th className="text-center p-2 w-20">{t("opportunities.quotes.itemQuantity")}</th>
+                        <th className="text-right p-2 w-24">{t("opportunities.quotes.unitPrice")}</th>
+                        <th className="text-right p-2 w-20">{t("opportunities.quotes.discountPercent")}</th>
+                        <th className="text-right p-2 w-24">{t("opportunities.quotes.lineTotal")}</th>
+                        <th className="text-center p-2 w-8"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {editFormData.items.map((item, index) => (
+                        <tr key={index} className="border-b">
+                          <td className="p-2">{item.description}</td>
+                          <td className="text-center p-2">
+                            <Input
+                              type="number"
+                              value={item.quantity}
+                              onChange={(e) => {
+                                const updated = [...editFormData.items]
+                                updated[index].quantity = parseInt(e.target.value) || 1
+                                setEditFormData({ ...editFormData, items: updated })
+                              }}
+                              className="w-full text-center"
+                            />
+                          </td>
+                          <td className="text-right p-2">
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={item.unit_price}
+                              onChange={(e) => {
+                                const updated = [...editFormData.items]
+                                updated[index].unit_price = parseFloat(e.target.value) || 0
+                                updated[index].line_subtotal = updated[index].quantity * updated[index].unit_price
+                                updated[index].line_discount_amount = (updated[index].line_subtotal * updated[index].discount_percent) / 100
+                                updated[index].line_total = updated[index].line_subtotal - updated[index].line_discount_amount
+                                setEditFormData({ ...editFormData, items: updated })
+                              }}
+                              className="w-full text-right"
+                            />
+                          </td>
+                          <td className="text-right p-2">
+                            <Input
+                              type="number"
+                              step="0.1"
+                              value={item.discount_percent}
+                              onChange={(e) => {
+                                const updated = [...editFormData.items]
+                                updated[index].discount_percent = parseFloat(e.target.value) || 0
+                                updated[index].line_discount_amount = (updated[index].line_subtotal * updated[index].discount_percent) / 100
+                                updated[index].line_total = updated[index].line_subtotal - updated[index].line_discount_amount
+                                setEditFormData({ ...editFormData, items: updated })
+                              }}
+                              className="w-full text-right"
+                            />
+                          </td>
+                          <td className="text-right p-2 font-medium">${item.line_total?.toFixed(2) || "0.00"}</td>
+                          <td className="text-center p-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleRemoveEditItem(index)}
+                              className="h-6 w-6 p-0"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Totals Section */}
+              {(() => {
+                const totals = calculateTotals(
+                  editFormData.items,
+                  editFormData.general_discount_amount,
+                  editFormData.shipping_amount
+                )
+                return (
+                  <div className="border rounded p-4 space-y-2 bg-gray-50">
+                    <div className="flex justify-between text-sm">
+                      <span>Subtotal:</span>
+                      <span>${totals.subtotal.toFixed(2)}</span>
                     </div>
-                    <div className="grid grid-cols-3 gap-2 text-sm">
-                      <div>
-                        <label className="text-xs text-gray-600">Precio Unit.</label>
-                        <Input
-                          type="number"
-                          value={item.unit_price || 0}
-                          onChange={(e) => {
-                            const updated = [...editFormData.items]
-                            updated[index].unit_price = parseFloat(e.target.value) || 0
-                            updated[index].line_total = calculateLineTotal(updated[index])
-                            setEditFormData({ ...editFormData, items: updated })
-                          }}
-                          placeholder="0"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs text-gray-600">Descuento %</label>
-                        <Input
-                          type="number"
-                          value={item.discount_percent || 0}
-                          onChange={(e) => {
-                            const updated = [...editFormData.items]
-                            updated[index].discount_percent = parseFloat(e.target.value) || 0
-                            updated[index].line_total = calculateLineTotal(updated[index])
-                            setEditFormData({ ...editFormData, items: updated })
-                          }}
-                          placeholder="0"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs text-gray-600">Total Línea</label>
-                        <div className="p-2 bg-white border rounded text-sm font-medium">
-                          {formatCurrency(item.line_total)}
-                        </div>
-                      </div>
+                    <div className="flex justify-between items-center">
+                      <label className="text-sm">{t("opportunities.quotes.generalDiscount")}:</label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={editFormData.general_discount_amount}
+                        onChange={(e) =>
+                          setEditFormData({ ...editFormData, general_discount_amount: parseFloat(e.target.value) || 0 })
+                        }
+                        className="w-24"
+                      />
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <label className="text-sm">{t("opportunities.quotes.shipping")}:</label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={editFormData.shipping_amount}
+                        onChange={(e) =>
+                          setEditFormData({ ...editFormData, shipping_amount: parseFloat(e.target.value) || 0 })
+                        }
+                        className="w-24"
+                      />
+                    </div>
+                    <div className="border-t pt-2 flex justify-between font-bold">
+                      <span>{t("opportunities.quotes.total")}:</span>
+                      <span>${totals.total.toFixed(2)}</span>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
+                )
+              })()}
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium">Descuento General</label>
-                <Input
-                  type="number"
-                  value={editFormData.general_discount_amount}
-                  onChange={(e) => setEditFormData({ ...editFormData, general_discount_amount: parseFloat(e.target.value) || 0 })}
-                  placeholder="0"
-                  className="mt-1"
+              {/* Notes */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{t("opportunities.quotes.notesLabel")}</label>
+                <Textarea
+                  placeholder={t("opportunities.quotes.notesPlaceholder")}
+                  value={editFormData.notes}
+                  onChange={(e) => setEditFormData({ ...editFormData, notes: e.target.value })}
+                  rows={2}
                 />
               </div>
-              <div>
-                <label className="text-sm font-medium">Envío</label>
-                <Input
-                  type="number"
-                  value={editFormData.shipping_amount}
-                  onChange={(e) => setEditFormData({ ...editFormData, shipping_amount: parseFloat(e.target.value) || 0 })}
-                  placeholder="0"
-                  className="mt-1"
-                />
+
+              {/* File Uploads */}
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">{t("opportunities.quotes.technicalAttachment")}</label>
+                  <Input
+                    type="file"
+                    accept=".pdf"
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, technical_file: e.target.files?.[0] || null })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-red-600">
+                    {t("opportunities.quotes.economicalQuote")}
+                  </label>
+                  <Input
+                    type="file"
+                    accept=".pdf"
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, economical_file: e.target.files?.[0] || null })
+                    }
+                    required
+                  />
+                </div>
               </div>
             </div>
-
-            <div>
-              <label className="text-sm font-medium">Anexo Técnico (PDF - Opcional)</label>
-              <Input
-                type="file"
-                accept=".pdf"
-                onChange={(e) => setEditFormData({ ...editFormData, technical_file: e.target.files?.[0] || null })}
-                className="mt-1"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium">Oferta Económica (PDF - Obligatorio)</label>
-              <Input
-                type="file"
-                accept=".pdf"
-                onChange={(e) => setEditFormData({ ...editFormData, economical_file: e.target.files?.[0] || null })}
-                className="mt-1"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium">Notas</label>
-              <Textarea
-                value={editFormData.notes}
-                onChange={(e) => setEditFormData({ ...editFormData, notes: e.target.value })}
-                className="mt-1"
-              />
-            </div>
-          </div>
+          )}
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowEditModal(false)}>
-              Cancelar
+              {t("opportunities.quotes.cancel")}
             </Button>
-            <Button onClick={handleSaveEditQuote} disabled={isSaving}>
-              {isSaving ? "Guardando..." : "Guardar Quote"}
+            <Button onClick={handleEditQuote} disabled={isSaving}>
+              {isSaving ? t("opportunities.quotes.saving") : t("opportunities.quotes.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
