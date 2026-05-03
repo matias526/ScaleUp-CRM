@@ -649,14 +649,20 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
           logDebug(`Usuario autenticado encontrado: ${user.id}`)
           const { data: userData, error: userError } = await supabase
             .from("users")
-            .select("*")
+            .select(`
+              *,
+              role:roles(code)
+            `)
             .eq("id", user.id)
             .single()
 
           if (userError) {
             logDebug(`Error al cargar datos del usuario: ${userError.message}`)
           } else {
-            setCurrentUser(userData)
+            setCurrentUser({
+              ...userData,
+              role_code: userData?.role?.code || null,
+            })
             logDebug(`Usuario actual cargado: ${userData?.id}`)
           }
         } else {
@@ -2014,7 +2020,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
           <OpportunityQuotes 
             opportunityId={opportunity?.id || ""} 
             lang={lang} 
-            userRole={currentUser?.role || ""}
+            userRole={currentUser?.role_code || ""}
           />
 
           {/* Tareas relacionadas */}
