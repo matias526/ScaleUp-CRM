@@ -73,6 +73,7 @@ import { getLocale as getLocaleString } from "@/lib/utils"
 import { es as esLocale, enUS, pt } from "date-fns/locale"
 import { EndCustomerInfoDialog } from "./end-customer-info-dialog"
 import { PulseMessageSenderOpportunity } from "@/components/pulse/pulse-message-sender-opportunity"
+import { OpportunityQuotes } from "./opportunity-quotes"
 
 
 
@@ -2005,6 +2006,13 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
               onSendMessage={() => setShowPulseMessageSender(true)}
             />
           </div>
+
+          {/* Quotes Section */}
+          <OpportunityQuotes 
+            opportunityId={opportunity?.id || ""} 
+            lang={lang} 
+            userRole={userInfo?.role || ""}
+          />
 
           {/* Tareas relacionadas */}
           <div className="mt-6">

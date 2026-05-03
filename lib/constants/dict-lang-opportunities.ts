@@ -635,4 +635,200 @@ export const DICT_LANG_OPPORTUNITIES = {
     en: "Create a new prospect partner",
     pt: "Criar um novo prospect partner",
   },
+  // Quotes section translations
+  "opportunities.quotes.title": {
+    es: "Quotes",
+    en: "Quotes",
+    pt: "Orçamentos",
+  },
+  "opportunities.quotes.request": {
+    es: "Solicitar Quote",
+    en: "Request Quote",
+    pt: "Solicitar Orçamento",
+  },
+  "opportunities.quotes.noQuotes": {
+    es: "No hay quotes disponibles",
+    en: "No quotes available",
+    pt: "Nenhum orçamento disponível",
+  },
+  "opportunities.quotes.status.requested": {
+    es: "Solicitada",
+    en: "Requested",
+    pt: "Solicitado",
+  },
+  "opportunities.quotes.status.offered": {
+    es: "Ofertada",
+    en: "Offered",
+    pt: "Oferecido",
+  },
+  "opportunities.quotes.status.accepted": {
+    es: "Aceptada",
+    en: "Accepted",
+    pt: "Aceito",
+  },
+  "opportunities.quotes.status.rejected": {
+    es: "Rechazada",
+    en: "Rejected",
+    pt: "Rejeitado",
+  },
+  "opportunities.quotes.createModalTitle": {
+    es: "Solicitar Quote",
+    en: "Request Quote",
+    pt: "Solicitar Orçamento",
+  },
+  "opportunities.quotes.editModalTitle": {
+    es: "Completar Datos de Quote",
+    en: "Complete Quote Data",
+    pt: "Completar Dados do Orçamento",
+  },
+  "opportunities.quotes.itemsLabel": {
+    es: "Items",
+    en: "Items",
+    pt: "Itens",
+  },
+  "opportunities.quotes.itemDescription": {
+    es: "Descripción del item",
+    en: "Item description",
+    pt: "Descrição do item",
+  },
+  "opportunities.quotes.itemQuantity": {
+    es: "Cantidad",
+    en: "Quantity",
+    pt: "Quantidade",
+  },
+  "opportunities.quotes.addItem": {
+    es: "Agregar",
+    en: "Add",
+    pt: "Adicionar",
+  },
+  "opportunities.quotes.notesLabel": {
+    es: "Notas",
+    en: "Notes",
+    pt: "Notas",
+  },
+  "opportunities.quotes.notesPlaceholder": {
+    es: "Notas de la quote...",
+    en: "Quote notes...",
+    pt: "Notas do orçamento...",
+  },
+  "opportunities.quotes.unitPrice": {
+    es: "Precio Unit.",
+    en: "Unit Price",
+    pt: "Preço Unit.",
+  },
+  "opportunities.quotes.discountPercent": {
+    es: "Descuento %",
+    en: "Discount %",
+    pt: "Desconto %",
+  },
+  "opportunities.quotes.lineTotal": {
+    es: "Total Línea",
+    en: "Line Total",
+    pt: "Total da Linha",
+  },
+  "opportunities.quotes.generalDiscount": {
+    es: "Descuento General",
+    en: "General Discount",
+    pt: "Desconto Geral",
+  },
+  "opportunities.quotes.shipping": {
+    es: "Envío",
+    en: "Shipping",
+    pt: "Frete",
+  },
+  "opportunities.quotes.technicalAttachment": {
+    es: "Anexo Técnico (PDF - Opcional)",
+    en: "Technical Attachment (PDF - Optional)",
+    pt: "Anexo Técnico (PDF - Opcional)",
+  },
+  "opportunities.quotes.economicalQuote": {
+    es: "Oferta Económica (PDF - Obligatorio)",
+    en: "Economical Quote (PDF - Required)",
+    pt: "Oferta Econômica (PDF - Obrigatório)",
+  },
+  "opportunities.quotes.cancel": {
+    es: "Cancelar",
+    en: "Cancel",
+    pt: "Cancelar",
+  },
+  "opportunities.quotes.save": {
+    es: "Guardar Quote",
+    en: "Save Quote",
+    pt: "Salvar Orçamento",
+  },
+  "opportunities.quotes.saving": {
+    es: "Guardando...",
+    en: "Saving...",
+    pt: "Salvando...",
+  },
+  "opportunities.quotes.requestQuote": {
+    es: "Solicitar Quote",
+    en: "Request Quote",
+    pt: "Solicitar Orçamento",
+  },
+  "opportunities.quotes.errorEmptyItems": {
+    es: "Debes agregar al menos un item",
+    en: "You must add at least one item",
+    pt: "Você deve adicionar pelo menos um item",
+  },
+  "opportunities.quotes.errorEmptyDescription": {
+    es: "Debes ingresar una descripción",
+    en: "You must enter a description",
+    pt: "Você deve inserir uma descrição",
+  },
+  "opportunities.quotes.successCreate": {
+    es: "Quote solicitada correctamente",
+    en: "Quote requested successfully",
+    pt: "Orçamento solicitado com sucesso",
+  },
+  "opportunities.quotes.errorCreate": {
+    es: "No se pudo guardar la quote",
+    en: "Could not save quote",
+    pt: "Não foi possível salvar o orçamento",
+  },
+  "opportunities.quotes.errorMissingEconomical": {
+    es: "La Oferta Económica es obligatoria",
+    en: "Economical Quote is required",
+    pt: "A Oferta Econômica é obrigatória",
+  },
+  "opportunities.quotes.successUpdate": {
+    es: "Quote actualizada correctamente",
+    en: "Quote updated successfully",
+    pt: "Orçamento atualizado com sucesso",
+  },
+  "opportunities.quotes.errorUpdate": {
+    es: "No se pudo actualizar la quote",
+    en: "Could not update quote",
+    pt: "Não foi possível atualizar o orçamento",
+  },
+  "opportunities.quotes.errorDelete": {
+    es: "No se pudo eliminar la quote",
+    en: "Could not delete quote",
+    pt: "Não foi possível excluir o orçamento",
+  },
+  "opportunities.quotes.successDelete": {
+    es: "Quote eliminada correctamente",
+    en: "Quote deleted successfully",
+    pt: "Orçamento excluído com sucesso",
+  },
+  "opportunities.quotes.date": {
+    es: "Fecha",
+    en: "Date",
+    pt: "Data",
+  },
+  "opportunities.quotes.total": {
+    es: "Total",
+    en: "Total",
+    pt: "Total",
+  },
+  "opportunities.quotes.downloadTechnical": {
+    es: "Descargar Anexo Técnico",
+    en: "Download Technical Attachment",
+    pt: "Baixar Anexo Técnico",
+  },
+  "opportunities.quotes.downloadEconomical": {
+    es: "Descargar Oferta Económica",
+    en: "Download Economical Quote",
+    pt: "Baixar Oferta Econômica",
+  },
 }
