@@ -57,7 +57,33 @@ export function PartnerOpportunityDetail({ opportunity, onClose, onDataChange }:
   const [techFields, setTechFields] = useState<any[]>([])
   const [partnerResponsible, setPartnerResponsible] = useState<any>(null)
   const [isLoadingPartnerResponsible, setIsLoadingPartnerResponsible] = useState(false)
+  const [userRoleCode, setUserRoleCode] = useState<string>("")
   
+  // Cargar el role_code del usuario actual
+  useEffect(() => {
+    const loadUserRoleCode = async () => {
+      if (userInfo?.id) {
+        try {
+          const { data, error } = await supabase
+            .from("users")
+            .select(`role:roles(code)`)
+            .eq("id", userInfo.id)
+            .single()
+
+          if (error) {
+            console.error("Error loading user role:", error)
+          } else {
+            setUserRoleCode(data?.role?.code || "")
+          }
+        } catch (error) {
+          console.error("Error loading user role:", error)
+        }
+      }
+    }
+
+    loadUserRoleCode()
+  }, [userInfo?.id])
+
   // Cargar usuarios relevantes y campos técnicos
   useEffect(() => {
     const loadData = async () => {
@@ -432,7 +458,7 @@ export function PartnerOpportunityDetail({ opportunity, onClose, onDataChange }:
           <OpportunityQuotes 
             opportunityId={opportunity?.id || ""} 
             lang={userInfo?.preferred_language || "es"}
-            userRole={userInfo?.role_code || ""}
+            userRole={userRoleCode}
           />
 
           {/* Sección de tareas (debajo) */}
