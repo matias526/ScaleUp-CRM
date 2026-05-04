@@ -538,7 +538,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
       const isAdminOrBDD = ["Admin", "BDD"].includes(userRoleCode)
       const poStatus = isAdminOrBDD ? "accepted" : "sent"
       const docStatus = isAdminOrBDD ? "accepted" : "pending"
-      const opportunityStatus = isAdminOrBDD ? "won" : "quotation"
+      const opportunityStatus = isAdminOrBDD ? "Won" : "quotation"
 
       // Create Purchase Order
       const poId = uuidv4()
@@ -606,7 +606,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
           .from("opportunities")
           .update({ 
             purchase_order_id: createdPoId,
-            pipeline_stage_id: isAdminOrBDD ? "82056c9d-0bdb-4db4-9097-f6f1a72d4db2" : QUOTATION_STAGE_ID
+            pipeline_stage_id: isAdminOrBDD ? "6ce3c904-c927-4e11-91f8-d25674d642ac" : QUOTATION_STAGE_ID
           } as any)
           .eq("id", oppId)
 
