@@ -116,6 +116,12 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
     selectedOpportunities: [] as string[],
   })
 
+  // Sanitize file name to remove special characters
+  const sanitizeFileName = (fileName: string): string => {
+    const ext = fileName.split(".").pop() || "pdf"
+    return `po_${Date.now()}.${ext}`
+  }
+
   // Load current user
   useEffect(() => {
     const loadCurrentUser = async () => {
@@ -512,8 +518,9 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
 
       setIsSaving(true)
 
-      // Upload PO file to storage
-      const poPath = `pos/${Date.now()}_${poFormData.po_file.name}`
+      // Upload PO file to storage with sanitized name
+      const sanitizedFileName = sanitizeFileName(poFormData.po_file.name)
+      const poPath = `pos/${sanitizedFileName}`
       const { error: uploadError } = await supabase.storage
         .from("po_documents")
         .upload(poPath, poFormData.po_file)
