@@ -250,12 +250,11 @@ export function Sidebar() {
       icon: CircleDollarSign,
       labelKey: "sidebar.opportunities",
     },
-    // TODO: Fix purchase orders page loading issue
-    // {
-    //   href: "/dashboard/purchase-orders",
-    //   icon: ClipboardList,
-    //   labelKey: "sidebar.orders",
-    // },
+    {
+      href: "/dashboard/purchase-orders",
+      icon: ClipboardList,
+      labelKey: "sidebar.orders",
+    },
     {
       href: "/dashboard/tasks",
       icon: ClipboardList,
