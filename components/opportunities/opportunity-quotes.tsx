@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Plus, Download, Edit2, Trash2 } from "lucide-react"
+import { Plus, Download, FileText, Trash2 } from "lucide-react"
 import { useTranslations } from "@/hooks/use-translations"
 import { DICT_LANG_OPPORTUNITIES } from "@/lib/constants/dict-lang-opportunities"
 import { supabase } from "@/lib/supabase/client"
@@ -62,7 +62,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
   const [quotes, setQuotes] = useState<Quote[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
-  const [showEditModal, setShowEditModal] = useState(false)
+  const [showGenerateModal, setShowGenerateModal] = useState(false)
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [currentUser, setCurrentUser] = useState<any>(null)
@@ -78,14 +78,16 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
     itemQuantity: 1,
   })
 
-  // Edit modal state
-  const [editFormData, setEditFormData] = useState({
+  // Generate modal state
+  const [generateFormData, setGenerateFormData] = useState({
     items: [] as QuoteItem[],
     notes: "",
     general_discount_amount: 0,
     shipping_amount: 0,
     technical_file: null as File | null,
     economical_file: null as File | null,
+    subtotal_amount: 0,
+    total_amount: 0,
   })
 
   // Load current user
@@ -101,14 +103,12 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
             .select("id, first_name, last_name, email")
             .eq("id", user.id)
             .single()
-
           setCurrentUser(userData)
         }
       } catch (error) {
         console.error("[v0] Error loading current user:", error)
       }
     }
-
     loadCurrentUser()
   }, [])
 
@@ -119,7 +119,6 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
 
   const loadQuotes = async () => {
     try {
-      setLoading(true)
       const { data, error } = await supabase
         .from("quotes")
         .select("*")
@@ -130,63 +129,13 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
       setQuotes(data || [])
     } catch (error) {
       console.error("[v0] Error loading quotes:", error)
-      toast({
-        title: t("common.error"),
-        description: t("opportunities.quotes.errorCreate"),
-        variant: "destructive",
-      })
     } finally {
       setLoading(false)
     }
   }
 
-  const calculateTotals = (items: QuoteItem[], discountAmount: number, shippingAmount: number) => {
-    const subtotal = items.reduce((sum, item) => sum + (item.line_total || 0), 0)
-    const total = subtotal - discountAmount + shippingAmount
-    return { subtotal, total }
-  }
-
-  const addNoteForAction = async (action: string) => {
-    if (!currentUser) return
-
-    try {
-      const userName = `${currentUser.first_name} ${currentUser.last_name}`
-      const noteContent = action === "request"
-        ? `${userName} ha solicitado una quote`
-        : `${userName} ha generado una quote`
-
-      await supabase.from("notes").insert([
-        {
-          opportunity_id: opportunityId,
-          content: noteContent,
-          user_id: currentUser.id,
-          created_at: new Date().toISOString(),
-        },
-      ])
-    } catch (error) {
-      console.error("[v0] Error adding note:", error)
-    }
-  }
-
-  const updateOpportunityStage = async () => {
-    try {
-      const { error } = await supabase
-        .from("opportunities")
-        .update({
-          pipeline_stage_id: QUOTATION_STAGE_ID,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", opportunityId)
-
-      if (error) throw error
-      console.log("[v0] Opportunity stage updated to Quotation")
-    } catch (error) {
-      console.error("[v0] Error updating opportunity stage:", error)
-    }
-  }
-
   const canRequestQuote = ALLOWED_ROLES_REQUEST.includes(userRoleCode)
-  const canEditQuote = ALLOWED_ROLES_EDIT.includes(userRoleCode)
+  const canGenerateQuote = ALLOWED_ROLES_EDIT.includes(userRoleCode)
 
   const handleAddItem = () => {
     if (!createFormData.itemDescription.trim()) {
@@ -199,7 +148,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
     }
 
     const newItem: QuoteItem = {
-      sku: uuidv4(),
+      sku: "",
       description: createFormData.itemDescription,
       quantity: createFormData.itemQuantity,
       unit_price: 0,
@@ -217,10 +166,10 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
     })
   }
 
-  const handleRemoveItem = (sku: string) => {
+  const handleRemoveItem = (index: number) => {
     setCreateFormData({
       ...createFormData,
-      items: createFormData.items.filter((item) => item.sku !== sku),
+      items: createFormData.items.filter((_, i) => i !== index),
     })
   }
 
@@ -234,54 +183,65 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
       return
     }
 
-    if (!currentUser) {
-      toast({
-        title: t("common.error"),
-        description: "Usuario no autenticado",
-        variant: "destructive",
-      })
-      return
-    }
-
     try {
       setIsSaving(true)
-      const totals = calculateTotals(createFormData.items, 0, 0)
 
-      const { error } = await supabase.from("quotes").insert([
+      // Create quote
+      const { data: quoteData, error: quoteError } = await supabase
+        .from("quotes")
+        .insert([
+          {
+            opportunity_id: opportunityId,
+            quote_number: `Q-${Date.now()}`,
+            status: "requested",
+            items: createFormData.items,
+            notes: createFormData.notes,
+            requested_by: currentUser?.id,
+            quote_date: new Date().toISOString(),
+          },
+        ])
+        .select()
+
+      if (quoteError) throw quoteError
+
+      // Change opportunity stage to Quotation
+      const { error: stageError } = await supabase
+        .from("opportunities")
+        .update({ stage_id: QUOTATION_STAGE_ID })
+        .eq("id", opportunityId)
+
+      if (stageError) console.error("[v0] Error updating opportunity stage:", stageError)
+
+      // Create note
+      const noteText = `${currentUser?.first_name} ${currentUser?.last_name} ha solicitado una quote`
+      const { error: noteError } = await supabase.from("notes").insert([
         {
           opportunity_id: opportunityId,
-          quote_number: `Q-${Date.now()}`,
-          status: "requested",
-          items: createFormData.items,
-          notes: createFormData.notes,
-          subtotal_amount: totals.subtotal,
-          total_amount: totals.total,
-          version: 1,
-          requested_by: currentUser.id,
+          description: noteText,
+          created_by: currentUser?.id,
         },
       ])
 
-      if (error) throw error
-
-      // Add note for quote request
-      await addNoteForAction("request")
-
-      // Update opportunity stage to Quotation
-      await updateOpportunityStage()
+      if (noteError) console.error("[v0] Error creating note:", noteError)
 
       toast({
         title: t("common.success"),
         description: t("opportunities.quotes.successCreate"),
       })
 
+      setCreateFormData({
+        notes: "",
+        items: [],
+        itemDescription: "",
+        itemQuantity: 1,
+      })
       setShowCreateModal(false)
-      setCreateFormData({ notes: "", items: [], itemDescription: "", itemQuantity: 1 })
       await loadQuotes()
-    } catch (error) {
+    } catch (error: any) {
       console.error("[v0] Error creating quote:", error)
       toast({
         title: t("common.error"),
-        description: t("opportunities.quotes.errorCreate"),
+        description: error.message || t("opportunities.quotes.errorCreate"),
         variant: "destructive",
       })
     } finally {
@@ -289,19 +249,57 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
     }
   }
 
-  const handleEditQuote = async () => {
-    if (!selectedQuote) return
+  const handleOpenGenerateModal = (quote: Quote) => {
+    setSelectedQuote(quote)
+    setGenerateFormData({
+      items: quote.items || [],
+      notes: quote.notes || "",
+      general_discount_amount: quote.general_discount_amount || 0,
+      shipping_amount: quote.shipping_amount || 0,
+      technical_file: null,
+      economical_file: null,
+      subtotal_amount: quote.subtotal_amount || 0,
+      total_amount: quote.total_amount || 0,
+    })
+    setShowGenerateModal(true)
+  }
 
-    if (editFormData.items.length === 0) {
-      toast({
-        title: t("common.error"),
-        description: t("opportunities.quotes.errorEmptyItems"),
-        variant: "destructive",
-      })
-      return
+  // Calculate totals whenever prices change
+  useEffect(() => {
+    if (showGenerateModal) {
+      calculateTotals()
     }
+  }, [generateFormData.items, generateFormData.general_discount_amount, generateFormData.shipping_amount, showGenerateModal])
 
-    if (!editFormData.economical_file && !selectedQuote.economical_quote_url) {
+  const calculateTotals = () => {
+    const subtotal = generateFormData.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0)
+    const afterDiscount = subtotal - generateFormData.general_discount_amount
+    const total = afterDiscount + generateFormData.shipping_amount
+
+    setGenerateFormData((prev) => ({
+      ...prev,
+      subtotal_amount: subtotal,
+      total_amount: Math.max(0, total),
+    }))
+  }
+
+  const handleUpdateItemPrice = (index: number, unitPrice: number) => {
+    const updatedItems = [...generateFormData.items]
+    updatedItems[index] = {
+      ...updatedItems[index],
+      unit_price: unitPrice,
+      line_subtotal: updatedItems[index].quantity * unitPrice,
+      line_discount_amount: (updatedItems[index].quantity * unitPrice * updatedItems[index].discount_percent) / 100,
+      line_total: (updatedItems[index].quantity * unitPrice) - ((updatedItems[index].quantity * unitPrice * updatedItems[index].discount_percent) / 100),
+    }
+    setGenerateFormData({
+      ...generateFormData,
+      items: updatedItems,
+    })
+  }
+
+  const handleSaveGenerateQuote = async () => {
+    if (!generateFormData.economical_file && !selectedQuote?.economical_quote_url) {
       toast({
         title: t("common.error"),
         description: t("opportunities.quotes.errorMissingEconomical"),
@@ -310,78 +308,85 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
       return
     }
 
-    if (!currentUser) {
-      toast({
-        title: t("common.error"),
-        description: "Usuario no autenticado",
-        variant: "destructive",
-      })
-      return
-    }
-
     try {
       setIsSaving(true)
-      const totals = calculateTotals(editFormData.items, editFormData.general_discount_amount, editFormData.shipping_amount)
 
-      let technicalUrl = selectedQuote.technical_quote_url
-      let economicalUrl = selectedQuote.economical_quote_url
+      let technicalUrl = selectedQuote?.technical_quote_url
+      let economicalUrl = selectedQuote?.economical_quote_url
 
       // Upload technical file if provided
-      if (editFormData.technical_file) {
-        const { data, error } = await supabase.storage
-          .from("quotes")
-          .upload(`${opportunityId}/${Date.now()}-technical.pdf`, editFormData.technical_file)
+      if (generateFormData.technical_file) {
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("quotes-attachments")
+          .upload(`${opportunityId}/${uuidv4()}-technical.pdf`, generateFormData.technical_file)
 
-        if (error) throw error
-        technicalUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/quotes/${data.path}`
+        if (uploadError) throw uploadError
+        technicalUrl = uploadData?.path || null
       }
 
       // Upload economical file if provided
-      if (editFormData.economical_file) {
-        const { data, error } = await supabase.storage
-          .from("quotes")
-          .upload(`${opportunityId}/${Date.now()}-economical.pdf`, editFormData.economical_file)
+      if (generateFormData.economical_file) {
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("quotes-attachments")
+          .upload(`${opportunityId}/${uuidv4()}-economical.pdf`, generateFormData.economical_file)
 
-        if (error) throw error
-        economicalUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/quotes/${data.path}`
+        if (uploadError) throw uploadError
+        economicalUrl = uploadData?.path || null
       }
 
-      const { error } = await supabase
+      // Update quote
+      const { error: updateError } = await supabase
         .from("quotes")
         .update({
           status: "offered",
-          items: editFormData.items,
-          notes: editFormData.notes,
-          subtotal_amount: totals.subtotal,
-          general_discount_amount: editFormData.general_discount_amount,
-          shipping_amount: editFormData.shipping_amount,
-          total_amount: totals.total,
+          items: generateFormData.items,
+          notes: generateFormData.notes,
+          subtotal_amount: generateFormData.subtotal_amount,
+          general_discount_amount: generateFormData.general_discount_amount,
+          shipping_amount: generateFormData.shipping_amount,
+          total_amount: generateFormData.total_amount,
           technical_quote_url: technicalUrl,
           economical_quote_url: economicalUrl,
-          version: (selectedQuote.version || 0) + 1,
-          answered_by: currentUser.id,
-          updated_at: new Date().toISOString(),
+          answered_by: currentUser?.id,
+          quote_date: new Date().toISOString(),
         })
-        .eq("id", selectedQuote.id)
+        .eq("id", selectedQuote?.id)
 
-      if (error) throw error
+      if (updateError) throw updateError
 
-      // Add note for quote generation
-      await addNoteForAction("answer")
+      // Update opportunity estimated_value
+      const { error: oppError } = await supabase
+        .from("opportunities")
+        .update({ estimated_value: generateFormData.total_amount })
+        .eq("id", opportunityId)
+
+      if (oppError) console.error("[v0] Error updating opportunity:", oppError)
+
+      // Create note
+      const noteText = `${currentUser?.first_name} ${currentUser?.last_name} ha generado una quote`
+      const { error: noteError } = await supabase.from("notes").insert([
+        {
+          opportunity_id: opportunityId,
+          description: noteText,
+          created_by: currentUser?.id,
+        },
+      ])
+
+      if (noteError) console.error("[v0] Error creating note:", noteError)
 
       toast({
         title: t("common.success"),
         description: t("opportunities.quotes.successUpdate"),
       })
 
-      setShowEditModal(false)
+      setShowGenerateModal(false)
       setSelectedQuote(null)
       await loadQuotes()
-    } catch (error) {
+    } catch (error: any) {
       console.error("[v0] Error updating quote:", error)
       toast({
         title: t("common.error"),
-        description: t("opportunities.quotes.errorUpdate"),
+        description: error.message || t("opportunities.quotes.errorUpdate"),
         variant: "destructive",
       })
     } finally {
@@ -390,9 +395,10 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
   }
 
   const handleDeleteQuote = async (quoteId: string) => {
-    if (!confirm(t("common.confirmDelete") || "¿Estás seguro?")) return
+    if (!confirm(t("common.confirmDelete"))) return
 
     try {
+      setIsSaving(true)
       const { error } = await supabase.from("quotes").delete().eq("id", quoteId)
 
       if (error) throw error
@@ -403,141 +409,109 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
       })
 
       await loadQuotes()
-    } catch (error) {
+    } catch (error: any) {
       console.error("[v0] Error deleting quote:", error)
       toast({
         title: t("common.error"),
-        description: t("opportunities.quotes.errorDelete"),
+        description: error.message || t("opportunities.quotes.errorDelete"),
         variant: "destructive",
       })
+    } finally {
+      setIsSaving(false)
     }
   }
 
-  const getStatusBadge = (status: string | null) => {
-    const statusMap: Record<string, string> = {
-      requested: t("opportunities.quotes.status.requested"),
-      offered: t("opportunities.quotes.status.offered"),
-      accepted: t("opportunities.quotes.status.accepted"),
-      rejected: t("opportunities.quotes.status.rejected"),
+  const getStatusBadgeVariant = (status: string | null) => {
+    switch (status) {
+      case "requested":
+        return "secondary"
+      case "offered":
+        return "default"
+      case "accepted":
+        return "outline"
+      case "rejected":
+        return "destructive"
+      default:
+        return "secondary"
     }
-
-    const badgeColors: Record<string, { bg: string; text: string }> = {
-      requested: { bg: "bg-blue-100", text: "text-blue-800" },
-      offered: { bg: "bg-green-100", text: "text-green-800" },
-      accepted: { bg: "bg-purple-100", text: "text-purple-800" },
-      rejected: { bg: "bg-red-100", text: "text-red-800" },
-    }
-
-    const colors = badgeColors[status || "requested"] || { bg: "bg-gray-100", text: "text-gray-800" }
-
-    return (
-      <Badge className={`${colors.bg} ${colors.text} border-0`}>
-        {statusMap[status || "requested"] || status}
-      </Badge>
-    )
   }
 
   if (loading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("opportunities.quotes.title")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center text-gray-500">{t("common.loading")}</div>
-        </CardContent>
-      </Card>
-    )
+    return <div className="text-center text-gray-500">{t("common.loading")}</div>
   }
 
   return (
     <>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-row items-center justify-between gap-4">
           <CardTitle>{t("opportunities.quotes.title")}</CardTitle>
           {canRequestQuote && (
-            <Button onClick={() => setShowCreateModal(true)} size="sm" className="gap-2">
-              <Plus className="h-4 w-4" />
+            <Button size="sm" onClick={() => setShowCreateModal(true)}>
+              <Plus className="h-4 w-4 mr-2" />
               {t("opportunities.quotes.request")}
             </Button>
           )}
         </CardHeader>
+
         <CardContent>
           {quotes.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">{t("opportunities.quotes.noQuotes")}</div>
+            <p className="text-center text-gray-500">{t("opportunities.quotes.noQuotes")}</p>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {quotes.map((quote) => (
-                <div key={quote.id} className="border rounded-lg p-4 hover:bg-gray-50">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-3">
-                      <span className="font-semibold text-lg">{quote.quote_number}</span>
-                      {getStatusBadge(quote.status)}
+                <div key={quote.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
+                  <div className="flex-1">
+                    <div className="font-medium">
+                      {quote.quote_number}
+                      <Badge className="ml-2" variant={getStatusBadgeVariant(quote.status)}>
+                        {quote.status}
+                      </Badge>
                     </div>
                     <div className="text-sm text-gray-600">
-                      {new Date(quote.created_at || "").toLocaleDateString()}
+                      {quote.quote_date && new Date(quote.quote_date).toLocaleDateString()}
+                      {quote.total_amount && ` - ${quote.total_amount.toLocaleString()}`}
                     </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">
-                        {t("opportunities.quotes.total")}: <span className="font-bold">${quote.total_amount?.toFixed(2)}</span>
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      {canEditQuote && quote.status === "requested" && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setSelectedQuote(quote)
-                            setEditFormData({
-                              items: quote.items || [],
-                              notes: quote.notes || "",
-                              general_discount_amount: quote.general_discount_amount || 0,
-                              shipping_amount: quote.shipping_amount || 0,
-                              technical_file: null,
-                              economical_file: null,
-                            })
-                            setShowEditModal(true)
-                          }}
-                          className="gap-2"
-                        >
-                          <Edit2 className="h-4 w-4" />
-                          {t("common.edit")}
-                        </Button>
-                      )}
-                      {quote.technical_quote_url && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => window.open(quote.technical_quote_url)}
-                          className="gap-2"
-                        >
-                          <Download className="h-4 w-4" />
-                          {t("opportunities.quotes.downloadTechnical")}
-                        </Button>
-                      )}
-                      {quote.economical_quote_url && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => window.open(quote.economical_quote_url)}
-                          className="gap-2"
-                        >
-                          <Download className="h-4 w-4" />
-                          {t("opportunities.quotes.downloadEconomical")}
-                        </Button>
-                      )}
+
+                  <div className="flex gap-2">
+                    {quote.technical_quote_url && (
                       <Button
                         size="sm"
-                        variant="outline"
-                        onClick={() => handleDeleteQuote(quote.id)}
-                        className="gap-2 text-red-600 hover:text-red-700"
+                        variant="ghost"
+                        onClick={() => window.open(`/api/download-quote/${quote.id}?file=technical`)}
+                        title={t("opportunities.quotes.downloadTechnical")}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Download className="h-4 w-4" />
                       </Button>
-                    </div>
+                    )}
+                    {quote.economical_quote_url && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => window.open(`/api/download-quote/${quote.id}?file=economical`)}
+                        title={t("opportunities.quotes.downloadEconomical")}
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {canGenerateQuote && quote.status === "requested" && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleOpenGenerateModal(quote)}
+                        title={t("opportunities.quotes.requestQuote")}
+                      >
+                        <FileText className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleDeleteQuote(quote.id)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -548,57 +522,80 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
 
       {/* Create Quote Modal */}
       <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{t("opportunities.quotes.createModalTitle")}</DialogTitle>
           </DialogHeader>
+
           <div className="space-y-4">
-            {/* Items Section */}
+            {/* Items List */}
             <div>
-              <label className="text-sm font-semibold mb-2 block">{t("opportunities.quotes.itemsLabel")}</label>
-              <div className="space-y-3">
-                {createFormData.items.map((item) => (
-                  <div key={item.sku} className="flex gap-2 items-center bg-gray-50 p-3 rounded">
+              <label className="text-sm font-medium">{t("opportunities.quotes.itemsLabel")}</label>
+              <div className="space-y-2 mt-2 max-h-60 overflow-y-auto">
+                {createFormData.items.map((item, index) => (
+                  <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                     <div className="flex-1">
-                      <p className="font-medium">{item.description}</p>
-                      <p className="text-sm text-gray-600">{t("opportunities.quotes.itemQuantity")}: {item.quantity}</p>
+                      <p className="text-sm font-medium">{item.description}</p>
+                      <p className="text-xs text-gray-500">
+                        {t("opportunities.quotes.itemQuantity")}: {item.quantity}
+                      </p>
                     </div>
                     <Button
                       size="sm"
-                      variant="destructive"
-                      onClick={() => handleRemoveItem(item.sku)}
+                      variant="ghost"
+                      onClick={() => handleRemoveItem(index)}
+                      className="text-red-500"
                     >
-                      {t("common.delete")}
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 ))}
               </div>
-              <div className="mt-3 space-y-2">
+            </div>
+
+            {/* Add Item Form */}
+            <div className="space-y-2 p-3 border rounded-lg bg-gray-50">
+              <Input
+                placeholder={t("opportunities.quotes.itemDescription")}
+                value={createFormData.itemDescription}
+                onChange={(e) =>
+                  setCreateFormData({
+                    ...createFormData,
+                    itemDescription: e.target.value,
+                  })
+                }
+              />
+              <div className="flex gap-2">
                 <Input
-                  placeholder={t("opportunities.quotes.itemDescription")}
-                  value={createFormData.itemDescription}
-                  onChange={(e) => setCreateFormData({ ...createFormData, itemDescription: e.target.value })}
+                  type="number"
+                  min="1"
+                  value={createFormData.itemQuantity}
+                  onChange={(e) =>
+                    setCreateFormData({
+                      ...createFormData,
+                      itemQuantity: Math.max(1, parseInt(e.target.value) || 1),
+                    })
+                  }
+                  className="w-24"
+                  placeholder={t("opportunities.quotes.itemQuantity")}
                 />
-                <div className="flex gap-2">
-                  <Input
-                    type="number"
-                    placeholder={t("opportunities.quotes.itemQuantity")}
-                    value={createFormData.itemQuantity}
-                    onChange={(e) => setCreateFormData({ ...createFormData, itemQuantity: parseInt(e.target.value) || 1 })}
-                    className="w-32"
-                  />
-                  <Button onClick={handleAddItem}>{t("opportunities.quotes.addItem")}</Button>
-                </div>
+                <Button onClick={handleAddItem}>{t("opportunities.quotes.addItem")}</Button>
               </div>
             </div>
 
             {/* Notes */}
             <div>
-              <label className="text-sm font-semibold mb-2 block">{t("opportunities.quotes.notesLabel")}</label>
+              <label className="text-sm font-medium">{t("opportunities.quotes.notesLabel")}</label>
               <Textarea
                 placeholder={t("opportunities.quotes.notesPlaceholder")}
                 value={createFormData.notes}
-                onChange={(e) => setCreateFormData({ ...createFormData, notes: e.target.value })}
+                onChange={(e) =>
+                  setCreateFormData({
+                    ...createFormData,
+                    notes: e.target.value,
+                  })
+                }
+                className="mt-1"
               />
             </div>
           </div>
@@ -608,154 +605,153 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
               {t("opportunities.quotes.cancel")}
             </Button>
             <Button onClick={handleCreateQuote} disabled={isSaving}>
-              {isSaving ? t("opportunities.quotes.saving") : t("opportunities.quotes.save")}
+              {isSaving ? t("opportunities.quotes.saving") : t("opportunities.quotes.requestQuote")}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Edit Quote Modal */}
-      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+      {/* Generate Quote Modal */}
+      <Dialog open={showGenerateModal} onOpenChange={setShowGenerateModal}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t("opportunities.quotes.editModalTitle")}</DialogTitle>
           </DialogHeader>
-          {selectedQuote && (
-            <div className="space-y-4">
-              {/* Items Section */}
-              <div>
-                <label className="text-sm font-semibold mb-2 block">{t("opportunities.quotes.itemsLabel")}</label>
-                <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {editFormData.items.map((item) => (
-                    <div key={item.sku} className="grid grid-cols-6 gap-2 items-center bg-gray-50 p-2 rounded text-sm">
-                      <div>{item.description}</div>
-                      <Input
-                        type="number"
-                        value={item.quantity}
-                        onChange={(e) => {
-                          const updated = editFormData.items.map((i) =>
-                            i.sku === item.sku ? { ...i, quantity: parseInt(e.target.value) || 0 } : i
-                          )
-                          setEditFormData({ ...editFormData, items: updated })
-                        }}
-                        className="h-8"
-                      />
-                      <Input
-                        type="number"
-                        value={item.unit_price}
-                        onChange={(e) => {
-                          const price = parseFloat(e.target.value) || 0
-                          const updated = editFormData.items.map((i) =>
-                            i.sku === item.sku
-                              ? {
-                                ...i,
-                                unit_price: price,
-                                line_subtotal: price * i.quantity,
-                                line_total: (price * i.quantity) * (1 - i.discount_percent / 100),
-                              }
-                              : i
-                          )
-                          setEditFormData({ ...editFormData, items: updated })
-                        }}
-                        className="h-8"
-                        placeholder="Precio"
-                      />
-                      <Input
-                        type="number"
-                        value={item.discount_percent}
-                        onChange={(e) => {
-                          const discount = parseFloat(e.target.value) || 0
-                          const updated = editFormData.items.map((i) =>
-                            i.sku === item.sku
-                              ? {
-                                ...i,
-                                discount_percent: discount,
-                                line_discount_amount: (i.line_subtotal * discount) / 100,
-                                line_total: i.line_subtotal * (1 - discount / 100),
-                              }
-                              : i
-                          )
-                          setEditFormData({ ...editFormData, items: updated })
-                        }}
-                        className="h-8"
-                        placeholder="%"
-                      />
-                      <div className="text-right font-semibold">${item.line_total?.toFixed(2)}</div>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => setEditFormData({ ...editFormData, items: editFormData.items.filter((i) => i.sku !== item.sku) })}
-                        className="h-8"
-                      >
-                        X
-                      </Button>
+
+          <div className="space-y-4">
+            {/* Items Section (Read-only) */}
+            <div>
+              <label className="text-sm font-medium">{t("opportunities.quotes.itemsLabel")}</label>
+              <div className="space-y-2 mt-2 max-h-60 overflow-y-auto">
+                {generateFormData.items.map((item, index) => (
+                  <div key={index} className="p-3 border rounded-lg bg-gray-50">
+                    <p className="font-medium text-sm">{item.description}</p>
+                    <div className="mt-2 text-sm text-gray-600">
+                      <p>{t("opportunities.quotes.itemQuantity")}: {item.quantity}</p>
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Discounts and Shipping */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-semibold mb-2 block">{t("opportunities.quotes.generalDiscount")}</label>
-                  <Input
-                    type="number"
-                    value={editFormData.general_discount_amount}
-                    onChange={(e) => setEditFormData({ ...editFormData, general_discount_amount: parseFloat(e.target.value) || 0 })}
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-semibold mb-2 block">{t("opportunities.quotes.shipping")}</label>
-                  <Input
-                    type="number"
-                    value={editFormData.shipping_amount}
-                    onChange={(e) => setEditFormData({ ...editFormData, shipping_amount: parseFloat(e.target.value) || 0 })}
-                  />
-                </div>
-              </div>
-
-              {/* Notes */}
-              <div>
-                <label className="text-sm font-semibold mb-2 block">{t("opportunities.quotes.notesLabel")}</label>
-                <Textarea
-                  value={editFormData.notes}
-                  onChange={(e) => setEditFormData({ ...editFormData, notes: e.target.value })}
-                />
-              </div>
-
-              {/* File Uploads */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-semibold mb-2 block">{t("opportunities.quotes.technicalAttachment")}</label>
-                  <Input
-                    type="file"
-                    accept=".pdf"
-                    onChange={(e) => setEditFormData({ ...editFormData, technical_file: e.target.files?.[0] || null })}
-                  />
-                  {selectedQuote.technical_quote_url && !editFormData.technical_file && (
-                    <p className="text-xs text-gray-500 mt-1">{t("opportunities.quotes.downloadTechnical")}</p>
-                  )}
-                </div>
-                <div>
-                  <label className="text-sm font-semibold mb-2 block">{t("opportunities.quotes.economicalQuote")}</label>
-                  <Input
-                    type="file"
-                    accept=".pdf"
-                    onChange={(e) => setEditFormData({ ...editFormData, economical_file: e.target.files?.[0] || null })}
-                  />
-                  {selectedQuote.economical_quote_url && !editFormData.economical_file && (
-                    <p className="text-xs text-gray-500 mt-1">{t("opportunities.quotes.downloadEconomical")}</p>
-                  )}
-                </div>
+                    <div className="mt-3 grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-medium text-gray-700">{t("opportunities.quotes.unitPrice")}</label>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={item.unit_price || ""}
+                          onChange={(e) => handleUpdateItemPrice(index, parseFloat(e.target.value) || 0)}
+                          placeholder="0.00"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-700">{t("opportunities.quotes.lineTotal")}</label>
+                        <div className="p-2 bg-white border rounded text-sm font-medium">
+                          {item.line_total?.toLocaleString() || "0.00"}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          )}
+
+            {/* Pricing Summary */}
+            <div className="space-y-2 p-3 border rounded-lg bg-blue-50">
+              <div className="flex justify-between text-sm">
+                <span>{t("opportunities.quotes.subtotal")}:</span>
+                <span className="font-medium">{generateFormData.subtotal_amount?.toLocaleString()}</span>
+              </div>
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <label className="text-xs font-medium">{t("opportunities.quotes.generalDiscount")}</label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={generateFormData.general_discount_amount || ""}
+                    onChange={(e) =>
+                      setGenerateFormData({
+                        ...generateFormData,
+                        general_discount_amount: parseFloat(e.target.value) || 0,
+                      })
+                    }
+                    placeholder="0.00"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="text-xs font-medium">{t("opportunities.quotes.shipping")}</label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={generateFormData.shipping_amount || ""}
+                    onChange={(e) =>
+                      setGenerateFormData({
+                        ...generateFormData,
+                        shipping_amount: parseFloat(e.target.value) || 0,
+                      })
+                    }
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-between text-base font-bold border-t pt-2">
+                <span>{t("opportunities.quotes.total")}:</span>
+                <span>{generateFormData.total_amount?.toLocaleString()}</span>
+              </div>
+            </div>
+
+            {/* Notes */}
+            <div>
+              <label className="text-sm font-medium">{t("opportunities.quotes.notesLabel")}</label>
+              <Textarea
+                value={generateFormData.notes}
+                onChange={(e) =>
+                  setGenerateFormData({
+                    ...generateFormData,
+                    notes: e.target.value,
+                  })
+                }
+                className="mt-1"
+              />
+            </div>
+
+            {/* File Uploads */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium">{t("opportunities.quotes.technicalAttachment")}</label>
+                <Input
+                  type="file"
+                  accept=".pdf"
+                  onChange={(e) =>
+                    setGenerateFormData({
+                      ...generateFormData,
+                      technical_file: e.target.files?.[0] || null,
+                    })
+                  }
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">{t("opportunities.quotes.economicalQuote")}</label>
+                <Input
+                  type="file"
+                  accept=".pdf"
+                  onChange={(e) =>
+                    setGenerateFormData({
+                      ...generateFormData,
+                      economical_file: e.target.files?.[0] || null,
+                    })
+                  }
+                  className="mt-1"
+                />
+              </div>
+            </div>
+          </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEditModal(false)}>
+            <Button variant="outline" onClick={() => setShowGenerateModal(false)}>
               {t("opportunities.quotes.cancel")}
             </Button>
-            <Button onClick={handleEditQuote} disabled={isSaving}>
+            <Button onClick={handleSaveGenerateQuote} disabled={isSaving}>
               {isSaving ? t("opportunities.quotes.saving") : t("opportunities.quotes.save")}
             </Button>
           </DialogFooter>
