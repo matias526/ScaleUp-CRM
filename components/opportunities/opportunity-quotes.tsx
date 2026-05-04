@@ -259,7 +259,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
       let economicalUrl = selectedQuote.economical_quote_url
 
       if (generateFormData.technical_file) {
-        const techPath = `quotes/${opportunityId}/${selectedQuote.id}-technical-${Date.now()}.pdf`
+        const techPath = `${opportunityId}/${selectedQuote.id}-technical-${Date.now()}.pdf`
         const { error: techError } = await supabase.storage
           .from("quotes")
           .upload(techPath, generateFormData.technical_file)
@@ -269,7 +269,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
       }
 
       if (generateFormData.economical_file) {
-        const economicalPath = `quotes/${opportunityId}/${selectedQuote.id}-economical-${Date.now()}.pdf`
+        const economicalPath = `${opportunityId}/${selectedQuote.id}-economical-${Date.now()}.pdf`
         const { error: ecoError } = await supabase.storage
           .from("quotes")
           .upload(economicalPath, generateFormData.economical_file)
