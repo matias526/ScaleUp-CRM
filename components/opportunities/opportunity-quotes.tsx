@@ -194,7 +194,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
       
       console.log("[v0] Current opportunity loaded:", {
         id: oppData.id,
-        name: oppData.title,
+        title: oppData.title,
         partner_id: oppData.partner_id,
         tech_company_id: oppData.tech_company_id,
       })
@@ -226,7 +226,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
 
         console.log("[v0] Executing query...")
         const { data: otherOpps, error: otherError } = await query
-          .order("name", { ascending: true })
+          .order("title", { ascending: true })
 
         console.log("[v0] Query result:")
         console.log("[v0]   - Error:", otherError?.message || "none")
