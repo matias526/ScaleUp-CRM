@@ -194,7 +194,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
       
       console.log("[v0] Current opportunity loaded:", {
         id: oppData.id,
-        name: oppData.name,
+        name: oppData.title,
         partner_id: oppData.partner_id,
         tech_company_id: oppData.tech_company_id,
       })
