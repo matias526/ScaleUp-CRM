@@ -841,4 +841,64 @@ export const DICT_LANG_OPPORTUNITIES = {
     en: "Download Economical Quote",
     pt: "Baixar Oferta Econômica",
   },
+  "opportunities.quotes.acceptQuote": {
+    es: "Aceptar Quote y Cargar PO",
+    en: "Accept Quote & Upload PO",
+    pt: "Aceitar Quote e Fazer Upload PO",
+  },
+  "opportunities.quotes.poNumber": {
+    es: "Número de PO",
+    en: "PO Number",
+    pt: "Número de PO",
+  },
+  "opportunities.quotes.poNumberPlaceholder": {
+    es: "Ingresar número de PO",
+    en: "Enter PO number",
+    pt: "Inserir número de PO",
+  },
+  "opportunities.quotes.poDocument": {
+    es: "Documento PO (PDF)",
+    en: "PO Document (PDF)",
+    pt: "Documento PO (PDF)",
+  },
+  "opportunities.quotes.required": {
+    es: "*",
+    en: "*",
+    pt: "*",
+  },
+  "opportunities.quotes.subtotalAmount": {
+    es: "Subtotal",
+    en: "Subtotal",
+    pt: "Subtotal",
+  },
+  "opportunities.quotes.shippingAmount": {
+    es: "Envío",
+    en: "Shipping",
+    pt: "Envio",
+  },
+  "opportunities.quotes.totalAmount": {
+    es: "Total",
+    en: "Total",
+    pt: "Total",
+  },
+  "opportunities.quotes.includeOtherOpportunities": {
+    es: "Incluir otras oportunidades",
+    en: "Include Other Opportunities",
+    pt: "Incluir outras oportunidades",
+  },
+  "opportunities.quotes.cancel": {
+    es: "Cancelar",
+    en: "Cancel",
+    pt: "Cancelar",
+  },
+  "opportunities.quotes.acceptUploadPO": {
+    es: "Aceptar y Cargar PO",
+    en: "Accept & Upload PO",
+    pt: "Aceitar e Fazer Upload PO",
+  },
+  "opportunities.quotes.uploading": {
+    es: "Cargando...",
+    en: "Uploading...",
+    pt: "Carregando...",
+  },
 }

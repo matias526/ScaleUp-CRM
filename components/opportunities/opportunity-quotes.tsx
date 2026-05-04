@@ -1029,15 +1029,17 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
       <Dialog open={showPOModal} onOpenChange={setShowPOModal}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Accept Quote & Upload PO</DialogTitle>
+            <DialogTitle>{t("opportunities.quotes.acceptQuote")}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-6">
             {/* PO Number */}
             <div>
-              <label className="text-sm font-medium">PO Number *</label>
+              <label className="text-sm font-medium">
+                {t("opportunities.quotes.poNumber")} {t("opportunities.quotes.required")}
+              </label>
               <Input
-                placeholder="Enter PO number"
+                placeholder={t("opportunities.quotes.poNumberPlaceholder")}
                 value={poFormData.po_number}
                 onChange={(e) =>
                   setPoFormData({
@@ -1050,7 +1052,9 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
 
             {/* File Upload */}
             <div>
-              <label className="text-sm font-medium">PO Document (PDF) *</label>
+              <label className="text-sm font-medium">
+                {t("opportunities.quotes.poDocument")} {t("opportunities.quotes.required")}
+              </label>
               <Input
                 type="file"
                 accept=".pdf"
@@ -1068,7 +1072,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
             {/* Amounts */}
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="text-sm font-medium">Subtotal</label>
+                <label className="text-sm font-medium">{t("opportunities.quotes.subtotalAmount")}</label>
                 <Input
                   type="number"
                   step="0.01"
@@ -1083,7 +1087,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">Shipping</label>
+                <label className="text-sm font-medium">{t("opportunities.quotes.shippingAmount")}</label>
                 <Input
                   type="number"
                   step="0.01"
@@ -1098,11 +1102,11 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">Total</label>
+                <label className="text-sm font-medium">{t("opportunities.quotes.totalAmount")}</label>
                 <Input
                   type="number"
                   disabled
-                  value={poFormData.total_amount}
+                  value={poFormData.total_amount.toFixed(2)}
                 />
               </div>
             </div>
@@ -1110,7 +1114,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
             {/* Additional Opportunities */}
             {availableOpportunities.length > 0 && (
               <div>
-                <label className="text-sm font-medium">Include Other Opportunities</label>
+                <label className="text-sm font-medium">{t("opportunities.quotes.includeOtherOpportunities")}</label>
                 <div className="space-y-2 mt-2 max-h-48 overflow-y-auto border rounded-lg p-3">
                   {availableOpportunities.map((opp) => (
                     <div key={opp.id} className="flex items-center gap-2">
@@ -1118,23 +1122,31 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
                         id={`opp-${opp.id}`}
                         checked={poFormData.selectedOpportunities.includes(opp.id)}
                         onCheckedChange={(checked) => {
+                          let newSubtotal = poFormData.subtotal_amount
+                          
                           if (checked) {
+                            newSubtotal += opp.estimated_value || 0
                             setPoFormData({
                               ...poFormData,
                               selectedOpportunities: [...poFormData.selectedOpportunities, opp.id],
+                              subtotal_amount: newSubtotal,
+                              total_amount: newSubtotal + poFormData.shipping_amount,
                             })
                           } else {
+                            newSubtotal -= opp.estimated_value || 0
                             setPoFormData({
                               ...poFormData,
                               selectedOpportunities: poFormData.selectedOpportunities.filter(
                                 (id) => id !== opp.id
                               ),
+                              subtotal_amount: newSubtotal,
+                              total_amount: newSubtotal + poFormData.shipping_amount,
                             })
                           }
                         }}
                       />
                       <label htmlFor={`opp-${opp.id}`} className="text-sm cursor-pointer">
-                        {opp.title} (${opp.estimated_value?.toFixed(2) || "0.00"})
+                        {opp.name} (${opp.estimated_value?.toFixed(2) || "0.00"})
                       </label>
                     </div>
                   ))}
@@ -1149,10 +1161,10 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
               onClick={() => setShowPOModal(false)}
               disabled={isSaving}
             >
-              Cancel
+              {t("opportunities.quotes.cancel")}
             </Button>
             <Button onClick={handleAcceptAndUploadPO} disabled={isSaving}>
-              {isSaving ? "Uploading..." : "Accept & Upload PO"}
+              {isSaving ? t("opportunities.quotes.uploading") : t("opportunities.quotes.acceptUploadPO")}
             </Button>
           </DialogFooter>
         </DialogContent>
