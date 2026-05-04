@@ -676,6 +676,11 @@ export const DICT_LANG_OPPORTUNITIES = {
     en: "Rejected",
     pt: "Rejeitado",
   },
+  "opportunities.quotes.status.declined": {
+    es: "No Relevante",
+    en: "No Relevant",
+    pt: "No Relevante",
+  },
   "opportunities.quotes.createModalTitle": {
     es: "Solicitar Quote",
     en: "Request Quote",
