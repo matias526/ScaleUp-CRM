@@ -551,12 +551,14 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
             partner_user_id: currentUser?.id,
             accepted_by: isAdminOrBDD ? currentUser?.id : null,
             accepted_at: isAdminOrBDD ? new Date().toISOString() : null,
-            opportunity_id: opportunityId,
           } as any,
         ])
         .select()
 
       if (poError) throw poError
+      
+      // Use the poId we created since opportunity_id relationship is now inverse
+      console.log("[v0] Created Purchase Order with ID:", poId)
 
       // Create document record
       const { error: docError } = await supabase
@@ -594,6 +596,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
 
       // Update all selected opportunities with PO reference and new status
       for (const oppId of selectedOppIds) {
+        console.log("[v0] Updating opportunity", oppId, "with purchase_order_id:", poId)
         const { error: oppError } = await supabase
           .from("opportunities")
           .update({ 
@@ -604,6 +607,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
 
         if (oppError) throw oppError
       }
+      console.log("[v0] All opportunities updated with purchase_order_id:", poId)
 
       // Create note
       const { error: noteError } = await supabase
