@@ -12,31 +12,23 @@ import { DICT_LANG_PO } from "@/lib/constants/dict-lang-po"
 import { supabase } from "@/lib/supabase/client"
 import { toast } from "@/components/ui/use-toast"
 import { format } from "date-fns"
-import { Download, CheckCircle } from "lucide-react"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { v4 as uuidv4 } from "uuid"
 import { DetailPageSkeleton } from "@/components/purchase-orders/skeletons"
+import { PONotes } from "@/components/purchase-orders/po-notes"
+import { POGeneralTab } from "@/components/purchase-orders/po-general-tab"
+import { POMilestonesTab } from "@/components/purchase-orders/po-milestones-tab"
+import { POLogisticsTab } from "@/components/purchase-orders/po-logistics-tab"
 
 export default function PurchaseOrderDetailPage() {
   const { t } = useTranslations(DICT_LANG_PO)
   const params = useParams()
   const poId = params.id as string
   const { userInfo, loading: authLoading } = useAuth()
-  
+
   const [po, setPo] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [documents, setDocuments] = useState<any[]>([])
   const [milestones, setMilestones] = useState<any[]>([])
   const [shippings, setShippings] = useState<any[]>([])
-  const [showApproveDialog, setShowApproveDialog] = useState(false)
   const [approving, setApproving] = useState(false)
 
   useEffect(() => {
@@ -58,33 +50,22 @@ export default function PurchaseOrderDetailPage() {
 
       setLoading(true)
       setError(null)
-      
+
       // Load PO details
       const { data: poData, error: poError } = await supabase
         .from("purchase_orders")
         .select("*, partners(name)")
         .eq("id", poId)
         .single()
-      
+
       if (poError) {
         console.error("[v0] Error loading PO:", poError)
         setError(t("po.errorLoadingOrder"))
         setLoading(false)
         return
       }
-      
-      setPo(poData)
 
-      // Load documents
-      const { data: docsData, error: docsError } = await supabase
-        .from("documents")
-        .select("*")
-        .eq("parent_id", poId)
-        .eq("parent_type", "purchase_order")
-      
-      if (!docsError) {
-        setDocuments(docsData || [])
-      }
+      setPo(poData)
 
       // Load milestones
       const { data: milestonesData, error: milestonesError } = await supabase
@@ -92,7 +73,7 @@ export default function PurchaseOrderDetailPage() {
         .select("*")
         .eq("purchase_order_id", poId)
         .order("scheduled_date")
-      
+
       if (!milestonesError) {
         setMilestones(milestonesData || [])
       }
@@ -103,7 +84,7 @@ export default function PurchaseOrderDetailPage() {
         .select("*")
         .eq("purchase_order_id", poId)
         .order("created_at")
-      
+
       if (!shippingsError) {
         setShippings(shippingsData || [])
       }
@@ -124,7 +105,7 @@ export default function PurchaseOrderDetailPage() {
     try {
       setApproving(true)
       const userRole = userInfo?.roleCode
-      
+
       if (!["Admin", "BDD"].includes(userRole || "")) {
         toast({
           title: t("common.error"),
@@ -137,66 +118,27 @@ export default function PurchaseOrderDetailPage() {
       // Update PO status to accepted
       const { error: poError } = await supabase
         .from("purchase_orders")
-        .update({ 
+        .update({
           status: "accepted",
           accepted_at: new Date().toISOString(),
           accepted_by: userInfo?.id,
         })
         .eq("id", poId)
-      
+
       if (poError) throw poError
 
-      // Update associated document status to accepted
-      const { error: docError } = await supabase
-        .from("documents")
-        .update({ status: "accepted" })
-        .eq("parent_id", poId)
-        .eq("parent_type", "purchase_order")
-      
-      if (docError) throw docError
-
-      // Find opportunities linked to this PO and update them to "won"
-      const { data: opportunities, error: oppError } = await supabase
-        .from("opportunities")
-        .select("id")
-        .eq("purchase_order_id", poId)
-      
-      if (oppError) throw oppError
-
-      if (opportunities && opportunities.length > 0) {
-        const { error: updateOppError } = await supabase
-          .from("opportunities")
-          .update({ pipeline_stage_id: "82056c9d-0bdb-4db4-9097-f6f1a72d4db2" })
-          .in("id", opportunities.map((o) => o.id))
-        
-        if (updateOppError) throw updateOppError
-      }
-
-      // Create note
-      const { error: noteError } = await supabase
-        .from("notes")
-        .insert([
-          {
-            opportunity_id: opportunities?.[0]?.id,
-            user_id: userInfo?.id,
-            content: `${userInfo?.firstName} ${userInfo?.lastName} aprobó la PO (${po.po_number})`,
-          } as any,
-        ])
-
-      if (noteError) throw noteError
-
       toast({
-        title: t("common.success"),
-        description: t("po.approveSuccess"),
+        title: "Éxito",
+        description: "Orden de compra aprobada",
       })
 
-      setShowApproveDialog(false)
+      // Reload PO data
       await loadPurchaseOrder()
     } catch (error) {
-      console.error("Error approving PO:", error)
+      console.error("[v0] Error approving PO:", error)
       toast({
         title: t("common.error"),
-        description: t("po.errorApproving"),
+        description: "No se pudo aprobar la orden",
         variant: "destructive",
       })
     } finally {
@@ -205,19 +147,17 @@ export default function PurchaseOrderDetailPage() {
   }
 
   const getStatusBadgeColor = (status: string) => {
-    switch (status) {
-      case "sent":
-        return "bg-blue-100 text-blue-800"
-      case "accepted":
-        return "bg-green-100 text-green-800"
-      case "pending":
-        return "bg-yellow-100 text-yellow-800"
-      default:
-        return "bg-gray-100 text-gray-800"
+    const colors: Record<string, string> = {
+      draft: "bg-gray-200 text-gray-900",
+      sent: "bg-blue-200 text-blue-900",
+      accepted: "bg-green-200 text-green-900",
+      rejected: "bg-red-200 text-red-900",
+      completed: "bg-purple-200 text-purple-900",
     }
+    return colors[status] || "bg-gray-200 text-gray-900"
   }
 
-  const canApprove = po?.status === "sent" && ["Admin", "BDD"].includes(userInfo?.roleCode)
+  const canApprove = po?.status === "sent" && ["Admin", "BDD"].includes(userInfo?.roleCode || "")
 
   if (authLoading) {
     return <DetailPageSkeleton />
@@ -254,6 +194,7 @@ export default function PurchaseOrderDetailPage() {
 
   return (
     <div className="p-8 space-y-6">
+      {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <div className="flex items-center gap-4">
           {/* Logo Section */}
@@ -264,7 +205,7 @@ export default function PurchaseOrderDetailPage() {
               </span>
             </div>
           )}
-          
+
           {/* PO Number */}
           <div>
             <div className="text-sm text-gray-600 font-medium">PO #{po.po_number}</div>
@@ -274,14 +215,14 @@ export default function PurchaseOrderDetailPage() {
             </span>
           </div>
         </div>
-        
+
         {canApprove && (
-          <Button 
-            onClick={() => setShowApproveDialog(true)}
+          <Button
+            onClick={handleApprovePO}
+            disabled={approving}
             className="bg-green-600 hover:bg-green-700"
           >
-            <CheckCircle className="mr-2 h-4 w-4" />
-            {t("po.approvePO")}
+            {approving ? "Aprobando..." : t("po.approvePO")}
           </Button>
         )}
       </div>
@@ -353,117 +294,59 @@ export default function PurchaseOrderDetailPage() {
         </Card>
       </div>
 
-      <Card>
-        <CardContent className="pt-6">
-          <Tabs defaultValue="general" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="general">{t("po.tab.general")}</TabsTrigger>
-              <TabsTrigger value="milestones">{t("po.tab.milestones")}</TabsTrigger>
-              <TabsTrigger value="logistics">{t("po.tab.logistics")}</TabsTrigger>
-              <TabsTrigger value="documents">{t("po.tab.documents")}</TabsTrigger>
-            </TabsList>
+      {/* Two Column Layout */}
+      <div className="grid grid-cols-4 gap-6">
+        {/* Main Content - 75% */}
+        <div className="col-span-3">
+          <Card>
+            <Tabs defaultValue="general" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="general">{t("po.tab.general")}</TabsTrigger>
+                <TabsTrigger value="milestones">{t("po.tab.milestones")}</TabsTrigger>
+                <TabsTrigger value="logistics">{t("po.tab.logistics")}</TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="general" className="space-y-4 pt-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm text-gray-600">{t("po.poNumber")}</label>
-                  <p className="font-medium">{po.po_number}</p>
-                </div>
-                <div>
-                  <label className="text-sm text-gray-600">{t("po.status")}</label>
-                  <p className="font-medium">{t(`po.status.${po.status}`)}</p>
-                </div>
+              <div className="p-6">
+                <TabsContent value="general" className="mt-0">
+                  <POGeneralTab
+                    po={po}
+                    canApprove={canApprove}
+                    onApprove={handleApprovePO}
+                    onApproveClick={handleApprovePO}
+                    getStatusBadgeColor={getStatusBadgeColor}
+                  />
+                </TabsContent>
+
+                <TabsContent value="milestones" className="mt-0">
+                  <POMilestonesTab
+                    po={po}
+                    milestones={milestones}
+                    subtotal={po.subtotal_amount || 0}
+                  />
+                </TabsContent>
+
+                <TabsContent value="logistics" className="mt-0">
+                  <POLogisticsTab
+                    po={po}
+                    shippings={shippings}
+                    userRole={userInfo?.roleCode || ""}
+                    currentUserId={userInfo?.id || ""}
+                  />
+                </TabsContent>
               </div>
-            </TabsContent>
+            </Tabs>
+          </Card>
+        </div>
 
-            <TabsContent value="milestones" className="space-y-4 pt-4">
-              {milestones.length === 0 ? (
-                <p className="text-gray-500">{t("po.noMilestones")}</p>
-              ) : (
-                <div className="space-y-2">
-                  {milestones.map((milestone) => (
-                    <div key={milestone.id} className="p-3 border rounded">
-                      <div className="font-medium">{milestone.title}</div>
-                      <div className="text-sm text-gray-600">
-                        {milestone.scheduled_date ? format(new Date(milestone.scheduled_date), "dd/MM/yyyy") : "-"}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="logistics" className="space-y-4 pt-4">
-              {shippings.length === 0 ? (
-                <p className="text-gray-500">{t("po.noShippings")}</p>
-              ) : (
-                <div className="space-y-2">
-                  {shippings.map((shipping) => (
-                    <div key={shipping.id} className="p-3 border rounded">
-                      <div className="font-medium">{shipping.tracking_number}</div>
-                      <div className="text-sm text-gray-600">
-                        {shipping.carrier}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="documents" className="space-y-4 pt-4">
-              {documents.length === 0 ? (
-                <p className="text-gray-500">{t("po.noDocuments")}</p>
-              ) : (
-                <div className="space-y-2">
-                  {documents.map((doc) => (
-                    <div key={doc.id} className="p-3 border rounded flex justify-between items-center">
-                      <div>
-                        <div className="font-medium">{doc.doc_type}</div>
-                        <div className="text-sm text-gray-600">
-                          {doc.created_at ? format(new Date(doc.created_at), "dd/MM/yyyy") : "-"}
-                        </div>
-                      </div>
-                      <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
-                        <Button variant="outline" size="sm">
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </a>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
-
-      {/* Approve Dialog */}
-      <Dialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t("po.confirmApprove")}</DialogTitle>
-            <DialogDescription>
-              {t("po.approveDescription")}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowApproveDialog(false)}
-              disabled={approving}
-            >
-              {t("common.cancel")}
-            </Button>
-            <Button
-              onClick={handleApprovePO}
-              disabled={approving}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              {approving ? t("common.approving") : t("po.approvePO")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        {/* Right Sidebar - 25% */}
+        <div className="col-span-1">
+          <PONotes
+            poId={poId}
+            currentUserId={userInfo?.id || ""}
+            isScaleUpMember={["Admin", "BDD"].includes(userInfo?.roleCode || "")}
+          />
+        </div>
+      </div>
     </div>
   )
 }

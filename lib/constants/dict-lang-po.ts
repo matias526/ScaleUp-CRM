@@ -232,6 +232,42 @@ export const DICT_LANG_PO = {
     pt: "Aprovado por",
   },
 
+  // Notes Section
+  "po.notes.title": {
+    es: "Notas y Actividad",
+    en: "Notes & Activity",
+    pt: "Notas e Atividade",
+  },
+
+  // Milestones Tab
+  "po.milestone.totalAmount": {
+    es: "Monto Total Hitos",
+    en: "Total Milestones Amount",
+    pt: "Valor Total dos Marcos",
+  },
+  "po.milestone.collected": {
+    es: "Recaudado",
+    en: "Collected",
+    pt: "Coletado",
+  },
+  "po.milestone.pending": {
+    es: "Pendiente",
+    en: "Pending",
+    pt: "Pendente",
+  },
+
+  // Logistics Tab
+  "po.logistics.destination": {
+    es: "Destino",
+    en: "Destination",
+    pt: "Destino",
+  },
+  "po.logistics.dispatch": {
+    es: "Despacho",
+    en: "Dispatch",
+    pt: "Despacho",
+  },
+
   // Detail Page - Milestones
   "po.noMilestones": {
     es: "Sin hitos configurados",
