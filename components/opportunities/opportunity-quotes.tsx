@@ -163,7 +163,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
     try {
       const { data: oppData, error: oppError } = await supabase
         .from("opportunities")
-        .select("id, partner_id, tech_company_id, pipeline_stage_id")
+        .select("id, partner_id, tech_company_id, pipeline_stage_id, name, estimated_value")
         .eq("id", opportunityId)
         .single()
 
@@ -171,22 +171,30 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
       if (oppData) {
         setOpportunity(oppData)
         
-        // Load other active opportunities from same partner and tech company
-        const { data: otherOpps, error: oppError } = await supabase
+        // Load other active opportunities from same partner
+        let query = supabase
           .from("opportunities")
-          .select("id, name, estimated_value")
+          .select("id, name, estimated_value, partner_id, tech_company_id")
           .eq("partner_id", oppData.partner_id)
-          .eq("tech_company_id", oppData.tech_company_id)
-          .not("pipeline_stage_id", "is", null)
           .neq("id", opportunityId)
-          .order("name")
 
-        if (!oppError) {
+        // If tech_company_id is set, filter by it too
+        if (oppData.tech_company_id) {
+          query = query.eq("tech_company_id", oppData.tech_company_id)
+        }
+
+        const { data: otherOpps, error: otherError } = await query
+          .order("name", { ascending: true })
+
+        if (otherError) {
+          console.error("[v0] Error loading other opportunities:", otherError)
+        } else {
+          console.log("[v0] Available opportunities loaded:", otherOpps?.length || 0, "items")
           setAvailableOpportunities(otherOpps || [])
         }
       }
     } catch (error) {
-      console.error("Error loading opportunity:", error)
+      console.error("[v0] Error loading opportunity:", error)
     }
   }
 
