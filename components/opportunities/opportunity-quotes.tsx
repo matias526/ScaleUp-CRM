@@ -272,7 +272,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
           .from("quotes")
           .upload(techPath, generateFormData.technical_file)
         if (techUploadError) throw techUploadError
-        
+
         const { data: techSignedData, error: techSignedError } = await supabase.storage
           .from("quotes")
           .createSignedUrl(techPath, 604800)
@@ -286,7 +286,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
           .from("quotes")
           .upload(economicalPath, generateFormData.economical_file)
         if (ecoUploadError) throw ecoUploadError
-        
+
         const { data: ecoSignedData, error: ecoSignedError } = await supabase.storage
           .from("quotes")
           .createSignedUrl(economicalPath, 604800)
@@ -324,12 +324,16 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
       // Create note
       const noteText = `${currentUser?.first_name} ${currentUser?.last_name} ha generado una quote`
       const { error: noteError } = await supabase.from("notes").insert([
-  {
-    opportunity_id: opportunityId,
-    content: noteText,
-    user_id: currentUser?.id,
-  },
-])
+        {
+          opportunity_id: opportunityId,
+          content: noteText,
+          user_id: currentUser?.id,
+        },
+      ])
+
+      if (noteError) {
+        console.error("❌ Error específico en la nota:", noteError)
+      }
 
       toast({
         title: t("common.success"),
