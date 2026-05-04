@@ -13,12 +13,22 @@ export const DICT_LANG_PO = {
   },
 
   // List Page
-  "po.list.title": {
+  "po.title": {
+    es: "Órdenes de Compra",
+    en: "Purchase Orders",
+    pt: "Pedidos de Compra",
+  },
+  "po.listTitle": {
     es: "Órdenes de Compra",
     en: "Purchase Orders",
     pt: "Pedidos de Compra",
   },
   "po.list.noResults": {
+    es: "No hay órdenes de compra",
+    en: "No purchase orders found",
+    pt: "Nenhum pedido de compra encontrado",
+  },
+  "po.noOrders": {
     es: "No hay órdenes de compra",
     en: "No purchase orders found",
     pt: "Nenhum pedido de compra encontrado",
@@ -38,37 +48,82 @@ export const DICT_LANG_PO = {
     en: "Error loading purchase orders.",
     pt: "Erro ao carregar pedidos de compra.",
   },
+  "po.errorLoadingOrder": {
+    es: "Error al cargar la orden de compra.",
+    en: "Error loading purchase order.",
+    pt: "Erro ao carregar pedido de compra.",
+  },
 
-  // List Table Headers
+  // List Table Headers (both variants for compatibility)
+  "po.poNumber": {
+    es: "Número de PO",
+    en: "PO Number",
+    pt: "Número PO",
+  },
   "po.table.poNumber": {
     es: "Número de PO",
     en: "PO Number",
     pt: "Número PO",
+  },
+  "po.partner": {
+    es: "Partner",
+    en: "Partner",
+    pt: "Partner",
   },
   "po.table.partner": {
     es: "Partner",
     en: "Partner",
     pt: "Partner",
   },
+  "po.status": {
+    es: "Estado",
+    en: "Status",
+    pt: "Status",
+  },
   "po.table.status": {
     es: "Estado",
     en: "Status",
     pt: "Status",
+  },
+  "po.totalAmount": {
+    es: "Monto Total",
+    en: "Total Amount",
+    pt: "Valor Total",
   },
   "po.table.totalAmount": {
     es: "Monto Total",
     en: "Total Amount",
     pt: "Valor Total",
   },
+  "po.date": {
+    es: "Fecha",
+    en: "Date",
+    pt: "Data",
+  },
   "po.table.date": {
     es: "Fecha",
     en: "Date",
     pt: "Data",
   },
+  "po.actions": {
+    es: "Acciones",
+    en: "Actions",
+    pt: "Ações",
+  },
   "po.table.actions": {
     es: "Acciones",
     en: "Actions",
     pt: "Ações",
+  },
+  "po.view": {
+    es: "Ver",
+    en: "View",
+    pt: "Ver",
+  },
+  "po.notFound": {
+    es: "Orden de compra no encontrada",
+    en: "Purchase order not found",
+    pt: "Pedido de compra não encontrado",
   },
 
   // Detail Page Tabs
