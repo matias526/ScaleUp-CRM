@@ -1134,7 +1134,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
                         }}
                       />
                       <label htmlFor={`opp-${opp.id}`} className="text-sm cursor-pointer">
-                        {opp.name} (${opp.estimated_value?.toFixed(2) || "0.00"})
+                        {opp.title} (${opp.estimated_value?.toFixed(2) || "0.00"})
                       </label>
                     </div>
                   ))}
