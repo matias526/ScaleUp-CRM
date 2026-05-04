@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useTranslations } from "@/hooks/use-translations"
+import { useAuth } from "@/components/auth/auth-provider"
 import { DICT_LANG_PO } from "@/lib/constants/dict-lang-po"
 import { supabase } from "@/lib/supabase/client"
 import { toast } from "@/components/ui/use-toast"
 import { format } from "date-fns"
-import { Loader2, Download, CheckCircle } from "lucide-react"
+import { Download, CheckCircle } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -27,10 +28,11 @@ export default function PurchaseOrderDetailPage() {
   const { t } = useTranslations(DICT_LANG_PO)
   const params = useParams()
   const poId = params.id as string
+  const { userInfo, loading: authLoading } = useAuth()
   
   const [po, setPo] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [currentUser, setCurrentUser] = useState<any>(null)
+  const [error, setError] = useState<string | null>(null)
   const [documents, setDocuments] = useState<any[]>([])
   const [milestones, setMilestones] = useState<any[]>([])
   const [shippings, setShippings] = useState<any[]>([])
@@ -38,37 +40,24 @@ export default function PurchaseOrderDetailPage() {
   const [approving, setApproving] = useState(false)
 
   useEffect(() => {
-    loadCurrentUser()
-  }, [])
-
-  useEffect(() => {
-    if (currentUser) {
+    if (!authLoading && userInfo) {
       loadPurchaseOrder()
+    } else if (!authLoading && !userInfo) {
+      setError(t("po.errorNotAuthenticated"))
+      setLoading(false)
     }
-  }, [currentUser, poId])
-
-  const loadCurrentUser = async () => {
-    try {
-      const { data } = await supabase.auth.getUser()
-      if (data.user) {
-        const { data: userData } = await supabase
-          .from("users")
-          .select("id, email, role")
-          .eq("id", data.user.id)
-          .single()
-        
-        if (userData) {
-          setCurrentUser(userData)
-        }
-      }
-    } catch (error) {
-      console.error("Error loading current user:", error)
-    }
-  }
+  }, [userInfo, authLoading, poId])
 
   const loadPurchaseOrder = async () => {
     try {
+      if (!userInfo) {
+        setError(t("po.errorNotAuthenticated"))
+        setLoading(false)
+        return
+      }
+
       setLoading(true)
+      setError(null)
       
       // Load PO details
       const { data: poData, error: poError } = await supabase
@@ -77,7 +66,13 @@ export default function PurchaseOrderDetailPage() {
         .eq("id", poId)
         .single()
       
-      if (poError) throw poError
+      if (poError) {
+        console.error("[v0] Error loading PO:", poError)
+        setError(t("po.errorLoadingOrder"))
+        setLoading(false)
+        return
+      }
+      
       setPo(poData)
 
       // Load documents
@@ -113,7 +108,8 @@ export default function PurchaseOrderDetailPage() {
         setShippings(shippingsData || [])
       }
     } catch (error) {
-      console.error("Error loading purchase order:", error)
+      console.error("[v0] Error loading purchase order:", error)
+      setError(t("po.errorLoadingOrder"))
       toast({
         title: t("common.error"),
         description: t("po.errorLoadingOrder"),
@@ -221,10 +217,29 @@ export default function PurchaseOrderDetailPage() {
     }
   }
 
-  const canApprove = po?.status === "sent" && ["Admin", "BDD"].includes(currentUser?.role?.code || currentUser?.role)
+  const canApprove = po?.status === "sent" && ["Admin", "BDD"].includes(userInfo?.roleCode)
+
+  if (authLoading) {
+    return <DetailPageSkeleton />
+  }
 
   if (loading) {
     return <DetailPageSkeleton />
+  }
+
+  if (error) {
+    return (
+      <div className="p-8">
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="pt-6">
+            <div className="text-red-800">
+              <h3 className="font-semibold mb-2">{t("common.error")}</h3>
+              <p>{error}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   if (!po) {

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useTranslations } from "@/hooks/use-translations"
+import { useAuth } from "@/components/auth/auth-provider"
 import { DICT_LANG_PO } from "@/lib/constants/dict-lang-po"
 import { supabase } from "@/lib/supabase/client"
 import { toast } from "@/components/ui/use-toast"
@@ -17,86 +18,81 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Loader2 } from "lucide-react"
 import Link from "next/link"
 import { TableSkeleton } from "@/components/purchase-orders/skeletons"
 
 export default function PurchaseOrdersPage() {
   const { t } = useTranslations(DICT_LANG_PO)
+  const { userInfo, loading: authLoading } = useAuth()
   const [purchaseOrders, setPurchaseOrders] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [currentUser, setCurrentUser] = useState<any>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    loadCurrentUser()
-  }, [])
-
-  useEffect(() => {
-    if (currentUser) {
+    if (!authLoading && userInfo) {
       loadPurchaseOrders()
+    } else if (!authLoading && !userInfo) {
+      setError(t("po.errorNotAuthenticated"))
+      setLoading(false)
     }
-  }, [currentUser])
-
-  const loadCurrentUser = async () => {
-    try {
-      const { data } = await supabase.auth.getUser()
-      if (data.user) {
-        const { data: userData } = await supabase
-          .from("users")
-          .select("id, email, role, partner_id")
-          .eq("id", data.user.id)
-          .single()
-        
-        if (userData) {
-          setCurrentUser(userData)
-        }
-      }
-    } catch (error) {
-      console.error("Error loading current user:", error)
-    }
-  }
+  }, [userInfo, authLoading])
 
   const loadPurchaseOrders = async () => {
     try {
-      console.log("[v0] Loading purchase orders for user:", currentUser?.id)
+      if (!userInfo) {
+        setError(t("po.errorNotAuthenticated"))
+        setLoading(false)
+        return
+      }
+
+      console.log("[v0] Loading purchase orders for user:", userInfo.id)
       setLoading(true)
+      setError(null)
+      
       let query = supabase
         .from("purchase_orders")
         .select("id, po_number, total_amount, status, created_at, quote_id, quotes(opportunity_id)")
 
       // Role-based filtering
-      const userRole = currentUser?.role?.code || currentUser?.role
+      const userRole = userInfo.roleCode
       console.log("[v0] User role:", userRole)
       
-      if (userRole === "PartnerUser" && currentUser?.partner_id) {
+      if (userRole === "PartnerUser" && userInfo.partnerId) {
         // PartnerUser solo ve sus propias POs
-        console.log("[v0] Filtering for PartnerUser:", currentUser.id)
-        query = query.eq("partner_user_id", currentUser.id)
+        console.log("[v0] Filtering for PartnerUser:", userInfo.id)
+        query = query.eq("partner_user_id", userInfo.id)
       } else if (userRole === "TechLogistic") {
         console.log("[v0] TechLogistic - showing all POs")
         // TechLogistic ve POs para logística (shippings)
-        // Por ahora, mostrar todas
       }
       // Admin y BDD ven todas
 
       console.log("[v0] Executing query...")
-      const { data, error } = await query
+      const { data, error: queryError } = await query
         .order("created_at", { ascending: false })
       
-      console.log("[v0] Query result - Error:", error?.message, "Data count:", data?.length)
+      console.log("[v0] Query result - Error:", queryError?.message, "Data count:", data?.length)
       
-      if (error) throw error
+      if (queryError) {
+        console.error("[v0] Query error:", queryError)
+        setError(t("po.errorLoadingOrders"))
+        setLoading(false)
+        return
+      }
       
-      // Now we need to get the opportunity names
       // Get all unique opportunity_ids from quotes
       const opportunityIds = data?.map(po => po.quotes?.opportunity_id).filter(Boolean) || []
       console.log("[v0] Opportunity IDs:", opportunityIds)
       
       if (opportunityIds.length > 0) {
-        const { data: opportunities } = await supabase
+        const { data: opportunities, error: oppError } = await supabase
           .from("opportunities")
           .select("id, name, partner_id")
           .in("id", opportunityIds)
+        
+        if (oppError) {
+          console.error("[v0] Error loading opportunities:", oppError)
+        }
         
         const oppMap = opportunities?.reduce((acc, opp) => {
           acc[opp.id] = opp
@@ -115,6 +111,7 @@ export default function PurchaseOrdersPage() {
       }
     } catch (error) {
       console.error("[v0] Error loading purchase orders:", error)
+      setError(t("po.errorLoadingOrders"))
       toast({
         title: t("common.error"),
         description: t("po.errorLoadingOrders"),
@@ -138,10 +135,25 @@ export default function PurchaseOrdersPage() {
     }
   }
 
-  if (loading) {
+  if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
+        <TableSkeleton rows={5} />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="p-8">
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="pt-6">
+            <div className="text-red-800">
+              <h3 className="font-semibold mb-2">{t("common.error")}</h3>
+              <p>{error}</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     )
   }

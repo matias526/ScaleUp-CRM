@@ -28,6 +28,16 @@ export const DICT_LANG_PO = {
     en: "Loading orders...",
     pt: "Carregando pedidos...",
   },
+  "po.errorNotAuthenticated": {
+    es: "No estás autenticado. Por favor, inicia sesión.",
+    en: "Not authenticated. Please log in.",
+    pt: "Não autenticado. Por favor, faça login.",
+  },
+  "po.errorLoadingOrders": {
+    es: "Error al cargar las órdenes de compra.",
+    en: "Error loading purchase orders.",
+    pt: "Erro ao carregar pedidos de compra.",
+  },
 
   // List Table Headers
   "po.table.poNumber": {
