@@ -63,7 +63,7 @@ interface OpportunityQuotesProps {
 }
 
 const ALLOWED_ROLES_REQUEST = ["Admin", "BDD", "PartnerUser"]
-const ALLOWED_ROLES_EDIT = ["Admin", "BDD", "TechUser"]
+const ALLOWED_ROLES_EDIT = ["Admin", "BDD", "TechUser", "PartnerUser"]
 const ALLOWED_ROLES_DELETE = ["Admin", "BDD", "TechUser"]
 const QUOTATION_STAGE_ID = "cea0f2b6-d55d-4d70-a730-adc5e365d928"
 
