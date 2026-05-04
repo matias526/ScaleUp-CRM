@@ -540,20 +540,44 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
       const docStatus = isAdminOrBDD ? "accepted" : "pending"
       const opportunityStatus = isAdminOrBDD ? "Won" : "quotation"
 
+      // Get partner_id based on user role
+      let partnerId = null
+      if (userRoleCode === "PartnerUser") {
+        // PartnerUser: use their own partner_id (from currentUser or opportunity)
+        partnerId = currentUser?.partner_id || opportunity?.partner_id
+      } else if (["Admin", "BDD"].includes(userRoleCode)) {
+        // Admin/BDD: get from opportunity
+        partnerId = opportunity?.partner_id
+      }
+      
+      console.log("[v0] Partner ID determination:", { userRoleCode, partnerId, oppPartnerId: opportunity?.partner_id })
+      
+      if (!partnerId) {
+        console.warn("[v0] No partner_id available")
+        if (!isAdminOrBDD) {
+          toast({
+            title: t("common.error"),
+            description: "Partner not assigned to this opportunity",
+            variant: "destructive",
+          })
+          return
+        }
+        // For Admin/BDD, allow to continue with null partner_id (direct sales)
+      }
+
       // Create Purchase Order
-      const poId = uuidv4()
       const selectedOppIds = [opportunityId, ...poFormData.selectedOpportunities]
 
       const { data: poData, error: poError } = await supabase
         .from("purchase_orders")
         .insert([
           {
-            quote_id: selectedQuote?.id,
             po_number: poFormData.po_number,
             subtotal_amount: poFormData.subtotal_amount,
             shipping_amount: poFormData.shipping_amount,
             total_amount: poFormData.total_amount,
             status: poStatus,
+            partner_id: partnerId,
             partner_user_id: currentUser?.id,
             accepted_by: isAdminOrBDD ? currentUser?.id : null,
             accepted_at: isAdminOrBDD ? new Date().toISOString() : null,
