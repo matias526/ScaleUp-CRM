@@ -132,6 +132,26 @@ export const DICT_LANG_PO = {
   },
 
   // Detail Page Tabs
+  "po.tab.general": {
+    es: "General",
+    en: "General",
+    pt: "Geral",
+  },
+  "po.tab.milestones": {
+    es: "Hitos y Financieros",
+    en: "Milestones & Financials",
+    pt: "Marcos e Financeiro",
+  },
+  "po.tab.logistics": {
+    es: "Logística",
+    en: "Logistics",
+    pt: "Logística",
+  },
+  "po.tab.documents": {
+    es: "Documentos",
+    en: "Documents",
+    pt: "Documentos",
+  },
   "po.tabs.general": {
     es: "General",
     en: "General",
@@ -153,7 +173,24 @@ export const DICT_LANG_PO = {
     pt: "Documentos",
   },
 
+  // Detail Page - Amounts
+  "po.subtotal": {
+    es: "Subtotal",
+    en: "Subtotal",
+    pt: "Subtotal",
+  },
+  "po.shipping": {
+    es: "Envío",
+    en: "Shipping",
+    pt: "Envio",
+  },
+
   // Detail Page - General Tab
+  "po.approvePO": {
+    es: "Aprobar PO",
+    en: "Approve PO",
+    pt: "Aprovar PO",
+  },
   "po.detail.poNumber": {
     es: "Número de PO",
     en: "PO Number",
@@ -190,7 +227,83 @@ export const DICT_LANG_PO = {
     pt: "Aprovado por",
   },
 
-  // Detail Page - Financials Tab
+  // Detail Page - Milestones
+  "po.noMilestones": {
+    es: "Sin hitos configurados",
+    en: "No milestones configured",
+    pt: "Nenhum marco configurado",
+  },
+  "po.milestone.title": {
+    es: "Título",
+    en: "Title",
+    pt: "Título",
+  },
+  "po.milestone.scheduledDate": {
+    es: "Fecha Programada",
+    en: "Scheduled Date",
+    pt: "Data Agendada",
+  },
+  "po.milestone.status": {
+    es: "Estado",
+    en: "Status",
+    pt: "Status",
+  },
+
+  // Detail Page - Logistics Tab
+  "po.shipping.noShipments": {
+    es: "Sin envíos registrados",
+    en: "No shipments recorded",
+    pt: "Nenhuma remessa registrada",
+  },
+  "po.shipping.trackingNumber": {
+    es: "Número de Seguimiento",
+    en: "Tracking Number",
+    pt: "Número de Rastreamento",
+  },
+  "po.shipping.status": {
+    es: "Estado",
+    en: "Status",
+    pt: "Status",
+  },
+  "po.shipping.estimatedDelivery": {
+    es: "Entrega Estimada",
+    en: "Estimated Delivery",
+    pt: "Entrega Estimada",
+  },
+
+  // Detail Page - Documents Tab
+  "po.document.uploadedDate": {
+    es: "Fecha de Carga",
+    en: "Upload Date",
+    pt: "Data de Upload",
+  },
+  "po.document.fileName": {
+    es: "Nombre del Archivo",
+    en: "File Name",
+    pt: "Nome do Arquivo",
+  },
+  "po.document.size": {
+    es: "Tamaño",
+    en: "Size",
+    pt: "Tamanho",
+  },
+  "po.document.download": {
+    es: "Descargar",
+    en: "Download",
+    pt: "Baixar",
+  },
+  "po.document.preview": {
+    es: "Vista Previa",
+    en: "Preview",
+    pt: "Visualizar",
+  },
+  "po.document.noDocuments": {
+    es: "Sin documentos cargados",
+    en: "No documents uploaded",
+    pt: "Nenhum documento carregado",
+  },
+
+  // Detail Page Financials
   "po.detail.subtotal": {
     es: "Subtotal",
     en: "Subtotal",
@@ -298,6 +411,11 @@ export const DICT_LANG_PO = {
     es: "Descargar PO",
     en: "Download PO",
     pt: "Baixar PO",
+  },
+  "po.unauthorizedApprove": {
+    es: "No tienes permisos para aprobar esta orden",
+    en: "You don't have permission to approve this order",
+    pt: "Você não tem permissão para aprovar este pedido",
   },
 
   // Messages
