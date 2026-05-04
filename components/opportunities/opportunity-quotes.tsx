@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Plus, Download, FileText, Trash2 } from "lucide-react"
+import { Plus, Download, FileText, Trash2, CheckCircle } from "lucide-react"
 import { useTranslations } from "@/hooks/use-translations"
 import { DICT_LANG_OPPORTUNITIES } from "@/lib/constants/dict-lang-opportunities"
 import { supabase } from "@/lib/supabase/client"
@@ -19,6 +19,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface Quote {
   id: string
@@ -65,9 +73,12 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showGenerateModal, setShowGenerateModal] = useState(false)
+  const [showPOModal, setShowPOModal] = useState(false)
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [currentUser, setCurrentUser] = useState<any>(null)
+  const [availableOpportunities, setAvailableOpportunities] = useState<any[]>([])
+  const [opportunity, setOpportunity] = useState<any>(null)
 
   // Get role code
   const userRoleCode = typeof userRole === "object" && userRole?.code ? userRole.code : userRole
@@ -90,6 +101,16 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
     notes: "",
     technical_file: null as File | null,
     economical_file: null as File | null,
+  })
+
+  // PO modal state
+  const [poFormData, setPoFormData] = useState({
+    po_number: "",
+    po_file: null as File | null,
+    subtotal_amount: 0,
+    shipping_amount: 0,
+    total_amount: 0,
+    selectedOpportunities: [] as string[],
   })
 
   // Load current user
@@ -117,6 +138,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
   // Load quotes
   useEffect(() => {
     loadQuotes()
+    loadCurrentOpportunity()
   }, [opportunityId])
 
   const loadQuotes = async () => {
@@ -134,6 +156,37 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
       console.error("Error loading quotes:", error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadCurrentOpportunity = async () => {
+    try {
+      const { data: oppData, error: oppError } = await supabase
+        .from("opportunities")
+        .select("id, partner_id, tech_company_id, pipeline_stage_id")
+        .eq("id", opportunityId)
+        .single()
+
+      if (oppError) throw oppError
+      if (oppData) {
+        setOpportunity(oppData)
+        
+        // Load other active opportunities from same partner and tech company
+        const { data: otherOpps, error: oppError } = await supabase
+          .from("opportunities")
+          .select("id, name, estimated_value")
+          .eq("partner_id", oppData.partner_id)
+          .eq("tech_company_id", oppData.tech_company_id)
+          .not("pipeline_stage_id", "is", null)
+          .neq("id", opportunityId)
+          .order("name")
+
+        if (!oppError) {
+          setAvailableOpportunities(otherOpps || [])
+        }
+      }
+    } catch (error) {
+      console.error("Error loading opportunity:", error)
     }
   }
 
@@ -383,6 +436,163 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
     }
   }
 
+  const handleAcceptAndUploadPO = async () => {
+    try {
+      if (!poFormData.po_number.trim()) {
+        toast({
+          title: t("common.error"),
+          description: "PO number is required",
+          variant: "destructive",
+        })
+        return
+      }
+
+      if (!poFormData.po_file) {
+        toast({
+          title: t("common.error"),
+          description: "PO document is required",
+          variant: "destructive",
+        })
+        return
+      }
+
+      setIsSaving(true)
+
+      // Upload PO file to storage
+      const poPath = `pos/${Date.now()}_${poFormData.po_file.name}`
+      const { error: uploadError } = await supabase.storage
+        .from("po_documents")
+        .upload(poPath, poFormData.po_file)
+      if (uploadError) throw uploadError
+
+      // Generate signed URL
+      const { data: signedData, error: signedError } = await supabase.storage
+        .from("po_documents")
+        .createSignedUrl(poPath, 604800)
+      if (signedError) throw signedError
+
+      const poFileUrl = signedData.signedUrl
+
+      // Determine role-based status
+      const isAdminOrBDD = ["Admin", "BDD"].includes(userRoleCode)
+      const poStatus = isAdminOrBDD ? "accepted" : "sent"
+      const docStatus = isAdminOrBDD ? "accepted" : "pending"
+      const opportunityStatus = isAdminOrBDD ? "won" : "quotation"
+
+      // Create Purchase Order
+      const poId = uuidv4()
+      const selectedOppIds = [opportunityId, ...poFormData.selectedOpportunities]
+
+      const { data: poData, error: poError } = await supabase
+        .from("purchase_orders")
+        .insert([
+          {
+            id: poId,
+            quote_id: selectedQuote?.id,
+            po_number: poFormData.po_number,
+            subtotal_amount: poFormData.subtotal_amount,
+            shipping_amount: poFormData.shipping_amount,
+            total_amount: poFormData.total_amount,
+            status: poStatus,
+            partner_user_id: currentUser?.id,
+            accepted_by: isAdminOrBDD ? currentUser?.id : null,
+            accepted_at: isAdminOrBDD ? new Date().toISOString() : null,
+            opportunity_id: opportunityId,
+          } as any,
+        ])
+        .select()
+
+      if (poError) throw poError
+
+      // Create document record
+      const { error: docError } = await supabase
+        .from("documents")
+        .insert([
+          {
+            id: uuidv4(),
+            parent_id: poId,
+            parent_type: "purchase_order",
+            doc_type: "po_file",
+            file_url: poFileUrl,
+            status: docStatus,
+            created_at: new Date().toISOString(),
+          } as any,
+        ])
+
+      if (docError) throw docError
+
+      // Update current quote to accepted
+      const { error: updateQuoteError } = await supabase
+        .from("quotes")
+        .update({ status: "accepted" })
+        .eq("id", selectedQuote?.id)
+
+      if (updateQuoteError) throw updateQuoteError
+
+      // Decline other quotes from all selected opportunities
+      const { error: declineError } = await supabase
+        .from("quotes")
+        .update({ status: "declined" })
+        .in("opportunity_id", selectedOppIds)
+        .neq("id", selectedQuote?.id)
+
+      if (declineError) throw declineError
+
+      // Update all selected opportunities with PO reference and new status
+      for (const oppId of selectedOppIds) {
+        const { error: oppError } = await supabase
+          .from("opportunities")
+          .update({ 
+            purchase_order_id: poId,
+            pipeline_stage_id: isAdminOrBDD ? "82056c9d-0bdb-4db4-9097-f6f1a72d4db2" : QUOTATION_STAGE_ID
+          } as any)
+          .eq("id", oppId)
+
+        if (oppError) throw oppError
+      }
+
+      // Create note
+      const { error: noteError } = await supabase
+        .from("notes")
+        .insert([
+          {
+            id: uuidv4(),
+            opportunity_id: opportunityId,
+            user_id: currentUser?.id,
+            content: `${currentUser?.first_name} ${currentUser?.last_name} ha cargado una PO (${poFormData.po_number})`,
+            created_at: new Date().toISOString(),
+          } as any,
+        ])
+
+      if (noteError) throw noteError
+
+      toast({
+        title: t("common.success"),
+        description: "PO created successfully",
+      })
+
+      setShowPOModal(false)
+      setPoFormData({
+        po_number: "",
+        po_file: null,
+        subtotal_amount: 0,
+        shipping_amount: 0,
+        total_amount: 0,
+        selectedOpportunities: [],
+      })
+      await loadQuotes()
+    } catch (error) {
+      console.error("Error creating PO:", error)
+      toast({
+        title: t("common.error"),
+        description: "Error creating purchase order",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   const getStatusBadgeColor = (status: string | null) => {
     switch (status) {
       case "requested":
@@ -492,6 +702,37 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
                         <Download className="mr-2 h-4 w-4" />
                         {t("opportunities.quotes.downloadEconomical")}
                       </Button>
+                    )}
+
+                    {canGenerateQuote && quote.status === "offered" && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => {
+                                setSelectedQuote(quote)
+                                setPoFormData({
+                                  po_number: "",
+                                  po_file: null,
+                                  subtotal_amount: quote.subtotal_amount || 0,
+                                  shipping_amount: quote.shipping_amount || 0,
+                                  total_amount: quote.total_amount || 0,
+                                  selectedOpportunities: [],
+                                })
+                                setShowPOModal(true)
+                              }}
+                              className="p-0 h-8 w-8"
+                            >
+                              <CheckCircle className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            Accept & Upload PO
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     )}
 
                     {canDeleteQuote && (
@@ -725,6 +966,139 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
             </Button>
             <Button onClick={handleGenerateQuote} disabled={isSaving}>
               {isSaving ? t("opportunities.quotes.saving") : t("opportunities.quotes.save")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Accept & Upload PO Modal */}
+      <Dialog open={showPOModal} onOpenChange={setShowPOModal}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Accept Quote & Upload PO</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            {/* PO Number */}
+            <div>
+              <label className="text-sm font-medium">PO Number *</label>
+              <Input
+                placeholder="Enter PO number"
+                value={poFormData.po_number}
+                onChange={(e) =>
+                  setPoFormData({
+                    ...poFormData,
+                    po_number: e.target.value,
+                  })
+                }
+              />
+            </div>
+
+            {/* File Upload */}
+            <div>
+              <label className="text-sm font-medium">PO Document (PDF) *</label>
+              <Input
+                type="file"
+                accept=".pdf"
+                onChange={(e) => {
+                  if (e.target.files?.[0]) {
+                    setPoFormData({
+                      ...poFormData,
+                      po_file: e.target.files[0],
+                    })
+                  }
+                }}
+              />
+            </div>
+
+            {/* Amounts */}
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="text-sm font-medium">Subtotal</label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={poFormData.subtotal_amount}
+                  onChange={(e) =>
+                    setPoFormData({
+                      ...poFormData,
+                      subtotal_amount: parseFloat(e.target.value) || 0,
+                      total_amount: parseFloat(e.target.value) + poFormData.shipping_amount,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Shipping</label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={poFormData.shipping_amount}
+                  onChange={(e) =>
+                    setPoFormData({
+                      ...poFormData,
+                      shipping_amount: parseFloat(e.target.value) || 0,
+                      total_amount: poFormData.subtotal_amount + parseFloat(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Total</label>
+                <Input
+                  type="number"
+                  disabled
+                  value={poFormData.total_amount}
+                />
+              </div>
+            </div>
+
+            {/* Additional Opportunities */}
+            {availableOpportunities.length > 0 && (
+              <div>
+                <label className="text-sm font-medium">Include Other Opportunities</label>
+                <div className="space-y-2 mt-2 max-h-48 overflow-y-auto border rounded-lg p-3">
+                  {availableOpportunities.map((opp) => (
+                    <div key={opp.id} className="flex items-center gap-2">
+                      <Checkbox
+                        id={`opp-${opp.id}`}
+                        checked={poFormData.selectedOpportunities.includes(opp.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setPoFormData({
+                              ...poFormData,
+                              selectedOpportunities: [...poFormData.selectedOpportunities, opp.id],
+                            })
+                          } else {
+                            setPoFormData({
+                              ...poFormData,
+                              selectedOpportunities: poFormData.selectedOpportunities.filter(
+                                (id) => id !== opp.id
+                              ),
+                            })
+                          }
+                        }}
+                      />
+                      <label htmlFor={`opp-${opp.id}`} className="text-sm cursor-pointer">
+                        {opp.name} (${opp.estimated_value?.toFixed(2) || "0.00"})
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowPOModal(false)}
+              disabled={isSaving}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleAcceptAndUploadPO} disabled={isSaving}>
+              {isSaving ? "Uploading..." : "Accept & Upload PO"}
             </Button>
           </DialogFooter>
         </DialogContent>
