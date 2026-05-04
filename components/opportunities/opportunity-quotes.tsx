@@ -30,6 +30,8 @@ interface Quote {
   economical_quote_url: string | null
   expiration_date: string | null
   version: number | null
+  requested_by: string | null
+  answered_by: string | null
   created_at: string | null
   updated_at: string | null
 }
@@ -48,11 +50,12 @@ interface QuoteItem {
 interface OpportunityQuotesProps {
   opportunityId: string
   lang: "es" | "en" | "pt"
-  userRole: any // Role object with id and code
+  userRole: any
 }
 
 const ALLOWED_ROLES_REQUEST = ["Admin", "BDD", "PartnerUser"]
 const ALLOWED_ROLES_EDIT = ["Admin", "BDD", "TechUser"]
+const QUOTATION_STAGE_ID = "cea0f2b6-d55d-4d70-a730-adc5e365d928"
 
 export function OpportunityQuotes({ opportunityId, lang, userRole }: OpportunityQuotesProps) {
   const { t } = useTranslations(DICT_LANG_OPPORTUNITIES)
@@ -62,6 +65,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
   const [showEditModal, setShowEditModal] = useState(false)
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [currentUser, setCurrentUser] = useState<any>(null)
 
   // Get role code from userRole object
   const userRoleCode = typeof userRole === "object" && userRole?.code ? userRole.code : userRole
@@ -83,6 +87,30 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
     technical_file: null as File | null,
     economical_file: null as File | null,
   })
+
+  // Load current user
+  useEffect(() => {
+    const loadCurrentUser = async () => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+        if (user) {
+          const { data: userData } = await supabase
+            .from("users")
+            .select("id, first_name, last_name, email")
+            .eq("id", user.id)
+            .single()
+
+          setCurrentUser(userData)
+        }
+      } catch (error) {
+        console.error("[v0] Error loading current user:", error)
+      }
+    }
+
+    loadCurrentUser()
+  }, [])
 
   // Load quotes
   useEffect(() => {
@@ -118,6 +146,45 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
     return { subtotal, total }
   }
 
+  const addNoteForAction = async (action: string) => {
+    if (!currentUser) return
+
+    try {
+      const userName = `${currentUser.first_name} ${currentUser.last_name}`
+      const noteContent = action === "request" 
+        ? `${userName} ha solicitado una quote`
+        : `${userName} ha generado una quote`
+
+      await supabase.from("notes").insert([
+        {
+          opportunity_id: opportunityId,
+          content: noteContent,
+          user_id: currentUser.id,
+          created_at: new Date().toISOString(),
+        },
+      ])
+    } catch (error) {
+      console.error("[v0] Error adding note:", error)
+    }
+  }
+
+  const updateOpportunityStage = async () => {
+    try {
+      const { error } = await supabase
+        .from("opportunities")
+        .update({
+          stage_id: QUOTATION_STAGE_ID,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", opportunityId)
+
+      if (error) throw error
+      console.log("[v0] Opportunity stage updated to Quotation")
+    } catch (error) {
+      console.error("[v0] Error updating opportunity stage:", error)
+    }
+  }
+
   const canRequestQuote = ALLOWED_ROLES_REQUEST.includes(userRoleCode)
   const canEditQuote = ALLOWED_ROLES_EDIT.includes(userRoleCode)
 
@@ -150,17 +217,10 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
     })
   }
 
-  const handleRemoveEditItem = (index: number) => {
-    setEditFormData({
-      ...editFormData,
-      items: editFormData.items.filter((_, i) => i !== index),
-    })
-  }
-
-  const handleRemoveCreateItem = (index: number) => {
+  const handleRemoveItem = (sku: string) => {
     setCreateFormData({
       ...createFormData,
-      items: createFormData.items.filter((_, i) => i !== index),
+      items: createFormData.items.filter((item) => item.sku !== sku),
     })
   }
 
@@ -169,6 +229,15 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
       toast({
         title: t("common.error"),
         description: t("opportunities.quotes.errorEmptyItems"),
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!currentUser) {
+      toast({
+        title: t("common.error"),
+        description: "Usuario no autenticado",
         variant: "destructive",
       })
       return
@@ -188,10 +257,17 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
           subtotal_amount: totals.subtotal,
           total_amount: totals.total,
           version: 1,
+          requested_by: currentUser.id,
         },
       ])
 
       if (error) throw error
+
+      // Add note for quote request
+      await addNoteForAction("request")
+
+      // Update opportunity stage to Quotation
+      await updateOpportunityStage()
 
       toast({
         title: t("common.success"),
@@ -234,6 +310,15 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
       return
     }
 
+    if (!currentUser) {
+      toast({
+        title: t("common.error"),
+        description: "Usuario no autenticado",
+        variant: "destructive",
+      })
+      return
+    }
+
     try {
       setIsSaving(true)
       const totals = calculateTotals(editFormData.items, editFormData.general_discount_amount, editFormData.shipping_amount)
@@ -245,20 +330,20 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
       if (editFormData.technical_file) {
         const { data, error } = await supabase.storage
           .from("quotes")
-          .upload(`technical/${selectedQuote.id}/${editFormData.technical_file.name}`, editFormData.technical_file)
+          .upload(`${opportunityId}/${Date.now()}-technical.pdf`, editFormData.technical_file)
 
         if (error) throw error
-        technicalUrl = data.path
+        technicalUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/quotes/${data.path}`
       }
 
       // Upload economical file if provided
       if (editFormData.economical_file) {
         const { data, error } = await supabase.storage
           .from("quotes")
-          .upload(`economical/${selectedQuote.id}/${editFormData.economical_file.name}`, editFormData.economical_file)
+          .upload(`${opportunityId}/${Date.now()}-economical.pdf`, editFormData.economical_file)
 
         if (error) throw error
-        economicalUrl = data.path
+        economicalUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/quotes/${data.path}`
       }
 
       const { error } = await supabase
@@ -274,11 +359,15 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
           technical_quote_url: technicalUrl,
           economical_quote_url: economicalUrl,
           version: (selectedQuote.version || 0) + 1,
+          answered_by: currentUser.id,
           updated_at: new Date().toISOString(),
         })
         .eq("id", selectedQuote.id)
 
       if (error) throw error
+
+      // Add note for quote generation
+      await addNoteForAction("answer")
 
       toast({
         title: t("common.success"),
@@ -349,161 +438,167 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
   }
 
   if (loading) {
-    return <div className="text-center py-4">{t("common.loading")}</div>
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("opportunities.quotes.title")}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center text-gray-500">{t("common.loading")}</div>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>{t("opportunities.quotes.title")}</CardTitle>
-        {canRequestQuote && (
-          <Button size="sm" onClick={() => setShowCreateModal(true)} className="gap-2">
-            <Plus className="h-4 w-4" />
-            {t("opportunities.quotes.request")}
-          </Button>
-        )}
-      </CardHeader>
-      <CardContent>
-        {quotes.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">{t("opportunities.quotes.noQuotes")}</div>
-        ) : (
-          <div className="space-y-3">
-            {quotes.map((quote) => (
-              <div key={quote.id} className="border rounded-lg p-4 flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="font-semibold">{quote.quote_number}</span>
-                    {getStatusBadge(quote.status)}
-                    <span className="text-sm text-gray-500">
-                      {quote.quote_date ? new Date(quote.quote_date).toLocaleDateString() : ""}
-                    </span>
+    <>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>{t("opportunities.quotes.title")}</CardTitle>
+          {canRequestQuote && (
+            <Button onClick={() => setShowCreateModal(true)} size="sm" className="gap-2">
+              <Plus className="h-4 w-4" />
+              {t("opportunities.quotes.request")}
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent>
+          {quotes.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">{t("opportunities.quotes.noQuotes")}</div>
+          ) : (
+            <div className="space-y-4">
+              {quotes.map((quote) => (
+                <div key={quote.id} className="border rounded-lg p-4 hover:bg-gray-50">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <span className="font-semibold text-lg">{quote.quote_number}</span>
+                      {getStatusBadge(quote.status)}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {new Date(quote.created_at || "").toLocaleDateString()}
+                    </div>
                   </div>
-                  <div className="text-sm">
-                    <span className="font-medium">{t("opportunities.quotes.total")}:</span> ${quote.total_amount?.toFixed(2) || "0.00"}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600">
+                        {t("opportunities.quotes.total")}: <span className="font-bold">${quote.total_amount?.toFixed(2)}</span>
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      {canEditQuote && quote.status === "requested" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedQuote(quote)
+                            setEditFormData({
+                              items: quote.items || [],
+                              notes: quote.notes || "",
+                              general_discount_amount: quote.general_discount_amount || 0,
+                              shipping_amount: quote.shipping_amount || 0,
+                              technical_file: null,
+                              economical_file: null,
+                            })
+                            setShowEditModal(true)
+                          }}
+                          className="gap-2"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                          {t("common.edit")}
+                        </Button>
+                      )}
+                      {quote.technical_quote_url && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => window.open(quote.technical_quote_url)}
+                          className="gap-2"
+                        >
+                          <Download className="h-4 w-4" />
+                          {t("opportunities.quotes.downloadTechnical")}
+                        </Button>
+                      )}
+                      {quote.economical_quote_url && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => window.open(quote.economical_quote_url)}
+                          className="gap-2"
+                        >
+                          <Download className="h-4 w-4" />
+                          {t("opportunities.quotes.downloadEconomical")}
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDeleteQuote(quote.id)}
+                        className="gap-2 text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {canEditQuote && quote.status === "requested" && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        setSelectedQuote(quote)
-                        setEditFormData({
-                          items: quote.items || [],
-                          notes: quote.notes || "",
-                          general_discount_amount: quote.general_discount_amount || 0,
-                          shipping_amount: quote.shipping_amount || 0,
-                          technical_file: null,
-                          economical_file: null,
-                        })
-                        setShowEditModal(true)
-                      }}
-                      className="h-8 w-8 p-0"
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                  )}
-                  {quote.economical_quote_url && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => window.open(quote.economical_quote_url, "_blank")}
-                      className="h-8 w-8 p-0"
-                      title={t("opportunities.quotes.downloadEconomical")}
-                    >
-                      <Download className="h-4 w-4" />
-                    </Button>
-                  )}
-                  {quote.technical_quote_url && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => window.open(quote.technical_quote_url, "_blank")}
-                      className="h-8 w-8 p-0"
-                      title={t("opportunities.quotes.downloadTechnical")}
-                    >
-                      <Download className="h-4 w-4" />
-                    </Button>
-                  )}
-                  {canEditQuote && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleDeleteQuote(quote.id)}
-                      className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Create Quote Modal */}
       <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t("opportunities.quotes.createModalTitle")}</DialogTitle>
           </DialogHeader>
-
           <div className="space-y-4">
             {/* Items Section */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">{t("opportunities.quotes.itemsLabel")}</label>
-
-              <div className="space-y-2">
-                {createFormData.items.map((item, index) => (
-                  <div key={index} className="border rounded p-2 flex items-center justify-between bg-gray-50">
+            <div>
+              <label className="text-sm font-semibold mb-2 block">{t("opportunities.quotes.itemsLabel")}</label>
+              <div className="space-y-3">
+                {createFormData.items.map((item) => (
+                  <div key={item.sku} className="flex gap-2 items-center bg-gray-50 p-3 rounded">
                     <div className="flex-1">
-                      <div className="font-medium text-sm">{item.description}</div>
-                      <div className="text-xs text-gray-500">
-                        {t("opportunities.quotes.itemQuantity")}: {item.quantity}
-                      </div>
+                      <p className="font-medium">{item.description}</p>
+                      <p className="text-sm text-gray-600">{t("opportunities.quotes.itemQuantity")}: {item.quantity}</p>
                     </div>
                     <Button
                       size="sm"
-                      variant="ghost"
-                      onClick={() => handleRemoveCreateItem(index)}
-                      className="h-6 w-6 p-0"
+                      variant="destructive"
+                      onClick={() => handleRemoveItem(item.sku)}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      {t("common.delete")}
                     </Button>
                   </div>
                 ))}
               </div>
-
-              <div className="flex gap-2">
+              <div className="mt-3 space-y-2">
                 <Input
                   placeholder={t("opportunities.quotes.itemDescription")}
                   value={createFormData.itemDescription}
                   onChange={(e) => setCreateFormData({ ...createFormData, itemDescription: e.target.value })}
-                  className="flex-1"
                 />
-                <Input
-                  type="number"
-                  placeholder={t("opportunities.quotes.itemQuantity")}
-                  value={createFormData.itemQuantity}
-                  onChange={(e) => setCreateFormData({ ...createFormData, itemQuantity: parseInt(e.target.value) || 1 })}
-                  className="w-20"
-                />
-                <Button onClick={handleAddItem} size="sm" variant="outline">
-                  {t("opportunities.quotes.addItem")}
-                </Button>
+                <div className="flex gap-2">
+                  <Input
+                    type="number"
+                    placeholder={t("opportunities.quotes.itemQuantity")}
+                    value={createFormData.itemQuantity}
+                    onChange={(e) => setCreateFormData({ ...createFormData, itemQuantity: parseInt(e.target.value) || 1 })}
+                    className="w-32"
+                  />
+                  <Button onClick={handleAddItem}>{t("opportunities.quotes.addItem")}</Button>
+                </div>
               </div>
             </div>
 
-            {/* Notes Section */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">{t("opportunities.quotes.notesLabel")}</label>
+            {/* Notes */}
+            <div>
+              <label className="text-sm font-semibold mb-2 block">{t("opportunities.quotes.notesLabel")}</label>
               <Textarea
                 placeholder={t("opportunities.quotes.notesPlaceholder")}
                 value={createFormData.notes}
                 onChange={(e) => setCreateFormData({ ...createFormData, notes: e.target.value })}
-                rows={3}
               />
             </div>
           </div>
@@ -521,173 +616,136 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
 
       {/* Edit Quote Modal */}
       <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t("opportunities.quotes.editModalTitle")}</DialogTitle>
           </DialogHeader>
-
           {selectedQuote && (
             <div className="space-y-4">
-              {/* Items Table */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">{t("opportunities.quotes.itemsLabel")}</label>
-                <div className="border rounded overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead className="bg-gray-100 border-b">
-                      <tr>
-                        <th className="text-left p-2">{t("opportunities.quotes.itemDescription")}</th>
-                        <th className="text-center p-2 w-20">{t("opportunities.quotes.itemQuantity")}</th>
-                        <th className="text-right p-2 w-24">{t("opportunities.quotes.unitPrice")}</th>
-                        <th className="text-right p-2 w-20">{t("opportunities.quotes.discountPercent")}</th>
-                        <th className="text-right p-2 w-24">{t("opportunities.quotes.lineTotal")}</th>
-                        <th className="text-center p-2 w-8"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {editFormData.items.map((item, index) => (
-                        <tr key={index} className="border-b">
-                          <td className="p-2">{item.description}</td>
-                          <td className="text-center p-2">
-                            <Input
-                              type="number"
-                              value={item.quantity}
-                              onChange={(e) => {
-                                const updated = [...editFormData.items]
-                                updated[index].quantity = parseInt(e.target.value) || 1
-                                setEditFormData({ ...editFormData, items: updated })
-                              }}
-                              className="w-full text-center"
-                            />
-                          </td>
-                          <td className="text-right p-2">
-                            <Input
-                              type="number"
-                              step="0.01"
-                              value={item.unit_price}
-                              onChange={(e) => {
-                                const updated = [...editFormData.items]
-                                updated[index].unit_price = parseFloat(e.target.value) || 0
-                                updated[index].line_subtotal = updated[index].quantity * updated[index].unit_price
-                                updated[index].line_discount_amount = (updated[index].line_subtotal * updated[index].discount_percent) / 100
-                                updated[index].line_total = updated[index].line_subtotal - updated[index].line_discount_amount
-                                setEditFormData({ ...editFormData, items: updated })
-                              }}
-                              className="w-full text-right"
-                            />
-                          </td>
-                          <td className="text-right p-2">
-                            <Input
-                              type="number"
-                              step="0.1"
-                              value={item.discount_percent}
-                              onChange={(e) => {
-                                const updated = [...editFormData.items]
-                                updated[index].discount_percent = parseFloat(e.target.value) || 0
-                                updated[index].line_discount_amount = (updated[index].line_subtotal * updated[index].discount_percent) / 100
-                                updated[index].line_total = updated[index].line_subtotal - updated[index].line_discount_amount
-                                setEditFormData({ ...editFormData, items: updated })
-                              }}
-                              className="w-full text-right"
-                            />
-                          </td>
-                          <td className="text-right p-2 font-medium">${item.line_total?.toFixed(2) || "0.00"}</td>
-                          <td className="text-center p-2">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleRemoveEditItem(index)}
-                              className="h-6 w-6 p-0"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              {/* Items Section */}
+              <div>
+                <label className="text-sm font-semibold mb-2 block">{t("opportunities.quotes.itemsLabel")}</label>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {editFormData.items.map((item) => (
+                    <div key={item.sku} className="grid grid-cols-6 gap-2 items-center bg-gray-50 p-2 rounded text-sm">
+                      <div>{item.description}</div>
+                      <Input
+                        type="number"
+                        value={item.quantity}
+                        onChange={(e) => {
+                          const updated = editFormData.items.map((i) =>
+                            i.sku === item.sku ? { ...i, quantity: parseInt(e.target.value) || 0 } : i
+                          )
+                          setEditFormData({ ...editFormData, items: updated })
+                        }}
+                        className="h-8"
+                      />
+                      <Input
+                        type="number"
+                        value={item.unit_price}
+                        onChange={(e) => {
+                          const price = parseFloat(e.target.value) || 0
+                          const updated = editFormData.items.map((i) =>
+                            i.sku === item.sku
+                              ? {
+                                  ...i,
+                                  unit_price: price,
+                                  line_subtotal: price * i.quantity,
+                                  line_total: (price * i.quantity) * (1 - i.discount_percent / 100),
+                                }
+                              : i
+                          )
+                          setEditFormData({ ...editFormData, items: updated })
+                        }}
+                        className="h-8"
+                        placeholder="Precio"
+                      />
+                      <Input
+                        type="number"
+                        value={item.discount_percent}
+                        onChange={(e) => {
+                          const discount = parseFloat(e.target.value) || 0
+                          const updated = editFormData.items.map((i) =>
+                            i.sku === item.sku
+                              ? {
+                                  ...i,
+                                  discount_percent: discount,
+                                  line_discount_amount: (i.line_subtotal * discount) / 100,
+                                  line_total: i.line_subtotal * (1 - discount / 100),
+                                }
+                              : i
+                          )
+                          setEditFormData({ ...editFormData, items: updated })
+                        }}
+                        className="h-8"
+                        placeholder="%"
+                      />
+                      <div className="text-right font-semibold">${item.line_total?.toFixed(2)}</div>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => setEditFormData({ ...editFormData, items: editFormData.items.filter((i) => i.sku !== item.sku) })}
+                        className="h-8"
+                      >
+                        X
+                      </Button>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              {/* Totals Section */}
-              {(() => {
-                const totals = calculateTotals(
-                  editFormData.items,
-                  editFormData.general_discount_amount,
-                  editFormData.shipping_amount
-                )
-                return (
-                  <div className="border rounded p-4 space-y-2 bg-gray-50">
-                    <div className="flex justify-between text-sm">
-                      <span>Subtotal:</span>
-                      <span>${totals.subtotal.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <label className="text-sm">{t("opportunities.quotes.generalDiscount")}:</label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        value={editFormData.general_discount_amount}
-                        onChange={(e) =>
-                          setEditFormData({ ...editFormData, general_discount_amount: parseFloat(e.target.value) || 0 })
-                        }
-                        className="w-24"
-                      />
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <label className="text-sm">{t("opportunities.quotes.shipping")}:</label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        value={editFormData.shipping_amount}
-                        onChange={(e) =>
-                          setEditFormData({ ...editFormData, shipping_amount: parseFloat(e.target.value) || 0 })
-                        }
-                        className="w-24"
-                      />
-                    </div>
-                    <div className="border-t pt-2 flex justify-between font-bold">
-                      <span>{t("opportunities.quotes.total")}:</span>
-                      <span>${totals.total.toFixed(2)}</span>
-                    </div>
-                  </div>
-                )
-              })()}
+              {/* Discounts and Shipping */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-semibold mb-2 block">{t("opportunities.quotes.generalDiscount")}</label>
+                  <Input
+                    type="number"
+                    value={editFormData.general_discount_amount}
+                    onChange={(e) => setEditFormData({ ...editFormData, general_discount_amount: parseFloat(e.target.value) || 0 })}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-semibold mb-2 block">{t("opportunities.quotes.shipping")}</label>
+                  <Input
+                    type="number"
+                    value={editFormData.shipping_amount}
+                    onChange={(e) => setEditFormData({ ...editFormData, shipping_amount: parseFloat(e.target.value) || 0 })}
+                  />
+                </div>
+              </div>
 
               {/* Notes */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">{t("opportunities.quotes.notesLabel")}</label>
+              <div>
+                <label className="text-sm font-semibold mb-2 block">{t("opportunities.quotes.notesLabel")}</label>
                 <Textarea
-                  placeholder={t("opportunities.quotes.notesPlaceholder")}
                   value={editFormData.notes}
                   onChange={(e) => setEditFormData({ ...editFormData, notes: e.target.value })}
-                  rows={2}
                 />
               </div>
 
               {/* File Uploads */}
-              <div className="space-y-3">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">{t("opportunities.quotes.technicalAttachment")}</label>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-semibold mb-2 block">{t("opportunities.quotes.technicalAttachment")}</label>
                   <Input
                     type="file"
                     accept=".pdf"
-                    onChange={(e) =>
-                      setEditFormData({ ...editFormData, technical_file: e.target.files?.[0] || null })
-                    }
+                    onChange={(e) => setEditFormData({ ...editFormData, technical_file: e.target.files?.[0] || null })}
                   />
+                  {selectedQuote.technical_quote_url && !editFormData.technical_file && (
+                    <p className="text-xs text-gray-500 mt-1">{t("opportunities.quotes.downloadTechnical")}</p>
+                  )}
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-red-600">
-                    {t("opportunities.quotes.economicalQuote")}
-                  </label>
+                <div>
+                  <label className="text-sm font-semibold mb-2 block">{t("opportunities.quotes.economicalQuote")}</label>
                   <Input
                     type="file"
                     accept=".pdf"
-                    onChange={(e) =>
-                      setEditFormData({ ...editFormData, economical_file: e.target.files?.[0] || null })
-                    }
-                    required
+                    onChange={(e) => setEditFormData({ ...editFormData, economical_file: e.target.files?.[0] || null })}
                   />
+                  {selectedQuote.economical_quote_url && !editFormData.economical_file && (
+                    <p className="text-xs text-gray-500 mt-1">{t("opportunities.quotes.downloadEconomical")}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -703,6 +761,6 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </Card>
+    </>
   )
 }
