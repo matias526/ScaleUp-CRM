@@ -541,7 +541,6 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
         .from("purchase_orders")
         .insert([
           {
-            id: poId,
             quote_id: selectedQuote?.id,
             po_number: poFormData.po_number,
             subtotal_amount: poFormData.subtotal_amount,
@@ -557,21 +556,20 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
 
       if (poError) throw poError
       
-      // Use the poId we created since opportunity_id relationship is now inverse
-      console.log("[v0] Created Purchase Order with ID:", poId)
+      // Get the created PO ID from the response
+      const createdPoId = poData?.[0]?.id || poId
+      console.log("[v0] Created Purchase Order with ID:", createdPoId)
 
       // Create document record
       const { error: docError } = await supabase
         .from("documents")
         .insert([
           {
-            id: uuidv4(),
-            parent_id: poId,
+            parent_id: createdPoId,
             parent_type: "purchase_order",
             doc_type: "po_file",
             file_url: poFileUrl,
             status: docStatus,
-            created_at: new Date().toISOString(),
           } as any,
         ])
 
@@ -596,29 +594,27 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
 
       // Update all selected opportunities with PO reference and new status
       for (const oppId of selectedOppIds) {
-        console.log("[v0] Updating opportunity", oppId, "with purchase_order_id:", poId)
+        console.log("[v0] Updating opportunity", oppId, "with purchase_order_id:", createdPoId)
         const { error: oppError } = await supabase
           .from("opportunities")
           .update({ 
-            purchase_order_id: poId,
+            purchase_order_id: createdPoId,
             pipeline_stage_id: isAdminOrBDD ? "82056c9d-0bdb-4db4-9097-f6f1a72d4db2" : QUOTATION_STAGE_ID
           } as any)
           .eq("id", oppId)
 
         if (oppError) throw oppError
       }
-      console.log("[v0] All opportunities updated with purchase_order_id:", poId)
+      console.log("[v0] All opportunities updated with purchase_order_id:", createdPoId)
 
       // Create note
       const { error: noteError } = await supabase
         .from("notes")
         .insert([
           {
-            id: uuidv4(),
             opportunity_id: opportunityId,
             user_id: currentUser?.id,
             content: `${currentUser?.first_name} ${currentUser?.last_name} ha cargado una PO (${poFormData.po_number})`,
-            created_at: new Date().toISOString(),
           } as any,
         ])
 
