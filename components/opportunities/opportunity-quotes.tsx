@@ -161,17 +161,36 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
 
   const loadCurrentOpportunity = async () => {
     try {
+      console.log("[v0] Loading current opportunity with ID:", opportunityId)
       const { data: oppData, error: oppError } = await supabase
         .from("opportunities")
         .select("id, partner_id, tech_company_id, pipeline_stage_id, name, estimated_value")
         .eq("id", opportunityId)
         .single()
 
-      if (oppError) throw oppError
+      if (oppError) {
+        console.error("[v0] Error loading current opportunity:", oppError)
+        throw oppError
+      }
+      
+      console.log("[v0] Current opportunity loaded:", {
+        id: oppData.id,
+        name: oppData.name,
+        partner_id: oppData.partner_id,
+        tech_company_id: oppData.tech_company_id,
+      })
+      
       if (oppData) {
         setOpportunity(oppData)
         
         // Load other active opportunities from same partner
+        console.log("[v0] Starting query to find other opportunities...")
+        console.log("[v0] Query filters:")
+        console.log("[v0]   - Table: opportunities")
+        console.log("[v0]   - Select: id, name, estimated_value, partner_id, tech_company_id")
+        console.log("[v0]   - partner_id =", oppData.partner_id)
+        console.log("[v0]   - id != ", opportunityId)
+        
         let query = supabase
           .from("opportunities")
           .select("id, name, estimated_value, partner_id, tech_company_id")
@@ -180,16 +199,24 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
 
         // If tech_company_id is set, filter by it too
         if (oppData.tech_company_id) {
+          console.log("[v0]   - tech_company_id =", oppData.tech_company_id)
           query = query.eq("tech_company_id", oppData.tech_company_id)
+        } else {
+          console.log("[v0]   - tech_company_id: NOT SET (will not filter)")
         }
 
+        console.log("[v0] Executing query...")
         const { data: otherOpps, error: otherError } = await query
           .order("name", { ascending: true })
+
+        console.log("[v0] Query result:")
+        console.log("[v0]   - Error:", otherError?.message || "none")
+        console.log("[v0]   - Count:", otherOpps?.length || 0)
+        console.log("[v0]   - Data:", otherOpps)
 
         if (otherError) {
           console.error("[v0] Error loading other opportunities:", otherError)
         } else {
-          console.log("[v0] Available opportunities loaded:", otherOpps?.length || 0, "items")
           setAvailableOpportunities(otherOpps || [])
         }
       }
