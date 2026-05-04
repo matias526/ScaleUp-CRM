@@ -254,18 +254,27 @@ export default function PurchaseOrderDetailPage() {
 
   return (
     <div className="p-8 space-y-6">
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-3xl font-bold">{po.po_number}</h1>
-          <div className="flex items-center gap-3 mt-2">
-            <Badge className={getStatusBadgeColor(po.status)}>
-              {t(`po.status.${po.status}`)}
-            </Badge>
+      <div className="flex justify-between items-start mb-6">
+        <div className="flex items-center gap-4">
+          {/* Logo Section */}
+          {po.partners?.name && (
+            <div className="flex items-center justify-center w-16 h-16 rounded-lg bg-gray-100 border-2 border-gray-200">
+              <span className="text-2xl font-bold text-gray-700">
+                {po.partners.name.substring(0, 2).toUpperCase()}
+              </span>
+            </div>
+          )}
+          
+          {/* PO Number */}
+          <div>
+            <div className="text-sm text-gray-600 font-medium">PO #{po.po_number}</div>
+            <h1 className="text-3xl font-bold">{po.po_number}</h1>
             <span className="text-gray-600">
               {po.created_at ? format(new Date(po.created_at), "dd/MM/yyyy HH:mm") : "-"}
             </span>
           </div>
         </div>
+        
         {canApprove && (
           <Button 
             onClick={() => setShowApproveDialog(true)}
@@ -277,40 +286,68 @@ export default function PurchaseOrderDetailPage() {
         )}
       </div>
 
+      {/* Summary Cards - Status, Amounts, Logos */}
       <div className="grid grid-cols-3 gap-4">
+        {/* Card 1: Status */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-gray-600">
-              {t("po.totalAmount")}
+              {t("po.status")}
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex flex-col gap-3">
+            <Badge className={getStatusBadgeColor(po.status)}>
+              {t(`po.status.${po.status}`)}
+            </Badge>
+            <div className="text-xs text-gray-600">
+              {po.accepted_at && (
+                <div>
+                  {t("po.detail.approvedDate")}: {format(new Date(po.accepted_at), "dd/MM/yyyy")}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Card 2: Amounts */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-gray-600">
+              {t("po.detail.total")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
             <div className="text-2xl font-bold">
               ${po.total_amount?.toFixed(2) || "0.00"}
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              {t("po.subtotal")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              ${po.subtotal_amount?.toFixed(2) || "0.00"}
+            <div className="text-xs text-gray-600 space-y-1">
+              <div>
+                <span className="font-medium">{t("po.subtotal")}:</span> ${po.subtotal_amount?.toFixed(2) || "0.00"}
+              </div>
+              <div>
+                <span className="font-medium">{t("po.shipping")}:</span> ${po.shipping_amount?.toFixed(2) || "0.00"}
+              </div>
             </div>
           </CardContent>
         </Card>
+
+        {/* Card 3: Partner Info */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-gray-600">
-              {t("po.shipping")}
+              {t("po.detail.partner")}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              ${po.shipping_amount?.toFixed(2) || "0.00"}
+          <CardContent className="flex flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-blue-100 border-2 border-blue-200">
+                <span className="text-lg font-bold text-blue-700">
+                  {po.partners?.name?.substring(0, 2).toUpperCase() || "?"}
+                </span>
+              </div>
+              <div className="text-sm font-medium">
+                {po.partners?.name || t("po.noPartner")}
+              </div>
             </div>
           </CardContent>
         </Card>

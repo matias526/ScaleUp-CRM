@@ -206,6 +206,11 @@ export const DICT_LANG_PO = {
     en: "Partner",
     pt: "Partner",
   },
+  "po.noPartner": {
+    es: "Sin Partner",
+    en: "No Partner",
+    pt: "Sem Partner",
+  },
   "po.detail.createdDate": {
     es: "Fecha de Creación",
     en: "Created Date",
