@@ -415,17 +415,6 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
                     </Badge>
                   </div>
 
-                  {quote.items && (
-                    <div className="text-sm space-y-1">
-                      <p className="font-medium text-gray-700">{t("opportunities.quotes.itemsLabel")}:</p>
-                      {quote.items.map((item: QuoteItem, idx: number) => (
-                        <p key={idx} className="text-gray-600">
-                          • {item.description} (Qty: {item.quantity})
-                        </p>
-                      ))}
-                    </div>
-                  )}
-
                   {quote.total_amount && (
                     <div className="text-sm font-medium text-gray-700">
                       {t("opportunities.quotes.total")}: ${quote.total_amount.toFixed(2)}
