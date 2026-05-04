@@ -29,6 +29,7 @@ const sidebarTranslations = {
   en: {
     "sidebar.dashboard": "Dashboard",
     "sidebar.opportunities": "Opportunities",
+    "sidebar.orders": "Orders",
     "sidebar.partners": "Partners",
     "sidebar.prospect_partners": "Prospect Partners",
     "sidebar.contacts": "Contacts",
@@ -55,6 +56,7 @@ const sidebarTranslations = {
   es: {
     "sidebar.dashboard": "Dashboard",
     "sidebar.opportunities": "Oportunidades",
+    "sidebar.orders": "Órdenes",
     "sidebar.partners": "Socios",
     "sidebar.prospect_partners": "Socios Potenciales",
     "sidebar.contacts": "Contactos",
@@ -81,6 +83,7 @@ const sidebarTranslations = {
   pt: {
     "sidebar.dashboard": "Dashboard",
     "sidebar.opportunities": "Oportunidades",
+    "sidebar.orders": "Pedidos",
     "sidebar.partners": "Parceiros",
     "sidebar.prospect_partners": "Parceiros Potenciais",
     "sidebar.contacts": "Contatos",
@@ -246,6 +249,11 @@ export function Sidebar() {
       href: "/dashboard/opportunities",
       icon: CircleDollarSign,
       labelKey: "sidebar.opportunities",
+    },
+    {
+      href: "/dashboard/purchase-orders",
+      icon: ClipboardList,
+      labelKey: "sidebar.orders",
     },
     {
       href: "/dashboard/tasks",
