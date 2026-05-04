@@ -13,6 +13,12 @@ import { DICT_LANG_OPPORTUNITIES } from "@/lib/constants/dict-lang-opportunities
 import { supabase } from "@/lib/supabase/client"
 import { toast } from "@/components/ui/use-toast"
 import { v4 as uuidv4 } from "uuid"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface Quote {
   id: string
@@ -50,6 +56,7 @@ interface OpportunityQuotesProps {
 
 const ALLOWED_ROLES_REQUEST = ["Admin", "BDD", "PartnerUser"]
 const ALLOWED_ROLES_EDIT = ["Admin", "BDD", "TechUser"]
+const ALLOWED_ROLES_DELETE = ["Admin", "BDD", "TechUser"]
 const QUOTATION_STAGE_ID = "cea0f2b6-d55d-4d70-a730-adc5e365d928"
 
 export function OpportunityQuotes({ opportunityId, lang, userRole }: OpportunityQuotesProps) {
@@ -66,6 +73,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
   const userRoleCode = typeof userRole === "object" && userRole?.code ? userRole.code : userRole
   const canRequestQuote = ALLOWED_ROLES_REQUEST.includes(userRoleCode)
   const canGenerateQuote = ALLOWED_ROLES_EDIT.includes(userRoleCode)
+  const canDeleteQuote = ALLOWED_ROLES_DELETE.includes(userRoleCode)
 
   // Create modal state
   const [createFormData, setCreateFormData] = useState({
@@ -431,24 +439,33 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
 
                   <div className="flex gap-2 justify-end">
                     {canGenerateQuote && quote.status === "requested" && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setSelectedQuote(quote)
-                          setGenerateFormData({
-                            subtotal_amount: 0,
-                            shipping_amount: 0,
-                            notes: quote.notes || "",
-                            technical_file: null,
-                            economical_file: null,
-                          })
-                          setShowGenerateModal(true)
-                        }}
-                      >
-                        <FileText className="mr-2 h-4 w-4" />
-                        {t("opportunities.quotes.requestQuote")}
-                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => {
+                                setSelectedQuote(quote)
+                                setGenerateFormData({
+                                  subtotal_amount: 0,
+                                  shipping_amount: 0,
+                                  notes: quote.notes || "",
+                                  technical_file: null,
+                                  economical_file: null,
+                                })
+                                setShowGenerateModal(true)
+                              }}
+                              className="p-0 h-8 w-8"
+                            >
+                              <FileText className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {t("opportunities.quotes.editModalTitle")}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     )}
 
                     {quote.technical_quote_url && (
@@ -473,14 +490,16 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
                       </Button>
                     )}
 
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleDeleteQuote(quote.id)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {canDeleteQuote && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDeleteQuote(quote.id)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
