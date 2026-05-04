@@ -149,6 +149,17 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
     console.log("[v0] ========== useEffect END ==========")
   }, [opportunityId])
 
+  // Load opportunities when PO modal opens
+  useEffect(() => {
+    console.log("[v0] ========== PO Modal useEffect START ==========")
+    console.log("[v0] showPOModal changed to:", showPOModal)
+    if (showPOModal) {
+      console.log("[v0] Modal is open, calling loadCurrentOpportunity...")
+      loadCurrentOpportunity()
+    }
+    console.log("[v0] ========== PO Modal useEffect END ==========")
+  }, [showPOModal])
+
   const loadQuotes = async () => {
     try {
       setLoading(true)
