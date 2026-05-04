@@ -216,7 +216,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
         {
           opportunity_id: opportunityId,
           content: noteText,
-          created_by: currentUser?.id,
+          user_id: currentUser?.id,
         },
       ])
 
@@ -327,13 +327,9 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
   {
     opportunity_id: opportunityId,
     content: noteText,
-    created_by: currentUser?.id,
+    user_id: currentUser?.id,
   },
 ])
-
-if (noteError) {
-  console.error("❌ Error específico en la nota:", noteError)
-}
 
       toast({
         title: t("common.success"),
