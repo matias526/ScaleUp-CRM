@@ -29,6 +29,7 @@ export default function PurchaseOrderDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [milestones, setMilestones] = useState<any[]>([])
   const [shippings, setShippings] = useState<any[]>([])
+  const [techCompany, setTechCompany] = useState<any>(null)
   const [approving, setApproving] = useState(false)
 
   useEffect(() => {
@@ -51,10 +52,10 @@ export default function PurchaseOrderDetailPage() {
       setLoading(true)
       setError(null)
 
-      // Load PO details
+      // Load PO details with partner and tech company info
       const { data: poData, error: poError } = await supabase
         .from("purchase_orders")
-        .select("*, partners(name)")
+        .select("*, partners(name, logo_url)")
         .eq("id", poId)
         .single()
 
@@ -66,6 +67,19 @@ export default function PurchaseOrderDetailPage() {
       }
 
       setPo(poData)
+
+      // Load TechCompany info (the user who created the PO)
+      if (poData.partner_user_id) {
+        const { data: techCompanyData } = await supabase
+          .from("users")
+          .select("id, firstName, lastName, company_name, logo_url")
+          .eq("id", poData.partner_user_id)
+          .single()
+
+        if (techCompanyData) {
+          setTechCompany(techCompanyData)
+        }
+      }
 
       // Load milestones
       const { data: milestonesData, error: milestonesError } = await supabase
@@ -194,104 +208,81 @@ export default function PurchaseOrderDetailPage() {
 
   return (
     <div className="p-8 space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-start mb-6">
-        <div className="flex items-center gap-4">
-          {/* Logo Section */}
+      {/* Compact Header - Horizontal Layout */}
+      <div className="flex items-center justify-between bg-white rounded-lg border border-gray-200 p-6">
+        {/* Left: Partner Logo, PO Number, Date */}
+        <div className="flex items-center gap-6">
+          {/* Partner Logo */}
           {po.partners?.name && (
-            <div className="flex items-center justify-center w-16 h-16 rounded-lg bg-gray-100 border-2 border-gray-200">
-              <span className="text-2xl font-bold text-gray-700">
+            <div className="flex items-center justify-center w-14 h-14 rounded-lg bg-gray-100 border-2 border-gray-300 flex-shrink-0">
+              <span className="text-lg font-bold text-gray-700">
                 {po.partners.name.substring(0, 2).toUpperCase()}
               </span>
             </div>
           )}
 
-          {/* PO Number */}
-          <div>
-            <div className="text-sm text-gray-600 font-medium">PO #{po.po_number}</div>
-            <h1 className="text-3xl font-bold">{po.po_number}</h1>
-            <span className="text-gray-600">
+          {/* PO Info */}
+          <div className="flex flex-col gap-1">
+            <div className="text-xs text-gray-500 uppercase tracking-wide font-semibold">PO #{po.po_number}</div>
+            <h1 className="text-2xl font-bold text-gray-900">{po.po_number}</h1>
+            <span className="text-sm text-gray-600">
               {po.created_at ? format(new Date(po.created_at), "dd/MM/yyyy HH:mm") : "-"}
             </span>
           </div>
+
+          {/* Status Badge - Inline */}
+          <div className="flex flex-col gap-1 pl-6 border-l border-gray-200">
+            <span className="text-xs text-gray-500 uppercase tracking-wide font-semibold">{t("po.status")}</span>
+            <Badge className={getStatusBadgeColor(po.status)}>
+              {t(`po.status.${po.status}`)}
+            </Badge>
+            {po.accepted_at && (
+              <span className="text-xs text-gray-600">
+                {format(new Date(po.accepted_at), "dd/MM/yyyy")}
+              </span>
+            )}
+          </div>
         </div>
 
+        {/* Center: Total Amount */}
+        <div className="flex flex-col items-center gap-2 px-6 border-l border-r border-gray-200">
+          <span className="text-xs text-gray-500 uppercase tracking-wide font-semibold">{t("po.detail.total")}</span>
+          <div className="text-3xl font-bold text-gray-900">
+            ${po.total_amount?.toFixed(2) || "0.00"}
+          </div>
+          <div className="text-xs text-gray-600 text-center">
+            <div>{t("po.subtotal")}: ${po.subtotal_amount?.toFixed(2) || "0.00"}</div>
+            <div>{t("po.shipping")}: ${po.shipping_amount?.toFixed(2) || "0.00"}</div>
+          </div>
+        </div>
+
+        {/* Right: TechCompany Logo + Partner Name */}
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-1">{t("po.detail.partner")}</p>
+            <p className="text-sm font-medium text-gray-900">{po.partners?.name || t("po.noPartner")}</p>
+          </div>
+
+          {/* TechCompany Logo */}
+          {techCompany?.company_name && (
+            <div className="flex items-center justify-center w-14 h-14 rounded-lg bg-blue-100 border-2 border-blue-300 flex-shrink-0">
+              <span className="text-lg font-bold text-blue-700">
+                {techCompany.company_name.substring(0, 2).toUpperCase()}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Approve Button */}
         {canApprove && (
           <Button
             onClick={handleApprovePO}
             disabled={approving}
-            className="bg-green-600 hover:bg-green-700"
+            className="bg-green-600 hover:bg-green-700 flex-shrink-0"
           >
             {approving ? "Aprobando..." : t("po.approvePO")}
           </Button>
         )}
-      </div>
-
-      {/* Summary Cards - Status, Amounts, Logos */}
-      <div className="grid grid-cols-3 gap-4">
-        {/* Card 1: Status */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              {t("po.status")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            <Badge className={getStatusBadgeColor(po.status)}>
-              {t(`po.status.${po.status}`)}
-            </Badge>
-            <div className="text-xs text-gray-600">
-              {po.accepted_at && (
-                <div>
-                  {t("po.detail.approvedDate")}: {format(new Date(po.accepted_at), "dd/MM/yyyy")}
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Card 2: Amounts */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              {t("po.detail.total")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="text-2xl font-bold">
-              ${po.total_amount?.toFixed(2) || "0.00"}
-            </div>
-            <div className="text-xs text-gray-600 space-y-1">
-              <div>
-                <span className="font-medium">{t("po.subtotal")}:</span> ${po.subtotal_amount?.toFixed(2) || "0.00"}
-              </div>
-              <div>
-                <span className="font-medium">{t("po.shipping")}:</span> ${po.shipping_amount?.toFixed(2) || "0.00"}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Card 3: Partner Info */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              {t("po.detail.partner")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-blue-100 border-2 border-blue-200">
-                <span className="text-lg font-bold text-blue-700">
-                  {po.partners?.name?.substring(0, 2).toUpperCase() || "?"}
-                </span>
-              </div>
-              <div className="text-sm font-medium">
-                {po.partners?.name || t("po.noPartner")}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Two Column Layout */}
