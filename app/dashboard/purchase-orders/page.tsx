@@ -27,15 +27,24 @@ export default function PurchaseOrdersPage() {
   const [purchaseOrders, setPurchaseOrders] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [partners, setPartners] = useState<any[]>([])
+  const [techCompanies, setTechCompanies] = useState<any[]>([])
+  const [selectedPartner, setSelectedPartner] = useState<string>("")
+  const [selectedTechCompany, setSelectedTechCompany] = useState<string>("")
 
   useEffect(() => {
     if (!authLoading && userInfo) {
       loadPurchaseOrders()
+      // Only load filter options for Admin/BDD
+      if (["Admin", "BDD"].includes(userInfo.roleCode)) {
+        loadPartners()
+        loadTechCompanies()
+      }
     } else if (!authLoading && !userInfo) {
       setError(t("po.errorNotAuthenticated"))
       setLoading(false)
     }
-  }, [userInfo, authLoading])
+  }, [userInfo, authLoading, selectedPartner, selectedTechCompany])
 
   const loadPurchaseOrders = async () => {
     try {
@@ -51,7 +60,7 @@ export default function PurchaseOrdersPage() {
       
       let query = supabase
         .from("purchase_orders")
-        .select("id, po_number, total_amount, status, created_at, quote_id, quotes(opportunity_id)")
+        .select("id, po_number, total_amount, status, created_at, partner_user_id, quote_id, quotes(opportunity_id, opportunity(partner_id))")
 
       // Role-based filtering
       const userRole = userInfo.roleCode
@@ -63,9 +72,15 @@ export default function PurchaseOrdersPage() {
         query = query.eq("partner_user_id", userInfo.id)
       } else if (userRole === "TechLogistic") {
         console.log("[v0] TechLogistic - showing all POs")
-        // TechLogistic ve POs para logística (shippings)
+      } else if (["Admin", "BDD"].includes(userRole)) {
+        // Admin/BDD pueden aplicar filtros adicionales
+        if (selectedPartner) {
+          query = query.eq("quotes.opportunity.partner_id", selectedPartner)
+        }
+        if (selectedTechCompany) {
+          query = query.eq("partner_user_id", selectedTechCompany)
+        }
       }
-      // Admin y BDD ven todas
 
       console.log("[v0] Executing query...")
       const { data, error: queryError } = await query
@@ -80,29 +95,29 @@ export default function PurchaseOrdersPage() {
         return
       }
       
-      // Get all unique opportunity_ids from quotes
-      const opportunityIds = data?.map(po => po.quotes?.opportunity_id).filter(Boolean) || []
-      console.log("[v0] Opportunity IDs:", opportunityIds)
+      // Get all unique partner_ids and opportunity_ids
+      const partnerIds = data?.map(po => po.quotes?.opportunity?.partner_id).filter(Boolean) || []
+      console.log("[v0] Partner IDs:", partnerIds)
       
-      if (opportunityIds.length > 0) {
-        const { data: opportunities, error: oppError } = await supabase
-          .from("opportunities")
-          .select("id, name, partner_id")
-          .in("id", opportunityIds)
+      if (partnerIds.length > 0) {
+        const { data: partnersData, error: partnerError } = await supabase
+          .from("partners")
+          .select("id, name")
+          .in("id", partnerIds)
         
-        if (oppError) {
-          console.error("[v0] Error loading opportunities:", oppError)
+        if (partnerError) {
+          console.error("[v0] Error loading partners:", partnerError)
         }
         
-        const oppMap = opportunities?.reduce((acc, opp) => {
-          acc[opp.id] = opp
+        const partnerMap = partnersData?.reduce((acc, partner) => {
+          acc[partner.id] = partner
           return acc
         }, {} as any) || {}
         
-        // Enrich purchase orders with opportunity data
+        // Enrich purchase orders with partner data
         const enrichedData = data?.map(po => ({
           ...po,
-          opportunity: oppMap[po.quotes?.opportunity_id]
+          partner: partnerMap[po.quotes?.opportunity?.partner_id]
         })) || []
         
         setPurchaseOrders(enrichedData)
@@ -119,6 +134,37 @@ export default function PurchaseOrdersPage() {
       })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadPartners = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("partners")
+        .select("id, name")
+        .order("name")
+      
+      if (!error) {
+        setPartners(data || [])
+      }
+    } catch (error) {
+      console.error("[v0] Error loading partners:", error)
+    }
+  }
+
+  const loadTechCompanies = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("partners")
+        .select("id, name")
+        .eq("type", "tech")
+        .order("name")
+      
+      if (!error) {
+        setTechCompanies(data || [])
+      }
+    } catch (error) {
+      console.error("[v0] Error loading tech companies:", error)
     }
   }
 
@@ -171,6 +217,36 @@ export default function PurchaseOrdersPage() {
         <CardHeader>
           <CardTitle>{t("po.listTitle")}</CardTitle>
         </CardHeader>
+        {["Admin", "BDD"].includes(userInfo?.roleCode || "") && (
+          <div className="px-6 pt-0 pb-4 flex gap-4 flex-wrap items-end">
+            <div className="flex-1 min-w-[200px]">
+              <label className="text-sm font-medium block mb-2">{t("po.filter.byPartner")}</label>
+              <select
+                value={selectedPartner}
+                onChange={(e) => setSelectedPartner(e.target.value)}
+                className="w-full px-3 py-2 border rounded-md text-sm"
+              >
+                <option value="">{t("po.filter.selectPartner")}</option>
+                {partners.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex-1 min-w-[200px]">
+              <label className="text-sm font-medium block mb-2">{t("po.filter.byTechCompany")}</label>
+              <select
+                value={selectedTechCompany}
+                onChange={(e) => setSelectedTechCompany(e.target.value)}
+                className="w-full px-3 py-2 border rounded-md text-sm"
+              >
+                <option value="">{t("po.filter.selectTechCompany")}</option>
+                {techCompanies.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
         <CardContent>
           {purchaseOrders.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
@@ -195,7 +271,7 @@ export default function PurchaseOrdersPage() {
                   {purchaseOrders.map((po) => (
                     <TableRow key={po.id}>
                       <TableCell className="font-medium">{po.po_number}</TableCell>
-                      <TableCell>{po.opportunity?.name || "-"}</TableCell>
+                      <TableCell>{po.partner?.name || "-"}</TableCell>
                       <TableCell>${po.total_amount?.toFixed(2) || "0.00"}</TableCell>
                       <TableCell>
                         <Badge className={getStatusBadgeColor(po.status)}>

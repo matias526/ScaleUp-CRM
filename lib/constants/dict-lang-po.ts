@@ -18,6 +18,11 @@ export const DICT_LANG_PO = {
     en: "Purchase Orders",
     pt: "Pedidos de Compra",
   },
+  "po.subtitle": {
+    es: "Gestiona y monitorea todas tus órdenes de compra",
+    en: "Manage and monitor all your purchase orders",
+    pt: "Gerencie e monitore todos os seus pedidos de compra",
+  },
   "po.listTitle": {
     es: "Órdenes de Compra",
     en: "Purchase Orders",
@@ -332,6 +337,21 @@ export const DICT_LANG_PO = {
     es: "Por Partner",
     en: "By Partner",
     pt: "Por Partner",
+  },
+  "po.filter.byTechCompany": {
+    es: "Por Empresa Tecnológica",
+    en: "By Tech Company",
+    pt: "Por Empresa de Tecnologia",
+  },
+  "po.filter.selectPartner": {
+    es: "Seleccionar Partner",
+    en: "Select Partner",
+    pt: "Selecionar Partner",
+  },
+  "po.filter.selectTechCompany": {
+    es: "Seleccionar Empresa",
+    en: "Select Company",
+    pt: "Selecionar Empresa",
   },
   "common.success": {
     es: "Éxito",
