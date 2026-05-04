@@ -323,13 +323,17 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
 
       // Create note
       const noteText = `${currentUser?.first_name} ${currentUser?.last_name} ha generado una quote`
-      await supabase.from("notes").insert([
-        {
-          opportunity_id: opportunityId,
-          content: noteText,
-          created_by: currentUser?.id,
-        },
-      ])
+      const { error: noteError } = await supabase.from("notes").insert([
+  {
+    opportunity_id: opportunityId,
+    content: noteText,
+    created_by: currentUser?.id,
+  },
+])
+
+if (noteError) {
+  console.error("❌ Error específico en la nota:", noteError)
+}
 
       toast({
         title: t("common.success"),
