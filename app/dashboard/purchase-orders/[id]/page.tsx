@@ -62,7 +62,7 @@ export default function PurchaseOrderDetailPage() {
       // Load PO details
       const { data: poData, error: poError } = await supabase
         .from("purchase_orders")
-        .select("*")
+        .select("*, partners(name)")
         .eq("id", poId)
         .single()
       
@@ -123,9 +123,9 @@ export default function PurchaseOrderDetailPage() {
   const handleApprovePO = async () => {
     try {
       setApproving(true)
-      const userRole = currentUser?.role?.code || currentUser?.role
+      const userRole = userInfo?.roleCode
       
-      if (!["Admin", "BDD"].includes(userRole)) {
+      if (!["Admin", "BDD"].includes(userRole || "")) {
         toast({
           title: t("common.error"),
           description: t("po.unauthorizedApprove"),
@@ -140,7 +140,7 @@ export default function PurchaseOrderDetailPage() {
         .update({ 
           status: "accepted",
           accepted_at: new Date().toISOString(),
-          accepted_by: currentUser.id,
+          accepted_by: userInfo?.id,
         })
         .eq("id", poId)
       
@@ -178,8 +178,8 @@ export default function PurchaseOrderDetailPage() {
         .insert([
           {
             opportunity_id: opportunities?.[0]?.id,
-            user_id: currentUser.id,
-            content: `${currentUser.first_name} ${currentUser.last_name} aprobó la PO (${po.po_number})`,
+            user_id: userInfo?.id,
+            content: `${userInfo?.firstName} ${userInfo?.lastName} aprobó la PO (${po.po_number})`,
           } as any,
         ])
 

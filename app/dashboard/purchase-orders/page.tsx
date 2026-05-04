@@ -60,7 +60,7 @@ export default function PurchaseOrdersPage() {
       
       let query = supabase
         .from("purchase_orders")
-        .select("id, po_number, total_amount, status, created_at, partner_user_id, quote_id, quotes(opportunity_id, opportunity(partner_id))")
+        .select("id, po_number, total_amount, status, created_at, partner_user_id, partner_id, partners(name)")
 
       // Role-based filtering
       const userRole = userInfo.roleCode
@@ -75,7 +75,7 @@ export default function PurchaseOrdersPage() {
       } else if (["Admin", "BDD"].includes(userRole)) {
         // Admin/BDD pueden aplicar filtros adicionales
         if (selectedPartner) {
-          query = query.eq("quotes.opportunity.partner_id", selectedPartner)
+          query = query.eq("partner_id", selectedPartner)
         }
         if (selectedTechCompany) {
           query = query.eq("partner_user_id", selectedTechCompany)
@@ -95,35 +95,7 @@ export default function PurchaseOrdersPage() {
         return
       }
       
-      // Get all unique partner_ids and opportunity_ids
-      const partnerIds = data?.map(po => po.quotes?.opportunity?.partner_id).filter(Boolean) || []
-      console.log("[v0] Partner IDs:", partnerIds)
-      
-      if (partnerIds.length > 0) {
-        const { data: partnersData, error: partnerError } = await supabase
-          .from("partners")
-          .select("id, name")
-          .in("id", partnerIds)
-        
-        if (partnerError) {
-          console.error("[v0] Error loading partners:", partnerError)
-        }
-        
-        const partnerMap = partnersData?.reduce((acc, partner) => {
-          acc[partner.id] = partner
-          return acc
-        }, {} as any) || {}
-        
-        // Enrich purchase orders with partner data
-        const enrichedData = data?.map(po => ({
-          ...po,
-          partner: partnerMap[po.quotes?.opportunity?.partner_id]
-        })) || []
-        
-        setPurchaseOrders(enrichedData)
-      } else {
-        setPurchaseOrders(data || [])
-      }
+      setPurchaseOrders(data || [])
     } catch (error) {
       console.error("[v0] Error loading purchase orders:", error)
       setError(t("po.errorLoadingOrders"))
