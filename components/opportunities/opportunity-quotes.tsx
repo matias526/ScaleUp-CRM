@@ -183,7 +183,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
       console.log("[v0] Loading current opportunity with ID:", opportunityId)
       const { data: oppData, error: oppError } = await supabase
         .from("opportunities")
-        .select("id, partner_id, tech_company_id, pipeline_stage_id, name, estimated_value")
+        .select("id, partner_id, tech_company_id, pipeline_stage_id, title, estimated_value")
         .eq("id", opportunityId)
         .single()
 
