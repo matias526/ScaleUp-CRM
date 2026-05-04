@@ -1028,6 +1028,7 @@ export type Database = {
           pipeline_stage_id: string
           probability: number | null
           prospect_id: string | null
+          purchase_order_id: string | null
           rejection_reason: string | null
           tech_company_id: string
           title: string
@@ -1052,6 +1053,7 @@ export type Database = {
           pipeline_stage_id: string
           probability?: number | null
           prospect_id?: string | null
+          purchase_order_id?: string | null
           rejection_reason?: string | null
           tech_company_id: string
           title: string
@@ -1076,6 +1078,7 @@ export type Database = {
           pipeline_stage_id?: string
           probability?: number | null
           prospect_id?: string | null
+          purchase_order_id?: string | null
           rejection_reason?: string | null
           tech_company_id?: string
           title?: string
@@ -1132,6 +1135,13 @@ export type Database = {
             columns: ["prospect_id"]
             isOneToOne: false
             referencedRelation: "prospect_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunities_purchase_order_id_fkey"
+            columns: ["purchase_order_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
             referencedColumns: ["id"]
           },
           {
@@ -1808,7 +1818,6 @@ export type Database = {
           accepted_by: string | null
           created_at: string | null
           id: string
-          opportunity_id: string
           partner_user_id: string | null
           po_number: string
           quote_id: string | null
@@ -1823,7 +1832,6 @@ export type Database = {
           accepted_by?: string | null
           created_at?: string | null
           id?: string
-          opportunity_id: string
           partner_user_id?: string | null
           po_number: string
           quote_id?: string | null
@@ -1838,7 +1846,6 @@ export type Database = {
           accepted_by?: string | null
           created_at?: string | null
           id?: string
-          opportunity_id?: string
           partner_user_id?: string | null
           po_number?: string
           quote_id?: string | null
@@ -1860,6 +1867,7 @@ export type Database = {
       }
       quotes: {
         Row: {
+          answered_by: string | null
           created_at: string | null
           economical_quote_url: string | null
           expiration_date: string | null
@@ -1870,6 +1878,7 @@ export type Database = {
           opportunity_id: string
           quote_date: string | null
           quote_number: string
+          requested_by: string | null
           shipping_amount: number | null
           status: string | null
           subtotal_amount: number | null
@@ -1879,6 +1888,7 @@ export type Database = {
           version: number | null
         }
         Insert: {
+          answered_by?: string | null
           created_at?: string | null
           economical_quote_url?: string | null
           expiration_date?: string | null
@@ -1889,6 +1899,7 @@ export type Database = {
           opportunity_id: string
           quote_date?: string | null
           quote_number: string
+          requested_by?: string | null
           shipping_amount?: number | null
           status?: string | null
           subtotal_amount?: number | null
@@ -1898,6 +1909,7 @@ export type Database = {
           version?: number | null
         }
         Update: {
+          answered_by?: string | null
           created_at?: string | null
           economical_quote_url?: string | null
           expiration_date?: string | null
@@ -1908,6 +1920,7 @@ export type Database = {
           opportunity_id?: string
           quote_date?: string | null
           quote_number?: string
+          requested_by?: string | null
           shipping_amount?: number | null
           status?: string | null
           subtotal_amount?: number | null
@@ -1916,7 +1929,22 @@ export type Database = {
           updated_at?: string | null
           version?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "quotes_answered_by_fkey"
+            columns: ["answered_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       roles: {
         Row: {
