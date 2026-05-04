@@ -206,13 +206,13 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
         console.log("[v0] Starting query to find other opportunities...")
         console.log("[v0] Query filters:")
         console.log("[v0]   - Table: opportunities")
-        console.log("[v0]   - Select: id, name, estimated_value, partner_id, tech_company_id")
+        console.log("[v0]   - Select: id, title, estimated_value, partner_id, tech_company_id")
         console.log("[v0]   - partner_id =", oppData.partner_id)
         console.log("[v0]   - id != ", opportunityId)
         
         let query = supabase
           .from("opportunities")
-          .select("id, name, estimated_value, partner_id, tech_company_id")
+          .select("id, title, estimated_value, partner_id, tech_company_id")
           .eq("partner_id", oppData.partner_id)
           .neq("id", opportunityId)
 
