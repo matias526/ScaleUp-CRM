@@ -262,7 +262,7 @@ export default function PurchaseOrderDetailPage() {
               {t(`po.status.${po.status}`)}
             </Badge>
             <span className="text-gray-600">
-              {format(new Date(po.created_at), "dd/MM/yyyy HH:mm")}
+              {po.created_at ? format(new Date(po.created_at), "dd/MM/yyyy HH:mm") : "-"}
             </span>
           </div>
         </div>
@@ -348,7 +348,7 @@ export default function PurchaseOrderDetailPage() {
                     <div key={milestone.id} className="p-3 border rounded">
                       <div className="font-medium">{milestone.title}</div>
                       <div className="text-sm text-gray-600">
-                        {format(new Date(milestone.scheduled_date), "dd/MM/yyyy")}
+                        {milestone.scheduled_date ? format(new Date(milestone.scheduled_date), "dd/MM/yyyy") : "-"}
                       </div>
                     </div>
                   ))}
@@ -383,7 +383,7 @@ export default function PurchaseOrderDetailPage() {
                       <div>
                         <div className="font-medium">{doc.doc_type}</div>
                         <div className="text-sm text-gray-600">
-                          {format(new Date(doc.created_at), "dd/MM/yyyy")}
+                          {doc.created_at ? format(new Date(doc.created_at), "dd/MM/yyyy") : "-"}
                         </div>
                       </div>
                       <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
