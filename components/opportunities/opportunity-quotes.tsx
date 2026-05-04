@@ -259,35 +259,31 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
       let economicalUrl = selectedQuote.economical_quote_url
 
       if (generateFormData.technical_file) {
-        const techFormData = new FormData()
-        techFormData.append('file', generateFormData.technical_file)
-        techFormData.append('opportunityId', opportunityId)
-        techFormData.append('quoteId', selectedQuote.id)
-        techFormData.append('fileType', 'technical')
-
-        const techResponse = await fetch('/api/quotes/upload', {
-          method: 'POST',
-          body: techFormData,
-        })
-        if (!techResponse.ok) throw new Error('Failed to upload technical file')
-        const techData = await techResponse.json()
-        technicalUrl = techData.url
+        const techPath = `${opportunityId}/${selectedQuote.id}-technical-${Date.now()}.pdf`
+        const { error: techUploadError } = await supabase.storage
+          .from("quotes")
+          .upload(techPath, generateFormData.technical_file)
+        if (techUploadError) throw techUploadError
+        
+        const { data: techSignedData, error: techSignedError } = await supabase.storage
+          .from("quotes")
+          .createSignedUrl(techPath, 604800)
+        if (techSignedError) throw techSignedError
+        technicalUrl = techSignedData.signedUrl
       }
 
       if (generateFormData.economical_file) {
-        const ecoFormData = new FormData()
-        ecoFormData.append('file', generateFormData.economical_file)
-        ecoFormData.append('opportunityId', opportunityId)
-        ecoFormData.append('quoteId', selectedQuote.id)
-        ecoFormData.append('fileType', 'economical')
-
-        const ecoResponse = await fetch('/api/quotes/upload', {
-          method: 'POST',
-          body: ecoFormData,
-        })
-        if (!ecoResponse.ok) throw new Error('Failed to upload economical file')
-        const ecoData = await ecoResponse.json()
-        economicalUrl = ecoData.url
+        const economicalPath = `${opportunityId}/${selectedQuote.id}-economical-${Date.now()}.pdf`
+        const { error: ecoUploadError } = await supabase.storage
+          .from("quotes")
+          .upload(economicalPath, generateFormData.economical_file)
+        if (ecoUploadError) throw ecoUploadError
+        
+        const { data: ecoSignedData, error: ecoSignedError } = await supabase.storage
+          .from("quotes")
+          .createSignedUrl(economicalPath, 604800)
+        if (ecoSignedError) throw ecoSignedError
+        economicalUrl = ecoSignedData.signedUrl
       }
 
       // Update quote
