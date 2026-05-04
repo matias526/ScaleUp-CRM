@@ -259,23 +259,35 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
       let economicalUrl = selectedQuote.economical_quote_url
 
       if (generateFormData.technical_file) {
-        const techPath = `${opportunityId}/${selectedQuote.id}-technical-${Date.now()}.pdf`
-        const { error: techError } = await supabase.storage
-          .from("quotes")
-          .upload(techPath, generateFormData.technical_file)
-        if (techError) throw techError
-        const { data: techData } = supabase.storage.from("quotes").getPublicUrl(techPath)
-        technicalUrl = techData.publicUrl
+        const techFormData = new FormData()
+        techFormData.append('file', generateFormData.technical_file)
+        techFormData.append('opportunityId', opportunityId)
+        techFormData.append('quoteId', selectedQuote.id)
+        techFormData.append('fileType', 'technical')
+
+        const techResponse = await fetch('/api/quotes/upload', {
+          method: 'POST',
+          body: techFormData,
+        })
+        if (!techResponse.ok) throw new Error('Failed to upload technical file')
+        const techData = await techResponse.json()
+        technicalUrl = techData.url
       }
 
       if (generateFormData.economical_file) {
-        const economicalPath = `${opportunityId}/${selectedQuote.id}-economical-${Date.now()}.pdf`
-        const { error: ecoError } = await supabase.storage
-          .from("quotes")
-          .upload(economicalPath, generateFormData.economical_file)
-        if (ecoError) throw ecoError
-        const { data: ecoData } = supabase.storage.from("quotes").getPublicUrl(economicalPath)
-        economicalUrl = ecoData.publicUrl
+        const ecoFormData = new FormData()
+        ecoFormData.append('file', generateFormData.economical_file)
+        ecoFormData.append('opportunityId', opportunityId)
+        ecoFormData.append('quoteId', selectedQuote.id)
+        ecoFormData.append('fileType', 'economical')
+
+        const ecoResponse = await fetch('/api/quotes/upload', {
+          method: 'POST',
+          body: ecoFormData,
+        })
+        if (!ecoResponse.ok) throw new Error('Failed to upload economical file')
+        const ecoData = await ecoResponse.json()
+        economicalUrl = ecoData.url
       }
 
       // Update quote
