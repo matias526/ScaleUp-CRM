@@ -826,6 +826,11 @@ export const DICT_LANG_OPPORTUNITIES = {
     en: "Total",
     pt: "Total",
   },
+  "opportunities.quotes.subtotal": {
+    es: "Subtotal de Productos",
+    en: "Products Subtotal",
+    pt: "Subtotal de Produtos",
+  },
   "opportunities.quotes.downloadTechnical": {
     es: "Descargar Anexo Técnico",
     en: "Download Technical Attachment",
