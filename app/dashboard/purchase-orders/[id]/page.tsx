@@ -21,6 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { v4 as uuidv4 } from "uuid"
+import { DetailPageSkeleton } from "@/components/purchase-orders/skeletons"
 
 export default function PurchaseOrderDetailPage() {
   const { t } = useTranslations(DICT_LANG_PO)
@@ -223,11 +224,7 @@ export default function PurchaseOrderDetailPage() {
   const canApprove = po?.status === "sent" && ["Admin", "BDD"].includes(currentUser?.role?.code || currentUser?.role)
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    )
+    return <DetailPageSkeleton />
   }
 
   if (!po) {

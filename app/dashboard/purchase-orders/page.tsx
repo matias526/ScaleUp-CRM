@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/table"
 import { Loader2 } from "lucide-react"
 import Link from "next/link"
+import { TableSkeleton } from "@/components/purchase-orders/skeletons"
 
 export default function PurchaseOrdersPage() {
   const { t } = useTranslations(DICT_LANG_PO)
@@ -130,6 +131,8 @@ export default function PurchaseOrdersPage() {
             <div className="text-center py-8 text-gray-500">
               {t("po.noOrders")}
             </div>
+          ) : loading ? (
+            <TableSkeleton rows={5} />
           ) : (
             <div className="overflow-x-auto">
               <Table>
