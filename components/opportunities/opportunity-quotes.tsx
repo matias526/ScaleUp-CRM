@@ -140,9 +140,13 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
 
   // Load quotes
   useEffect(() => {
+    console.log("[v0] ========== useEffect START ==========")
     console.log("[v0] useEffect triggered with opportunityId:", opportunityId)
+    console.log("[v0] loadQuotes function exists:", typeof loadQuotes)
+    console.log("[v0] loadCurrentOpportunity function exists:", typeof loadCurrentOpportunity)
     loadQuotes()
     loadCurrentOpportunity()
+    console.log("[v0] ========== useEffect END ==========")
   }, [opportunityId])
 
   const loadQuotes = async () => {
