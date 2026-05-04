@@ -58,30 +58,63 @@ export default function PurchaseOrdersPage() {
 
   const loadPurchaseOrders = async () => {
     try {
+      console.log("[v0] Loading purchase orders for user:", currentUser?.id)
       setLoading(true)
       let query = supabase
         .from("purchase_orders")
-        .select("id, po_number, total_amount, status, created_at, quote_id, quotes(opportunity_id), opportunities(partner_id, name)")
+        .select("id, po_number, total_amount, status, created_at, quote_id, quotes(opportunity_id)")
 
       // Role-based filtering
       const userRole = currentUser?.role?.code || currentUser?.role
+      console.log("[v0] User role:", userRole)
       
       if (userRole === "PartnerUser" && currentUser?.partner_id) {
         // PartnerUser solo ve sus propias POs
+        console.log("[v0] Filtering for PartnerUser:", currentUser.id)
         query = query.eq("partner_user_id", currentUser.id)
       } else if (userRole === "TechLogistic") {
+        console.log("[v0] TechLogistic - showing all POs")
         // TechLogistic ve POs para logística (shippings)
         // Por ahora, mostrar todas
       }
       // Admin y BDD ven todas
 
+      console.log("[v0] Executing query...")
       const { data, error } = await query
         .order("created_at", { ascending: false })
       
+      console.log("[v0] Query result - Error:", error?.message, "Data count:", data?.length)
+      
       if (error) throw error
-      setPurchaseOrders(data || [])
+      
+      // Now we need to get the opportunity names
+      // Get all unique opportunity_ids from quotes
+      const opportunityIds = data?.map(po => po.quotes?.opportunity_id).filter(Boolean) || []
+      console.log("[v0] Opportunity IDs:", opportunityIds)
+      
+      if (opportunityIds.length > 0) {
+        const { data: opportunities } = await supabase
+          .from("opportunities")
+          .select("id, name, partner_id")
+          .in("id", opportunityIds)
+        
+        const oppMap = opportunities?.reduce((acc, opp) => {
+          acc[opp.id] = opp
+          return acc
+        }, {} as any) || {}
+        
+        // Enrich purchase orders with opportunity data
+        const enrichedData = data?.map(po => ({
+          ...po,
+          opportunity: oppMap[po.quotes?.opportunity_id]
+        })) || []
+        
+        setPurchaseOrders(enrichedData)
+      } else {
+        setPurchaseOrders(data || [])
+      }
     } catch (error) {
-      console.error("Error loading purchase orders:", error)
+      console.error("[v0] Error loading purchase orders:", error)
       toast({
         title: t("common.error"),
         description: t("po.errorLoadingOrders"),
@@ -150,7 +183,7 @@ export default function PurchaseOrdersPage() {
                   {purchaseOrders.map((po) => (
                     <TableRow key={po.id}>
                       <TableCell className="font-medium">{po.po_number}</TableCell>
-                      <TableCell>{po.quote?.opportunities?.name || "-"}</TableCell>
+                      <TableCell>{po.opportunity?.name || "-"}</TableCell>
                       <TableCell>${po.total_amount?.toFixed(2) || "0.00"}</TableCell>
                       <TableCell>
                         <Badge className={getStatusBadgeColor(po.status)}>
