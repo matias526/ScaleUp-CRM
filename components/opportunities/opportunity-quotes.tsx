@@ -69,6 +69,9 @@ const QUOTATION_STAGE_ID = "cea0f2b6-d55d-4d70-a730-adc5e365d928"
 
 export function OpportunityQuotes({ opportunityId, lang, userRole }: OpportunityQuotesProps) {
   const { t } = useTranslations(DICT_LANG_OPPORTUNITIES)
+  
+  console.log("[v0] OpportunityQuotes component mounted with opportunityId:", opportunityId)
+  
   const [quotes, setQuotes] = useState<Quote[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -137,6 +140,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
 
   // Load quotes
   useEffect(() => {
+    console.log("[v0] useEffect triggered with opportunityId:", opportunityId)
     loadQuotes()
     loadCurrentOpportunity()
   }, [opportunityId])
