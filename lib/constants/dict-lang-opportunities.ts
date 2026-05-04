@@ -227,6 +227,11 @@ export const DICT_LANG_OPPORTUNITIES = {
     en: "Next",
     pt: "Próximo",
   },
+  "common.delete": {
+    es: "Eliminar",
+    en: "Delete",
+    pt: "Eliminar",
+  },
 
   // Summary labels
   "opportunities.form.summary.title": {

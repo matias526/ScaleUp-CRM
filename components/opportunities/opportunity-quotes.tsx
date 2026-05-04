@@ -151,7 +151,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
 
     try {
       const userName = `${currentUser.first_name} ${currentUser.last_name}`
-      const noteContent = action === "request" 
+      const noteContent = action === "request"
         ? `${userName} ha solicitado una quote`
         : `${userName} ha generado una quote`
 
@@ -173,7 +173,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
       const { error } = await supabase
         .from("opportunities")
         .update({
-          stage_id: QUOTATION_STAGE_ID,
+          pipeline_stage_id: QUOTATION_STAGE_ID,
           updated_at: new Date().toISOString(),
         })
         .eq("id", opportunityId)
@@ -648,11 +648,11 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
                           const updated = editFormData.items.map((i) =>
                             i.sku === item.sku
                               ? {
-                                  ...i,
-                                  unit_price: price,
-                                  line_subtotal: price * i.quantity,
-                                  line_total: (price * i.quantity) * (1 - i.discount_percent / 100),
-                                }
+                                ...i,
+                                unit_price: price,
+                                line_subtotal: price * i.quantity,
+                                line_total: (price * i.quantity) * (1 - i.discount_percent / 100),
+                              }
                               : i
                           )
                           setEditFormData({ ...editFormData, items: updated })
@@ -668,11 +668,11 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
                           const updated = editFormData.items.map((i) =>
                             i.sku === item.sku
                               ? {
-                                  ...i,
-                                  discount_percent: discount,
-                                  line_discount_amount: (i.line_subtotal * discount) / 100,
-                                  line_total: i.line_subtotal * (1 - discount / 100),
-                                }
+                                ...i,
+                                discount_percent: discount,
+                                line_discount_amount: (i.line_subtotal * discount) / 100,
+                                line_total: i.line_subtotal * (1 - discount / 100),
+                              }
                               : i
                           )
                           setEditFormData({ ...editFormData, items: updated })
