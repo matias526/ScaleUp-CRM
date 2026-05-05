@@ -29,8 +29,10 @@ export default function PurchaseOrderDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [milestones, setMilestones] = useState<any[]>([])
   const [shippings, setShippings] = useState<any[]>([])
+  const [opportunities, setOpportunities] = useState<any[]>([])
   const [approverName, setApproverName] = useState<string>("")
   const [approving, setApproving] = useState(false)
+  const [activeTab, setActiveTab] = useState("general")
 
   useEffect(() => {
     if (!authLoading && userInfo) {
@@ -124,6 +126,17 @@ export default function PurchaseOrderDetailPage() {
 
       if (!shippingsError) {
         setShippings(shippingsData || [])
+      }
+
+      // Load related opportunities
+      const { data: opportunitiesData, error: oppError } = await supabase
+        .from("opportunities")
+        .select("id, name, stage, amount, contact_name, created_at")
+        .eq("purchase_order_id", poId)
+        .order("created_at", { ascending: false })
+
+      if (!oppError) {
+        setOpportunities(opportunitiesData || [])
       }
     } catch (error) {
       console.error("[v0] Error loading purchase order:", error)
@@ -337,7 +350,7 @@ export default function PurchaseOrderDetailPage() {
         {/* Main Content - 65% */}
         <div className="col-span-3">
           <Card>
-            <Tabs defaultValue="general" className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="general">{t("po.tab.general")}</TabsTrigger>
                 <TabsTrigger value="milestones">{t("po.tab.milestones")}</TabsTrigger>
@@ -348,9 +361,13 @@ export default function PurchaseOrderDetailPage() {
                 <TabsContent value="general" className="mt-0">
                   <POGeneralTab
                     po={po}
+                    milestones={milestones}
+                    shipping={shippings[0] || null}
+                    opportunities={opportunities}
                     canApprove={canApprove}
-                    onApprove={handleApprovePO}
                     onApproveClick={handleApprovePO}
+                    onMilestonesTabClick={() => setActiveTab("milestones")}
+                    onLogisticsTabClick={() => setActiveTab("logistics")}
                     getStatusBadgeColor={getStatusBadgeColor}
                     approverName={approverName}
                   />

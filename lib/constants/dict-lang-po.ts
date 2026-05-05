@@ -953,4 +953,85 @@ export const DICT_LANG_PO = {
     en: "No previous shipments for this partner",
     pt: "Não há envios anteriores para este parceiro",
   },
+  // General Tab
+  "po.general.relatedOpportunities": {
+    es: "Oportunidades Relacionadas",
+    en: "Related Opportunities",
+    pt: "Oportunidades Relacionadas",
+  },
+  "po.general.milestonesStatus": {
+    es: "Estado de Hitos",
+    en: "Milestones Status",
+    pt: "Status dos Marcos",
+  },
+  "po.general.logisticsStatus": {
+    es: "Estado de Logística",
+    en: "Logistics Status",
+    pt: "Status de Logística",
+  },
+  "po.general.documentAccess": {
+    es: "Acceso a Documentos",
+    en: "Document Access",
+    pt: "Acesso a Documentos",
+  },
+  "po.general.noRelatedOpportunities": {
+    es: "No hay oportunidades relacionadas con esta orden de compra",
+    en: "No opportunities related to this purchase order",
+    pt: "Não há oportunidades relacionadas com este pedido de compra",
+  },
+  "po.general.viewOriginalPO": {
+    es: "Ver PO Original",
+    en: "View Original PO",
+    pt: "Ver PO Original",
+  },
+  "po.general.paidOf": {
+    es: "de",
+    en: "of",
+    pt: "de",
+  },
+  "po.general.collected": {
+    es: "Recaudado",
+    en: "Collected",
+    pt: "Coletado",
+  },
+  "po.general.viewMilestones": {
+    es: "Ver Hitos",
+    en: "View Milestones",
+    pt: "Ver Marcos",
+  },
+  "po.general.viewLogistics": {
+    es: "Ver Logística",
+    en: "View Logistics",
+    pt: "Ver Logística",
+  },
+  "po.general.pending": {
+    es: "Pendiente",
+    en: "Pending",
+    pt: "Pendente",
+  },
+  "po.general.inProcess": {
+    es: "En Proceso",
+    en: "In Process",
+    pt: "Em Processo",
+  },
+  "po.general.shipped": {
+    es: "Enviado",
+    en: "Shipped",
+    pt: "Enviado",
+  },
+  "po.general.delivered": {
+    es: "Entregado",
+    en: "Delivered",
+    pt: "Entregue",
+  },
+  "po.general.trackingNumber": {
+    es: "Número de Seguimiento",
+    en: "Tracking Number",
+    pt: "Número de Rastreamento",
+  },
+  "po.general.estimatedDelivery": {
+    es: "Entrega Estimada",
+    en: "Estimated Delivery",
+    pt: "Entrega Estimada",
+  },
 }
