@@ -85,7 +85,7 @@ export default function PurchaseOrderDetailPage() {
         .from("po_milestones")
         .select("*")
         .eq("po_id", poId)
-        .order("scheduled_date")
+        .order("due_date")
 
       if (!milestonesError) {
         setMilestones(milestonesData || [])
