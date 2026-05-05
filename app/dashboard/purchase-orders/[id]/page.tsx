@@ -249,17 +249,64 @@ export default function PurchaseOrderDetailPage() {
 
   return (
     <div className="p-8 space-y-6">
-      {/* Elegant Header - Minimal & Professional */}
-      <div className="bg-white rounded-lg border border-gray-200 p-8 shadow-sm mb-6">
-        <div className="flex items-start justify-between gap-12">
-          
-          {/* Left: PO Info */}
-          <div className="flex-1">
-            <div className="mb-4">
-              <span className="bg-blue-50 text-blue-700 border border-blue-100 text-[10px] px-3 py-1.5 rounded-md uppercase font-bold tracking-wider">
-                {po.status || "Draft"}
-              </span>
-            </div>
+      {/* Clean Header - No Background Container */}
+      <div className="flex items-start justify-between gap-8 mb-8 px-2">
+        
+        {/* Left: PO Info */}
+        <div className="flex-1">
+          <div className="mb-4">
+            <span className="bg-blue-50 text-blue-700 border border-blue-100 text-[10px] px-3 py-1.5 rounded-md uppercase font-bold tracking-wider">
+              {po.status || "Draft"}
+            </span>
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-1">
+            PO #{po.po_number || "---"}
+          </h1>
+          <p className="text-sm text-gray-500">
+            {po.created_at ? format(new Date(po.created_at), "dd MMMM yyyy", { locale: es }) : "-"}
+          </p>
+        </div>
+
+        {/* Right: Large Logos */}
+        <div className="flex items-center gap-6">
+          {/* Partner Logo */}
+          <div className="w-24 h-24 flex items-center justify-center flex-shrink-0">
+            {po.partners?.logo_url ? (
+              <img src={po.partners.logo_url} alt="Partner" className="max-w-full max-h-full object-contain" />
+            ) : (
+              <div className="w-20 h-20 bg-slate-200 rounded-lg flex items-center justify-center">
+                <span className="text-2xl font-bold text-gray-400">{po.partners?.name?.substring(0, 2)}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Tech Company Logo */}
+          <div className="w-24 h-24 flex items-center justify-center flex-shrink-0">
+            {po.tech_companies?.logo_url ? (
+              <img src={po.tech_companies.logo_url} alt="Tech" className="max-w-full max-h-full object-contain" />
+            ) : (
+              <div className="w-20 h-20 bg-slate-900 rounded-lg flex items-center justify-center">
+                <span className="text-lg font-bold text-white">
+                  {po.tech_companies?.name?.substring(0, 2).toUpperCase() || "TC"}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Approve Button */}
+        {canApprove && po.status === 'sent' && (
+          <div className="flex items-center">
+            <button
+              onClick={handleApprovePO}
+              disabled={approving}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-lg font-semibold text-sm shadow-sm hover:shadow-md transition-all active:scale-95 disabled:opacity-50"
+            >
+              {approving ? "..." : "Approve"}
+            </button>
+          </div>
+        )}
+      </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-1">
               PO #{po.po_number || "---"}
             </h1>
