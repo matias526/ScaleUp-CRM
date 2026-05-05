@@ -740,7 +740,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
                   )}
 
                   <div className="flex gap-2 justify-end">
-                    {canGenerateQuote && quote.status === "requested" && (
+                    {canCompleteQuote && quote.status === "requested" && (
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -792,7 +792,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
                       </Button>
                     )}
 
-                    {canCompleteQuote && quote.status === "offered" && (
+                    {canGenerateQuote && quote.status === "offered" && (
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
