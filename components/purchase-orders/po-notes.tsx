@@ -10,11 +10,13 @@ import { supabase } from "@/lib/supabase/client"
 import { toast } from "@/components/ui/use-toast"
 import { useTranslations } from "@/hooks/use-translations"
 import { DICT_LANG_PO } from "@/lib/constants/dict-lang-po"
+import { useAuth } from "@/components/auth/auth-provider"
+import { PONoteFormDialog } from "./po-note-form-dialog"
 
 interface PONotesProps {
   poId: string
   currentUserId: string
-  isScaleUpMember?: boolean
+  userRole?: string
 }
 
 interface Note {
@@ -31,14 +33,16 @@ interface Note {
   }
 }
 
-export function PONotes({ poId, currentUserId, isScaleUpMember = false }: PONotesProps) {
+export function PONotes({ poId, currentUserId, userRole = "" }: PONotesProps) {
   const { t } = useTranslations(DICT_LANG_PO)
+  const { userInfo } = useAuth()
   const [notes, setNotes] = useState<Note[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [noteContent, setNoteContent] = useState("")
-  const [isAdding, setIsAdding] = useState(false)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState<Record<string, boolean>>({})
-  const [isPrivate, setIsPrivate] = useState(false)
+
+  // Determinar si es usuario de ScaleUp (Admin o BDD)
+  const isScaleUpUser = userRole === "Admin" || userRole === "BDD"
 
   useEffect(() => {
     loadNotes()
@@ -57,8 +61,8 @@ export function PONotes({ poId, currentUserId, isScaleUpMember = false }: PONote
         )
         .eq("purchase_order_id", poId)
 
-      // Filter private notes if not ScaleUp member
-      if (!isScaleUpMember) {
+      // Solo filtrar notas privadas si el usuario NO es de ScaleUp
+      if (!isScaleUpUser) {
         query = query.eq("is_private", false)
       }
 
@@ -75,48 +79,6 @@ export function PONotes({ poId, currentUserId, isScaleUpMember = false }: PONote
       })
     } finally {
       setIsLoading(false)
-    }
-  }
-
-  const handleAddNote = async () => {
-    if (!noteContent.trim()) {
-      toast({
-        title: "Error",
-        description: "La nota no puede estar vacía",
-        variant: "destructive",
-      })
-      return
-    }
-
-    setIsAdding(true)
-    try {
-      const { error } = await supabase.from("notes").insert([
-        {
-          content: noteContent,
-          is_private: isPrivate,
-          user_id: currentUserId,
-          purchase_order_id: poId,
-        },
-      ])
-
-      if (error) throw error
-
-      setNoteContent("")
-      setIsPrivate(false)
-      await loadNotes()
-      toast({
-        title: "Éxito",
-        description: "Nota agregada correctamente",
-      })
-    } catch (error) {
-      console.error("Error adding note:", error)
-      toast({
-        title: "Error",
-        description: "No se pudo agregar la nota",
-        variant: "destructive",
-      })
-    } finally {
-      setIsAdding(false)
     }
   }
 
@@ -147,48 +109,38 @@ export function PONotes({ poId, currentUserId, isScaleUpMember = false }: PONote
   }
 
   const canDeleteNote = (note: Note) => {
-    return note.user_id === currentUserId || isScaleUpMember
+    return note.user_id === currentUserId || isScaleUpUser
   }
 
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between pb-3">
-        <CardTitle className="text-lg">{t("po.notes.title") || "Notas"}</CardTitle>
+        <CardTitle className="text-lg">{t("po.notes.title") || "Notas y Actividad"}</CardTitle>
         <Button onClick={loadNotes} size="sm" variant="outline" title="Recargar">
           <RefreshCw className="h-4 w-4" />
         </Button>
       </CardHeader>
       <CardContent className="flex-1 overflow-y-auto space-y-4">
-        {/* Add Note Form */}
-        <div className="border rounded-lg p-3 space-y-2">
-          <textarea
-            value={noteContent}
-            onChange={(e) => setNoteContent(e.target.value)}
-            placeholder="Agregar una nota..."
-            className="w-full p-2 border rounded text-sm resize-none"
-            rows={3}
-          />
-          <div className="flex items-center justify-between">
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={isPrivate}
-                onChange={(e) => setIsPrivate(e.target.checked)}
-                className="w-4 h-4"
-              />
-              <Lock className="h-3 w-3" />
-              <span>Privada (solo Admin/BDD)</span>
-            </label>
-            <Button
-              onClick={handleAddNote}
-              size="sm"
-              disabled={isAdding || !noteContent.trim()}
-            >
-              <PlusCircle className="h-4 w-4 mr-1" />
-              Agregar
-            </Button>
-          </div>
-        </div>
+        {/* Add Note Button */}
+        <Button
+          onClick={() => setIsDialogOpen(true)}
+          size="sm"
+          className="w-full"
+          variant="outline"
+        >
+          <PlusCircle className="h-4 w-4 mr-2" />
+          Agregar Nota
+        </Button>
+
+        {/* Note Form Dialog */}
+        <PONoteFormDialog
+          isOpen={isDialogOpen}
+          onClose={() => setIsDialogOpen(false)}
+          poId={poId}
+          currentUserId={currentUserId}
+          userRole={userRole}
+          onNoteAdded={loadNotes}
+        />
 
         {/* Notes List */}
         {isLoading ? (

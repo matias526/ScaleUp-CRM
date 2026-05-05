@@ -384,7 +384,7 @@ export default function PurchaseOrderDetailPage() {
           <PONotes
             poId={poId}
             currentUserId={userInfo?.id || ""}
-            isScaleUpMember={["Admin", "BDD"].includes(userInfo?.roleCode || "")}
+            userRole={userInfo?.roleCode || ""}
           />
         </div>
       </div>
