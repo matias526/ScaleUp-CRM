@@ -214,10 +214,10 @@ export default function PurchaseOrderDetailPage() {
         <div className="flex items-center gap-6">
           {/* Partner Logo */}
           {po.partners?.name && (
-            <div className="flex items-center justify-center w-14 h-14 rounded-lg bg-gray-100 border-2 border-gray-300 flex-shrink-0">
-              <span className="text-lg font-bold text-gray-700">
+            
+              <div className="flex items-center flex-grow">
                 {po.partners?.logo_url}
-              </span>
+            
             </div>
           )}
 
