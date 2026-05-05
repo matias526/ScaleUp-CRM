@@ -208,91 +208,103 @@ export default function PurchaseOrderDetailPage() {
 
   return (
     <div className="p-8 space-y-6">
-      {/* Compact Header - Horizontal Layout */}
-<div className="flex items-center justify-between bg-white rounded-lg border border-gray-200 p-6 shadow-sm mb-6">
+{/* Compact Header - Clean Layout */}
+<div className="flex items-center justify-between bg-white rounded-lg border border-gray-200 p-8 shadow-sm mb-6">
   
-  {/* Left: Partner Logo & PO Info */}
-  <div className="flex items-center gap-6">
-    {/* Partner Logo */}
-    <div className="h-12 w-12 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0">
-      {po.partners?.logo_url ? (
-        <img src={po.partners.logo_url} alt="" className="h-full w-full object-contain" />
-      ) : (
-        <span className="text-lg font-bold text-slate-400">
-          {po.partners?.name?.substring(0, 2).toUpperCase() || "PO"}
-        </span>
-      )}
-    </div>
-
-    {/* PO Status, Number & Date */}
-    <div className="flex flex-col">
-      <div className="mb-1">
-        <span className="bg-blue-50 text-blue-700 border border-blue-100 text-[10px] px-2 py-0.5 rounded uppercase font-bold">
-          {po.status || "Draft"}
-        </span>
-      </div>
-      
-      <h1 className="text-2xl font-black text-gray-900 leading-none tracking-tight">
-        #{po.po_number || "---"}
-      </h1>
-      
-      <span className="text-[11px] text-gray-500 mt-1 font-medium">
-        📅 {po.created_at ? format(new Date(po.created_at), "dd/MM/yyyy HH:mm") : "-"}
+  {/* Left Section: PO Branding & Status */}
+  <div className="flex flex-col gap-2">
+    {/* Status Badge on top */}
+    <div>
+      <span className="bg-blue-50 text-blue-700 border border-blue-100 text-[11px] px-2.5 py-1 rounded-md uppercase font-black tracking-wider">
+        {po.status || "Draft"}
       </span>
     </div>
+
+    {/* PO Number - Bigger */}
+    <h1 className="text-4xl font-black text-gray-900 leading-none tracking-tight">
+      PO#{po.po_number || "---"}
+    </h1>
+    
+    {/* Date - Smaller and Clean (No time) */}
+    <span className="text-xs text-gray-400 font-bold uppercase tracking-widest">
+      {po.created_at ? format(new Date(po.created_at), "dd/MM/yyyy") : "-"}
+    </span>
   </div>
 
-  {/* Center: Total Amount */}
-  <div className="flex flex-col items-center px-10 border-l border-r border-gray-100">
-    <span className="text-[10px] text-gray-400 uppercase tracking-[0.15em] font-bold mb-1">
+  {/* Center Section: Financials (More compact) */}
+  <div className="flex flex-col items-center px-12 border-x border-gray-100">
+    <span className="text-[10px] text-gray-400 uppercase tracking-[0.2em] font-black mb-1">
       Total Amount
     </span>
-    <div className="text-4xl font-black text-gray-900 tracking-tighter">
+    <div className="text-3xl font-black text-gray-900 tracking-tighter">
       ${(po.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
     </div>
-    <div className="flex gap-4 mt-1 text-[10px] text-gray-500 font-bold uppercase">
-      <span className="opacity-70">Sub: ${(po.subtotal_amount || 0).toFixed(2)}</span>
-      <span className="opacity-70">Ship: ${(po.shipping_amount || 0).toFixed(2)}</span>
+    <div className="flex gap-4 mt-2 text-[10px] text-gray-500 font-bold uppercase tracking-tight">
+      <span>Sub: ${(po.subtotal_amount || 0).toFixed(2)}</span>
+      <span>Ship: ${(po.shipping_amount || 0).toFixed(2)}</span>
     </div>
   </div>
 
-  {/* Right: TechCompany & Partner Name */}
-  <div className="flex items-center gap-4 flex-grow justify-end px-6">
-    <div className="text-right">
-      <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-1">
-        Customer / Partner
-      </p>
-      <p className="text-sm font-bold text-gray-900 mb-2 truncate max-w-[150px]">
-        {po.partners?.name || "N/A"}
-      </p>
-      
-      <div className="flex items-center justify-end gap-2">
-        <span className="text-[9px] font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 uppercase">
-          Tech Co.
-        </span>
-        <span className="text-xs font-bold text-gray-700">
+  {/* Right Section: Logos & Names (No frames) */}
+  <div className="flex items-center gap-8">
+    {/* Info Text */}
+    <div className="text-right flex flex-col gap-1">
+      <div className="mb-2">
+        <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest leading-none mb-1">
+          Partner
+        </p>
+        <p className="text-sm font-black text-gray-900">
+          {po.partners?.name || "N/A"}
+        </p>
+      </div>
+      <div>
+        <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest leading-none mb-1">
+          Tech Company
+        </p>
+        <p className="text-sm font-bold text-blue-600">
           {techCompany?.company_name || "Unassigned"}
-        </span>
+        </p>
       </div>
     </div>
 
-    {/* TechCompany Visual Avatar */}
-    <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-slate-900 flex-shrink-0 shadow-lg shadow-slate-200">
-      <span className="text-lg font-black text-white">
-        {techCompany?.company_name?.substring(0, 2).toUpperCase() || "TC"}
-      </span>
+    {/* Logos Section - Clean without borders/frames */}
+    <div className="flex items-center gap-4">
+      {/* Partner Logo */}
+      <div className="w-16 h-16 flex items-center justify-center">
+        {po.partners?.logo_url ? (
+          <img src={po.partners.logo_url} alt="Partner" className="max-w-full max-h-full object-contain" />
+        ) : (
+          <span className="text-2xl font-black text-gray-200">{po.partners?.name?.substring(0, 2)}</span>
+        )}
+      </div>
+
+      {/* Divider */}
+      <div className="h-10 w-[1px] bg-gray-100" />
+
+      {/* Tech Company Logo */}
+      <div className="w-16 h-16 flex items-center justify-center">
+        {techCompany?.logo_url ? (
+          <img src={techCompany.logo_url} alt="Tech" className="max-w-full max-h-full object-contain" />
+        ) : (
+          <div className="w-12 h-12 bg-slate-900 rounded-md flex items-center justify-center">
+             <span className="text-xl font-black text-white">
+              {techCompany?.company_name?.substring(0, 2).toUpperCase() || "TC"}
+            </span>
+          </div>
+        )}
+      </div>
     </div>
   </div>
 
-  {/* Final Action: Approve Button */}
+  {/* Approve Action */}
   {canApprove && po.status === 'sent' && (
-    <div className="pl-6 border-l border-gray-100">
+    <div className="ml-6 pl-6 border-l border-gray-100">
       <button
         onClick={handleApprovePO}
         disabled={approving}
-        className="bg-emerald-600 hover:bg-emerald-700 text-white h-12 px-6 rounded-xl font-bold shadow-lg shadow-emerald-100 disabled:opacity-50 transition-colors"
+        className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-xl font-black uppercase text-xs tracking-widest shadow-lg shadow-emerald-100 transition-all active:scale-95 disabled:opacity-50"
       >
-        {approving ? "..." : "Approve Order"}
+        {approving ? "..." : "Approve"}
       </button>
     </div>
   )}
