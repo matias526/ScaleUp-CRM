@@ -209,81 +209,103 @@ export default function PurchaseOrderDetailPage() {
   return (
     <div className="p-8 space-y-6">
       {/* Compact Header - Horizontal Layout */}
-      <div className="flex items-center justify-between bg-white rounded-lg border border-gray-200 p-6">
-        {/* Left: Partner Logo, PO Number, Date */}
-        <div className="flex items-center gap-6">
-          {/* Partner Logo */}
-          {po.partners?.name && (
-            <OrganizationAvatar
-                                    name={po.partners?.name || ""}
-                                    imageUrl= {po.partners?.logo_url}
-                                    size="sm"
-                                  />
-            </div>
-          )}
+<div className="flex items-center justify-between bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+  
+  {/* Left Section: Partner & PO Info */}
+  <div className="flex items-center gap-6">
+    {/* Partner Logo */}
+    {po.partners?.name && (
+      <OrganizationAvatar
+        name={po.partners.name || ""}
+        imageUrl={po.partners.logo_url}
+        size="md"
+      />
+    )}
 
-          {/* PO Info */}
-          <div className="flex flex-col gap-1">
-            <h1 className="text-2xl font-bold text-gray-900">PO #{po.po_number}</h1>
-            <span className="text-sm text-gray-600">
-              {po.created_at ? format(new Date(po.created_at), "dd/MM/yyyy") : "-"}
-            </span>
-          </div>
-
-          {/* Status Badge - Inline */}
-          <div className="flex flex-col gap-1 pl-6 border-l border-gray-200">
-            <span className="text-xs text-gray-500 uppercase tracking-wide font-semibold">{t("po.status")}</span>
-            <Badge className={getStatusBadgeColor(po.status)}>
-              {t(`po.status.${po.status}`)}
-            </Badge>
-            {po.accepted_at && (
-              <span className="text-xs text-gray-600">
-                {format(new Date(po.accepted_at), "dd/MM/yyyy")}
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Center: Total Amount */}
-        <div className="flex flex-col items-center gap-2 px-6 border-l border-r border-gray-200">
-          <span className="text-xs text-gray-500 uppercase tracking-wide font-semibold">{t("po.detail.total")}</span>
-          <div className="text-3xl font-bold text-gray-900">
-            ${po.total_amount?.toFixed(2) || "0.00"}
-          </div>
-          <div className="text-xs text-gray-600 text-center">
-            <div>{t("po.subtotal")}: ${po.subtotal_amount?.toFixed(2) || "0.00"}</div>
-            <div>{t("po.shipping")}: ${po.shipping_amount?.toFixed(2) || "0.00"}</div>
-          </div>
-        </div>
-
-        {/* Right: TechCompany Logo + Partner Name */}
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-1">{t("po.detail.partner")}</p>
-            <p className="text-sm font-medium text-gray-900">{po.partners?.name || t("po.noPartner")}</p>
-          </div>
-
-          {/* TechCompany Logo */}
-          {techCompany?.company_name && (
-            <div className="flex items-center justify-center w-14 h-14 rounded-lg bg-blue-100 border-2 border-blue-300 flex-shrink-0">
-              <span className="text-lg font-bold text-blue-700">
-                {techCompany.company_name.substring(0, 2).toUpperCase()}
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Approve Button */}
-        {canApprove && (
-          <Button
-            onClick={handleApprovePO}
-            disabled={approving}
-            className="bg-green-600 hover:bg-green-700 flex-shrink-0"
-          >
-            {approving ? "Aprobando..." : t("po.approvePO")}
-          </Button>
-        )}
+    {/* PO Status, Number & Date */}
+    <div className="flex flex-col">
+      {/* Status Badge moved on top of PO Number per your sketch */}
+      <div className="mb-1">
+        <Badge className={`${getStatusBadgeColor(po.status)} text-[10px] px-2 py-0 uppercase`}>
+          {t(`po.status.${po.status}`)}
+        </Badge>
       </div>
+      
+      <h1 className="text-2xl font-black text-gray-900 leading-none">
+        {po.po_number}
+      </h1>
+      
+      <span className="text-xs text-gray-500 mt-1 font-medium">
+        {po.created_at ? format(new Date(po.created_at), "dd/MM/yyyy HH:mm") : "-"}
+      </span>
+    </div>
+  </div>
+
+  {/* Center Section: Total Amount (Clean & Big) */}
+  <div className="flex flex-col items-center px-10 border-l border-r border-gray-100">
+    <span className="text-[10px] text-gray-400 uppercase tracking-[0.1em] font-bold mb-1">
+      {t("po.detail.total")}
+    </span>
+    <div className="text-4xl font-black text-gray-900 tracking-tight">
+      ${po.total_amount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+    </div>
+    <div className="flex gap-3 mt-1 text-[10px] text-gray-500 font-medium">
+      <span>Sub: ${po.subtotal_amount?.toFixed(2)}</span>
+      <span>Ship: ${po.shipping_amount?.toFixed(2)}</span>
+    </div>
+  </div>
+
+  {/* Right Section: TechCompany & Partner Name */}
+  <div className="flex items-center gap-4 flex-grow justify-end px-6">
+    <div className="text-right">
+      <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider leading-none mb-1">
+        {t("po.detail.partner")}
+      </p>
+      <p className="text-sm font-bold text-gray-900 mb-2">
+        {po.partners?.name || t("po.noPartner")}
+      </p>
+      
+      {/* Tech Company Label & Initials */}
+      <div className="flex items-center justify-end gap-2">
+        <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase">
+          T.C.
+        </span>
+        <span className="text-xs font-semibold text-gray-700">
+          {techCompany?.company_name || "No Tech assigned"}
+        </span>
+      </div>
+    </div>
+
+    {/* TechCompany Visual Avatar/Initial */}
+    {techCompany?.company_name && (
+      <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-blue-600 shadow-md shadow-blue-100 flex-shrink-0">
+        <span className="text-lg font-black text-white">
+          {techCompany.company_name.substring(0, 2).toUpperCase()}
+        </span>
+      </div>
+    )}
+  </div>
+
+  {/* Final Action: Approve Button */}
+  {canApprove && (
+    <div className="pl-6 border-l border-gray-100">
+      <Button
+        onClick={handleApprovePO}
+        disabled={approving}
+        className="bg-green-600 hover:bg-green-700 h-12 px-6 rounded-xl font-bold transition-all shadow-lg shadow-green-100 flex gap-2 items-center"
+      >
+        {approving ? (
+          <span className="animate-spin text-lg">◌</span>
+        ) : (
+          <>
+            <CheckCircle2 className="w-5 h-5" />
+            {t("po.approvePO")}
+          </>
+        )}
+      </Button>
+    </div>
+  )}
+</div>
 
       {/* Two Column Layout */}
       <div className="grid grid-cols-4 gap-6">
