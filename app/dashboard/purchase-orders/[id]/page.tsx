@@ -214,10 +214,11 @@ export default function PurchaseOrderDetailPage() {
         <div className="flex items-center gap-6">
           {/* Partner Logo */}
           {po.partners?.name && (
-            
-              <div className="flex items-center flex-grow">
-                {po.partners?.logo_url}
-            
+            <OrganizationAvatar
+                                    name={po.partners?.name || ""}
+                                    imageUrl= {po.partners?.logo_url}
+                                    size="sm"
+                                  />
             </div>
           )}
 
