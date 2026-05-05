@@ -58,37 +58,6 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
     }
   }
 
-  // Load all milestone documents on mount
-  useEffect(() => {
-    const loadAllDocuments = async () => {
-      try {
-        const docsToLoad = initialMilestones || []
-        const loadedDocs: { [key: string]: any } = {}
-
-        for (const milestone of docsToLoad) {
-          const { data } = await supabase
-            .from('documents')
-            .select('*')
-            .eq('parent_id', milestone.id)
-            .eq('parent_type', 'po_milestone')
-            .single()
-
-          if (data) {
-            loadedDocs[milestone.id] = data
-          }
-        }
-
-        setDocuments(loadedDocs)
-      } catch (error) {
-        console.log('[v0] Error loading documents:', error)
-      }
-    }
-
-    if (initialMilestones && initialMilestones.length > 0) {
-      loadAllDocuments()
-    }
-  }, [initialMilestones])
-
   // Load document for milestone
   const loadMilestoneDocument = async (milestoneId: string) => {
     if (documents[milestoneId]) return documents[milestoneId]
