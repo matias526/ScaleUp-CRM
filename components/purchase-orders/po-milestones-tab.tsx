@@ -58,9 +58,7 @@ export function POMilestonesTab({
 
   // Calculate milestone amounts
   const getMilestoneAmount = (milestone: any) => {
-    if (milestone.amount_type === "percentage") {
-      return (subtotal * milestone.amount) / 100
-    }
+    // Amount is already calculated and stored directly
     return milestone.amount
   }
 
@@ -102,14 +100,17 @@ export function POMilestonesTab({
         return
       }
 
-      // Calculate actual amount
+      // Calculate actual amount based on type (for UI only)
       const actualAmount =
         formData.amountType === "percentage"
           ? (subtotal * formData.amount) / 100
           : formData.amount
 
       // Check if total would exceed PO amount
-      const newTotal = totalMilestoneAmount + actualAmount
+      const currentTotal = editingId
+        ? totalMilestoneAmount - (milestones.find((m) => m.id === editingId)?.amount || 0)
+        : totalMilestoneAmount
+      const newTotal = currentTotal + actualAmount
       if (newTotal > subtotal) {
         toast({
           title: t("common.error"),
@@ -120,13 +121,12 @@ export function POMilestonesTab({
       }
 
       if (editingId) {
-        // Update existing milestone
+        // Update existing milestone - only save the calculated amount
         const { error } = await supabase
           .from("po_milestones")
           .update({
             title: formData.title,
-            amount: formData.amount,
-            amount_type: formData.amountType,
+            amount: actualAmount,
             due_date: formData.dueDate || null,
           })
           .eq("id", editingId)
@@ -137,13 +137,12 @@ export function POMilestonesTab({
           description: t("po.milestone.updated"),
         })
       } else {
-        // Create new milestone
+        // Create new milestone - only save the calculated amount
         const { error } = await supabase.from("po_milestones").insert([
           {
             po_id: po.id,
             title: formData.title,
-            amount: formData.amount,
-            amount_type: formData.amountType,
+            amount: actualAmount,
             due_date: formData.dueDate || null,
             status: "pending",
           },
@@ -232,7 +231,7 @@ export function POMilestonesTab({
   const handleEditMilestone = (milestone: any) => {
     setFormData({
       title: milestone.title,
-      amountType: milestone.amount_type || "fixed",
+      amountType: "fixed", // Default to fixed when editing
       amount: milestone.amount,
       dueDate: milestone.due_date || "",
     })
