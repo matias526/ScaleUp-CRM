@@ -67,18 +67,24 @@ export default function PurchaseOrdersPage() {
       console.log("[v0] User role:", userRole)
       
       if (userRole === "PartnerUser" && userInfo.partnerId) {
-        // PartnerUser solo ve sus propias POs
-        console.log("[v0] Filtering for PartnerUser:", userInfo.id)
-        query = query.eq("partner_user_id", userInfo.id)
-      } else if (userRole === "TechLogistic") {
-        console.log("[v0] TechLogistic - showing all POs")
+        // PartnerUser solo ve POs de su partner
+        console.log("[v0] Filtering for PartnerUser with partner_id:", userInfo.partnerId)
+        query = query.eq("partner_id", userInfo.partnerId)
+      } else if (userRole === "TechUser" && userInfo.techCompanyId) {
+        // TechUser solo ve POs de su tech company
+        console.log("[v0] Filtering for TechUser with tech_company_id:", userInfo.techCompanyId)
+        query = query.eq("tech_company_id", userInfo.techCompanyId)
+      } else if (userRole === "TechLogistic" && userInfo.techCompanyId) {
+        // TechLogistic solo ve POs de su tech company
+        console.log("[v0] Filtering for TechLogistic with tech_company_id:", userInfo.techCompanyId)
+        query = query.eq("tech_company_id", userInfo.techCompanyId)
       } else if (["Admin", "BDD"].includes(userRole)) {
         // Admin/BDD pueden aplicar filtros adicionales
         if (selectedPartner) {
           query = query.eq("partner_id", selectedPartner)
         }
         if (selectedTechCompany) {
-          query = query.eq("partner_user_id", selectedTechCompany)
+          query = query.eq("tech_company_id", selectedTechCompany)
         }
       }
 
@@ -233,6 +239,7 @@ export default function PurchaseOrdersPage() {
                   <TableRow>
                     <TableHead>{t("po.poNumber")}</TableHead>
                     <TableHead>{t("po.partner")}</TableHead>
+                    <TableHead>{t("po.detail.techCompany")}</TableHead>
                     <TableHead>{t("po.totalAmount")}</TableHead>
                     <TableHead>{t("po.status")}</TableHead>
                     <TableHead>{t("po.date")}</TableHead>
@@ -243,7 +250,8 @@ export default function PurchaseOrdersPage() {
                   {purchaseOrders.map((po) => (
                     <TableRow key={po.id}>
                       <TableCell className="font-medium">{po.po_number}</TableCell>
-                      <TableCell>{po.partner?.name || "-"}</TableCell>
+                      <TableCell>{po.partners?.name || "-"}</TableCell>
+                      <TableCell>{po.tech_companies?.name || "-"}</TableCell>
                       <TableCell>${po.total_amount?.toFixed(2) || "0.00"}</TableCell>
                       <TableCell>
                         <Badge className={getStatusBadgeColor(po.status)}>
