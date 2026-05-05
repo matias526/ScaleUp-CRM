@@ -29,6 +29,7 @@ export default function PurchaseOrderDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [milestones, setMilestones] = useState<any[]>([])
   const [shippings, setShippings] = useState<any[]>([])
+  const [approverName, setApproverName] = useState<string>("")
   const [approving, setApproving] = useState(false)
 
   useEffect(() => {
@@ -66,6 +67,19 @@ export default function PurchaseOrderDetailPage() {
       }
 
       setPo(poData)
+
+      // Load approver info if PO is accepted
+      if (poData.accepted_by) {
+        const { data: approverData } = await supabase
+          .from("users")
+          .select("firstName, lastName")
+          .eq("id", poData.accepted_by)
+          .single()
+
+        if (approverData) {
+          setApproverName(`${approverData.firstName} ${approverData.lastName}`)
+        }
+      }
 
       // Load milestones
       const { data: milestonesData, error: milestonesError } = await supabase
@@ -315,6 +329,7 @@ export default function PurchaseOrderDetailPage() {
                     onApprove={handleApprovePO}
                     onApproveClick={handleApprovePO}
                     getStatusBadgeColor={getStatusBadgeColor}
+                    approverName={approverName}
                   />
                 </TabsContent>
 

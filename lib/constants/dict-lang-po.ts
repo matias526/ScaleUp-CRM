@@ -527,9 +527,26 @@ export const DICT_LANG_PO = {
     en: "Cancel",
     pt: "Cancelar",
   },
+  "common.confirm": {
+    es: "Confirmar",
+    en: "Confirm",
+    pt: "Confirmar",
+  },
   "common.save": {
     es: "Guardar",
     en: "Save",
     pt: "Salvar",
+  },
+  
+  // General Tab
+  "po.general.approveDescription": {
+    es: "Aprueba esta orden de compra para proceder con el flujo. Esto marcará la oportunidad como 'ganada' y actualizará el estado de la PO a aceptada.",
+    en: "Approve this purchase order to proceed with the workflow. This will mark the opportunity as 'won' and update the PO status to accepted.",
+    pt: "Aprove este pedido de compra para prosseguir com o fluxo. Isso marcará a oportunidade como 'ganha' e atualizará o status da PO para aceita.",
+  },
+  "po.general.confirmApprove": {
+    es: "¿Estás seguro de que deseas aprobar esta orden de compra? Esta acción no puede ser revertida.",
+    en: "Are you sure you want to approve this purchase order? This action cannot be undone.",
+    pt: "Tem certeza de que deseja aprovar este pedido de compra? Esta ação não pode ser desfeita.",
   },
 }

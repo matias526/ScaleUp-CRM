@@ -23,6 +23,7 @@ interface POGeneralTabProps {
   onApprove: () => void
   onApproveClick: () => void
   getStatusBadgeColor: (status: string) => string
+  approverName?: string
 }
 
 export function POGeneralTab({
@@ -30,6 +31,7 @@ export function POGeneralTab({
   canApprove,
   onApproveClick,
   getStatusBadgeColor,
+  approverName,
 }: POGeneralTabProps) {
   const { t } = useTranslations(DICT_LANG_PO)
   const [showApproveDialog, setShowApproveDialog] = useState(false)
@@ -75,7 +77,7 @@ export function POGeneralTab({
                   <div className="text-sm text-gray-600 font-medium">
                     {t("po.detail.approvedBy")}
                   </div>
-                  <div className="mt-2 text-sm">{po.accepted_by || "-"}</div>
+                  <div className="mt-2 text-sm">{approverName || "-"}</div>
                 </div>
               </>
             )}
@@ -91,8 +93,7 @@ export function POGeneralTab({
           </CardHeader>
           <CardContent>
             <p className="text-sm text-green-800 mb-4">
-              Aprueba esta orden de compra para proceder con el flujo. Esto marcará la oportunidad
-              como "ganada" y actualizará el estado de la PO a aceptada.
+              {t("po.general.approveDescription")}
             </p>
             <Button
               onClick={() => setShowApproveDialog(true)}
@@ -111,13 +112,12 @@ export function POGeneralTab({
           <DialogHeader>
             <DialogTitle>{t("po.approvePO")}</DialogTitle>
             <DialogDescription>
-              ¿Estás seguro de que deseas aprobar esta orden de compra? Esta acción no puede ser
-              revertida.
+              {t("po.general.confirmApprove")}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowApproveDialog(false)}>
-              Cancelar
+              {t("common.cancel")}
             </Button>
             <Button
               className="bg-green-600 hover:bg-green-700"
@@ -126,7 +126,7 @@ export function POGeneralTab({
                 setShowApproveDialog(false)
               }}
             >
-              Confirmar Aprobación
+              {t("common.confirm")}
             </Button>
           </DialogFooter>
         </DialogContent>
