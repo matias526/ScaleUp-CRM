@@ -444,38 +444,57 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
           milestones.map((milestone) => {
             const permissions = getActionPermissions(milestone)
             const doc = documents[milestone.id]
+            const statusColors = {
+              pending: 'bg-yellow-100 border-yellow-200',
+              in_process: 'bg-blue-100 border-blue-200',
+              paid: 'bg-emerald-100 border-emerald-200',
+            }
+            const statusColor = statusColors[milestone.status as keyof typeof statusColors] || 'bg-gray-100 border-gray-200'
             
             return (
-              <Card key={milestone.id}>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    {/* Milestone Info */}
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg">{milestone.title}</h3>
-                      <p className="text-sm text-gray-600">
-                        {t('po.milestone.amount')}: ${milestone.amount?.toFixed(2) || '0.00'}
-                      </p>
-                      {milestone.due_date && (
-                        <p className="text-xs text-gray-500 mt-1">
-                          {t('po.milestone.dueDate')}: {format(new Date(milestone.due_date), 'dd/MM/yyyy')}
-                        </p>
-                      )}
-                      {milestone.paid_at && (
-                        <p className="text-xs text-gray-500">
-                          {t('po.milestone.paidDate')}: {format(new Date(milestone.paid_at), 'dd/MM/yyyy')}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Status */}
-                    <div className="mx-6">
+              <Card key={milestone.id} className="border-gray-200">
+                <CardContent className="p-3">
+                  <div className="space-y-2">
+                    {/* Header Row: Title and Status */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-sm text-gray-900">{milestone.title}</h3>
+                      </div>
                       <Badge className={getStatusBadgeColor(milestone.status)}>
                         {t(`po.milestone.status.${milestone.status?.toLowerCase() || 'pending'}`)}
                       </Badge>
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex items-center gap-2">
+                    {/* Info Grid Row */}
+                    <div className="border border-gray-200 rounded p-2 bg-white">
+                      <div className="grid grid-cols-4 gap-2 text-xs">
+                        <div>
+                          <span className="text-gray-600 uppercase font-bold text-xs">Monto</span>
+                          <p className="font-semibold text-gray-900 mt-0.5">${milestone.amount?.toFixed(2) || '0.00'}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-600 uppercase font-bold text-xs">Vencimiento</span>
+                          <p className="font-semibold text-gray-900 mt-0.5">
+                            {milestone.due_date ? format(new Date(milestone.due_date), 'dd/MM/yyyy') : '-'}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-gray-600 uppercase font-bold text-xs">Pagado</span>
+                          <p className="font-semibold text-gray-900 mt-0.5">
+                            {milestone.paid_at ? format(new Date(milestone.paid_at), 'dd/MM/yyyy') : '-'}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-gray-600 uppercase font-bold text-xs">Documento</span>
+                          <p className="font-semibold text-gray-900 mt-0.5">
+                            {doc ? '✓ Adjunto' : ''}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Actions Row */}
+                    <div className="flex items-center justify-end gap-1">
                       <TooltipProvider>
                         {/* Edit */}
                         {permissions.canEdit && (
@@ -485,9 +504,9 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => handleEditMilestone(milestone)}
-                                className="h-8 w-8 p-0"
+                                className="h-7 w-7 p-0 text-xs"
                               >
-                                <Edit2 className="h-4 w-4" />
+                                <Edit2 className="h-3.5 w-3.5" />
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>{t('common.edit')}</TooltipContent>
@@ -503,9 +522,9 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
                                   <Button
                                     size="sm"
                                     variant="ghost"
-                                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                                    className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
                                   >
-                                    <Trash2 className="h-4 w-4" />
+                                    <Trash2 className="h-3.5 w-3.5" />
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>{t('po.milestone.delete')}</TooltipContent>
@@ -543,9 +562,9 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
                                   setShowUploadDialog(true)
                                   setUploadFile(null)
                                 }}
-                                className="h-8 w-8 p-0"
+                                className="h-7 w-7 p-0"
                               >
-                                <Upload className="h-4 w-4" />
+                                <Upload className="h-3.5 w-3.5" />
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>{t('po.milestone.uploadDocument')}</TooltipContent>
@@ -561,9 +580,9 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
                                   <Button
                                     size="sm"
                                     variant="ghost"
-                                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                                    className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
                                   >
-                                    <X className="h-4 w-4" />
+                                    <X className="h-3.5 w-3.5" />
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>{t('po.milestone.deleteDocument')}</TooltipContent>
@@ -590,16 +609,19 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
                         )}
 
                         {/* View Document */}
-                        {permissions.canViewDocument && doc && (
+                        {doc && (
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                onClick={() => window.open(doc.file_url, '_blank')}
-                                className="h-8 w-8 p-0"
+                                onClick={() => {
+                                  setSelectedMilestone(milestone)
+                                  setShowViewDocumentDialog(true)
+                                }}
+                                className="h-7 w-7 p-0"
                               >
-                                <FileText className="h-4 w-4" />
+                                <FileText className="h-3.5 w-3.5" />
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>{t('po.milestone.viewDocument')}</TooltipContent>
@@ -618,9 +640,9 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
                                   await loadMilestoneDocument(milestone.id)
                                   setShowConfirmPaymentDialog(true)
                                 }}
-                                className="h-8 w-8 p-0 text-green-600 hover:text-green-700"
+                                className="h-7 w-7 p-0 text-green-600 hover:text-green-700"
                               >
-                                <Check className="h-4 w-4" />
+                                <Check className="h-3.5 w-3.5" />
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>{t('po.milestone.confirmPayment')}</TooltipContent>

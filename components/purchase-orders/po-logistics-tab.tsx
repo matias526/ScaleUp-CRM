@@ -677,7 +677,7 @@ export function POLogisticsTab({
                   {/* Carrier Row */}
                   <div className="border border-gray-200 rounded p-2">
                     <div className="font-semibold text-xs text-gray-900 uppercase tracking-wider mb-2">Transportista</div>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                       <div>
                         <Label className="text-xs font-semibold text-gray-600">Transportista</Label>
                         <Input
@@ -698,54 +698,20 @@ export function POLogisticsTab({
                           className="mt-0.5 h-7 text-xs font-mono"
                         />
                       </div>
-                    </div>
-                  </div>
-
-                  {/* Package Row */}
-                  <div className="border border-gray-200 rounded p-2">
-                    <div className="font-semibold text-xs text-gray-900 uppercase tracking-wider mb-2">Paquete</div>
-                    <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <Label className="text-xs font-semibold text-gray-600">Peso (kg)</Label>
+                        <Label className="text-xs font-semibold text-gray-600">Fecha Estimada</Label>
                         <Input
-                          type="number"
-                          value={dispatchForm.weight}
+                          type="date"
+                          value={dispatchForm.estimated_delivery_date}
                           onChange={(e) =>
-                            setDispatchForm({ ...dispatchForm, weight: e.target.value })
+                            setDispatchForm({
+                              ...dispatchForm,
+                              estimated_delivery_date: e.target.value,
+                            })
                           }
                           className="mt-0.5 h-7 text-xs"
                         />
                       </div>
-                      <div>
-                        <Label className="text-xs font-semibold text-gray-600">Dimensiones</Label>
-                        <Input
-                          value={dispatchForm.dimensions}
-                          onChange={(e) =>
-                            setDispatchForm({ ...dispatchForm, dimensions: e.target.value })
-                          }
-                          placeholder="50x30x20"
-                          className="mt-0.5 h-7 text-xs"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Delivery Row */}
-                  <div className="border border-gray-200 rounded p-2">
-                    <div className="font-semibold text-xs text-gray-900 uppercase tracking-wider mb-2">Entrega</div>
-                    <div>
-                      <Label className="text-xs font-semibold text-gray-600">Fecha Estimada</Label>
-                      <Input
-                        type="date"
-                        value={dispatchForm.estimated_delivery_date}
-                        onChange={(e) =>
-                          setDispatchForm({
-                            ...dispatchForm,
-                            estimated_delivery_date: e.target.value,
-                          })
-                        }
-                        className="mt-0.5 h-7 text-xs"
-                      />
                     </div>
                   </div>
 
@@ -758,7 +724,7 @@ export function POLogisticsTab({
                   {/* Carrier Display */}
                   <div className="border border-gray-200 rounded p-2">
                     <div className="font-semibold text-gray-900 uppercase tracking-wider mb-1">Transportista</div>
-                    <div className="text-gray-800 grid grid-cols-2 gap-2 text-xs">
+                    <div className="text-gray-800 grid grid-cols-3 gap-2 text-xs">
                       <div>
                         <span className="text-gray-600">Transportista:</span> {dispatchForm.carrier || "-"}
                       </div>
@@ -767,6 +733,9 @@ export function POLogisticsTab({
                         <div className="font-mono text-xs bg-gray-50 border border-gray-200 p-1 rounded mt-0.5 text-gray-900">
                           {dispatchForm.tracking_number || "-"}
                         </div>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Entrega Est.:</span> {dispatchForm.estimated_delivery_date || "-"}
                       </div>
                     </div>
                   </div>
@@ -779,16 +748,6 @@ export function POLogisticsTab({
                       {dispatchForm.dimensions && <div><span className="text-gray-600">Dimensiones:</span> {dispatchForm.dimensions}</div>}
                     </div>
                   </div>
-
-                  {/* Delivery Display */}
-                  {dispatchForm.estimated_delivery_date && (
-                    <div className="border border-gray-200 rounded p-2">
-                      <div className="font-semibold text-gray-900 uppercase tracking-wider mb-1">Entrega</div>
-                      <div className="text-gray-800 text-xs">
-                        <span className="text-gray-600">Estimada:</span> {dispatchForm.estimated_delivery_date}
-                      </div>
-                    </div>
-                  )}
                 </div>
               )}
             </CardContent>
