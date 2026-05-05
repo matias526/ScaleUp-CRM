@@ -14,7 +14,6 @@ import { toast } from '@/components/ui/use-toast'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Edit2, Trash2, Upload, FileText, Check, Eye, X } from 'lucide-react'
 import { format } from 'date-fns'
-import { put, del } from '@vercel/blob'
 
 interface POMilestonesTabProps {
   po: any
@@ -193,15 +192,25 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
 
     setIsLoading(true)
     try {
-      // Upload file to blob
+      // Upload file to Supabase storage
       const fileExtension = uploadFile.name.split('.').pop()
       const fileName = `po-${po.id}-milestone-${selectedMilestone.id}-${Date.now()}.${fileExtension}`
-      const filePath = `po-documents/${fileName}`
+      const filePath = `milestones/${fileName}`
 
-      const blob = await put(filePath, uploadFile, {
-        access: 'private',
-        addRandomSuffix: false,
-      })
+      const { error: uploadError } = await supabase.storage
+        .from('po_documents')
+        .upload(filePath, uploadFile)
+
+      if (uploadError) throw uploadError
+
+      // Generate signed URL
+      const { data: signedData, error: signedError } = await supabase.storage
+        .from('po_documents')
+        .createSignedUrl(filePath, 604800) // 7 days
+
+      if (signedError) throw signedError
+
+      const fileUrl = signedData.signedUrl
 
       // Create document record
       const { data: doc, error: docError } = await supabase
@@ -211,7 +220,7 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
             parent_id: selectedMilestone.id,
             parent_type: 'po_milestone',
             doc_type: 'invoice',
-            file_url: blob.url,
+            file_url: fileUrl,
             uploaded_at: new Date().toISOString(),
           },
         ])
@@ -255,8 +264,16 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
 
     setIsLoading(true)
     try {
-      // Delete from blob
-      await del(doc.file_url)
+      // Extract file path from signed URL
+      const urlParts = doc.file_url.split('/storage/v1/object/sign/po_documents/')
+      const filePath = urlParts[1]?.split('?')[0]
+
+      // Delete from Supabase storage
+      if (filePath) {
+        await supabase.storage
+          .from('po_documents')
+          .remove([filePath])
+      }
 
       // Delete document record
       await supabase.from('documents').delete().eq('id', doc.id)
