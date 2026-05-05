@@ -29,7 +29,6 @@ export default function PurchaseOrderDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [milestones, setMilestones] = useState<any[]>([])
   const [shippings, setShippings] = useState<any[]>([])
-  const [techCompany, setTechCompany] = useState<any>(null)
   const [approving, setApproving] = useState(false)
 
   useEffect(() => {
@@ -55,7 +54,7 @@ export default function PurchaseOrderDetailPage() {
       // Load PO details with partner and tech company info
       const { data: poData, error: poError } = await supabase
         .from("purchase_orders")
-        .select("*, partners(name, logo_url)")
+        .select("*, partners!partner_id(name, logo_url), tech_companies!tech_company_id(name, logo_url)")
         .eq("id", poId)
         .single()
 
@@ -67,19 +66,6 @@ export default function PurchaseOrderDetailPage() {
       }
 
       setPo(poData)
-
-      // Load TechCompany info (the user who created the PO)
-      if (poData.partner_user_id) {
-        const { data: techCompanyData } = await supabase
-          .from("users")
-          .select("id, firstName, lastName, company_name, logo_url")
-          .eq("id", poData.partner_user_id)
-          .single()
-
-        if (techCompanyData) {
-          setTechCompany(techCompanyData)
-        }
-      }
 
       // Load milestones
       const { data: milestonesData, error: milestonesError } = await supabase
@@ -245,56 +231,56 @@ export default function PurchaseOrderDetailPage() {
     </div>
   </div>
 
-  {/* Right Section: Logos & Names (No frames) */}
-  <div className="flex items-center gap-8">
-    {/* Info Text */}
-    <div className="text-right flex flex-col gap-1">
-      <div className="mb-2">
-        <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest leading-none mb-1">
-          Partner
-        </p>
-        <p className="text-sm font-black text-gray-900">
-          {po.partners?.name || "N/A"}
-        </p>
-      </div>
-      <div>
-        <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest leading-none mb-1">
-          Tech Company
-        </p>
-        <p className="text-sm font-bold text-blue-600">
-          {techCompany?.company_name || "Unassigned"}
-        </p>
-      </div>
-    </div>
-
-    {/* Logos Section - Clean without borders/frames */}
-    <div className="flex items-center gap-4">
-      {/* Partner Logo */}
-      <div className="w-16 h-16 flex items-center justify-center">
-        {po.partners?.logo_url ? (
-          <img src={po.partners.logo_url} alt="Partner" className="max-w-full max-h-full object-contain" />
-        ) : (
-          <span className="text-2xl font-black text-gray-200">{po.partners?.name?.substring(0, 2)}</span>
-        )}
-      </div>
-
-      {/* Divider */}
-      <div className="h-10 w-[1px] bg-gray-100" />
-
-      {/* Tech Company Logo */}
-      <div className="w-16 h-16 flex items-center justify-center">
-        {techCompany?.logo_url ? (
-          <img src={techCompany.logo_url} alt="Tech" className="max-w-full max-h-full object-contain" />
-        ) : (
-          <div className="w-12 h-12 bg-slate-900 rounded-md flex items-center justify-center">
-             <span className="text-xl font-black text-white">
-              {techCompany?.company_name?.substring(0, 2).toUpperCase() || "TC"}
-            </span>
+      {/* Right Section: Logos & Names (No frames) */}
+      <div className="flex items-center gap-8">
+        {/* Info Text */}
+        <div className="text-right flex flex-col gap-1">
+          <div className="mb-2">
+            <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest leading-none mb-1">
+              Partner
+            </p>
+            <p className="text-sm font-black text-gray-900">
+              {po.partners?.name || "N/A"}
+            </p>
           </div>
-        )}
+          <div>
+            <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest leading-none mb-1">
+              Tech Company
+            </p>
+            <p className="text-sm font-bold text-blue-600">
+              {po.tech_companies?.name || "Unassigned"}
+            </p>
+          </div>
+        </div>
+
+        {/* Logos Section - Clean without borders/frames */}
+        <div className="flex items-center gap-4">
+          {/* Partner Logo */}
+          <div className="w-16 h-16 flex items-center justify-center">
+            {po.partners?.logo_url ? (
+              <img src={po.partners.logo_url} alt="Partner" className="max-w-full max-h-full object-contain" />
+            ) : (
+              <span className="text-2xl font-black text-gray-200">{po.partners?.name?.substring(0, 2)}</span>
+            )}
+          </div>
+
+          {/* Divider */}
+          <div className="h-10 w-[1px] bg-gray-100" />
+
+          {/* Tech Company Logo */}
+          <div className="w-16 h-16 flex items-center justify-center">
+            {po.tech_companies?.logo_url ? (
+              <img src={po.tech_companies.logo_url} alt="Tech" className="max-w-full max-h-full object-contain" />
+            ) : (
+              <div className="w-12 h-12 bg-slate-900 rounded-md flex items-center justify-center">
+                <span className="text-xl font-black text-white">
+                  {po.tech_companies?.name?.substring(0, 2).toUpperCase() || "TC"}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
 
   {/* Approve Action */}
   {canApprove && po.status === 'sent' && (

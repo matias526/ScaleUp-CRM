@@ -578,6 +578,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
             total_amount: poFormData.total_amount,
             status: poStatus,
             partner_id: partnerId,
+            tech_company_id: opportunity?.tech_company_id,
             partner_user_id: currentUser?.id,
             accepted_by: isAdminOrBDD ? currentUser?.id : null,
             accepted_at: isAdminOrBDD ? new Date().toISOString() : null,

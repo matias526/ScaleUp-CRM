@@ -60,7 +60,7 @@ export default function PurchaseOrdersPage() {
       
       let query = supabase
         .from("purchase_orders")
-        .select("id, po_number, total_amount, status, created_at, partner_user_id, partner_id, partners(name)")
+        .select("id, po_number, total_amount, status, created_at, partner_user_id, partner_id, partners!partner_id(name), tech_companies!tech_company_id(name)")
 
       // Role-based filtering
       const userRole = userInfo.roleCode
