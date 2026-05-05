@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useTranslations } from '@/lib/hooks/use-translations'
+import { useTranslation } from '@/lib/hooks/use-translation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -25,7 +25,7 @@ interface POMilestonesTabProps {
 }
 
 export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, userRole, onMilestonesUpdate }: POMilestonesTabProps) {
-  const { t } = useTranslations()
+  const { t } = useTranslation()
   const supabase = createClient()
 
   const [milestones, setMilestones] = useState<any[]>(initialMilestones || [])
