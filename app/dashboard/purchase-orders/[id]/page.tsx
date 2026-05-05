@@ -213,7 +213,7 @@ export default function PurchaseOrderDetailPage() {
   
   {/* Left: Partner Logo & PO Info */}
   <div className="flex items-center gap-6">
-    {/* Partner Logo (Simplified to avoid ReferenceError) */}
+    {/* Partner Logo */}
     <div className="h-12 w-12 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0">
       {po.partners?.logo_url ? (
         <img src={po.partners.logo_url} alt="" className="h-full w-full object-contain" />
@@ -227,23 +227,22 @@ export default function PurchaseOrderDetailPage() {
     {/* PO Status, Number & Date */}
     <div className="flex flex-col">
       <div className="mb-1">
-        <Badge className="bg-blue-50 text-blue-700 border-blue-200 text-[10px] px-2 py-0 uppercase font-bold">
+        <span className="bg-blue-50 text-blue-700 border border-blue-100 text-[10px] px-2 py-0.5 rounded uppercase font-bold">
           {po.status || "Draft"}
-        </Badge>
+        </span>
       </div>
       
       <h1 className="text-2xl font-black text-gray-900 leading-none tracking-tight">
         #{po.po_number || "---"}
       </h1>
       
-      <span className="text-[11px] text-gray-500 mt-1 font-medium flex items-center gap-1">
-        <Calendar className="w-3 h-3" />
-        {po.created_at ? format(new Date(po.created_at), "dd/MM/yyyy HH:mm") : "-"}
+      <span className="text-[11px] text-gray-500 mt-1 font-medium">
+        📅 {po.created_at ? format(new Date(po.created_at), "dd/MM/yyyy HH:mm") : "-"}
       </span>
     </div>
   </div>
 
-  {/* Center: Total Amount (Destacado) */}
+  {/* Center: Total Amount */}
   <div className="flex flex-col items-center px-10 border-l border-r border-gray-100">
     <span className="text-[10px] text-gray-400 uppercase tracking-[0.15em] font-bold mb-1">
       Total Amount
@@ -251,9 +250,9 @@ export default function PurchaseOrderDetailPage() {
     <div className="text-4xl font-black text-gray-900 tracking-tighter">
       ${(po.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
     </div>
-    <div className="flex gap-4 mt-1 text-[10px] text-gray-500 font-bold">
-      <span className="opacity-70">SUB: ${(po.subtotal_amount || 0).toFixed(2)}</span>
-      <span className="opacity-70">SHIP: ${(po.shipping_amount || 0).toFixed(2)}</span>
+    <div className="flex gap-4 mt-1 text-[10px] text-gray-500 font-bold uppercase">
+      <span className="opacity-70">Sub: ${(po.subtotal_amount || 0).toFixed(2)}</span>
+      <span className="opacity-70">Ship: ${(po.shipping_amount || 0).toFixed(2)}</span>
     </div>
   </div>
 
@@ -268,8 +267,8 @@ export default function PurchaseOrderDetailPage() {
       </p>
       
       <div className="flex items-center justify-end gap-2">
-        <span className="text-[9px] font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
-          TECH CO.
+        <span className="text-[9px] font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 uppercase">
+          Tech Co.
         </span>
         <span className="text-xs font-bold text-gray-700">
           {techCompany?.company_name || "Unassigned"}
@@ -288,17 +287,16 @@ export default function PurchaseOrderDetailPage() {
   {/* Final Action: Approve Button */}
   {canApprove && po.status === 'sent' && (
     <div className="pl-6 border-l border-gray-100">
-      <Button
+      <button
         onClick={handleApprovePO}
         disabled={approving}
-        className="bg-emerald-600 hover:bg-emerald-700 h-12 px-6 rounded-xl font-bold text-white shadow-lg shadow-emerald-100"
+        className="bg-emerald-600 hover:bg-emerald-700 text-white h-12 px-6 rounded-xl font-bold shadow-lg shadow-emerald-100 disabled:opacity-50 transition-colors"
       >
         {approving ? "..." : "Approve Order"}
-      </Button>
+      </button>
     </div>
   )}
 </div>
-
       {/* Two Column Layout */}
       <div className="grid grid-cols-4 gap-6">
         {/* Main Content - 75% */}
