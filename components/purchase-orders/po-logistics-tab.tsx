@@ -336,6 +336,24 @@ export function POLogisticsTab({
       if (error) throw error
 
       setShipping({ ...shipping, status: "delivered" })
+      
+      // Create note for mark as received
+      const userName = userInfo ? `${userInfo.first_name || ""} ${userInfo.last_name || ""}`.trim() : "Usuario"
+      const { error: noteError } = await supabase
+        .from("notes")
+        .insert([
+          {
+            purchase_order_id: po.id,
+            user_id: currentUserId,
+            content: `${userName} ha marcado el envío como recibido`,
+            is_private: false,
+          },
+        ])
+      
+      if (noteError) {
+        console.error("[v0] Error creating note:", noteError)
+      }
+      
       toast({
         title: t("common.success"),
         description: t("po.logistics.markedAsReceived"),
@@ -354,6 +372,7 @@ export function POLogisticsTab({
 
   const isShipped = shipping?.status === "shipped"
   const isInProcess = shipping?.status === "in_process"
+  const isDelivered = shipping?.status === "delivered"
 
   return (
     <div className="space-y-6">
@@ -374,7 +393,7 @@ export function POLogisticsTab({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {canEditDestination && !isShipped ? (
+          {canEditDestination && isInProcess ? (
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -541,7 +560,7 @@ export function POLogisticsTab({
       </Card>
 
       {/* Section B: Dispatch Data */}
-      {(isInProcess || isShipped) && (
+      {(isInProcess || isShipped || isDelivered) && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
