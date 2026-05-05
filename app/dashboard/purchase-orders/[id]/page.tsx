@@ -207,107 +207,107 @@ export default function PurchaseOrderDetailPage() {
 
   return (
     <div className="p-8 space-y-6">
-{/* Compact Header - Clean Layout */}
-<div className="flex items-center justify-between bg-white rounded-lg border border-gray-200 p-8 shadow-sm mb-6">
-  
-  {/* Left Section: PO Branding & Status */}
-  <div className="flex flex-col gap-2">
-    {/* Status Badge on top */}
-    <div>
-      <span className="bg-blue-50 text-blue-700 border border-blue-100 text-[11px] px-2.5 py-1 rounded-md uppercase font-black tracking-wider">
-        {po.status || "Draft"}
-      </span>
-    </div>
+      {/* Compact Header - Clean Layout */}
+      <div className="flex items-center justify-between bg-white rounded-lg border border-gray-200 p-8 shadow-sm mb-6">
 
-    {/* PO Number - Bigger */}
-    <h1 className="text-4xl font-black text-gray-900 leading-none tracking-tight">
-      PO#{po.po_number || "---"}
-    </h1>
-    
-    {/* Date - Smaller and Clean (No time) */}
-    <span className="text-xs text-gray-400 font-bold uppercase tracking-widest">
-      {po.created_at ? format(new Date(po.created_at), "dd/MM/yyyy") : "-"}
-    </span>
-  </div>
-
-  {/* Center Section: Financials (More compact) */}
-  <div className="flex flex-col items-center px-12 border-x border-gray-100">
-    <span className="text-[10px] text-gray-400 uppercase tracking-[0.2em] font-black mb-1">
-      Total Amount
-    </span>
-    <div className="text-3xl font-black text-gray-900 tracking-tighter">
-      ${(po.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-    </div>
-    <div className="flex gap-4 mt-2 text-[10px] text-gray-500 font-bold uppercase tracking-tight">
-      <span>Sub: ${(po.subtotal_amount || 0).toFixed(2)}</span>
-      <span>Ship: ${(po.shipping_amount || 0).toFixed(2)}</span>
-    </div>
-  </div>
-
-      {/* Right Section: Logos & Names (No frames) */}
-      <div className="flex items-center gap-8">
-        {/* Info Text */}
-        <div className="text-right flex flex-col gap-1">
-          <div className="mb-2">
-            <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest leading-none mb-1">
-              Partner
-            </p>
-            <p className="text-sm font-black text-gray-900">
-              {po.partners?.name || "N/A"}
-            </p>
-          </div>
+        {/* Left Section: PO Branding & Status */}
+        <div className="flex flex-col gap-2">
+          {/* Status Badge on top */}
           <div>
-            <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest leading-none mb-1">
-              Tech Company
-            </p>
-            <p className="text-sm font-bold text-blue-600">
-              {po.tech_companies?.name || "Unassigned"}
-            </p>
+            <span className="bg-blue-50 text-blue-700 border border-blue-100 text-[11px] px-2.5 py-1 rounded-md uppercase font-black tracking-wider">
+              {po.status || "Draft"}
+            </span>
+          </div>
+
+          {/* PO Number - Bigger */}
+          <h1 className="text-4xl font-black text-gray-900 leading-none tracking-tight">
+            PO#{po.po_number || "---"}
+          </h1>
+
+          {/* Date - Smaller and Clean (No time) */}
+          <span className="text-xs text-gray-400 font-bold uppercase tracking-widest">
+            {po.created_at ? format(new Date(po.created_at), "dd/MM/yyyy") : "-"}
+          </span>
+        </div>
+
+        {/* Center Section: Financials (More compact) */}
+        <div className="flex flex-col items-center px-12 border-x border-gray-100">
+          <span className="text-[10px] text-gray-400 uppercase tracking-[0.2em] font-black mb-1">
+            Total Amount
+          </span>
+          <div className="text-3xl font-black text-gray-900 tracking-tighter">
+            ${(po.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+          </div>
+          <div className="flex gap-4 mt-2 text-[10px] text-gray-500 font-bold uppercase tracking-tight">
+            <span>Sub: ${(po.subtotal_amount || 0).toFixed(2)}</span>
+            <span>Ship: ${(po.shipping_amount || 0).toFixed(2)}</span>
           </div>
         </div>
 
-        {/* Logos Section - Clean without borders/frames */}
-        <div className="flex items-center gap-4">
-          {/* Partner Logo */}
-          <div className="w-16 h-16 flex items-center justify-center">
-            {po.partners?.logo_url ? (
-              <img src={po.partners.logo_url} alt="Partner" className="max-w-full max-h-full object-contain" />
-            ) : (
-              <span className="text-2xl font-black text-gray-200">{po.partners?.name?.substring(0, 2)}</span>
-            )}
+        {/* Right Section: Logos & Names (No frames) */}
+        <div className="flex items-center gap-8">
+          {/* Info Text */}
+          <div className="text-right flex flex-col gap-1">
+            <div className="mb-2">
+              <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest leading-none mb-1">
+                Partner
+              </p>
+              <p className="text-sm font-black text-gray-900">
+                {po.partners?.name || "N/A"}
+              </p>
+            </div>
+            <div>
+              <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest leading-none mb-1">
+                Tech Company
+              </p>
+              <p className="text-sm font-bold text-blue-600">
+                {po.tech_companies?.name || "Unassigned"}
+              </p>
+            </div>
           </div>
 
-          {/* Divider */}
-          <div className="h-10 w-[1px] bg-gray-100" />
+          {/* Logos Section - Clean without borders/frames */}
+          <div className="flex items-center gap-4">
+            {/* Partner Logo */}
+            <div className="w-16 h-16 flex items-center justify-center">
+              {po.partners?.logo_url ? (
+                <img src={po.partners.logo_url} alt="Partner" className="max-w-full max-h-full object-contain" />
+              ) : (
+                <span className="text-2xl font-black text-gray-200">{po.partners?.name?.substring(0, 2)}</span>
+              )}
+            </div>
 
-          {/* Tech Company Logo */}
-          <div className="w-16 h-16 flex items-center justify-center">
-            {po.tech_companies?.logo_url ? (
-              <img src={po.tech_companies.logo_url} alt="Tech" className="max-w-full max-h-full object-contain" />
-            ) : (
-              <div className="w-12 h-12 bg-slate-900 rounded-md flex items-center justify-center">
-                <span className="text-xl font-black text-white">
-                  {po.tech_companies?.name?.substring(0, 2).toUpperCase() || "TC"}
-                </span>
-              </div>
-            )}
+            {/* Divider */}
+            <div className="h-10 w-[1px] bg-gray-100" />
+
+            {/* Tech Company Logo */}
+            <div className="w-16 h-16 flex items-center justify-center">
+              {po.tech_companies?.logo_url ? (
+                <img src={po.tech_companies.logo_url} alt="Tech" className="max-w-full max-h-full object-contain" />
+              ) : (
+                <div className="w-12 h-12 bg-slate-900 rounded-md flex items-center justify-center">
+                  <span className="text-xl font-black text-white">
+                    {po.tech_companies?.name?.substring(0, 2).toUpperCase() || "TC"}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
+
+        {/* Approve Action */}
+        {canApprove && po.status === 'sent' && (
+          <div className="ml-6 pl-6 border-l border-gray-100">
+            <button
+              onClick={handleApprovePO}
+              disabled={approving}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-xl font-black uppercase text-xs tracking-widest shadow-lg shadow-emerald-100 transition-all active:scale-95 disabled:opacity-50"
+            >
+              {approving ? "..." : "Approve"}
+            </button>
+          </div>
+        )}
       </div>
-
-  {/* Approve Action */}
-  {canApprove && po.status === 'sent' && (
-    <div className="ml-6 pl-6 border-l border-gray-100">
-      <button
-        onClick={handleApprovePO}
-        disabled={approving}
-        className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-xl font-black uppercase text-xs tracking-widest shadow-lg shadow-emerald-100 transition-all active:scale-95 disabled:opacity-50"
-      >
-        {approving ? "..." : "Approve"}
-      </button>
-    </div>
-  )}
-</div>
       {/* Two Column Layout */}
       <div className="grid grid-cols-5 gap-6">
         {/* Main Content - 65% */}
