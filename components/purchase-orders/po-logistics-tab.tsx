@@ -715,6 +715,35 @@ export function POLogisticsTab({
                     </div>
                   </div>
 
+                  {/* Package Row */}
+                  <div className="border border-gray-200 rounded p-2">
+                    <div className="font-semibold text-xs text-gray-900 uppercase tracking-wider mb-2">Paquete</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-xs font-semibold text-gray-600">Peso (kg)</Label>
+                        <Input
+                          type="number"
+                          value={dispatchForm.weight}
+                          onChange={(e) =>
+                            setDispatchForm({ ...dispatchForm, weight: e.target.value })
+                          }
+                          className="mt-0.5 h-7 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs font-semibold text-gray-600">Dimensiones</Label>
+                        <Input
+                          value={dispatchForm.dimensions}
+                          onChange={(e) =>
+                            setDispatchForm({ ...dispatchForm, dimensions: e.target.value })
+                          }
+                          placeholder="50x30x20"
+                          className="mt-0.5 h-7 text-xs"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                   <Button onClick={handleSaveDispatch} disabled={loading} className="w-full text-xs h-7">
                     Guardar
                   </Button>
