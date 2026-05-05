@@ -379,6 +379,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
   const [partnerResponsible, setPartnerResponsible] = useState<any>(null)
   const [isLoadingUser, setIsLoadingUser] = useState(false)
   const [currentUser, setCurrentUser] = useState<any>(null)
+  const [isUserScaleUp, setIsUserScaleUp] = useState(false)
   const [notesKey, setNotesKey] = useState(0) // Clave para forzar la recarga del componente de notas
   const [showDebug, setShowDebug] = useState(false) // Estado para mostrar/ocultar el depurador
   const [loading, setLoading] = useState(false)
@@ -664,6 +665,11 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
               role_code: userData?.role?.code || null,
             })
             logDebug(`Usuario actual cargado: ${userData?.id}`)
+            
+            // Verificar si el usuario es de ScaleUp
+            const userIsScaleUp = await isScaleUpMember(userData?.id)
+            setIsUserScaleUp(userIsScaleUp)
+            logDebug(`Usuario es de ScaleUp: ${userIsScaleUp}`)
           }
         } else {
           logDebug("No se pudo obtener el usuario actual")
@@ -1290,112 +1296,117 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
         </Button>
 
         <div className="flex space-x-2">
-          {/* Botones de validación/rechazo solo si la oportunidad está pendiente */}
-          {opportunity?.validation_status === "pending" && currentUser && (
+          {/* Botones solo visibles para usuarios de ScaleUp */}
+          {isUserScaleUp && (
             <>
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-blue-50 text-blue-600 hover:bg-blue-100 border-blue-200"
-                onClick={() => setShowEndCustomerInfo(true)}
-              >
-                <Building2 className="h-4 w-4 mr-1" />
-                Ver info Cliente Final
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-green-50 text-green-600 hover:bg-green-100 border-green-200"
-                onClick={handleValidateOpportunity}
-                disabled={isSaving}
-              >
-                {isSaving ? (
-                  <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                ) : (
-                  <Check className="h-4 w-4 mr-1" />
-                )}
-                Validar
-              </Button>
-
-              <AlertDialog open={isRejectionDialogOpen} onOpenChange={setIsRejectionDialogOpen}>
-                <AlertDialogTrigger asChild>
+              {/* Botones de validación/rechazo solo si la oportunidad está pendiente */}
+              {opportunity?.validation_status === "pending" && currentUser && (
+                <>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="bg-red-50 text-red-600 hover:bg-red-100 border-red-200"
+                    className="bg-blue-50 text-blue-600 hover:bg-blue-100 border-blue-200"
+                    onClick={() => setShowEndCustomerInfo(true)}
                   >
-                    <X className="mr-2 h-4 w-4" />
-                    Rechazar
+                    <Building2 className="h-4 w-4 mr-1" />
+                    Ver info Cliente Final
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="bg-green-50 text-green-600 hover:bg-green-100 border-green-200"
+                    onClick={handleValidateOpportunity}
+                    disabled={isSaving}
+                  >
+                    {isSaving ? (
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                    ) : (
+                      <Check className="h-4 w-4 mr-1" />
+                    )}
+                    Validar
+                  </Button>
+
+                  <AlertDialog open={isRejectionDialogOpen} onOpenChange={setIsRejectionDialogOpen}>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="bg-red-50 text-red-600 hover:bg-red-100 border-red-200"
+                      >
+                        <X className="mr-2 h-4 w-4" />
+                        Rechazar
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Rechazar oportunidad</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Por favor, indica el motivo del rechazo de esta oportunidad.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <div className="py-4">
+                        <Textarea
+                          value={rejectionReason}
+                          onChange={(e) => setRejectionReason(e.target.value)}
+                          placeholder="Motivo del rechazo"
+                          className="w-full min-h-[100px]"
+                        />
+                      </div>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setRejectionReason("")}>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleRejectOpportunity} disabled={isSaving || !rejectionReason.trim()}>
+                          {isSaving ? "Procesando..." : "Rechazar"}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </>
+              )}
+
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm">
+                    <Trash className="mr-2 h-4 w-4" />
+                    Eliminar
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Rechazar oportunidad</AlertDialogTitle>
+                    <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Por favor, indica el motivo del rechazo de esta oportunidad.
+                      Esta acción no se puede deshacer. Se eliminará permanentemente la oportunidad.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
-                  <div className="py-4">
-                    <Textarea
-                      value={rejectionReason}
-                      onChange={(e) => setRejectionReason(e.target.value)}
-                      placeholder="Motivo del rechazo"
-                      className="w-full min-h-[100px]"
-                    />
-                  </div>
                   <AlertDialogFooter>
-                    <AlertDialogCancel onClick={() => setRejectionReason("")}>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleRejectOpportunity} disabled={isSaving || !rejectionReason.trim()}>
-                      {isSaving ? "Procesando..." : "Rechazar"}
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
+                      {isDeleting ? "Eliminando..." : "Eliminar"}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
             </>
           )}
-
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive" size="sm">
-                <Trash className="mr-2 h-4 w-4" />
-                Eliminar
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Esta acción no se puede deshacer. Se eliminará permanentemente la oportunidad.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
-                  {isDeleting ? "Eliminando..." : "Eliminar"}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
         </div>
       </div>
 
