@@ -534,8 +534,6 @@ export const DICT_LANG_PO = {
     en: "Upload",
     pt: "Carregar",
   },
-    pt: "Falha ao atualizar o marco",
-  },
   "po.milestone.confirmDelete": {
     es: "¿Estás seguro de que deseas eliminar este hito?",
     en: "Are you sure you want to delete this milestone?",
