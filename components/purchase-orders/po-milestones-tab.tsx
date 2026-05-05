@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useTranslation } from '@/lib/hooks/use-translation'
+import { useTranslations } from '@/hooks/use-translations'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -24,7 +24,7 @@ interface POMilestonesTabProps {
 }
 
 export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, userRole, onMilestonesUpdate }: POMilestonesTabProps) {
-  const { t } = useTranslation()
+  const t = useTranslations()
   const supabase = createClient()
 
   const [milestones, setMilestones] = useState<any[]>(initialMilestones || [])
@@ -151,7 +151,17 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
       // Delete associated document if exists
       const doc = documents[milestone.id]
       if (doc) {
-        await del(doc.file_url)
+        // Extract file path from signed URL
+        const urlParts = doc.file_url.split('/storage/v1/object/sign/po_documents/')
+        const filePath = urlParts[1]?.split('?')[0]
+        
+        // Delete from Supabase storage
+        if (filePath) {
+          await supabase.storage
+            .from('po_documents')
+            .remove([filePath])
+        }
+        
         await supabase.from('documents').delete().eq('id', doc.id)
       }
 
@@ -589,8 +599,9 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                onClick={() => {
+                                onClick={async () => {
                                   setSelectedMilestone(milestone)
+                                  await loadMilestoneDocument(milestone.id)
                                   setShowConfirmPaymentDialog(true)
                                 }}
                                 className="h-8 w-8 p-0 text-green-600 hover:text-green-700"
@@ -685,24 +696,38 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
 
       {/* Confirm Payment Dialog */}
       <Dialog open={showConfirmPaymentDialog} onOpenChange={setShowConfirmPaymentDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{t('po.milestone.confirmPayment')}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            {selectedMilestone && (
-              <>
-                <div>
-                  <p className="text-sm text-gray-600">{t('po.milestone.title')}</p>
-                  <p className="font-medium">{selectedMilestone.title}</p>
+          {selectedMilestone && (
+            <div className="space-y-4">
+              <div className="bg-gray-50 p-4 rounded">
+                <p className="text-sm font-semibold">{selectedMilestone.title}</p>
+                <p className="text-sm text-gray-600">Monto: ${selectedMilestone.amount?.toFixed(2)}</p>
+              </div>
+              
+              {/* Document Preview */}
+              {documents[selectedMilestone.id] && (
+                <div className="border rounded p-4 bg-white">
+                  <p className="text-sm font-semibold mb-3">{t('po.milestone.viewDocument')}</p>
+                  <iframe
+                    src={documents[selectedMilestone.id].file_url}
+                    className="w-full h-96 border rounded"
+                    title="Document Preview"
+                  />
+                  <a
+                    href={documents[selectedMilestone.id].file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-600 hover:underline mt-2 inline-block"
+                  >
+                    Abrir documento en nueva pestaña
+                  </a>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">{t('po.milestone.amount')}</p>
-                  <p className="font-medium">${selectedMilestone.amount?.toFixed(2)}</p>
-                </div>
-              </>
-            )}
-          </div>
+              )}
+            </div>
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowConfirmPaymentDialog(false)}>
               {t('common.cancel')}
