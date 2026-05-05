@@ -354,6 +354,193 @@ export const DICT_LANG_PO = {
     en: "Are you sure you want to delete this milestone?",
     pt: "Tem certeza de que deseja deletar este marco?",
   },
+  "po.milestone.delete": {
+    es: "Eliminar",
+    en: "Delete",
+    pt: "Deletar",
+  },
+  "po.milestone.dueDate": {
+    es: "Fecha de Vencimiento",
+    en: "Due Date",
+    pt: "Data de Vencimento",
+  },
+  "po.milestone.amountType": {
+    es: "Tipo de Monto",
+    en: "Amount Type",
+    pt: "Tipo de Valor",
+  },
+  "po.milestone.fixed": {
+    es: "Monto Fijo",
+    en: "Fixed Amount",
+    pt: "Valor Fixo",
+  },
+  "po.milestone.percentage": {
+    es: "Porcentaje",
+    en: "Percentage",
+    pt: "Porcentagem",
+  },
+  "po.milestone.amount": {
+    es: "Monto",
+    en: "Amount",
+    pt: "Valor",
+  },
+  "po.milestone.calculatedAmount": {
+    es: "Monto Calculado",
+    en: "Calculated Amount",
+    pt: "Valor Calculado",
+  },
+  "po.milestone.paid": {
+    es: "Pagado",
+    en: "Paid",
+    pt: "Pago",
+  },
+  "po.milestone.paidDate": {
+    es: "Fecha de Pago",
+    en: "Paid Date",
+    pt: "Data de Pagamento",
+  },
+  "po.milestone.markAsPaid": {
+    es: "Marcar como Pagado",
+    en: "Mark as Paid",
+    pt: "Marcar como Pago",
+  },
+  "po.milestone.markedAsPaid": {
+    es: "Marcado como pagado",
+    en: "Marked as paid",
+    pt: "Marcado como pago",
+  },
+  "po.milestone.titlePlaceholder": {
+    es: "Ej: Pago Inicial, Entrega, Finalización",
+    en: "E.g: Initial Payment, Delivery, Completion",
+    pt: "Ex: Pagamento Inicial, Entrega, Conclusão",
+  },
+  "po.milestone.percentageMax": {
+    es: "El porcentaje no puede exceder 100%",
+    en: "Percentage cannot exceed 100%",
+    pt: "A porcentagem não pode exceder 100%",
+  },
+  "po.milestone.uploadDocument": {
+    es: "Cargar Comprobante",
+    en: "Upload Document",
+    pt: "Carregar Documento",
+  },
+  "po.milestone.deleteDocument": {
+    es: "Eliminar Comprobante",
+    en: "Delete Document",
+    pt: "Eliminar Documento",
+  },
+  "po.milestone.viewDocument": {
+    es: "Ver Comprobante",
+    en: "View Document",
+    pt: "Ver Documento",
+  },
+  "po.milestone.confirmPayment": {
+    es: "Confirmar Pago",
+    en: "Confirm Payment",
+    pt: "Confirmar Pagamento",
+  },
+  "po.milestone.documentUploaded": {
+    es: "Documento cargado exitosamente",
+    en: "Document uploaded successfully",
+    pt: "Documento enviado com sucesso",
+  },
+  "po.milestone.documentDeleted": {
+    es: "Documento eliminado exitosamente",
+    en: "Document deleted successfully",
+    pt: "Documento deletado com sucesso",
+  },
+  "po.milestone.selectFile": {
+    es: "Selecciona un archivo",
+    en: "Select a file",
+    pt: "Selecione um arquivo",
+  },
+  "po.milestone.selectFileDescription": {
+    es: "Carga el comprobante de pago o factura relacionado a este hito",
+    en: "Upload the payment receipt or invoice related to this milestone",
+    pt: "Carregue o recibo de pagamento ou fatura relacionado a este marco",
+  },
+  "po.milestone.confirmDeleteDocument": {
+    es: "¿Estás seguro de que deseas eliminar el comprobante? El estado del hito vuelve a Pendiente",
+    en: "Are you sure you want to delete the document? Milestone status will return to Pending",
+    pt: "Tem certeza de que deseja deletar o documento? O status do marco voltará para Pendente",
+  },
+  "po.milestone.totalMilestones": {
+    es: "Monto Total Hitos",
+    en: "Total Milestones",
+    pt: "Total de Marcos",
+  },
+  "po.milestone.collected": {
+    es: "Recaudado",
+    en: "Collected",
+    pt: "Coletado",
+  },
+  "po.milestone.pending": {
+    es: "Pendiente",
+    en: "Pending",
+    pt: "Pendente",
+  },
+  "po.milestone.ofTotal": {
+    es: "del total",
+    en: "of total",
+    pt: "do total",
+  },
+  "po.milestone.noMilestones": {
+    es: "No hay hitos configurados",
+    en: "No milestones configured",
+    pt: "Nenhum marco configurado",
+  },
+  "po.milestone.saving": {
+    es: "Guardando...",
+    en: "Saving...",
+    pt: "Salvando...",
+  },
+  "po.milestone.uploading": {
+    es: "Cargando...",
+    en: "Uploading...",
+    pt: "Carregando...",
+  },
+  "po.milestone.confirming": {
+    es: "Confirmando...",
+    en: "Confirming...",
+    pt: "Confirmando...",
+  },
+  "po.milestone.title": {
+    es: "Título",
+    en: "Title",
+    pt: "Título",
+  },
+  "po.milestone.status.pending": {
+    es: "Pendiente",
+    en: "Pending",
+    pt: "Pendente",
+  },
+  "po.milestone.status.in_process": {
+    es: "En Proceso",
+    en: "In Process",
+    pt: "Em Processo",
+  },
+  "po.milestone.status.paid": {
+    es: "Pagado",
+    en: "Paid",
+    pt: "Pago",
+  },
+  "common.success": {
+    es: "Éxito",
+    en: "Success",
+    pt: "Sucesso",
+  },
+  "common.upload": {
+    es: "Cargar",
+    en: "Upload",
+    pt: "Carregar",
+  },
+    pt: "Falha ao atualizar o marco",
+  },
+  "po.milestone.confirmDelete": {
+    es: "¿Estás seguro de que deseas eliminar este hito?",
+    en: "Are you sure you want to delete this milestone?",
+    pt: "Tem certeza de que deseja deletar este marco?",
+  },
   "po.milestone.dueDate": {
     es: "Fecha de Vencimiento",
     en: "Due Date",

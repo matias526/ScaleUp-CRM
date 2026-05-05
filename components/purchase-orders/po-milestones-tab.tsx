@@ -1,578 +1,698 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { useTranslations } from "@/hooks/use-translations"
-import { DICT_LANG_PO } from "@/lib/constants/dict-lang-po"
-import { supabase } from "@/lib/supabase/client"
-import { toast } from "@/components/ui/use-toast"
-import { format } from "date-fns"
-import { Check, Clock, Plus, Trash2, AlertCircle } from "lucide-react"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { useTranslations } from '@/lib/hooks/use-translations'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { toast } from '@/components/ui/use-toast'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Edit2, Trash2, Upload, FileText, Check, Eye, X } from 'lucide-react'
+import { format } from 'date-fns'
+import { put, del } from '@vercel/blob'
 
 interface POMilestonesTabProps {
   po: any
   milestones: any[]
   subtotal: number
-  userRole?: string
-  onMilestonesUpdate?: () => void
+  userRole: string
+  onMilestonesUpdate: () => void
 }
 
-export function POMilestonesTab({
-  po,
-  milestones: initialMilestones,
-  subtotal,
-  userRole = "",
-  onMilestonesUpdate,
-}: POMilestonesTabProps) {
-  const { t } = useTranslations(DICT_LANG_PO)
-  const [localMilestones, setLocalMilestones] = useState<any[]>(initialMilestones || [])
-  const [showAddDialog, setShowAddDialog] = useState(false)
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [formData, setFormData] = useState({
-    title: "",
-    amountType: "fixed", // "fixed" or "percentage"
-    amount: 0,
-    dueDate: "",
-  })
+export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, userRole, onMilestonesUpdate }: POMilestonesTabProps) {
+  const { t } = useTranslations()
+  const supabase = createClient()
 
-  const isEditable = ["Admin", "BDD"].includes(userRole)
+  const [milestones, setMilestones] = useState<any[]>(initialMilestones || [])
+  const [showEditDialog, setShowEditDialog] = useState(false)
+  const [showUploadDialog, setShowUploadDialog] = useState(false)
+  const [showConfirmPaymentDialog, setShowConfirmPaymentDialog] = useState(false)
+  const [showViewDocumentDialog, setShowViewDocumentDialog] = useState(false)
+  const [selectedMilestone, setSelectedMilestone] = useState<any | null>(null)
+  const [editFormData, setEditFormData] = useState({ title: '', amount: 0, due_date: '' })
+  const [uploadFile, setUploadFile] = useState<File | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [documents, setDocuments] = useState<{ [key: string]: any }>({})
 
-  // Update local milestones when initial milestones change
-  useEffect(() => {
-    setLocalMilestones(initialMilestones || [])
-  }, [initialMilestones])
+  // Role-based permissions
+  const isAdmin = ['Admin', 'BDD'].includes(userRole)
+  const isPartner = userRole === 'PartnerUser'
+  const isTech = ['TechUser', 'TechLogistic'].includes(userRole)
 
-  // Calculate milestone amounts
-  const getMilestoneAmount = (milestone: any) => {
-    return milestone.amount
+  // Get milestone status badge color
+  const getStatusBadgeColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800'
+      case 'in_process':
+        return 'bg-blue-100 text-blue-800'
+      case 'paid':
+        return 'bg-green-100 text-green-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
+    }
   }
 
-  const totalMilestoneAmount = localMilestones.reduce((sum, milestone) => {
-    return sum + getMilestoneAmount(milestone)
-  }, 0)
-
-  const collectedAmount = localMilestones
-    .filter((m) => m.status === "paid")
-    .reduce((sum, milestone) => {
-      return sum + getMilestoneAmount(milestone)
-    }, 0)
-
-  const pendingAmount = totalMilestoneAmount - collectedAmount
-
-  // Calculate percentage of total PO
-  const milestonesTotalPercent = (totalMilestoneAmount / subtotal) * 100
-  const isBalanced = Math.abs(totalMilestoneAmount - subtotal) < 0.01 // Allow for floating point rounding
-
-  const resetForm = () => {
-    setFormData({
-      title: "",
-      amountType: "fixed",
-      amount: 0,
-      dueDate: "",
-    })
-    setEditingId(null)
-    setShowAddDialog(false)
+  // Load document for milestone
+  const loadMilestoneDocument = async (milestoneId: string) => {
+    if (documents[milestoneId]) return documents[milestoneId]
+    
+    try {
+      const { data } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('parent_id', milestoneId)
+        .eq('parent_type', 'po_milestone')
+        .single()
+      
+      if (data) {
+        setDocuments(prev => ({ ...prev, [milestoneId]: data }))
+      }
+      return data
+    } catch (error) {
+      return null
+    }
   }
 
-  const handleAddMilestone = () => {
-    // Validation
-    if (!formData.title.trim()) {
-      toast({
-        title: t("common.error"),
-        description: t("po.milestone.titleRequired"),
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (formData.amount <= 0) {
-      toast({
-        title: t("common.error"),
-        description: t("po.milestone.amountRequired"),
-        variant: "destructive",
-      })
-      return
-    }
-
-    // Calculate actual amount based on type
-    const actualAmount =
-      formData.amountType === "percentage"
-        ? (subtotal * formData.amount) / 100
-        : formData.amount
-
-    if (actualAmount <= 0) {
-      toast({
-        title: t("common.error"),
-        description: t("po.milestone.amountRequired"),
-        variant: "destructive",
-      })
-      return
-    }
-
-    // Check percentage doesn't exceed 100%
-    if (formData.amountType === "percentage" && formData.amount > 100) {
-      toast({
-        title: t("common.error"),
-        description: t("po.milestone.percentageMax"),
-        variant: "destructive",
-      })
-      return
-    }
-
-    // Calculate new total (excluding current edit if applicable)
-    const currentTotal = editingId
-      ? totalMilestoneAmount - (localMilestones.find((m) => m.id === editingId)?.amount || 0)
-      : totalMilestoneAmount
-
-    const newTotal = currentTotal + actualAmount
-
-    // Warn if exceeds PO total (but don't prevent - user can adjust)
-    if (newTotal > subtotal) {
-      toast({
-        title: t("common.warning"),
-        description: `${t("po.milestone.exceedsTotal")} (${newTotal.toFixed(2)} > ${subtotal.toFixed(2)})`,
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (editingId) {
-      // Update existing milestone in local state
-      setLocalMilestones(
-        localMilestones.map((m) =>
-          m.id === editingId
-            ? {
-                ...m,
-                title: formData.title,
-                amount: actualAmount,
-                due_date: formData.dueDate || null,
-              }
-            : m
-        )
-      )
-      toast({
-        title: "Éxito",
-        description: t("po.milestone.updated"),
-      })
-    } else {
-      // Add new milestone to local state with temporary ID
-      const tempId = `temp-${Date.now()}`
-      setLocalMilestones([
-        ...localMilestones,
-        {
-          id: tempId,
-          po_id: po.id,
-          title: formData.title,
-          amount: actualAmount,
-          due_date: formData.dueDate || null,
-          status: "pending",
-          created_at: new Date().toISOString(),
-        },
-      ])
-      toast({
-        title: "Éxito",
-        description: t("po.milestone.created"),
-      })
-    }
-
-    resetForm()
-  }
-
+  // Handle edit milestone
   const handleEditMilestone = (milestone: any) => {
-    setFormData({
+    setSelectedMilestone(milestone)
+    setEditFormData({
       title: milestone.title,
-      amountType: "fixed", // Always show as fixed since we store final amount
       amount: milestone.amount,
-      dueDate: milestone.due_date || "",
+      due_date: milestone.due_date || '',
     })
-    setEditingId(milestone.id)
-    setShowAddDialog(true)
+    setShowEditDialog(true)
   }
 
-  const handleDeleteMilestone = (id: string) => {
-    if (window.confirm(t("po.milestone.confirmDelete"))) {
-      setLocalMilestones(localMilestones.filter((m) => m.id !== id))
+  // Save edited milestone
+  const handleSaveEdit = async () => {
+    if (!selectedMilestone || !editFormData.title || editFormData.amount <= 0) {
       toast({
-        title: "Éxito",
-        description: t("po.milestone.deleted"),
+        title: t('common.error'),
+        description: t('po.milestone.titleRequired'),
+        variant: 'destructive',
       })
+      return
     }
-  }
 
-  const handleSaveAllMilestones = async () => {
+    // Validate total doesn't exceed PO
+    const otherMilestonesTotal = milestones
+      .filter(m => m.id !== selectedMilestone.id)
+      .reduce((sum, m) => sum + (m.amount || 0), 0)
+    
+    if (otherMilestonesTotal + editFormData.amount > subtotal) {
+      toast({
+        title: t('common.error'),
+        description: t('po.milestone.exceedsTotal'),
+        variant: 'destructive',
+      })
+      return
+    }
+
+    setIsLoading(true)
     try {
-      setSaving(true)
-
-      // Validate total equals PO amount
-      if (!isBalanced) {
-        toast({
-          title: t("common.error"),
-          description: `${t("po.milestone.exceedsTotal")} (${totalMilestoneAmount.toFixed(2)} ≠ ${subtotal.toFixed(2)})`,
-          variant: "destructive",
+      const { error } = await supabase
+        .from('po_milestones')
+        .update({
+          title: editFormData.title,
+          amount: editFormData.amount,
+          due_date: editFormData.due_date || null,
         })
-        return
-      }
+        .eq('id', selectedMilestone.id)
 
-      // Delete all existing milestones for this PO
-      const { error: deleteError } = await supabase
-        .from("po_milestones")
-        .delete()
-        .eq("po_id", po.id)
-
-      if (deleteError) throw deleteError
-
-      // Insert all new milestones
-      const milestonesToInsert = localMilestones.map((m) => ({
-        po_id: po.id,
-        title: m.title,
-        amount: m.amount,
-        due_date: m.due_date || null,
-        status: m.status || "pending",
-      }))
-
-      const { error: insertError } = await supabase
-        .from("po_milestones")
-        .insert(milestonesToInsert)
-
-      if (insertError) throw insertError
+      if (error) throw error
 
       toast({
-        title: "Éxito",
-        description: "Todos los hitos han sido guardados correctamente",
+        title: t('common.success'),
+        description: t('po.milestone.updated'),
       })
-
-      // Refresh parent component
-      if (onMilestonesUpdate) {
-        onMilestonesUpdate()
-      }
-    } catch (error) {
-      console.error("[v0] Error saving milestones:", error)
+      setShowEditDialog(false)
+      onMilestonesUpdate()
+    } catch (error: any) {
       toast({
-        title: t("common.error"),
-        description: "Error al guardar los hitos",
-        variant: "destructive",
+        title: t('common.error'),
+        description: error.message,
+        variant: 'destructive',
       })
     } finally {
-      setSaving(false)
+      setIsLoading(false)
     }
   }
 
-  const handleMarkAsPaid = async (id: string) => {
+  // Handle delete milestone
+  const handleDeleteMilestone = async (milestone: any) => {
+    setIsLoading(true)
     try {
-      setLoading(true)
-
-      // If it's a temporary ID, just update local state
-      if (id.startsWith("temp-")) {
-        setLocalMilestones(
-          localMilestones.map((m) =>
-            m.id === id
-              ? {
-                  ...m,
-                  status: "paid",
-                  paid_at: new Date().toISOString(),
-                }
-              : m
-          )
-        )
-      } else {
-        // Update in database
-        const { error } = await supabase
-          .from("po_milestones")
-          .update({
-            status: "paid",
-            paid_at: new Date().toISOString(),
-          })
-          .eq("id", id)
-
-        if (error) throw error
-
-        setLocalMilestones(
-          localMilestones.map((m) =>
-            m.id === id
-              ? {
-                  ...m,
-                  status: "paid",
-                  paid_at: new Date().toISOString(),
-                }
-              : m
-          )
-        )
+      // Delete associated document if exists
+      const doc = documents[milestone.id]
+      if (doc) {
+        await del(doc.file_url)
+        await supabase.from('documents').delete().eq('id', doc.id)
       }
 
+      // Delete milestone
+      const { error } = await supabase
+        .from('po_milestones')
+        .delete()
+        .eq('id', milestone.id)
+
+      if (error) throw error
+
       toast({
-        title: "Éxito",
-        description: t("po.milestone.markedAsPaid"),
+        title: t('common.success'),
+        description: t('po.milestone.deleted'),
       })
-    } catch (error) {
-      console.error("[v0] Error marking milestone as paid:", error)
+      onMilestonesUpdate()
+    } catch (error: any) {
       toast({
-        title: t("common.error"),
-        description: t("po.milestone.updateFailed"),
-        variant: "destructive",
+        title: t('common.error'),
+        description: error.message,
+        variant: 'destructive',
       })
     } finally {
-      setLoading(false)
+      setIsLoading(false)
     }
   }
+
+  // Handle upload document
+  const handleUploadDocument = async () => {
+    if (!selectedMilestone || !uploadFile) {
+      toast({
+        title: t('common.error'),
+        description: t('po.milestone.selectFile'),
+        variant: 'destructive',
+      })
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      // Upload file to blob
+      const fileExtension = uploadFile.name.split('.').pop()
+      const fileName = `po-${po.id}-milestone-${selectedMilestone.id}-${Date.now()}.${fileExtension}`
+      const filePath = `po-documents/${fileName}`
+
+      const blob = await put(filePath, uploadFile, {
+        access: 'private',
+        addRandomSuffix: false,
+      })
+
+      // Create document record
+      const { data: doc, error: docError } = await supabase
+        .from('documents')
+        .insert([
+          {
+            parent_id: selectedMilestone.id,
+            parent_type: 'po_milestone',
+            doc_type: 'invoice',
+            file_url: blob.url,
+            uploaded_at: new Date().toISOString(),
+          },
+        ])
+        .select()
+        .single()
+
+      if (docError) throw docError
+
+      // Update milestone status to 'in_process'
+      const { error: updateError } = await supabase
+        .from('po_milestones')
+        .update({ status: 'in_process', invoiced_at: new Date().toISOString() })
+        .eq('id', selectedMilestone.id)
+
+      if (updateError) throw updateError
+
+      setDocuments(prev => ({ ...prev, [selectedMilestone.id]: doc }))
+
+      toast({
+        title: t('common.success'),
+        description: t('po.milestone.documentUploaded'),
+      })
+      setShowUploadDialog(false)
+      setUploadFile(null)
+      onMilestonesUpdate()
+    } catch (error: any) {
+      toast({
+        title: t('common.error'),
+        description: error.message,
+        variant: 'destructive',
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Handle delete document
+  const handleDeleteDocument = async (milestone: any) => {
+    const doc = documents[milestone.id]
+    if (!doc) return
+
+    setIsLoading(true)
+    try {
+      // Delete from blob
+      await del(doc.file_url)
+
+      // Delete document record
+      await supabase.from('documents').delete().eq('id', doc.id)
+
+      // Update milestone status back to 'pending'
+      await supabase
+        .from('po_milestones')
+        .update({ status: 'pending', invoiced_at: null })
+        .eq('id', milestone.id)
+
+      setDocuments(prev => {
+        const updated = { ...prev }
+        delete updated[milestone.id]
+        return updated
+      })
+
+      toast({
+        title: t('common.success'),
+        description: t('po.milestone.documentDeleted'),
+      })
+      onMilestonesUpdate()
+    } catch (error: any) {
+      toast({
+        title: t('common.error'),
+        description: error.message,
+        variant: 'destructive',
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Handle confirm payment
+  const handleConfirmPayment = async () => {
+    if (!selectedMilestone) return
+
+    setIsLoading(true)
+    try {
+      const { error } = await supabase
+        .from('po_milestones')
+        .update({ 
+          status: 'paid',
+          paid_at: new Date().toISOString(),
+          achieved_at: new Date().toISOString(),
+        })
+        .eq('id', selectedMilestone.id)
+
+      if (error) throw error
+
+      toast({
+        title: t('common.success'),
+        description: t('po.milestone.markedAsPaid'),
+      })
+      setShowConfirmPaymentDialog(false)
+      onMilestonesUpdate()
+    } catch (error: any) {
+      toast({
+        title: t('common.error'),
+        description: error.message,
+        variant: 'destructive',
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Get allowed actions for milestone based on role and status
+  const getActionPermissions = (milestone: any) => {
+    const status = milestone.status?.toLowerCase()
+    
+    return {
+      canEdit: isAdmin && status === 'pending',
+      canDelete: isAdmin && status === 'pending',
+      canUploadDocument: (isAdmin || isPartner) && status === 'pending',
+      canDeleteDocument: (isAdmin || isPartner) && status === 'in_process',
+      canConfirmPayment: (isAdmin || isTech) && status === 'in_process',
+      canViewDocument: status === 'in_process' || status === 'paid',
+    }
+  }
+
+  // Calculate totals
+  const totalMilestones = milestones.reduce((sum, m) => sum + (m.amount || 0), 0)
+  const paidMilestones = milestones
+    .filter(m => m.status?.toLowerCase() === 'paid')
+    .reduce((sum, m) => sum + (m.amount || 0), 0)
+  const pendingMilestones = totalMilestones - paidMilestones
 
   return (
     <div className="space-y-6">
-      {/* Summary Dashboard */}
+      {/* Dashboard Summary */}
       <div className="grid grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-gray-600">
-              {t("po.milestone.totalAmount")}
+              {t('po.milestone.totalMilestones')}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalMilestoneAmount.toFixed(2)}</div>
-            <div className="text-xs text-gray-500 mt-2">{milestonesTotalPercent.toFixed(1)}% del total</div>
+            <div className="text-2xl font-bold">${totalMilestones.toFixed(2)}</div>
+            <p className="text-xs text-gray-600 mt-1">
+              {totalMilestones > 0 ? ((totalMilestones / subtotal) * 100).toFixed(1) : '0'}% {t('po.milestone.ofTotal')}
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-gray-600">
-              {t("po.milestone.collected")}
+              {t('po.milestone.collected')}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">${collectedAmount.toFixed(2)}</div>
-            <div className="text-xs text-gray-500 mt-2">{localMilestones.length > 0 ? `${(collectedAmount / totalMilestoneAmount * 100 || 0).toFixed(1)}%` : "0%"}</div>
+            <div className="text-2xl font-bold text-green-600">${paidMilestones.toFixed(2)}</div>
+            <p className="text-xs text-gray-600 mt-1">
+              {totalMilestones > 0 ? ((paidMilestones / totalMilestones) * 100).toFixed(1) : '0'}%
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-gray-600">
-              {t("po.milestone.pending")}
+              {t('po.milestone.pending')}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">${pendingAmount.toFixed(2)}</div>
-            <div className="text-xs text-gray-500 mt-2">{localMilestones.length > 0 ? `${(pendingAmount / totalMilestoneAmount * 100 || 0).toFixed(1)}%` : "0%"}</div>
+            <div className="text-2xl font-bold text-orange-600">${pendingMilestones.toFixed(2)}</div>
+            <p className="text-xs text-gray-600 mt-1">
+              {totalMilestones > 0 ? ((pendingMilestones / totalMilestones) * 100).toFixed(1) : '0'}%
+            </p>
           </CardContent>
         </Card>
-      </div>
-
-      {/* Balance Alert */}
-      {localMilestones.length > 0 && !isBalanced && (
-        <Alert className={isBalanced ? "border-green-200 bg-green-50" : "border-amber-200 bg-amber-50"}>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription className={isBalanced ? "text-green-800" : "text-amber-800"}>
-            {isBalanced
-              ? `Perfectamente balanceado: $${totalMilestoneAmount.toFixed(2)} = ${subtotal.toFixed(2)}`
-              : `Diferencia: $${Math.abs(totalMilestoneAmount - subtotal).toFixed(2)} ${totalMilestoneAmount > subtotal ? "exceso" : "falta"}`}
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Action Buttons */}
-      <div className="flex gap-2">
-        {isEditable && (
-          <>
-            <Button onClick={() => setShowAddDialog(true)} variant="outline">
-              <Plus className="mr-2 h-4 w-4" />
-              {t("po.milestone.addMilestone")}
-            </Button>
-            <Button
-              onClick={handleSaveAllMilestones}
-              disabled={!isBalanced || localMilestones.length === 0 || saving}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              {saving ? "Guardando..." : "Guardar Todos los Hitos"}
-            </Button>
-          </>
-        )}
       </div>
 
       {/* Milestones List */}
-      {localMilestones.length > 0 ? (
-        <div className="space-y-3">
-          {localMilestones.map((milestone) => (
-            <Card key={milestone.id}>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <h3 className="font-semibold">{milestone.title}</h3>
-                    <div className="mt-2 flex gap-4 text-sm text-gray-600">
-                      <div>
-                        <span className="font-medium">{t("po.milestone.amount")}:</span> ${milestone.amount.toFixed(2)}
-                      </div>
+      <div className="space-y-3">
+        {milestones.length === 0 ? (
+          <Card>
+            <CardContent className="pt-6 text-center text-gray-500">
+              {t('po.milestone.noMilestones')}
+            </CardContent>
+          </Card>
+        ) : (
+          milestones.map((milestone) => {
+            const permissions = getActionPermissions(milestone)
+            const doc = documents[milestone.id]
+            
+            return (
+              <Card key={milestone.id}>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    {/* Milestone Info */}
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg">{milestone.title}</h3>
+                      <p className="text-sm text-gray-600">
+                        {t('po.milestone.amount')}: ${milestone.amount?.toFixed(2) || '0.00'}
+                      </p>
                       {milestone.due_date && (
-                        <div>
-                          <span className="font-medium">{t("po.milestone.dueDate")}:</span>{" "}
-                          {format(new Date(milestone.due_date), "dd/MM/yyyy")}
-                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {t('po.milestone.dueDate')}: {format(new Date(milestone.due_date), 'dd/MM/yyyy')}
+                        </p>
                       )}
                       {milestone.paid_at && (
-                        <div>
-                          <span className="font-medium">{t("po.milestone.paidDate")}:</span>{" "}
-                          {format(new Date(milestone.paid_at), "dd/MM/yyyy")}
-                        </div>
+                        <p className="text-xs text-gray-500">
+                          {t('po.milestone.paidDate')}: {format(new Date(milestone.paid_at), 'dd/MM/yyyy')}
+                        </p>
                       )}
                     </div>
+
+                    {/* Status */}
+                    <div className="mx-6">
+                      <Badge className={getStatusBadgeColor(milestone.status)}>
+                        {t(`po.milestone.status.${milestone.status?.toLowerCase() || 'pending'}`)}
+                      </Badge>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2">
+                      <TooltipProvider>
+                        {/* Edit */}
+                        {permissions.canEdit && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleEditMilestone(milestone)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>{t('common.edit')}</TooltipContent>
+                          </Tooltip>
+                        )}
+
+                        {/* Delete */}
+                        {permissions.canDelete && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>{t('po.milestone.delete')}</TooltipContent>
+                              </Tooltip>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>{t('common.warning')}</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  {t('po.milestone.confirmDelete')}
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteMilestone(milestone)}
+                                  className="bg-red-600 hover:bg-red-700"
+                                >
+                                  {t('po.milestone.delete')}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
+
+                        {/* Upload Document */}
+                        {permissions.canUploadDocument && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  setSelectedMilestone(milestone)
+                                  setShowUploadDialog(true)
+                                  setUploadFile(null)
+                                }}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Upload className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>{t('po.milestone.uploadDocument')}</TooltipContent>
+                          </Tooltip>
+                        )}
+
+                        {/* Delete Document */}
+                        {permissions.canDeleteDocument && doc && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>{t('po.milestone.deleteDocument')}</TooltipContent>
+                              </Tooltip>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>{t('common.warning')}</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  {t('po.milestone.confirmDeleteDocument')}
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteDocument(milestone)}
+                                  className="bg-red-600 hover:bg-red-700"
+                                >
+                                  {t('po.milestone.deleteDocument')}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
+
+                        {/* View Document */}
+                        {permissions.canViewDocument && doc && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => window.open(doc.file_url, '_blank')}
+                                className="h-8 w-8 p-0"
+                              >
+                                <FileText className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>{t('po.milestone.viewDocument')}</TooltipContent>
+                          </Tooltip>
+                        )}
+
+                        {/* Confirm Payment */}
+                        {permissions.canConfirmPayment && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  setSelectedMilestone(milestone)
+                                  setShowConfirmPaymentDialog(true)
+                                }}
+                                className="h-8 w-8 p-0 text-green-600 hover:text-green-700"
+                              >
+                                <Check className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>{t('po.milestone.confirmPayment')}</TooltipContent>
+                          </Tooltip>
+                        )}
+                      </TooltipProvider>
+                    </div>
                   </div>
+                </CardContent>
+              </Card>
+            )
+          })
+        )}
+      </div>
 
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      variant={milestone.status === "paid" ? "default" : "secondary"}
-                      className={milestone.status === "paid" ? "bg-green-600" : ""}
-                    >
-                      {milestone.status === "paid" ? (
-                        <>
-                          <Check className="mr-1 h-3 w-3" />
-                          Pagado
-                        </>
-                      ) : (
-                        <>
-                          <Clock className="mr-1 h-3 w-3" />
-                          Pendiente
-                        </>
-                      )}
-                    </Badge>
-
-                    {isEditable && (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleEditMilestone(milestone)}
-                        >
-                          Editar
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDeleteMilestone(milestone.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </>
-                    )}
-
-                    {milestone.status === "pending" && isEditable && (
-                      <Button
-                        size="sm"
-                        onClick={() => handleMarkAsPaid(milestone.id)}
-                        disabled={loading}
-                        className="bg-green-500 hover:bg-green-600"
-                      >
-                        <Check className="mr-1 h-3 w-3" />
-                        {t("po.milestone.markAsPaid")}
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <Card>
-          <CardContent className="pt-6 text-center text-gray-500">
-            {t("po.noMilestones")}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Add/Edit Dialog */}
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+      {/* Edit Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {editingId ? t("po.milestone.editMilestone") : t("po.milestone.addMilestone")}
-            </DialogTitle>
-            <DialogDescription>{t("po.milestone.configureDescription")}</DialogDescription>
+            <DialogTitle>{t('po.milestone.editMilestone')}</DialogTitle>
           </DialogHeader>
-
           <div className="space-y-4">
             <div>
-              <Label htmlFor="title">{t("po.milestone.title")}</Label>
+              <Label>{t('po.milestone.title')}</Label>
               <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder={t("po.milestone.titlePlaceholder")}
+                value={editFormData.title}
+                onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
               />
             </div>
-
             <div>
-              <Label>{t("po.milestone.amountType")}</Label>
-              <Select value={formData.amountType} onValueChange={(val) => setFormData({ ...formData, amountType: val })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="fixed">{t("po.milestone.fixed")}</SelectItem>
-                  <SelectItem value="percentage">{t("po.milestone.percentage")}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="amount">
-                {formData.amountType === "percentage" ? "Porcentaje (%)" : t("po.milestone.amount")}
-              </Label>
-              <div className="flex gap-2">
-                <Input
-                  id="amount"
-                  type="number"
-                  value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
-                  placeholder="0"
-                  step="0.01"
-                />
-              </div>
-              {formData.amount > 0 && (
-                <div className="mt-2 text-sm text-gray-600">
-                  {t("po.milestone.calculatedAmount")}:{" "}
-                  {formData.amountType === "percentage"
-                    ? `$${((subtotal * formData.amount) / 100).toFixed(2)} (${formData.amount}% de $${subtotal.toFixed(2)})`
-                    : `$${formData.amount.toFixed(2)}`}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="dueDate">{t("po.milestone.dueDate")}</Label>
+              <Label>{t('po.milestone.amount')}</Label>
               <Input
-                id="dueDate"
+                type="number"
+                value={editFormData.amount}
+                onChange={(e) => setEditFormData({ ...editFormData, amount: parseFloat(e.target.value) })}
+              />
+            </div>
+            <div>
+              <Label>{t('po.milestone.dueDate')}</Label>
+              <Input
                 type="date"
-                value={formData.dueDate}
-                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                value={editFormData.due_date}
+                onChange={(e) => setEditFormData({ ...editFormData, due_date: e.target.value })}
               />
             </div>
           </div>
-
           <DialogFooter>
-            <Button variant="outline" onClick={resetForm}>
-              {t("common.cancel")}
+            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+              {t('common.cancel')}
             </Button>
-            <Button onClick={handleAddMilestone}>{editingId ? "Actualizar" : "Agregar"}</Button>
+            <Button onClick={handleSaveEdit} disabled={isLoading}>
+              {t('common.save')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Upload Document Dialog */}
+      <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('po.milestone.uploadDocument')}</DialogTitle>
+            <DialogDescription>
+              {t('po.milestone.selectFileDescription')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>{t('po.milestone.selectFile')}</Label>
+              <Input
+                type="file"
+                onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                accept=".pdf,.jpg,.png,.doc,.docx"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowUploadDialog(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button onClick={handleUploadDocument} disabled={isLoading || !uploadFile}>
+              {t('common.upload')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirm Payment Dialog */}
+      <Dialog open={showConfirmPaymentDialog} onOpenChange={setShowConfirmPaymentDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('po.milestone.confirmPayment')}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {selectedMilestone && (
+              <>
+                <div>
+                  <p className="text-sm text-gray-600">{t('po.milestone.title')}</p>
+                  <p className="font-medium">{selectedMilestone.title}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">{t('po.milestone.amount')}</p>
+                  <p className="font-medium">${selectedMilestone.amount?.toFixed(2)}</p>
+                </div>
+              </>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowConfirmPaymentDialog(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button onClick={handleConfirmPayment} disabled={isLoading}>
+              {t('po.milestone.confirmPayment')}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
