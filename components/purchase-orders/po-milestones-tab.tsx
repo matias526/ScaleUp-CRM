@@ -39,6 +39,36 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
   const [isLoading, setIsLoading] = useState(false)
   const [documents, setDocuments] = useState<{ [key: string]: any }>({})
 
+  // Load documents when milestones are initialized or change
+  useEffect(() => {
+    const loadDocuments = async () => {
+      try {
+        const docsMap: { [key: string]: any } = {}
+        
+        for (const milestone of (initialMilestones || [])) {
+          const { data: doc } = await supabase
+            .from('documents')
+            .select('*')
+            .eq('parent_id', milestone.id)
+            .eq('parent_type', 'po_milestone')
+            .maybeSingle()
+          
+          if (doc) {
+            docsMap[milestone.id] = doc
+          }
+        }
+        
+        setDocuments(docsMap)
+      } catch (error) {
+        console.log('[v0] Error loading documents:', error)
+      }
+    }
+
+    if (initialMilestones && initialMilestones.length > 0) {
+      loadDocuments()
+    }
+  }, [initialMilestones])
+
   // Role-based permissions
   const isAdmin = ['Admin', 'BDD'].includes(userRole)
   const isPartner = userRole === 'PartnerUser'
