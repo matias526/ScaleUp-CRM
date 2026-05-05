@@ -72,12 +72,12 @@ export default function PurchaseOrderDetailPage() {
       if (poData.accepted_by) {
         const { data: approverData } = await supabase
           .from("users")
-          .select("firstName, lastName")
+          .select("first_name, last_name")
           .eq("id", poData.accepted_by)
           .single()
 
         if (approverData) {
-          setApproverName(`${approverData.firstName} ${approverData.lastName}`)
+          setApproverName(`${approverData.first_name} ${approverData.last_name}`)
         }
       }
 
