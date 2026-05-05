@@ -307,69 +307,7 @@ export default function PurchaseOrderDetailPage() {
           </div>
         )}
       </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">
-              PO #{po.po_number || "---"}
-            </h1>
-            <p className="text-sm text-gray-500">
-              {po.created_at ? format(new Date(po.created_at), "dd MMMM yyyy", { locale: es }) : "-"}
-            </p>
-          </div>
 
-          {/* Center: Partner & Tech Company - Stacked */}
-          <div className="flex-1 flex flex-col gap-3">
-            <div>
-              <p className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Partner</p>
-              <p className="text-base font-semibold text-gray-900">
-                {po.partners?.name || "N/A"}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Tech Company</p>
-              <p className="text-base font-semibold text-blue-600">
-                {po.tech_companies?.name || "Unassigned"}
-              </p>
-            </div>
-          </div>
-
-          {/* Right: Logos */}
-          <div className="flex items-center gap-3">
-            {/* Partner Logo */}
-            <div className="w-12 h-12 flex items-center justify-center">
-              {po.partners?.logo_url ? (
-                <img src={po.partners.logo_url} alt="Partner" className="max-w-full max-h-full object-contain" />
-              ) : (
-                <span className="text-lg font-bold text-gray-300">{po.partners?.name?.substring(0, 2)}</span>
-              )}
-            </div>
-
-            {/* Tech Company Logo */}
-            <div className="w-12 h-12 flex items-center justify-center">
-              {po.tech_companies?.logo_url ? (
-                <img src={po.tech_companies.logo_url} alt="Tech" className="max-w-full max-h-full object-contain" />
-              ) : (
-                <div className="w-10 h-10 bg-slate-900 rounded-md flex items-center justify-center">
-                  <span className="text-xs font-bold text-white">
-                    {po.tech_companies?.name?.substring(0, 2).toUpperCase() || "TC"}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Approve Button */}
-          {canApprove && po.status === 'sent' && (
-            <div className="flex items-center">
-              <button
-                onClick={handleApprovePO}
-                disabled={approving}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-lg font-semibold text-sm shadow-sm hover:shadow-md transition-all active:scale-95 disabled:opacity-50"
-              >
-                {approving ? "..." : "Approve"}
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
       {/* Two Column Layout */}
       <div className="grid grid-cols-5 gap-6">
         {/* Main Content - 65% */}
