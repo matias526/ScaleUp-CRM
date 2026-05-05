@@ -85,7 +85,7 @@ export default function PurchaseOrderDetailPage() {
       const { data: milestonesData, error: milestonesError } = await supabase
         .from("po_milestones")
         .select("*")
-        .eq("purchase_order_id", poId)
+        .eq("po_id", poId)
         .order("scheduled_date")
 
       if (!milestonesError) {
@@ -96,7 +96,7 @@ export default function PurchaseOrderDetailPage() {
       const { data: shippingsData, error: shippingsError } = await supabase
         .from("shippings")
         .select("*")
-        .eq("purchase_order_id", poId)
+        .eq("po_id", poId)
         .order("created_at")
 
       if (!shippingsError) {
@@ -216,17 +216,16 @@ export default function PurchaseOrderDetailPage() {
           {po.partners?.name && (
             <div className="flex items-center justify-center w-14 h-14 rounded-lg bg-gray-100 border-2 border-gray-300 flex-shrink-0">
               <span className="text-lg font-bold text-gray-700">
-                {po.partners.name.substring(0, 2).toUpperCase()}
+                {po.partners?.logo_url}
               </span>
             </div>
           )}
 
           {/* PO Info */}
           <div className="flex flex-col gap-1">
-            <div className="text-xs text-gray-500 uppercase tracking-wide font-semibold">PO #{po.po_number}</div>
-            <h1 className="text-2xl font-bold text-gray-900">{po.po_number}</h1>
+            <h1 className="text-2xl font-bold text-gray-900">PO #{po.po_number}</h1>
             <span className="text-sm text-gray-600">
-              {po.created_at ? format(new Date(po.created_at), "dd/MM/yyyy HH:mm") : "-"}
+              {po.created_at ? format(new Date(po.created_at), "dd/MM/yyyy") : "-"}
             </span>
           </div>
 
