@@ -24,7 +24,7 @@ interface POMilestonesTabProps {
 }
 
 export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, userRole, onMilestonesUpdate }: POMilestonesTabProps) {
-  const t = useTranslations()
+  const { t } = useTranslations()
   const supabase = createClient()
 
   const [milestones, setMilestones] = useState<any[]>(initialMilestones || [])
