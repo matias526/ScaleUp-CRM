@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useTranslations } from '@/hooks/use-translations'
 import { DICT_LANG_PO } from "@/lib/constants/dict-lang-po"
@@ -57,6 +57,19 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
         return 'bg-gray-100 text-gray-800'
     }
   }
+
+  // Initialize documents from initialMilestones pre-loaded data
+  useEffect(() => {
+    if (initialMilestones && initialMilestones.length > 0) {
+      const docsMap: { [key: string]: any } = {}
+      for (const milestone of initialMilestones) {
+        if (milestone._document) {
+          docsMap[milestone.id] = milestone._document
+        }
+      }
+      setDocuments(docsMap)
+    }
+  }, [initialMilestones])
 
   // Load document for milestone
   const loadMilestoneDocument = async (milestoneId: string) => {

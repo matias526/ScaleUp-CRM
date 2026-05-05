@@ -89,6 +89,30 @@ export default function PurchaseOrderDetailPage() {
 
       if (!milestonesError) {
         setMilestones(milestonesData || [])
+        
+        // Pre-load documents for milestones
+        if (milestonesData && milestonesData.length > 0) {
+          const milestoneIds = milestonesData.map(m => m.id)
+          const { data: docsData } = await supabase
+            .from("documents")
+            .select("*")
+            .in("parent_id", milestoneIds)
+            .eq("parent_type", "po_milestone")
+          
+          // Store docs info in milestones for component to use
+          if (docsData) {
+            const docsMap = docsData.reduce((acc, doc) => {
+              acc[doc.parent_id] = doc
+              return acc
+            }, {} as { [key: string]: any })
+            
+            // Update milestones with docs info (for initial render)
+            setMilestones(milestonesData.map(m => ({
+              ...m,
+              _document: docsMap[m.id]
+            })))
+          }
+        }
       }
 
       // Load shippings
