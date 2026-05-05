@@ -802,4 +802,155 @@ export const DICT_LANG_PO = {
     en: "Are you sure you want to approve this purchase order? This action cannot be undone.",
     pt: "Tem certeza de que deseja aprovar este pedido de compra? Esta ação não pode ser desfeita.",
   },
+  // Logistics Tab
+  "po.logistics.shippingStatus": {
+    es: "Estado del Envío",
+    en: "Shipping Status",
+    pt: "Status do Envio",
+  },
+  "po.logistics.notStarted": {
+    es: "No Iniciado",
+    en: "Not Started",
+    pt: "Não Iniciado",
+  },
+  "po.logistics.inProcess": {
+    es: "En Proceso",
+    en: "In Process",
+    pt: "Em Processo",
+  },
+  "po.logistics.shipped": {
+    es: "Enviado",
+    en: "Shipped",
+    pt: "Enviado",
+  },
+  "po.logistics.delivered": {
+    es: "Finalizado",
+    en: "Delivered",
+    pt: "Entregue",
+  },
+  "po.logistics.destinationData": {
+    es: "Datos de Destino",
+    en: "Destination Data",
+    pt: "Dados de Destino",
+  },
+  "po.logistics.dispatchData": {
+    es: "Datos de Despacho",
+    en: "Dispatch Data",
+    pt: "Dados de Despacho",
+  },
+  "po.logistics.shippingAddress": {
+    es: "Dirección de Envío",
+    en: "Shipping Address",
+    pt: "Endereço de Envio",
+  },
+  "po.logistics.street": {
+    es: "Calle",
+    en: "Street",
+    pt: "Rua",
+  },
+  "po.logistics.streetNumber": {
+    es: "Número",
+    en: "Number",
+    pt: "Número",
+  },
+  "po.logistics.city": {
+    es: "Ciudad",
+    en: "City",
+    pt: "Cidade",
+  },
+  "po.logistics.country": {
+    es: "País",
+    en: "Country",
+    pt: "País",
+  },
+  "po.logistics.zipcode": {
+    es: "Código Postal",
+    en: "Zip Code",
+    pt: "CEP",
+  },
+  "po.logistics.contactName": {
+    es: "Nombre de Contacto",
+    en: "Contact Name",
+    pt: "Nome do Contato",
+  },
+  "po.logistics.contactPhone": {
+    es: "Teléfono",
+    en: "Phone",
+    pt: "Telefone",
+  },
+  "po.logistics.contactEmail": {
+    es: "Correo Electrónico",
+    en: "Email",
+    pt: "Email",
+  },
+  "po.logistics.loadLastShipping": {
+    es: "Cargar Último Envío",
+    en: "Load Last Shipping",
+    pt: "Carregar Último Envio",
+  },
+  "po.logistics.saveDestinationData": {
+    es: "Guardar Datos de Destino",
+    en: "Save Destination Data",
+    pt: "Salvar Dados de Destino",
+  },
+  "po.logistics.carrier": {
+    es: "Transportista",
+    en: "Carrier",
+    pt: "Transportadora",
+  },
+  "po.logistics.weight": {
+    es: "Peso (kg)",
+    en: "Weight (kg)",
+    pt: "Peso (kg)",
+  },
+  "po.logistics.dimensions": {
+    es: "Dimensiones",
+    en: "Dimensions",
+    pt: "Dimensões",
+  },
+  "po.logistics.trackingNumber": {
+    es: "Número de Seguimiento",
+    en: "Tracking Number",
+    pt: "Número de Rastreamento",
+  },
+  "po.logistics.estimatedDeliveryDate": {
+    es: "Fecha Estimada de Entrega",
+    en: "Estimated Delivery Date",
+    pt: "Data Estimada de Entrega",
+  },
+  "po.logistics.saveDispatchData": {
+    es: "Guardar Datos de Despacho",
+    en: "Save Dispatch Data",
+    pt: "Salvar Dados de Despacho",
+  },
+  "po.logistics.markAsReceived": {
+    es: "Marcar como Recibido",
+    en: "Mark as Received",
+    pt: "Marcar como Recebido",
+  },
+  "po.logistics.destinationDataSaved": {
+    es: "Datos de destino guardados correctamente",
+    en: "Destination data saved successfully",
+    pt: "Dados de destino salvos com sucesso",
+  },
+  "po.logistics.dispatchDataSaved": {
+    es: "Datos de despacho guardados correctamente",
+    en: "Dispatch data saved successfully",
+    pt: "Dados de despacho salvos com sucesso",
+  },
+  "po.logistics.markedAsReceived": {
+    es: "Envío marcado como recibido",
+    en: "Shipping marked as received",
+    pt: "Envio marcado como recebido",
+  },
+  "po.logistics.lastShippingLoaded": {
+    es: "Datos del último envío cargados",
+    en: "Last shipping data loaded",
+    pt: "Dados do último envio carregados",
+  },
+  "po.logistics.noLastShipping": {
+    es: "No hay envíos anteriores para este partner",
+    en: "No previous shipments for this partner",
+    pt: "Não há envios anteriores para este parceiro",
+  },
 }
