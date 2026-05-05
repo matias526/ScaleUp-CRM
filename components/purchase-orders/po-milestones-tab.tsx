@@ -444,57 +444,198 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
           milestones.map((milestone) => {
             const permissions = getActionPermissions(milestone)
             const doc = documents[milestone.id]
-            const statusColors = {
-              pending: 'bg-yellow-100 border-yellow-200',
-              in_process: 'bg-blue-100 border-blue-200',
-              paid: 'bg-emerald-100 border-emerald-200',
-            }
-            const statusColor = statusColors[milestone.status as keyof typeof statusColors] || 'bg-gray-100 border-gray-200'
             
             return (
               <Card key={milestone.id} className="border-gray-200">
                 <CardContent className="p-3">
-                  <div className="space-y-2">
-                    {/* Header Row: Title and Status */}
-                    <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-start justify-between gap-3">
+                    {/* Milestone Info - Horizontal Layout */}
+                    <div className="flex-1 flex items-center gap-4">
                       <div className="flex-1">
                         <h3 className="font-semibold text-sm text-gray-900">{milestone.title}</h3>
+                        <div className="flex items-center gap-4 mt-1 text-xs text-gray-600">
+                          <div>
+                            <span className="font-bold">Monto:</span> ${milestone.amount?.toFixed(2) || '0.00'}
+                          </div>
+                          {milestone.due_date && (
+                            <div>
+                              <span className="font-bold">Vencimiento:</span> {format(new Date(milestone.due_date), 'dd/MM/yyyy')}
+                            </div>
+                          )}
+                          {milestone.paid_at && (
+                            <div>
+                              <span className="font-bold">Pagado:</span> {format(new Date(milestone.paid_at), 'dd/MM/yyyy')}
+                            </div>
+                          )}
+                        </div>
                       </div>
                       <Badge className={getStatusBadgeColor(milestone.status)}>
                         {t(`po.milestone.status.${milestone.status?.toLowerCase() || 'pending'}`)}
                       </Badge>
                     </div>
 
-                    {/* Info Grid Row */}
-                    <div className="border border-gray-200 rounded p-2 bg-white">
-                      <div className="grid grid-cols-4 gap-2 text-xs">
-                        <div>
-                          <span className="text-gray-600 uppercase font-bold text-xs">Monto</span>
-                          <p className="font-semibold text-gray-900 mt-0.5">${milestone.amount?.toFixed(2) || '0.00'}</p>
-                        </div>
-                        <div>
-                          <span className="text-gray-600 uppercase font-bold text-xs">Vencimiento</span>
-                          <p className="font-semibold text-gray-900 mt-0.5">
-                            {milestone.due_date ? format(new Date(milestone.due_date), 'dd/MM/yyyy') : '-'}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-gray-600 uppercase font-bold text-xs">Pagado</span>
-                          <p className="font-semibold text-gray-900 mt-0.5">
-                            {milestone.paid_at ? format(new Date(milestone.paid_at), 'dd/MM/yyyy') : '-'}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-gray-600 uppercase font-bold text-xs">Documento</span>
-                          <p className="font-semibold text-gray-900 mt-0.5">
-                            {doc ? '✓ Adjunto' : ''}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+                    {/* Actions */}
+                    <div className="flex items-center gap-1">
+                      <TooltipProvider>
+                        {/* Edit */}
+                        {permissions.canEdit && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleEditMilestone(milestone)}
+                                className="h-7 w-7 p-0"
+                              >
+                                <Edit2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>{t('common.edit')}</TooltipContent>
+                          </Tooltip>
+                        )}
 
-                    {/* Actions Row */}
-                    <div className="flex items-center justify-end gap-1">
+                        {/* Delete */}
+                        {permissions.canDelete && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>{t('po.milestone.delete')}</TooltipContent>
+                              </Tooltip>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>{t('common.warning')}</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  {t('po.milestone.confirmDelete')}
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteMilestone(milestone)}
+                                  className="bg-red-600 hover:bg-red-700"
+                                >
+                                  {t('po.milestone.delete')}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
+
+                        {/* Upload Document */}
+                        {permissions.canUploadDocument && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  setSelectedMilestone(milestone)
+                                  setShowUploadDialog(true)
+                                  setUploadFile(null)
+                                }}
+                                className="h-7 w-7 p-0"
+                              >
+                                <Upload className="h-3.5 w-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>{t('po.milestone.uploadDocument')}</TooltipContent>
+                          </Tooltip>
+                        )}
+
+                        {/* Delete Document */}
+                        {permissions.canDeleteDocument && doc && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
+                                  >
+                                    <X className="h-3.5 w-3.5" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>{t('po.milestone.deleteDocument')}</TooltipContent>
+                              </Tooltip>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>{t('common.warning')}</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  {t('po.milestone.confirmDeleteDocument')}
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteDocument(milestone)}
+                                  className="bg-red-600 hover:bg-red-700"
+                                >
+                                  {t('po.milestone.deleteDocument')}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
+
+                        {/* View Document */}
+                        {doc && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  setSelectedMilestone(milestone)
+                                  setShowViewDocumentDialog(true)
+                                }}
+                                className="h-7 w-7 p-0"
+                              >
+                                <FileText className="h-3.5 w-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>{t('po.milestone.viewDocument')}</TooltipContent>
+                          </Tooltip>
+                        )}
+
+                        {/* Confirm Payment */}
+                        {permissions.canConfirmPayment && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={async () => {
+                                  setSelectedMilestone(milestone)
+                                  await loadMilestoneDocument(milestone.id)
+                                  setShowConfirmPaymentDialog(true)
+                                }}
+                                className="h-7 w-7 p-0 text-green-600 hover:text-green-700"
+                              >
+                                <Check className="h-3.5 w-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>{t('po.milestone.confirmPayment')}</TooltipContent>
+                          </Tooltip>
+                        )}
+                      </TooltipProvider>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })
                       <TooltipProvider>
                         {/* Edit */}
                         {permissions.canEdit && (
