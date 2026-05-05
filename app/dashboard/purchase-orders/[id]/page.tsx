@@ -209,99 +209,91 @@ export default function PurchaseOrderDetailPage() {
   return (
     <div className="p-8 space-y-6">
       {/* Compact Header - Horizontal Layout */}
-<div className="flex items-center justify-between bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+<div className="flex items-center justify-between bg-white rounded-lg border border-gray-200 p-6 shadow-sm mb-6">
   
-  {/* Left Section: Partner & PO Info */}
+  {/* Left: Partner Logo & PO Info */}
   <div className="flex items-center gap-6">
-    {/* Partner Logo */}
-    {po.partners?.name && (
-      <OrganizationAvatar
-        name={po.partners.name || ""}
-        imageUrl={po.partners.logo_url}
-        size="md"
-      />
-    )}
+    {/* Partner Logo (Simplified to avoid ReferenceError) */}
+    <div className="h-12 w-12 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0">
+      {po.partners?.logo_url ? (
+        <img src={po.partners.logo_url} alt="" className="h-full w-full object-contain" />
+      ) : (
+        <span className="text-lg font-bold text-slate-400">
+          {po.partners?.name?.substring(0, 2).toUpperCase() || "PO"}
+        </span>
+      )}
+    </div>
 
     {/* PO Status, Number & Date */}
     <div className="flex flex-col">
-      {/* Status Badge moved on top of PO Number per your sketch */}
       <div className="mb-1">
-        <Badge className={`${getStatusBadgeColor(po.status)} text-[10px] px-2 py-0 uppercase`}>
-          {t(`po.status.${po.status}`)}
+        <Badge className="bg-blue-50 text-blue-700 border-blue-200 text-[10px] px-2 py-0 uppercase font-bold">
+          {po.status || "Draft"}
         </Badge>
       </div>
       
-      <h1 className="text-2xl font-black text-gray-900 leading-none">
-        {po.po_number}
+      <h1 className="text-2xl font-black text-gray-900 leading-none tracking-tight">
+        #{po.po_number || "---"}
       </h1>
       
-      <span className="text-xs text-gray-500 mt-1 font-medium">
+      <span className="text-[11px] text-gray-500 mt-1 font-medium flex items-center gap-1">
+        <Calendar className="w-3 h-3" />
         {po.created_at ? format(new Date(po.created_at), "dd/MM/yyyy HH:mm") : "-"}
       </span>
     </div>
   </div>
 
-  {/* Center Section: Total Amount (Clean & Big) */}
+  {/* Center: Total Amount (Destacado) */}
   <div className="flex flex-col items-center px-10 border-l border-r border-gray-100">
-    <span className="text-[10px] text-gray-400 uppercase tracking-[0.1em] font-bold mb-1">
-      {t("po.detail.total")}
+    <span className="text-[10px] text-gray-400 uppercase tracking-[0.15em] font-bold mb-1">
+      Total Amount
     </span>
-    <div className="text-4xl font-black text-gray-900 tracking-tight">
-      ${po.total_amount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+    <div className="text-4xl font-black text-gray-900 tracking-tighter">
+      ${(po.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
     </div>
-    <div className="flex gap-3 mt-1 text-[10px] text-gray-500 font-medium">
-      <span>Sub: ${po.subtotal_amount?.toFixed(2)}</span>
-      <span>Ship: ${po.shipping_amount?.toFixed(2)}</span>
+    <div className="flex gap-4 mt-1 text-[10px] text-gray-500 font-bold">
+      <span className="opacity-70">SUB: ${(po.subtotal_amount || 0).toFixed(2)}</span>
+      <span className="opacity-70">SHIP: ${(po.shipping_amount || 0).toFixed(2)}</span>
     </div>
   </div>
 
-  {/* Right Section: TechCompany & Partner Name */}
+  {/* Right: TechCompany & Partner Name */}
   <div className="flex items-center gap-4 flex-grow justify-end px-6">
     <div className="text-right">
-      <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider leading-none mb-1">
-        {t("po.detail.partner")}
+      <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-1">
+        Customer / Partner
       </p>
-      <p className="text-sm font-bold text-gray-900 mb-2">
-        {po.partners?.name || t("po.noPartner")}
+      <p className="text-sm font-bold text-gray-900 mb-2 truncate max-w-[150px]">
+        {po.partners?.name || "N/A"}
       </p>
       
-      {/* Tech Company Label & Initials */}
       <div className="flex items-center justify-end gap-2">
-        <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase">
-          T.C.
+        <span className="text-[9px] font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
+          TECH CO.
         </span>
-        <span className="text-xs font-semibold text-gray-700">
-          {techCompany?.company_name || "No Tech assigned"}
+        <span className="text-xs font-bold text-gray-700">
+          {techCompany?.company_name || "Unassigned"}
         </span>
       </div>
     </div>
 
-    {/* TechCompany Visual Avatar/Initial */}
-    {techCompany?.company_name && (
-      <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-blue-600 shadow-md shadow-blue-100 flex-shrink-0">
-        <span className="text-lg font-black text-white">
-          {techCompany.company_name.substring(0, 2).toUpperCase()}
-        </span>
-      </div>
-    )}
+    {/* TechCompany Visual Avatar */}
+    <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-slate-900 flex-shrink-0 shadow-lg shadow-slate-200">
+      <span className="text-lg font-black text-white">
+        {techCompany?.company_name?.substring(0, 2).toUpperCase() || "TC"}
+      </span>
+    </div>
   </div>
 
   {/* Final Action: Approve Button */}
-  {canApprove && (
+  {canApprove && po.status === 'sent' && (
     <div className="pl-6 border-l border-gray-100">
       <Button
         onClick={handleApprovePO}
         disabled={approving}
-        className="bg-green-600 hover:bg-green-700 h-12 px-6 rounded-xl font-bold transition-all shadow-lg shadow-green-100 flex gap-2 items-center"
+        className="bg-emerald-600 hover:bg-emerald-700 h-12 px-6 rounded-xl font-bold text-white shadow-lg shadow-emerald-100"
       >
-        {approving ? (
-          <span className="animate-spin text-lg">◌</span>
-        ) : (
-          <>
-            <CheckCircle2 className="w-5 h-5" />
-            {t("po.approvePO")}
-          </>
-        )}
+        {approving ? "..." : "Approve Order"}
       </Button>
     </div>
   )}
