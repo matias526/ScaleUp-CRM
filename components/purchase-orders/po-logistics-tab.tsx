@@ -798,39 +798,6 @@ export function POLogisticsTab({
     </div>
   )
 }
-                  <Button
-                    onClick={handleLoadLastShipping}
-                    disabled={loadingLastShipping}
-                    variant="outline"
-                    size="sm"
-                    className="text-xs"
-                  >
-                    <RefreshCw className="h-3 w-3 mr-1" />
-                    Cargar Último
-                  </Button>
-                  <Button onClick={handleSaveDestination} disabled={loading} size="sm" className="text-xs">
-                    Guardar
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-2 text-sm">
-                {/* Address Display Card */}
-                <div className="border border-gray-200 rounded-lg p-3">
-                  <div className="font-semibold text-xs uppercase tracking-wider text-gray-600 mb-2">Dirección</div>
-                  <div className="text-sm text-gray-800">
-                    <div>
-                      {destinationForm.street && destinationForm.street_number
-                        ? `${destinationForm.street} ${destinationForm.street_number}`
-                        : "-"}
-                    </div>
-                    <div>
-                      {[destinationForm.zipcode, destinationForm.city, destinationForm.country]
-                        .filter(Boolean)
-                        .join(", ") || "-"}
-                    </div>
-                  </div>
-                </div>
 
                 {/* Contact Display Card */}
                 <div className="border border-gray-200 rounded-lg p-3">
