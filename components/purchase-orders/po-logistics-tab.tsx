@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useTranslations } from "@/hooks/use-translations"
+import { useAuth } from "@/components/auth/auth-provider"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -26,6 +27,7 @@ export function POLogisticsTab({
 }: POLogisticsTabProps) {
   const { t } = useTranslations(DICT_LANG_PO)
   const supabase = createClient()
+  const { userInfo } = useAuth()
 
   // State
   const [shipping, setShipping] = useState<any>(null)
@@ -89,6 +91,43 @@ export function POLogisticsTab({
       }
     } catch (error) {
       console.error("[v0] Error loading shipping:", error)
+    }
+  }
+
+  // Create note for shipping updates
+  const createShippingNote = async (noteType: "destination" | "dispatch", dataChanges: any) => {
+    try {
+      const userName = userInfo ? `${userInfo.first_name || ""} ${userInfo.last_name || ""}`.trim() : "Usuario"
+      const noteTypeLabel = noteType === "destination" ? "Destino" : "Despacho"
+      
+      let content = `${userName} ha cargado datos de ${noteTypeLabel}`
+      
+      // Add data summary
+      const dataEntries = Object.entries(dataChanges)
+        .filter(([_, value]) => value)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join(", ")
+      
+      if (dataEntries) {
+        content += `\n${dataEntries}`
+      }
+
+      const { error } = await supabase
+        .from("notes")
+        .insert([
+          {
+            purchase_order_id: po.id,
+            user_id: currentUserId,
+            content: content,
+            is_private: false,
+          },
+        ])
+
+      if (error) {
+        console.error("[v0] Error creating note:", error)
+      }
+    } catch (error) {
+      console.error("[v0] Error in createShippingNote:", error)
     }
   }
 
@@ -197,13 +236,24 @@ export function POLogisticsTab({
           .update(destinationForm)
           .eq("id", shipping.id)
 
-        if (error) throw error
+      if (error) throw error
 
-        setShipping({ ...shipping, ...destinationForm })
-        toast({
-          title: t("common.success"),
-          description: t("po.logistics.destinationDataSaved"),
-        })
+      setShipping({ ...shipping, ...destinationForm })
+      
+      // Create note
+      await createShippingNote("destination", {
+        "Calle": destinationForm.street,
+        "Número": destinationForm.street_number,
+        "Ciudad": destinationForm.city,
+        "País": destinationForm.country,
+        "CP": destinationForm.zipcode,
+        "Contacto": destinationForm.contact_name,
+      })
+      
+      toast({
+        title: t("common.success"),
+        description: t("po.logistics.destinationDataSaved"),
+      })
       }
     } catch (error) {
       console.error("[v0] Error saving destination:", error)
@@ -247,6 +297,15 @@ export function POLogisticsTab({
 
       const updatedShipping = { ...shipping, ...dispatchForm, status: newStatus }
       setShipping(updatedShipping)
+
+      // Create note
+      await createShippingNote("dispatch", {
+        "Transportista": dispatchForm.carrier,
+        "Número de Seguimiento": dispatchForm.tracking_number,
+        "Peso": dispatchForm.weight,
+        "Dimensiones": dispatchForm.dimensions,
+        "Entrega Estimada": dispatchForm.estimated_delivery_date,
+      })
 
       toast({
         title: t("common.success"),
@@ -482,7 +541,7 @@ export function POLogisticsTab({
       </Card>
 
       {/* Section B: Dispatch Data */}
-      {isInProcess && (
+      {(isInProcess || isShipped) && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -491,7 +550,7 @@ export function POLogisticsTab({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {canEditDispatch ? (
+            {canEditDispatch && isInProcess ? (
               <div className="space-y-4">
                 <div>
                   <Label>{t("po.logistics.carrier")}</Label>
