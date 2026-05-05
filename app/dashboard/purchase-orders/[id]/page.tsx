@@ -67,7 +67,6 @@ export default function PurchaseOrderDetailPage() {
       }
 
       setPo(poData)
-
       // Load approver info if PO is accepted
       if (poData.accepted_by) {
         const { data: approverData } = await supabase
@@ -338,6 +337,8 @@ export default function PurchaseOrderDetailPage() {
                     po={po}
                     milestones={milestones}
                     subtotal={po.subtotal_amount || 0}
+                    userRole={userInfo?.roleCode || ""}
+                    onMilestonesUpdate={loadPurchaseOrder}
                   />
                 </TabsContent>
 

@@ -289,8 +289,141 @@ export const DICT_LANG_PO = {
     en: "Status",
     pt: "Status",
   },
-
-  // Detail Page - Logistics Tab
+  "po.milestone.addMilestone": {
+    es: "Agregar Hito",
+    en: "Add Milestone",
+    pt: "Adicionar Marco",
+  },
+  "po.milestone.editMilestone": {
+    es: "Editar Hito",
+    en: "Edit Milestone",
+    pt: "Editar Marco",
+  },
+  "po.milestone.configureDescription": {
+    es: "Configura los detalles del hito. Puedes usar un monto fijo o un porcentaje del total.",
+    en: "Configure milestone details. You can use a fixed amount or a percentage of the total.",
+    pt: "Configure os detalhes do marco. Você pode usar um valor fixo ou uma porcentagem do total.",
+  },
+  "po.milestone.titleRequired": {
+    es: "El título es requerido",
+    en: "Title is required",
+    pt: "O título é obrigatório",
+  },
+  "po.milestone.amountRequired": {
+    es: "El monto debe ser mayor a 0",
+    en: "Amount must be greater than 0",
+    pt: "O valor deve ser maior que 0",
+  },
+  "po.milestone.exceedsTotal": {
+    es: "La suma de los hitos no puede exceder el total de la PO",
+    en: "Sum of milestones cannot exceed PO total",
+    pt: "A soma dos marcos não pode exceder o total do PO",
+  },
+  "po.milestone.created": {
+    es: "Hito creado exitosamente",
+    en: "Milestone created successfully",
+    pt: "Marco criado com sucesso",
+  },
+  "po.milestone.updated": {
+    es: "Hito actualizado exitosamente",
+    en: "Milestone updated successfully",
+    pt: "Marco atualizado com sucesso",
+  },
+  "po.milestone.deleted": {
+    es: "Hito eliminado exitosamente",
+    en: "Milestone deleted successfully",
+    pt: "Marco deletado com sucesso",
+  },
+  "po.milestone.saveFailed": {
+    es: "Error al guardar el hito",
+    en: "Failed to save milestone",
+    pt: "Falha ao salvar o marco",
+  },
+  "po.milestone.deleteFailed": {
+    es: "Error al eliminar el hito",
+    en: "Failed to delete milestone",
+    pt: "Falha ao deletar o marco",
+  },
+  "po.milestone.updateFailed": {
+    es: "Error al actualizar el hito",
+    en: "Failed to update milestone",
+    pt: "Falha ao atualizar o marco",
+  },
+  "po.milestone.confirmDelete": {
+    es: "¿Estás seguro de que deseas eliminar este hito?",
+    en: "Are you sure you want to delete this milestone?",
+    pt: "Tem certeza de que deseja deletar este marco?",
+  },
+  "po.milestone.dueDate": {
+    es: "Fecha de Vencimiento",
+    en: "Due Date",
+    pt: "Data de Vencimento",
+  },
+  "po.milestone.amountType": {
+    es: "Tipo de Monto",
+    en: "Amount Type",
+    pt: "Tipo de Valor",
+  },
+  "po.milestone.fixed": {
+    es: "Monto Fijo",
+    en: "Fixed Amount",
+    pt: "Valor Fixo",
+  },
+  "po.milestone.percentage": {
+    es: "Porcentaje",
+    en: "Percentage",
+    pt: "Porcentagem",
+  },
+  "po.milestone.amount": {
+    es: "Monto",
+    en: "Amount",
+    pt: "Valor",
+  },
+  "po.milestone.calculatedAmount": {
+    es: "Monto Calculado",
+    en: "Calculated Amount",
+    pt: "Valor Calculado",
+  },
+  "po.milestone.paid": {
+    es: "Pagado",
+    en: "Paid",
+    pt: "Pago",
+  },
+  "po.milestone.paidDate": {
+    es: "Fecha de Pago",
+    en: "Paid Date",
+    pt: "Data de Pagamento",
+  },
+  "po.milestone.markAsPaid": {
+    es: "Marcar como Pagado",
+    en: "Mark as Paid",
+    pt: "Marcar como Pago",
+  },
+  "po.milestone.markedAsPaid": {
+    es: "Marcado como pagado",
+    en: "Marked as paid",
+    pt: "Marcado como pago",
+  },
+  "po.milestone.titlePlaceholder": {
+    es: "Ej: Pago Inicial, Entrega, Finalización",
+    en: "E.g: Initial Payment, Delivery, Completion",
+    pt: "Ex: Pagamento Inicial, Entrega, Conclusão",
+  },
+  "po.milestone.percentageMax": {
+    es: "El porcentaje no puede exceder 100%",
+    en: "Percentage cannot exceed 100%",
+    pt: "A porcentagem não pode exceder 100%",
+  },
+  "common.edit": {
+    es: "Editar",
+    en: "Edit",
+    pt: "Editar",
+  },
+  "common.warning": {
+    es: "Advertencia",
+    en: "Warning",
+    pt: "Aviso",
+  },
   "po.shipping.noShipments": {
     es: "Sin envíos registrados",
     en: "No shipments recorded",
