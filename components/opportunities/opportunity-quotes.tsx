@@ -64,6 +64,7 @@ interface OpportunityQuotesProps {
 
 const ALLOWED_ROLES_REQUEST = ["Admin", "BDD", "PartnerUser"]
 const ALLOWED_ROLES_EDIT = ["Admin", "BDD", "TechUser", "PartnerUser"]
+const ALLOWED_ROLES_COMPLETE = ["Admin", "BDD", "TechUser"]
 const ALLOWED_ROLES_DELETE = ["Admin", "BDD", "TechUser"]
 const QUOTATION_STAGE_ID = "cea0f2b6-d55d-4d70-a730-adc5e365d928"
 
@@ -87,6 +88,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
   const userRoleCode = typeof userRole === "object" && userRole?.code ? userRole.code : userRole
   const canRequestQuote = ALLOWED_ROLES_REQUEST.includes(userRoleCode)
   const canGenerateQuote = ALLOWED_ROLES_EDIT.includes(userRoleCode)
+  const canCompleteQuote = ALLOWED_ROLES_COMPLETE.includes(userRoleCode)
   const canDeleteQuote = ALLOWED_ROLES_DELETE.includes(userRoleCode)
 
   // Create modal state
@@ -790,7 +792,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
                       </Button>
                     )}
 
-                    {canGenerateQuote && quote.status === "offered" && (
+                    {canCompleteQuote && quote.status === "offered" && (
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
