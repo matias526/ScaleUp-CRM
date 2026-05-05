@@ -164,15 +164,20 @@ export function POLogisticsTab({
     setLoadingLastShipping(true)
     try {
       // Get last shipping for this partner and tech company
-      const { data } = await supabase
+      let query = supabase
         .from("shippings")
         .select("*")
         .eq("partner_id", po.partner_id)
         .eq("tech_company_id", po.tech_company_id)
-        .neq("id", shipping?.id || "")
         .order("created_at", { ascending: false })
         .limit(1)
-        .maybeSingle()
+
+      // Only exclude current shipping if it exists
+      if (shipping?.id) {
+        query = query.neq("id", shipping.id)
+      }
+
+      const { data } = await query.maybeSingle()
 
       if (data) {
         setDestinationForm({
