@@ -163,10 +163,12 @@ export function POLogisticsTab({
   const handleLoadLastShipping = async () => {
     setLoadingLastShipping(true)
     try {
+      // Get last shipping for this partner and tech company
       const { data } = await supabase
         .from("shippings")
         .select("*")
-        .eq("po_id", po.id)
+        .eq("partner_id", po.partner_id)
+        .eq("tech_company_id", po.tech_company_id)
         .neq("id", shipping?.id || "")
         .order("created_at", { ascending: false })
         .limit(1)
