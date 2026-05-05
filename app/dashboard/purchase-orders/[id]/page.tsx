@@ -310,8 +310,8 @@ export default function PurchaseOrderDetailPage() {
   )}
 </div>
       {/* Two Column Layout */}
-      <div className="grid grid-cols-4 gap-6">
-        {/* Main Content - 75% */}
+      <div className="grid grid-cols-5 gap-6">
+        {/* Main Content - 65% */}
         <div className="col-span-3">
           <Card>
             <Tabs defaultValue="general" className="w-full">
@@ -353,8 +353,8 @@ export default function PurchaseOrderDetailPage() {
           </Card>
         </div>
 
-        {/* Right Sidebar - 25% */}
-        <div className="col-span-1">
+        {/* Right Sidebar - 35% */}
+        <div className="col-span-2">
           <PONotes
             poId={poId}
             currentUserId={userInfo?.id || ""}
