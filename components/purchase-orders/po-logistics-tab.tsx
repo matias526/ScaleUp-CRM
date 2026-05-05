@@ -163,6 +163,17 @@ export function POLogisticsTab({
   const handleLoadLastShipping = async () => {
     setLoadingLastShipping(true)
     try {
+      // Validate required fields
+      if (!po.partner_id || !po.tech_company_id) {
+        toast({
+          title: "Error",
+          description: "Faltan datos de partner o tech company",
+          variant: "destructive",
+        })
+        setLoadingLastShipping(false)
+        return
+      }
+
       // Get last shipping for this partner and tech company
       let query = supabase
         .from("shippings")
@@ -177,7 +188,12 @@ export function POLogisticsTab({
         query = query.neq("id", shipping.id)
       }
 
-      const { data } = await query.maybeSingle()
+      const { data, error } = await query.maybeSingle()
+
+      if (error) {
+        console.error("[v0] Error loading last shipping:", error)
+        throw error
+      }
 
       if (data) {
         setDestinationForm({
