@@ -260,6 +260,17 @@ export function POLogisticsTab({
         if (error) throw error
 
         setShipping(newShipping)
+        
+        // Create note
+        await createShippingNote("destination", {
+          "Calle": destinationForm.street,
+          "Número": destinationForm.street_number,
+          "Ciudad": destinationForm.city,
+          "País": destinationForm.country,
+          "CP": destinationForm.zipcode,
+          "Contacto": destinationForm.contact_name,
+        })
+        
         toast({
           title: t("common.success"),
           description: t("po.logistics.destinationDataSaved"),
