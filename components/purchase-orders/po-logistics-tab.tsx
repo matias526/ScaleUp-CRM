@@ -421,9 +421,9 @@ export function POLogisticsTab({
   const isDelivered = shipping?.status === "delivered"
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Shipping Status Timeline */}
-      <div className="bg-gradient-to-r from-slate-50 to-blue-50 rounded-lg border border-slate-200 p-6">
+      <div className="bg-white rounded-lg border border-gray-200 p-5">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold text-gray-900 text-sm uppercase tracking-wide">Estado del Envío</h3>
           <Badge className={getStatusBadgeColor(shipping?.status || "")}>
@@ -468,103 +468,101 @@ export function POLogisticsTab({
 
       {/* Section A: Destination Data */}
       <div>
-        <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <MapPin className="h-5 w-5 text-blue-600" />
+        <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+          <MapPin className="h-4 w-4 text-gray-600" />
           Datos de Destino
         </h3>
         
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4">
             {canEditDestination && (isInProcess || !shipping) ? (
-              <div className="space-y-5">
+              <div className="space-y-3">
                 {/* Address Section */}
-                <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
-                  <h4 className="font-bold text-sm text-gray-900 uppercase tracking-wider mb-4">Dirección</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="border border-gray-200 rounded-lg p-3">
+                  <h4 className="font-semibold text-xs text-gray-900 uppercase tracking-wider mb-3">Dirección</h4>
+                  <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <Label className="text-xs uppercase font-bold text-gray-600">{t("po.logistics.street")}</Label>
+                      <Label className="text-xs font-semibold text-gray-600">{t("po.logistics.street")}</Label>
                       <Input
                         value={destinationForm.street}
                         onChange={(e) =>
                           setDestinationForm({ ...destinationForm, street: e.target.value })
                         }
-                        className="mt-1"
+                        className="mt-1 h-8 text-sm"
                       />
                     </div>
                     <div>
-                      <Label className="text-xs uppercase font-bold text-gray-600">{t("po.logistics.streetNumber")}</Label>
+                      <Label className="text-xs font-semibold text-gray-600">{t("po.logistics.streetNumber")}</Label>
                       <Input
                         value={destinationForm.street_number}
                         onChange={(e) =>
                           setDestinationForm({ ...destinationForm, street_number: e.target.value })
                         }
-                        className="mt-1"
+                        className="mt-1 h-8 text-sm"
                       />
                     </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
                     <div>
-                      <Label className="text-xs uppercase font-bold text-gray-600">{t("po.logistics.city")}</Label>
+                      <Label className="text-xs font-semibold text-gray-600">{t("po.logistics.city")}</Label>
                       <Input
                         value={destinationForm.city}
                         onChange={(e) =>
                           setDestinationForm({ ...destinationForm, city: e.target.value })
                         }
-                        className="mt-1"
+                        className="mt-1 h-8 text-sm"
                       />
                     </div>
                     <div>
-                      <Label className="text-xs uppercase font-bold text-gray-600">{t("po.logistics.country")}</Label>
-                      <Input
-                        value={destinationForm.country}
-                        onChange={(e) =>
-                          setDestinationForm({ ...destinationForm, country: e.target.value })
-                        }
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs uppercase font-bold text-gray-600">{t("po.logistics.zipcode")}</Label>
+                      <Label className="text-xs font-semibold text-gray-600">{t("po.logistics.zipcode")}</Label>
                       <Input
                         value={destinationForm.zipcode}
                         onChange={(e) =>
                           setDestinationForm({ ...destinationForm, zipcode: e.target.value })
                         }
-                        className="mt-1"
+                        className="mt-1 h-8 text-sm"
                       />
                     </div>
+                  </div>
+                  <div className="mt-2">
+                    <Label className="text-xs font-semibold text-gray-600">{t("po.logistics.country")}</Label>
+                    <Input
+                      value={destinationForm.country}
+                      onChange={(e) =>
+                        setDestinationForm({ ...destinationForm, country: e.target.value })
+                      }
+                      className="mt-1 h-8 text-sm"
+                    />
                   </div>
                 </div>
 
                 {/* Contact Section */}
-                <div className="bg-amber-50 border border-amber-100 rounded-lg p-4">
-                  <h4 className="font-bold text-sm text-gray-900 uppercase tracking-wider mb-4">Contacto</h4>
+                <div className="border border-gray-200 rounded-lg p-3">
+                  <h4 className="font-semibold text-xs text-gray-900 uppercase tracking-wider mb-3">Contacto</h4>
                   <div>
-                    <Label className="text-xs uppercase font-bold text-gray-600">{t("po.logistics.contactName")}</Label>
+                    <Label className="text-xs font-semibold text-gray-600">{t("po.logistics.contactName")}</Label>
                     <Input
                       value={destinationForm.contact_name}
                       onChange={(e) =>
                         setDestinationForm({ ...destinationForm, contact_name: e.target.value })
                       }
-                      className="mt-1"
+                      className="mt-1 h-8 text-sm"
                     />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                  <div className="grid grid-cols-2 gap-2 mt-2">
                     <div>
-                      <Label className="text-xs uppercase font-bold text-gray-600 flex items-center gap-1">
-                        <Phone className="h-3 w-3" /> {t("po.logistics.contactPhone")}
+                      <Label className="text-xs font-semibold text-gray-600 flex items-center gap-1">
+                        <Phone className="h-3 w-3" /> Teléfono
                       </Label>
                       <Input
                         value={destinationForm.contact_phone}
                         onChange={(e) =>
                           setDestinationForm({ ...destinationForm, contact_phone: e.target.value })
                         }
-                        className="mt-1"
+                        className="mt-1 h-8 text-sm"
                       />
                     </div>
                     <div>
-                      <Label className="text-xs uppercase font-bold text-gray-600 flex items-center gap-1">
-                        <Mail className="h-3 w-3" /> {t("po.logistics.contactEmail")}
+                      <Label className="text-xs font-semibold text-gray-600 flex items-center gap-1">
+                        <Mail className="h-3 w-3" /> Email
                       </Label>
                       <Input
                         type="email"
@@ -572,33 +570,34 @@ export function POLogisticsTab({
                         onChange={(e) =>
                           setDestinationForm({ ...destinationForm, contact_email: e.target.value })
                         }
-                        className="mt-1"
+                        className="mt-1 h-8 text-sm"
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="flex gap-2 pt-2">
+                <div className="flex gap-2 pt-1">
                   <Button
                     onClick={handleLoadLastShipping}
                     disabled={loadingLastShipping}
                     variant="outline"
                     size="sm"
+                    className="text-xs"
                   >
-                    <RefreshCw className="h-3.5 w-3.5 mr-2" />
+                    <RefreshCw className="h-3 w-3 mr-1" />
                     Cargar Último
                   </Button>
-                  <Button onClick={handleSaveDestination} disabled={loading} size="sm">
-                    Guardar Destino
+                  <Button onClick={handleSaveDestination} disabled={loading} size="sm" className="text-xs">
+                    Guardar
                   </Button>
                 </div>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-2 text-sm">
                 {/* Address Display Card */}
-                <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
-                  <h4 className="font-bold text-sm text-gray-900 uppercase tracking-wider mb-3">Dirección</h4>
-                  <div className="text-sm text-gray-700 space-y-1">
+                <div className="border border-gray-200 rounded-lg p-3">
+                  <div className="font-semibold text-xs uppercase tracking-wider text-gray-600 mb-2">Dirección</div>
+                  <div className="text-sm text-gray-800">
                     <div>
                       {destinationForm.street && destinationForm.street_number
                         ? `${destinationForm.street} ${destinationForm.street_number}`
@@ -613,19 +612,19 @@ export function POLogisticsTab({
                 </div>
 
                 {/* Contact Display Card */}
-                <div className="bg-amber-50 border border-amber-100 rounded-lg p-4">
-                  <h4 className="font-bold text-sm text-gray-900 uppercase tracking-wider mb-3">Contacto</h4>
-                  <div className="text-sm text-gray-700 space-y-2">
+                <div className="border border-gray-200 rounded-lg p-3">
+                  <div className="font-semibold text-xs uppercase tracking-wider text-gray-600 mb-2">Contacto</div>
+                  <div className="text-sm text-gray-800">
                     <div className="font-semibold">{destinationForm.contact_name || "-"}</div>
                     {destinationForm.contact_phone && (
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-3.5 w-3.5 text-gray-500" />
+                      <div className="flex items-center gap-2 text-xs mt-1">
+                        <Phone className="h-3 w-3 text-gray-500" />
                         <span>{destinationForm.contact_phone}</span>
                       </div>
                     )}
                     {destinationForm.contact_email && (
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-3.5 w-3.5 text-gray-500" />
+                      <div className="flex items-center gap-2 text-xs mt-1">
+                        <Mail className="h-3 w-3 text-gray-500" />
                         <span>{destinationForm.contact_email}</span>
                       </div>
                     )}
@@ -635,7 +634,7 @@ export function POLogisticsTab({
                 {isShipped && !isDelivered && canEditDestination && (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button className="w-full mt-2" size="sm">
+                      <Button className="w-full mt-2" size="sm" className="text-xs">
                         {t("po.logistics.markAsReceived")}
                       </Button>
                     </AlertDialogTrigger>
@@ -664,46 +663,46 @@ export function POLogisticsTab({
       {/* Section B: Dispatch Data */}
       {(isInProcess || isShipped || isDelivered) && (
         <div>
-          <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <Truck className="h-5 w-5 text-emerald-600" />
+          <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+            <Truck className="h-4 w-4 text-gray-600" />
             Datos de Despacho
           </h3>
           
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4">
               {canEditDispatch && isInProcess ? (
-                <div className="space-y-5">
+                <div className="space-y-3">
                   {/* Carrier & Tracking Section */}
-                  <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-4">
-                    <h4 className="font-bold text-sm text-gray-900 uppercase tracking-wider mb-4">Transportista</h4>
+                  <div className="border border-gray-200 rounded-lg p-3">
+                    <h4 className="font-semibold text-xs text-gray-900 uppercase tracking-wider mb-3">Transportista</h4>
                     <div>
-                      <Label className="text-xs uppercase font-bold text-gray-600">Transportista</Label>
+                      <Label className="text-xs font-semibold text-gray-600">Transportista</Label>
                       <Input
                         value={dispatchForm.carrier}
                         onChange={(e) =>
                           setDispatchForm({ ...dispatchForm, carrier: e.target.value })
                         }
-                        className="mt-1"
+                        className="mt-1 h-8 text-sm"
                       />
                     </div>
-                    <div className="mt-3">
-                      <Label className="text-xs uppercase font-bold text-gray-600">Número de Seguimiento</Label>
+                    <div className="mt-2">
+                      <Label className="text-xs font-semibold text-gray-600">Número de Seguimiento</Label>
                       <Input
                         value={dispatchForm.tracking_number}
                         onChange={(e) =>
                           setDispatchForm({ ...dispatchForm, tracking_number: e.target.value })
                         }
-                        className="mt-1 font-mono"
+                        className="mt-1 h-8 text-sm font-mono"
                       />
                     </div>
                   </div>
 
                   {/* Package Info Section */}
-                  <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
-                    <h4 className="font-bold text-sm text-gray-900 uppercase tracking-wider mb-4">Paquete</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="border border-gray-200 rounded-lg p-3">
+                    <h4 className="font-semibold text-xs text-gray-900 uppercase tracking-wider mb-3">Paquete</h4>
+                    <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <Label className="text-xs uppercase font-bold text-gray-600 flex items-center gap-1">
+                        <Label className="text-xs font-semibold text-gray-600 flex items-center gap-1">
                           <Gauge className="h-3 w-3" /> Peso (kg)
                         </Label>
                         <Input
@@ -712,27 +711,27 @@ export function POLogisticsTab({
                           onChange={(e) =>
                             setDispatchForm({ ...dispatchForm, weight: e.target.value })
                           }
-                          className="mt-1"
+                          className="mt-1 h-8 text-sm"
                         />
                       </div>
                       <div>
-                        <Label className="text-xs uppercase font-bold text-gray-600">Dimensiones</Label>
+                        <Label className="text-xs font-semibold text-gray-600">Dimensiones</Label>
                         <Input
                           value={dispatchForm.dimensions}
                           onChange={(e) =>
                             setDispatchForm({ ...dispatchForm, dimensions: e.target.value })
                           }
                           placeholder="ej: 50x30x20"
-                          className="mt-1"
+                          className="mt-1 h-8 text-sm"
                         />
                       </div>
                     </div>
                   </div>
 
                   {/* Delivery Date Section */}
-                  <div className="bg-amber-50 border border-amber-100 rounded-lg p-4">
-                    <h4 className="font-bold text-sm text-gray-900 uppercase tracking-wider mb-3">Entrega</h4>
-                    <Label className="text-xs uppercase font-bold text-gray-600 flex items-center gap-1">
+                  <div className="border border-gray-200 rounded-lg p-3">
+                    <h4 className="font-semibold text-xs text-gray-900 uppercase tracking-wider mb-2">Entrega</h4>
+                    <Label className="text-xs font-semibold text-gray-600 flex items-center gap-1">
                       <Calendar className="h-3 w-3" /> Fecha Estimada
                     </Label>
                     <Input
@@ -744,23 +743,23 @@ export function POLogisticsTab({
                           estimated_delivery_date: e.target.value,
                         })
                       }
-                      className="mt-1"
+                      className="mt-1 h-8 text-sm"
                     />
                   </div>
 
-                  <Button onClick={handleSaveDispatch} disabled={loading} className="w-full">
+                  <Button onClick={handleSaveDispatch} disabled={loading} className="w-full" size="sm">
                     Guardar Despacho
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-2 text-sm">
                   {/* Carrier Display Card */}
-                  <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-4">
-                    <h4 className="font-bold text-sm text-gray-900 uppercase tracking-wider mb-3">Transportista</h4>
-                    <div className="text-sm text-gray-700">
+                  <div className="border border-gray-200 rounded-lg p-3">
+                    <div className="font-semibold text-xs uppercase tracking-wider text-gray-600 mb-2">Transportista</div>
+                    <div className="text-sm text-gray-800">
                       <div className="font-semibold">{dispatchForm.carrier || "-"}</div>
                       {dispatchForm.tracking_number && (
-                        <div className="font-mono text-xs bg-white border border-emerald-200 p-2 rounded mt-2 text-gray-900">
+                        <div className="font-mono text-xs bg-gray-50 border border-gray-200 p-2 rounded mt-2 text-gray-900">
                           {dispatchForm.tracking_number}
                         </div>
                       )}
@@ -768,9 +767,9 @@ export function POLogisticsTab({
                   </div>
 
                   {/* Package Display Card */}
-                  <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
-                    <h4 className="font-bold text-sm text-gray-900 uppercase tracking-wider mb-3">Paquete</h4>
-                    <div className="text-sm text-gray-700 space-y-1">
+                  <div className="border border-gray-200 rounded-lg p-3">
+                    <div className="font-semibold text-xs uppercase tracking-wider text-gray-600 mb-2">Paquete</div>
+                    <div className="text-sm text-gray-800 space-y-1">
                       {dispatchForm.weight && <div>Peso: {dispatchForm.weight} kg</div>}
                       {dispatchForm.dimensions && <div>Dimensiones: {dispatchForm.dimensions}</div>}
                     </div>
@@ -778,9 +777,9 @@ export function POLogisticsTab({
 
                   {/* Delivery Display Card */}
                   {dispatchForm.estimated_delivery_date && (
-                    <div className="bg-amber-50 border border-amber-100 rounded-lg p-4">
-                      <h4 className="font-bold text-sm text-gray-900 uppercase tracking-wider mb-3">Entrega</h4>
-                      <div className="text-sm text-gray-700 font-semibold">
+                    <div className="border border-gray-200 rounded-lg p-3">
+                      <div className="font-semibold text-xs uppercase tracking-wider text-gray-600 mb-2">Entrega</div>
+                      <div className="text-sm text-gray-800 font-semibold">
                         {dispatchForm.estimated_delivery_date}
                       </div>
                     </div>
