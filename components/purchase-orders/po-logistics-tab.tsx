@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "@/components/ui/use-toast"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
-import { MapPin, Truck, RefreshCw } from "lucide-react"
+import { MapPin, Truck, RefreshCw, Phone, Mail, Package, Calendar, Gauge } from "lucide-react"
 import { DICT_LANG_PO } from "@/lib/constants/dict-lang-po"
 
 interface POLogisticsTabProps {
@@ -422,286 +422,374 @@ export function POLogisticsTab({
 
   return (
     <div className="space-y-6">
-      {/* Shipping Status Legend */}
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-semibold">{t("po.logistics.shippingStatus")}:</span>
-        <Badge className={getStatusBadgeColor(shipping?.status || "")}>
-          {getStatusLabel(shipping?.status || "")}
-        </Badge>
+      {/* Shipping Status Timeline */}
+      <div className="bg-gradient-to-r from-slate-50 to-blue-50 rounded-lg border border-slate-200 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-bold text-gray-900 text-sm uppercase tracking-wide">Estado del Envío</h3>
+          <Badge className={getStatusBadgeColor(shipping?.status || "")}>
+            {getStatusLabel(shipping?.status || "")}
+          </Badge>
+        </div>
+        
+        {/* Progress Timeline */}
+        <div className="flex items-center justify-between">
+          {["not_started", "in_process", "shipped", "delivered"].map((stage, index) => {
+            const isActive = ["not_started", "in_process", "shipped", "delivered"].indexOf(shipping?.status || "not_started") >= index
+            const stageName = stage === "not_started" ? "No Iniciado" : stage === "in_process" ? "En Proceso" : stage === "shipped" ? "Enviado" : "Entregado"
+            
+            return (
+              <div key={stage} className="flex items-center flex-1">
+                <div className="flex flex-col items-center">
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
+                      isActive
+                        ? "bg-emerald-500 text-white"
+                        : "bg-gray-200 text-gray-600"
+                    }`}
+                  >
+                    {index + 1}
+                  </div>
+                  <div className="text-xs font-semibold text-gray-600 mt-2 text-center whitespace-nowrap">
+                    {stageName}
+                  </div>
+                </div>
+                {index < 3 && (
+                  <div
+                    className={`flex-1 h-1 mx-2 rounded ${
+                      isActive ? "bg-emerald-500" : "bg-gray-200"
+                    }`}
+                  />
+                )}
+              </div>
+            )
+          })}
+        </div>
       </div>
 
       {/* Section A: Destination Data */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MapPin className="h-4 w-4" />
-            {t("po.logistics.destinationData")}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {canEditDestination && (isInProcess || !shipping) ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label>{t("po.logistics.street")}</Label>
-                  <Input
-                    value={destinationForm.street}
-                    onChange={(e) =>
-                      setDestinationForm({ ...destinationForm, street: e.target.value })
-                    }
-                    placeholder={t("po.logistics.street")}
-                  />
-                </div>
-                <div>
-                  <Label>{t("po.logistics.streetNumber")}</Label>
-                  <Input
-                    value={destinationForm.street_number}
-                    onChange={(e) =>
-                      setDestinationForm({ ...destinationForm, street_number: e.target.value })
-                    }
-                    placeholder={t("po.logistics.streetNumber")}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label>{t("po.logistics.city")}</Label>
-                  <Input
-                    value={destinationForm.city}
-                    onChange={(e) =>
-                      setDestinationForm({ ...destinationForm, city: e.target.value })
-                    }
-                    placeholder={t("po.logistics.city")}
-                  />
-                </div>
-                <div>
-                  <Label>{t("po.logistics.country")}</Label>
-                  <Input
-                    value={destinationForm.country}
-                    onChange={(e) =>
-                      setDestinationForm({ ...destinationForm, country: e.target.value })
-                    }
-                    placeholder={t("po.logistics.country")}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label>{t("po.logistics.zipcode")}</Label>
-                <Input
-                  value={destinationForm.zipcode}
-                  onChange={(e) =>
-                    setDestinationForm({ ...destinationForm, zipcode: e.target.value })
-                  }
-                  placeholder={t("po.logistics.zipcode")}
-                />
-              </div>
-
-              <hr />
-
-              <div>
-                <Label>{t("po.logistics.contactName")}</Label>
-                <Input
-                  value={destinationForm.contact_name}
-                  onChange={(e) =>
-                    setDestinationForm({ ...destinationForm, contact_name: e.target.value })
-                  }
-                  placeholder={t("po.logistics.contactName")}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label>{t("po.logistics.contactPhone")}</Label>
-                  <Input
-                    value={destinationForm.contact_phone}
-                    onChange={(e) =>
-                      setDestinationForm({ ...destinationForm, contact_phone: e.target.value })
-                    }
-                    placeholder={t("po.logistics.contactPhone")}
-                  />
-                </div>
-                <div>
-                  <Label>{t("po.logistics.contactEmail")}</Label>
-                  <Input
-                    type="email"
-                    value={destinationForm.contact_email}
-                    onChange={(e) =>
-                      setDestinationForm({ ...destinationForm, contact_email: e.target.value })
-                    }
-                    placeholder={t("po.logistics.contactEmail")}
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-2 pt-4">
-                <Button
-                  onClick={handleLoadLastShipping}
-                  disabled={loadingLastShipping}
-                  variant="outline"
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  {t("po.logistics.loadLastShipping")}
-                </Button>
-                <Button onClick={handleSaveDestination} disabled={loading}>
-                  {t("po.logistics.saveDestinationData")}
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-3 text-sm">
-              <div>
-                <span className="font-semibold">{t("po.logistics.street")}:</span> {destinationForm.street || "-"}
-              </div>
-              <div>
-                <span className="font-semibold">{t("po.logistics.streetNumber")}:</span> {destinationForm.street_number || "-"}
-              </div>
-              <div>
-                <span className="font-semibold">{t("po.logistics.city")}:</span> {destinationForm.city || "-"}
-              </div>
-              <div>
-                <span className="font-semibold">{t("po.logistics.country")}:</span> {destinationForm.country || "-"}
-              </div>
-              <div>
-                <span className="font-semibold">{t("po.logistics.zipcode")}:</span> {destinationForm.zipcode || "-"}
-              </div>
-              <hr />
-              <div>
-                <span className="font-semibold">{t("po.logistics.contactName")}:</span> {destinationForm.contact_name || "-"}
-              </div>
-              <div>
-                <span className="font-semibold">{t("po.logistics.contactPhone")}:</span> {destinationForm.contact_phone || "-"}
-              </div>
-              <div>
-                <span className="font-semibold">{t("po.logistics.contactEmail")}:</span> {destinationForm.contact_email || "-"}
-              </div>
-
-              {isShipped && !isDelivered && canEditDestination && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button className="mt-4">
-                      {t("po.logistics.markAsReceived")}
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>{t("po.logistics.markAsReceived")}</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        ¿Confirmar que el envío ha sido recibido? Esto cambiará el estado a Finalizado.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleMarkAsReceived} disabled={loading}>
-                        {t("common.confirm")}
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Section B: Dispatch Data */}
-      {(isInProcess || isShipped || isDelivered) && (
+      <div>
+        <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <MapPin className="h-5 w-5 text-blue-600" />
+          Datos de Destino
+        </h3>
+        
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Truck className="h-4 w-4" />
-              {t("po.logistics.dispatchData")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {canEditDispatch && isInProcess ? (
-              <div className="space-y-4">
-                <div>
-                  <Label>{t("po.logistics.carrier")}</Label>
-                  <Input
-                    value={dispatchForm.carrier}
-                    onChange={(e) =>
-                      setDispatchForm({ ...dispatchForm, carrier: e.target.value })
-                    }
-                    placeholder={t("po.logistics.carrier")}
-                  />
+          <CardContent className="p-6">
+            {canEditDestination && (isInProcess || !shipping) ? (
+              <div className="space-y-5">
+                {/* Address Section */}
+                <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
+                  <h4 className="font-bold text-sm text-gray-900 uppercase tracking-wider mb-4">Dirección</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs uppercase font-bold text-gray-600">{t("po.logistics.street")}</Label>
+                      <Input
+                        value={destinationForm.street}
+                        onChange={(e) =>
+                          setDestinationForm({ ...destinationForm, street: e.target.value })
+                        }
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs uppercase font-bold text-gray-600">{t("po.logistics.streetNumber")}</Label>
+                      <Input
+                        value={destinationForm.street_number}
+                        onChange={(e) =>
+                          setDestinationForm({ ...destinationForm, street_number: e.target.value })
+                        }
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+                    <div>
+                      <Label className="text-xs uppercase font-bold text-gray-600">{t("po.logistics.city")}</Label>
+                      <Input
+                        value={destinationForm.city}
+                        onChange={(e) =>
+                          setDestinationForm({ ...destinationForm, city: e.target.value })
+                        }
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs uppercase font-bold text-gray-600">{t("po.logistics.country")}</Label>
+                      <Input
+                        value={destinationForm.country}
+                        onChange={(e) =>
+                          setDestinationForm({ ...destinationForm, country: e.target.value })
+                        }
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs uppercase font-bold text-gray-600">{t("po.logistics.zipcode")}</Label>
+                      <Input
+                        value={destinationForm.zipcode}
+                        onChange={(e) =>
+                          setDestinationForm({ ...destinationForm, zipcode: e.target.value })
+                        }
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Contact Section */}
+                <div className="bg-amber-50 border border-amber-100 rounded-lg p-4">
+                  <h4 className="font-bold text-sm text-gray-900 uppercase tracking-wider mb-4">Contacto</h4>
                   <div>
-                    <Label>{t("po.logistics.weight")}</Label>
+                    <Label className="text-xs uppercase font-bold text-gray-600">{t("po.logistics.contactName")}</Label>
                     <Input
-                      type="number"
-                      value={dispatchForm.weight}
+                      value={destinationForm.contact_name}
                       onChange={(e) =>
-                        setDispatchForm({ ...dispatchForm, weight: e.target.value })
+                        setDestinationForm({ ...destinationForm, contact_name: e.target.value })
                       }
-                      placeholder={t("po.logistics.weight")}
+                      className="mt-1"
                     />
                   </div>
-                  <div>
-                    <Label>{t("po.logistics.dimensions")}</Label>
-                    <Input
-                      value={dispatchForm.dimensions}
-                      onChange={(e) =>
-                        setDispatchForm({ ...dispatchForm, dimensions: e.target.value })
-                      }
-                      placeholder="ej: 50x30x20 cm"
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                    <div>
+                      <Label className="text-xs uppercase font-bold text-gray-600 flex items-center gap-1">
+                        <Phone className="h-3 w-3" /> {t("po.logistics.contactPhone")}
+                      </Label>
+                      <Input
+                        value={destinationForm.contact_phone}
+                        onChange={(e) =>
+                          setDestinationForm({ ...destinationForm, contact_phone: e.target.value })
+                        }
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs uppercase font-bold text-gray-600 flex items-center gap-1">
+                        <Mail className="h-3 w-3" /> {t("po.logistics.contactEmail")}
+                      </Label>
+                      <Input
+                        type="email"
+                        value={destinationForm.contact_email}
+                        onChange={(e) =>
+                          setDestinationForm({ ...destinationForm, contact_email: e.target.value })
+                        }
+                        className="mt-1"
+                      />
+                    </div>
                   </div>
                 </div>
 
-                <div>
-                  <Label>{t("po.logistics.trackingNumber")}</Label>
-                  <Input
-                    value={dispatchForm.tracking_number}
-                    onChange={(e) =>
-                      setDispatchForm({ ...dispatchForm, tracking_number: e.target.value })
-                    }
-                    placeholder={t("po.logistics.trackingNumber")}
-                  />
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    onClick={handleLoadLastShipping}
+                    disabled={loadingLastShipping}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5 mr-2" />
+                    Cargar Último
+                  </Button>
+                  <Button onClick={handleSaveDestination} disabled={loading} size="sm">
+                    Guardar Destino
+                  </Button>
                 </div>
-
-                <div>
-                  <Label>{t("po.logistics.estimatedDeliveryDate")}</Label>
-                  <Input
-                    type="date"
-                    value={dispatchForm.estimated_delivery_date}
-                    onChange={(e) =>
-                      setDispatchForm({
-                        ...dispatchForm,
-                        estimated_delivery_date: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-
-                <Button onClick={handleSaveDispatch} disabled={loading} className="w-full">
-                  {t("po.logistics.saveDispatchData")}
-                </Button>
               </div>
             ) : (
-              <div className="space-y-3 text-sm">
-                <div>
-                  <span className="font-semibold">{t("po.logistics.carrier")}:</span> {dispatchForm.carrier || "-"}
+              <div className="space-y-4">
+                {/* Address Display Card */}
+                <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
+                  <h4 className="font-bold text-sm text-gray-900 uppercase tracking-wider mb-3">Dirección</h4>
+                  <div className="text-sm text-gray-700 space-y-1">
+                    <div>
+                      {destinationForm.street && destinationForm.street_number
+                        ? `${destinationForm.street} ${destinationForm.street_number}`
+                        : "-"}
+                    </div>
+                    <div>
+                      {[destinationForm.zipcode, destinationForm.city, destinationForm.country]
+                        .filter(Boolean)
+                        .join(", ") || "-"}
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <span className="font-semibold">{t("po.logistics.weight")}:</span> {dispatchForm.weight || "-"}
+
+                {/* Contact Display Card */}
+                <div className="bg-amber-50 border border-amber-100 rounded-lg p-4">
+                  <h4 className="font-bold text-sm text-gray-900 uppercase tracking-wider mb-3">Contacto</h4>
+                  <div className="text-sm text-gray-700 space-y-2">
+                    <div className="font-semibold">{destinationForm.contact_name || "-"}</div>
+                    {destinationForm.contact_phone && (
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-3.5 w-3.5 text-gray-500" />
+                        <span>{destinationForm.contact_phone}</span>
+                      </div>
+                    )}
+                    {destinationForm.contact_email && (
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-3.5 w-3.5 text-gray-500" />
+                        <span>{destinationForm.contact_email}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <span className="font-semibold">{t("po.logistics.dimensions")}:</span> {dispatchForm.dimensions || "-"}
-                </div>
-                <div>
-                  <span className="font-semibold">{t("po.logistics.trackingNumber")}:</span> {dispatchForm.tracking_number || "-"}
-                </div>
-                <div>
-                  <span className="font-semibold">{t("po.logistics.estimatedDeliveryDate")}:</span> {dispatchForm.estimated_delivery_date || "-"}
-                </div>
+
+                {isShipped && !isDelivered && canEditDestination && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button className="w-full mt-2" size="sm">
+                        {t("po.logistics.markAsReceived")}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>{t("po.logistics.markAsReceived")}</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          ¿Confirmar que el envío ha sido recibido? Esto cambiará el estado a Finalizado.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleMarkAsReceived} disabled={loading}>
+                          {t("common.confirm")}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
               </div>
             )}
           </CardContent>
         </Card>
+      </div>
+
+      {/* Section B: Dispatch Data */}
+      {(isInProcess || isShipped || isDelivered) && (
+        <div>
+          <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <Truck className="h-5 w-5 text-emerald-600" />
+            Datos de Despacho
+          </h3>
+          
+          <Card>
+            <CardContent className="p-6">
+              {canEditDispatch && isInProcess ? (
+                <div className="space-y-5">
+                  {/* Carrier & Tracking Section */}
+                  <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-4">
+                    <h4 className="font-bold text-sm text-gray-900 uppercase tracking-wider mb-4">Transportista</h4>
+                    <div>
+                      <Label className="text-xs uppercase font-bold text-gray-600">Transportista</Label>
+                      <Input
+                        value={dispatchForm.carrier}
+                        onChange={(e) =>
+                          setDispatchForm({ ...dispatchForm, carrier: e.target.value })
+                        }
+                        className="mt-1"
+                      />
+                    </div>
+                    <div className="mt-3">
+                      <Label className="text-xs uppercase font-bold text-gray-600">Número de Seguimiento</Label>
+                      <Input
+                        value={dispatchForm.tracking_number}
+                        onChange={(e) =>
+                          setDispatchForm({ ...dispatchForm, tracking_number: e.target.value })
+                        }
+                        className="mt-1 font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Package Info Section */}
+                  <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
+                    <h4 className="font-bold text-sm text-gray-900 uppercase tracking-wider mb-4">Paquete</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-xs uppercase font-bold text-gray-600 flex items-center gap-1">
+                          <Gauge className="h-3 w-3" /> Peso (kg)
+                        </Label>
+                        <Input
+                          type="number"
+                          value={dispatchForm.weight}
+                          onChange={(e) =>
+                            setDispatchForm({ ...dispatchForm, weight: e.target.value })
+                          }
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs uppercase font-bold text-gray-600">Dimensiones</Label>
+                        <Input
+                          value={dispatchForm.dimensions}
+                          onChange={(e) =>
+                            setDispatchForm({ ...dispatchForm, dimensions: e.target.value })
+                          }
+                          placeholder="ej: 50x30x20"
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Delivery Date Section */}
+                  <div className="bg-amber-50 border border-amber-100 rounded-lg p-4">
+                    <h4 className="font-bold text-sm text-gray-900 uppercase tracking-wider mb-3">Entrega</h4>
+                    <Label className="text-xs uppercase font-bold text-gray-600 flex items-center gap-1">
+                      <Calendar className="h-3 w-3" /> Fecha Estimada
+                    </Label>
+                    <Input
+                      type="date"
+                      value={dispatchForm.estimated_delivery_date}
+                      onChange={(e) =>
+                        setDispatchForm({
+                          ...dispatchForm,
+                          estimated_delivery_date: e.target.value,
+                        })
+                      }
+                      className="mt-1"
+                    />
+                  </div>
+
+                  <Button onClick={handleSaveDispatch} disabled={loading} className="w-full">
+                    Guardar Despacho
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Carrier Display Card */}
+                  <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-4">
+                    <h4 className="font-bold text-sm text-gray-900 uppercase tracking-wider mb-3">Transportista</h4>
+                    <div className="text-sm text-gray-700">
+                      <div className="font-semibold">{dispatchForm.carrier || "-"}</div>
+                      {dispatchForm.tracking_number && (
+                        <div className="font-mono text-xs bg-white border border-emerald-200 p-2 rounded mt-2 text-gray-900">
+                          {dispatchForm.tracking_number}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Package Display Card */}
+                  <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
+                    <h4 className="font-bold text-sm text-gray-900 uppercase tracking-wider mb-3">Paquete</h4>
+                    <div className="text-sm text-gray-700 space-y-1">
+                      {dispatchForm.weight && <div>Peso: {dispatchForm.weight} kg</div>}
+                      {dispatchForm.dimensions && <div>Dimensiones: {dispatchForm.dimensions}</div>}
+                    </div>
+                  </div>
+
+                  {/* Delivery Display Card */}
+                  {dispatchForm.estimated_delivery_date && (
+                    <div className="bg-amber-50 border border-amber-100 rounded-lg p-4">
+                      <h4 className="font-bold text-sm text-gray-900 uppercase tracking-wider mb-3">Entrega</h4>
+                      <div className="text-sm text-gray-700 font-semibold">
+                        {dispatchForm.estimated_delivery_date}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       )}
     </div>
   )
