@@ -531,7 +531,7 @@ export function POLogisticsTab({
                 <span className="font-semibold">{t("po.logistics.contactEmail")}:</span> {destinationForm.contact_email || "-"}
               </div>
 
-              {isShipped && canEditDestination && (
+              {isShipped && !isDelivered && canEditDestination && (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button className="mt-4">
