@@ -12,6 +12,7 @@ import { DICT_LANG_PO } from "@/lib/constants/dict-lang-po"
 import { supabase } from "@/lib/supabase/client"
 import { toast } from "@/components/ui/use-toast"
 import { format } from "date-fns"
+import { es } from "date-fns/locale"
 import { DetailPageSkeleton } from "@/components/purchase-orders/skeletons"
 import { PONotes } from "@/components/purchase-orders/po-notes"
 import { POGeneralTab } from "@/components/purchase-orders/po-general-tab"
@@ -131,12 +132,16 @@ export default function PurchaseOrderDetailPage() {
       // Load related opportunities
       const { data: opportunitiesData, error: oppError } = await supabase
         .from("opportunities")
-        .select("id, name, stage, amount, contact_name, created_at")
+        .select("id, title, stage, amount, created_at")
         .eq("purchase_order_id", poId)
         .order("created_at", { ascending: false })
 
       if (!oppError) {
         setOpportunities(opportunitiesData || [])
+      } else {
+        console.error("[v0] Error loading opportunities:", oppError)
+        // Don't fail the whole page if opportunities fail
+        setOpportunities([])
       }
     } catch (error) {
       console.error("[v0] Error loading purchase order:", error)

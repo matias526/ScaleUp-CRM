@@ -51,14 +51,11 @@ export function RelatedOpportunitiesSection({ opportunities }: RelatedOpportunit
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <h4 className="font-semibold text-sm">{opp.name}</h4>
+                  <h4 className="font-semibold text-sm">{opp.title}</h4>
                   <div className="flex gap-3 mt-2 text-xs text-gray-600">
                     {opp.stage && <span>Etapa: {opp.stage}</span>}
                     {opp.amount && <span>{formatCurrency(opp.amount)}</span>}
                   </div>
-                  {opp.contact_name && (
-                    <div className="text-xs text-gray-500 mt-1">Contacto: {opp.contact_name}</div>
-                  )}
                   {opp.created_at && (
                     <div className="text-xs text-gray-400 mt-1">
                       {format(new Date(opp.created_at), "dd MMM yyyy", { locale: es })}
