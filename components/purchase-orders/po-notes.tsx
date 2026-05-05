@@ -113,14 +113,14 @@ export function PONotes({ poId, currentUserId, userRole = "" }: PONotesProps) {
   }
 
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="flex flex-row items-center justify-between pb-3">
+    <Card className="flex flex-col h-[calc(100vh-280px)]">
+      <CardHeader className="flex flex-row items-center justify-between pb-3 flex-shrink-0">
         <CardTitle className="text-lg">{t("po.notes.title") || "Notas y Actividad"}</CardTitle>
         <Button onClick={loadNotes} size="sm" variant="outline" title="Recargar">
           <RefreshCw className="h-4 w-4" />
         </Button>
       </CardHeader>
-      <CardContent className="flex-1 overflow-y-auto space-y-4">
+      <CardContent className="flex-1 overflow-y-auto space-y-4 min-h-0">
         {/* Add Note Button */}
         <Button
           onClick={() => setIsDialogOpen(true)}
