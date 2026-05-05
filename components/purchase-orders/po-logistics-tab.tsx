@@ -174,37 +174,49 @@ export function POLogisticsTab({
         return
       }
 
-      // Get last shipping for this partner and tech company
-      let query = supabase
-        .from("shippings")
-        .select("*")
+      // First, get all POs for this partner and tech company (excluding current)
+      const { data: posData, error: posError } = await supabase
+        .from("purchase_orders")
+        .select("id")
         .eq("partner_id", po.partner_id)
         .eq("tech_company_id", po.tech_company_id)
+        .neq("id", po.id)
+        .order("created_at", { ascending: false })
+
+      if (posError) throw posError
+
+      if (!posData || posData.length === 0) {
+        toast({
+          title: "Info",
+          description: t("po.logistics.noLastShipping"),
+        })
+        setLoadingLastShipping(false)
+        return
+      }
+
+      const poIds = posData.map(p => p.id)
+
+      // Then get the latest shipping from those POs
+      const { data: shippingData, error: shippingError } = await supabase
+        .from("shippings")
+        .select("*")
+        .in("po_id", poIds)
         .order("created_at", { ascending: false })
         .limit(1)
+        .maybeSingle()
 
-      // Only exclude current shipping if it exists
-      if (shipping?.id) {
-        query = query.neq("id", shipping.id)
-      }
+      if (shippingError) throw shippingError
 
-      const { data, error } = await query.maybeSingle()
-
-      if (error) {
-        console.error("[v0] Error loading last shipping:", error)
-        throw error
-      }
-
-      if (data) {
+      if (shippingData) {
         setDestinationForm({
-          street: data.street || "",
-          street_number: data.street_number || "",
-          city: data.city || "",
-          country: data.country || "",
-          zipcode: data.zipcode || "",
-          contact_name: data.contact_name || "",
-          contact_phone: data.contact_phone || "",
-          contact_email: data.contact_email || "",
+          street: shippingData.street || "",
+          street_number: shippingData.street_number || "",
+          city: shippingData.city || "",
+          country: shippingData.country || "",
+          zipcode: shippingData.zipcode || "",
+          contact_name: shippingData.contact_name || "",
+          contact_phone: shippingData.contact_phone || "",
+          contact_email: shippingData.contact_email || "",
         })
         toast({
           title: t("common.success"),
