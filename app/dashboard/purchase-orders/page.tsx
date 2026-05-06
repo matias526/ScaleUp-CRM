@@ -580,18 +580,20 @@ return (
                               <Eye className="h-4 w-4" />
                             </Button>
                           </Link>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                            title={t("po.table.messages")}
-                            onClick={() => {
-                              // Aquí irá la lógica de mensajes
-                              console.log("[v0] Messages clicked for PO:", po.id)
-                            }}
-                          >
-                            <MessageSquare className="h-4 w-4" />
-                          </Button>
+                          {["Admin", "BDD"].includes(userInfo?.roleCode || "") && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              title={t("po.table.messages")}
+                              onClick={() => {
+                                // Aquí irá la lógica de mensajes
+                                console.log("[v0] Messages clicked for PO:", po.id)
+                              }}
+                            >
+                              <MessageSquare className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
