@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress"
 import { TrendingUp } from "lucide-react"
 import { formatCurrency } from "@/lib/utils/format"
 import { useTranslations } from "@/hooks/use-translations"
+import { DICT_LANG_PO } from "@/lib/constants/dict-lang-po"
 
 interface MilestonesStatusWidgetProps {
   milestones: any[]
@@ -13,7 +14,7 @@ interface MilestonesStatusWidgetProps {
 }
 
 export function MilestonesStatusWidget({ milestones, onViewClick }: MilestonesStatusWidgetProps) {
-  const { t } = useTranslations()
+  const { t } = useTranslations(DICT_LANG_PO)
   
   const totalMilestones = milestones?.length || 0
   const paidMilestones = milestones?.filter(m => m.status === "paid")?.length || 0

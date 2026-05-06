@@ -6,6 +6,7 @@ import { Truck, CheckCircle, Clock, Package } from "lucide-react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { useTranslations } from "@/hooks/use-translations"
+import { DICT_LANG_PO } from "@/lib/constants/dict-lang-po"
 
 interface LogisticsStatusWidgetProps {
   shipping: any | null
@@ -13,7 +14,7 @@ interface LogisticsStatusWidgetProps {
 }
 
 export function LogisticsStatusWidget({ shipping, onViewClick }: LogisticsStatusWidgetProps) {
-  const { t } = useTranslations()
+  const { t } = useTranslations(DICT_LANG_PO)
 
   const getStatusConfig = (status: string) => {
     const statusMap: Record<
