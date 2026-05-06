@@ -98,7 +98,18 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
     setEditFormData({
       title: milestone.title,
       amount: milestone.amount,
-      due_date: milestone.due_date || '',
+      due_date: milestone.due_date ? milestone.due_date.split('T')[0] : '',
+    })
+    setShowEditDialog(true)
+  }
+
+  // Handle create new milestone
+  const handleCreateMilestone = () => {
+    setSelectedMilestone(null)
+    setEditFormData({
+      title: '',
+      amount: 0,
+      due_date: '',
     })
     setShowEditDialog(true)
   }
@@ -436,8 +447,11 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
       <div className="space-y-3">
         {milestones.length === 0 ? (
           <Card>
-            <CardContent className="pt-6 text-center text-gray-500">
-              {t('po.milestone.noMilestones')}
+            <CardContent className="pt-6 flex flex-col items-center justify-center text-center gap-3">
+              <div className="text-gray-500">{t('po.milestone.noMilestones')}</div>
+              <Button onClick={handleCreateMilestone} className="mt-2">
+                + {t('po.milestone.create') || 'Crear Hito'}
+              </Button>
             </CardContent>
           </Card>
         ) : (

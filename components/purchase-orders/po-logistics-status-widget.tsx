@@ -58,17 +58,6 @@ export function LogisticsStatusWidget({ shipping, onViewClick }: LogisticsStatus
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
-        {/* Status Badge with Icon */}
-        <div className="flex items-center gap-3">
-          <div className={`${statusConfig.bgColor} p-2.5 rounded-lg`}>
-            <StatusIcon className={`h-5 w-5 ${statusConfig.color}`} />
-          </div>
-          <div>
-            <div className="text-xs text-gray-500 uppercase font-bold tracking-wider">Estado</div>
-            <div className={`text-sm font-semibold ${statusConfig.color}`}>{statusConfig.label}</div>
-          </div>
-        </div>
-
         {/* Progress Bar */}
         <div>
           <div className="flex items-center justify-between mb-2">
@@ -88,6 +77,17 @@ export function LogisticsStatusWidget({ shipping, onViewClick }: LogisticsStatus
               }`}
               style={{ width: `${progressPercent}%` }}
             />
+          </div>
+        </div>
+
+        {/* Status Badge with Icon */}
+        <div className="flex items-center gap-3">
+          <div className={`${statusConfig.bgColor} p-2.5 rounded-lg`}>
+            <StatusIcon className={`h-5 w-5 ${statusConfig.color}`} />
+          </div>
+          <div>
+            <div className="text-xs text-gray-500 uppercase font-bold tracking-wider">Estado</div>
+            <div className={`text-sm font-semibold ${statusConfig.color}`}>{statusConfig.label}</div>
           </div>
         </div>
 
