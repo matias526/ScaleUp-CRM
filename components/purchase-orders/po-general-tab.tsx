@@ -178,18 +178,6 @@ export function POGeneralTab({
             >
               <CheckCircle className="mr-2 h-4 w-4" />
               {t("po.approvePO")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-green-800 mb-4">
-              Revisa los detalles de la orden y apruébala para proceder con los hitos y logística.
-            </p>
-            <Button
-              onClick={() => setShowApproveDialog(true)}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <CheckCircle className="mr-2 h-4 w-4" />
-              Aprobar PO
             </Button>
           </CardContent>
         </Card>
