@@ -425,7 +425,7 @@ export function POLogisticsTab({
       {/* Shipping Status Timeline */}
       <div className="bg-white rounded-lg border border-gray-200 p-4">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-bold text-gray-900 text-xs uppercase tracking-wide">Estado del Envío</h3>
+          <h3 className="font-bold text-gray-900 text-xs uppercase tracking-wide">{t("po.logistics.shippingStatus")}</h3>
           <Badge className={getStatusBadgeColor(shipping?.status || "")}>
             {getStatusLabel(shipping?.status || "")}
           </Badge>
@@ -435,7 +435,7 @@ export function POLogisticsTab({
         <div className="flex items-center justify-between">
           {["not_started", "in_process", "shipped", "delivered"].map((stage, index) => {
             const isActive = ["not_started", "in_process", "shipped", "delivered"].indexOf(shipping?.status || "not_started") >= index
-            const stageName = stage === "not_started" ? "No Iniciado" : stage === "in_process" ? "En Proceso" : stage === "shipped" ? "Enviado" : "Entregado"
+            const stageName = stage === "not_started" ? t("po.logistics.notStarted") : stage === "in_process" ? t("po.logistics.inProcess") : stage === "shipped" ? t("po.logistics.shipped") : t("po.logistics.delivered")
             
             return (
               <div key={stage} className="flex items-center flex-1">
@@ -470,7 +470,7 @@ export function POLogisticsTab({
       <div>
         <h3 className="text-xs font-bold text-gray-900 mb-2 flex items-center gap-2">
           <MapPin className="h-3.5 w-3.5 text-gray-600" />
-          Datos de Destino
+          {t("po.logistics.destinationData")}
         </h3>
         
         <Card>
@@ -479,7 +479,7 @@ export function POLogisticsTab({
               <div className="space-y-2">
                 {/* Address Row */}
                 <div className="border border-gray-200 rounded p-2">
-                  <div className="font-semibold text-xs text-gray-900 uppercase tracking-wider mb-2">Dirección</div>
+                  <div className="font-semibold text-xs text-gray-900 uppercase tracking-wider mb-2">{t("po.logistics.shippingAddress")}</div>
                   <div className="grid grid-cols-4 gap-2">
                     <div>
                       <Label className="text-xs font-semibold text-gray-600">{t("po.logistics.street")}</Label>
@@ -492,7 +492,7 @@ export function POLogisticsTab({
                       />
                     </div>
                     <div>
-                      <Label className="text-xs font-semibold text-gray-600">Nº</Label>
+                      <Label className="text-xs font-semibold text-gray-600">{t("po.logistics.streetNumber")}</Label>
                       <Input
                         value={destinationForm.street_number}
                         onChange={(e) =>
@@ -512,7 +512,7 @@ export function POLogisticsTab({
                       />
                     </div>
                     <div>
-                      <Label className="text-xs font-semibold text-gray-600">CP</Label>
+                      <Label className="text-xs font-semibold text-gray-600">{t("po.logistics.zipcode")}</Label>
                       <Input
                         value={destinationForm.zipcode}
                         onChange={(e) =>
@@ -536,7 +536,7 @@ export function POLogisticsTab({
 
                 {/* Contact Row */}
                 <div className="border border-gray-200 rounded p-2">
-                  <div className="font-semibold text-xs text-gray-900 uppercase tracking-wider mb-2">Contacto</div>
+                  <div className="font-semibold text-xs text-gray-900 uppercase tracking-wider mb-2">{t("po.logistics.contactName")}</div>
                   <div className="grid grid-cols-3 gap-2">
                     <div>
                       <Label className="text-xs font-semibold text-gray-600">{t("po.logistics.contactName")}</Label>
@@ -550,7 +550,7 @@ export function POLogisticsTab({
                     </div>
                     <div>
                       <Label className="text-xs font-semibold text-gray-600 flex items-center gap-1">
-                        <Phone className="h-2.5 w-2.5" /> Teléfono
+                        <Phone className="h-2.5 w-2.5" /> {t("po.logistics.contactPhone")}
                       </Label>
                       <Input
                         value={destinationForm.contact_phone}
@@ -562,7 +562,7 @@ export function POLogisticsTab({
                     </div>
                     <div>
                       <Label className="text-xs font-semibold text-gray-600 flex items-center gap-1">
-                        <Mail className="h-2.5 w-2.5" /> Email
+                        <Mail className="h-2.5 w-2.5" /> {t("po.logistics.contactEmail")}
                       </Label>
                       <Input
                         type="email"
@@ -585,10 +585,10 @@ export function POLogisticsTab({
                     className="text-xs h-7"
                   >
                     <RefreshCw className="h-2.5 w-2.5 mr-1" />
-                    Cargar
+                    {t("po.logistics.loadLastShipping")}
                   </Button>
                   <Button onClick={handleSaveDestination} disabled={loading} size="sm" className="text-xs h-7">
-                    Guardar
+                    {t("common.save")}
                   </Button>
                 </div>
               </div>
@@ -596,28 +596,28 @@ export function POLogisticsTab({
               <div className="space-y-1 text-xs">
                 {/* Address Display */}
                 <div className="border border-gray-200 rounded p-2">
-                  <div className="font-semibold text-gray-900 uppercase tracking-wider mb-1">Dirección</div>
+                  <div className="font-semibold text-gray-900 uppercase tracking-wider mb-1">{t("po.logistics.shippingAddress")}</div>
                   <div className="text-gray-800 grid grid-cols-2 gap-2 text-xs">
                     <div>
-                      <span className="text-gray-600">Calle:</span> {destinationForm.street && destinationForm.street_number
+                      <span className="text-gray-600">{t("po.logistics.street")}:</span> {destinationForm.street && destinationForm.street_number
                         ? `${destinationForm.street} ${destinationForm.street_number}`
                         : "-"}
                     </div>
                     <div>
-                      <span className="text-gray-600">Ciudad:</span> {destinationForm.city || "-"}
+                      <span className="text-gray-600">{t("po.logistics.city")}:</span> {destinationForm.city || "-"}
                     </div>
                     <div>
-                      <span className="text-gray-600">CP:</span> {destinationForm.zipcode || "-"}
+                      <span className="text-gray-600">{t("po.logistics.zipcode")}:</span> {destinationForm.zipcode || "-"}
                     </div>
                     <div>
-                      <span className="text-gray-600">País:</span> {destinationForm.country || "-"}
+                      <span className="text-gray-600">{t("po.logistics.country")}:</span> {destinationForm.country || "-"}
                     </div>
                   </div>
                 </div>
 
                 {/* Contact Display */}
                 <div className="border border-gray-200 rounded p-2">
-                  <div className="font-semibold text-gray-900 uppercase tracking-wider mb-1">Contacto</div>
+                  <div className="font-semibold text-gray-900 uppercase tracking-wider mb-1">{t("po.logistics.contactName")}</div>
                   <div className="text-gray-800 grid grid-cols-3 gap-2 text-xs">
                     <div>
                       <span className="font-semibold">{destinationForm.contact_name || "-"}</span>
@@ -667,7 +667,7 @@ export function POLogisticsTab({
         <div>
           <h3 className="text-xs font-bold text-gray-900 mb-2 flex items-center gap-2">
             <Truck className="h-3.5 w-3.5 text-gray-600" />
-            Datos de Despacho
+            {t("po.logistics.dispatchData")}
           </h3>
           
           <Card>
@@ -676,10 +676,10 @@ export function POLogisticsTab({
                 <div className="space-y-2">
                   {/* Carrier Row */}
                   <div className="border border-gray-200 rounded p-2">
-                    <div className="font-semibold text-xs text-gray-900 uppercase tracking-wider mb-2">Transportista</div>
+                    <div className="font-semibold text-xs text-gray-900 uppercase tracking-wider mb-2">{t("po.logistics.carrier")}</div>
                     <div className="grid grid-cols-3 gap-2">
                       <div>
-                        <Label className="text-xs font-semibold text-gray-600">Transportista</Label>
+                        <Label className="text-xs font-semibold text-gray-600">{t("po.logistics.carrier")}</Label>
                         <Input
                           value={dispatchForm.carrier}
                           onChange={(e) =>
@@ -689,7 +689,7 @@ export function POLogisticsTab({
                         />
                       </div>
                       <div>
-                        <Label className="text-xs font-semibold text-gray-600">Nº Seguimiento</Label>
+                        <Label className="text-xs font-semibold text-gray-600">{t("po.logistics.trackingNumber")}</Label>
                         <Input
                           value={dispatchForm.tracking_number}
                           onChange={(e) =>
@@ -699,7 +699,7 @@ export function POLogisticsTab({
                         />
                       </div>
                       <div>
-                        <Label className="text-xs font-semibold text-gray-600">Fecha Estimada</Label>
+                        <Label className="text-xs font-semibold text-gray-600">{t("po.logistics.estimatedDeliveryDate")}</Label>
                         <Input
                           type="date"
                           value={dispatchForm.estimated_delivery_date}
@@ -717,10 +717,10 @@ export function POLogisticsTab({
 
                   {/* Package Row */}
                   <div className="border border-gray-200 rounded p-2">
-                    <div className="font-semibold text-xs text-gray-900 uppercase tracking-wider mb-2">Paquete</div>
+                    <div className="font-semibold text-xs text-gray-900 uppercase tracking-wider mb-2">{t("po.logistics.weight")}</div>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <Label className="text-xs font-semibold text-gray-600">Peso (kg)</Label>
+                        <Label className="text-xs font-semibold text-gray-600">{t("po.logistics.weight")}</Label>
                         <Input
                           type="number"
                           value={dispatchForm.weight}
@@ -731,7 +731,7 @@ export function POLogisticsTab({
                         />
                       </div>
                       <div>
-                        <Label className="text-xs font-semibold text-gray-600">Dimensiones</Label>
+                        <Label className="text-xs font-semibold text-gray-600">{t("po.logistics.dimensions")}</Label>
                         <Input
                           value={dispatchForm.dimensions}
                           onChange={(e) =>
@@ -745,36 +745,36 @@ export function POLogisticsTab({
                   </div>
 
                   <Button onClick={handleSaveDispatch} disabled={loading} className="w-full text-xs h-7">
-                    Guardar
+                    {t("common.save")}
                   </Button>
                 </div>
               ) : (
                 <div className="space-y-1 text-xs">
                   {/* Carrier Display */}
                   <div className="border border-gray-200 rounded p-2">
-                    <div className="font-semibold text-gray-900 uppercase tracking-wider mb-1">Transportista</div>
+                    <div className="font-semibold text-gray-900 uppercase tracking-wider mb-1">{t("po.logistics.carrier")}</div>
                     <div className="text-gray-800 grid grid-cols-3 gap-2 text-xs">
                       <div>
-                        <span className="text-gray-600">Transportista:</span> {dispatchForm.carrier || "-"}
+                        <span className="text-gray-600">{t("po.logistics.carrier")}:</span> {dispatchForm.carrier || "-"}
                       </div>
                       <div>
-                        <span className="text-gray-600">Seguimiento:</span>
+                        <span className="text-gray-600">{t("po.logistics.trackingNumber")}:</span>
                         <div className="font-mono text-xs bg-gray-50 border border-gray-200 p-1 rounded mt-0.5 text-gray-900">
                           {dispatchForm.tracking_number || "-"}
                         </div>
                       </div>
                       <div>
-                        <span className="text-gray-600">Entrega Est.:</span> {dispatchForm.estimated_delivery_date || "-"}
+                        <span className="text-gray-600">{t("po.logistics.estimatedDeliveryDate")}:</span> {dispatchForm.estimated_delivery_date || "-"}
                       </div>
                     </div>
                   </div>
 
                   {/* Package Display */}
                   <div className="border border-gray-200 rounded p-2">
-                    <div className="font-semibold text-gray-900 uppercase tracking-wider mb-1">Paquete</div>
+                    <div className="font-semibold text-gray-900 uppercase tracking-wider mb-1">{t("po.logistics.weight")}</div>
                     <div className="text-gray-800 grid grid-cols-2 gap-2 text-xs">
-                      {dispatchForm.weight && <div><span className="text-gray-600">Peso:</span> {dispatchForm.weight} kg</div>}
-                      {dispatchForm.dimensions && <div><span className="text-gray-600">Dimensiones:</span> {dispatchForm.dimensions}</div>}
+                      {dispatchForm.weight && <div><span className="text-gray-600">{t("po.logistics.weight")}:</span> {dispatchForm.weight} kg</div>}
+                      {dispatchForm.dimensions && <div><span className="text-gray-600">{t("po.logistics.dimensions")}:</span> {dispatchForm.dimensions}</div>}
                     </div>
                   </div>
                 </div>

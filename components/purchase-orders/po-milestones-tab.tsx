@@ -469,16 +469,16 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
                         <h3 className="font-semibold text-sm text-gray-900">{milestone.title}</h3>
                         <div className="flex items-center gap-4 mt-1 text-xs text-gray-600">
                           <div>
-                            <span className="font-bold">Monto:</span> ${milestone.amount?.toFixed(2) || '0.00'}
+                            <span className="font-bold">{t("po.milestone.amount")}:</span> ${milestone.amount?.toFixed(2) || '0.00'}
                           </div>
                           {milestone.due_date && (
                             <div>
-                              <span className="font-bold">Vencimiento:</span> {format(new Date(milestone.due_date), 'dd/MM/yyyy')}
+                              <span className="font-bold">{t("po.milestone.dueDate")}:</span> {format(new Date(milestone.due_date), 'dd/MM/yyyy')}
                             </div>
                           )}
                           {milestone.paid_at && (
                             <div>
-                              <span className="font-bold">Pagado:</span> {format(new Date(milestone.paid_at), 'dd/MM/yyyy')}
+                              <span className="font-bold">{t("po.milestone.paid")}:</span> {format(new Date(milestone.paid_at), 'dd/MM/yyyy')}
                             </div>
                           )}
                         </div>

@@ -61,15 +61,15 @@ export function POGeneralTab({
         {/* Card 1: PO Status & Total */}
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Orden de Compra</CardTitle>
+            <CardTitle className="text-base">{t("po.title")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Estado</span>
+              <span className="text-sm text-gray-600">{t("po.status")}</span>
               <Badge className={getStatusBadgeColor(po.status)}>{poStatusLabel}</Badge>
             </div>
             <div className="pt-2 border-t">
-              <div className="text-xs text-gray-500">Monto Total</div>
+              <div className="text-xs text-gray-500">{t("po.totalAmount")}</div>
               <div className="text-2xl font-bold">{formatCurrency(poAmount)}</div>
             </div>
             <div className="text-xs text-gray-500">
@@ -93,7 +93,7 @@ export function POGeneralTab({
       {/* Metadata Section - Enhanced */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Información Detallada</CardTitle>
+          <CardTitle className="text-base">{t("po.detail.detailedInfo") || "Información Detallada"}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -101,7 +101,7 @@ export function POGeneralTab({
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-xs text-gray-600">
                 <Calendar className="h-3.5 w-3.5" />
-                Fecha de Creación
+                {t("po.detail.createdDate") || "Fecha de Creación"}
               </div>
               <div className="font-medium text-sm">
                 {po.created_at
@@ -165,7 +165,19 @@ export function POGeneralTab({
           <CardHeader>
             <CardTitle className="text-green-900 text-base flex items-center gap-2">
               <CheckCircle className="h-5 w-5" />
-              Aprobar Orden de Compra
+              {t("po.approvePO")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-green-800 mb-4">
+              {t("po.detail.approveDescription") || "Revisa los detalles de la orden y apruébala para proceder con los hitos y logística."}
+            </p>
+            <Button
+              onClick={() => setShowApproveDialog(true)}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <CheckCircle className="mr-2 h-4 w-4" />
+              {t("po.approvePO")}
             </CardTitle>
           </CardHeader>
           <CardContent>
