@@ -236,6 +236,11 @@ export const DICT_LANG_PO = {
     en: "Approval Date",
     pt: "Data de Aprovação",
   },
+  "po.detail.approvedDate": {
+    es: "Fecha de Aprobación",
+    en: "Approval Date",
+    pt: "Data de Aprovação",
+  },
   "po.approvedBy": {
     es: "Aprobado por",
     en: "Approved By",
