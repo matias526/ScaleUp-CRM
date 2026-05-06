@@ -116,9 +116,14 @@ export const DICT_LANG_PO = {
     pt: "PO",
   },
   "po.table.milestonesStatus": {
-    es: "Milestones",
-    en: "Milestones",
-    pt: "Marcos",
+    es: "Financiero",
+    en: "Financial",
+    pt: "Financeiro",
+  },
+  "po.table.financialStatus": {
+    es: "Financiero",
+    en: "Financial",
+    pt: "Financeiro",
   },
   "po.table.logisticsStatus": {
     es: "Logística",
@@ -837,7 +842,51 @@ export const DICT_LANG_PO = {
     en: "Select Company",
     pt: "Selecionar Empresa",
   },
-  "common.success": {
+  "po.filter.byPoStatus": {
+    es: "Filtrar por Estado PO",
+    en: "Filter by PO Status",
+    pt: "Filtrar por Status PO",
+  },
+  "po.filter.selectPoStatus": {
+    es: "Seleccionar estado PO",
+    en: "Select PO status",
+    pt: "Selecionar status PO",
+  },
+  "po.filter.byFinancialStatus": {
+    es: "Filtrar por Estado Financiero",
+    en: "Filter by Financial Status",
+    pt: "Filtrar por Status Financeiro",
+  },
+  "po.filter.selectFinancialStatus": {
+    es: "Seleccionar estado financiero",
+    en: "Select financial status",
+    pt: "Selecionar status financeiro",
+  },
+  "po.filter.nopayment": {
+    es: "Ningún pago",
+    en: "No payment",
+    pt: "Sem pagamento",
+  },
+  "po.filter.somepayment": {
+    es: "Algún pago",
+    en: "Some payment",
+    pt: "Algum pagamento",
+  },
+  "po.filter.fullpayment": {
+    es: "Pagado",
+    en: "Paid",
+    pt: "Pago",
+  },
+  "po.filter.byLogisticsStatus": {
+    es: "Filtrar por Estado Logístico",
+    en: "Filter by Logistics Status",
+    pt: "Filtrar por Status Logístico",
+  },
+  "po.filter.selectLogisticsStatus": {
+    es: "Seleccionar estado logístico",
+    en: "Select logistics status",
+    pt: "Selecionar status logístico",
+  },
     es: "Éxito",
     en: "Success",
     pt: "Sucesso",

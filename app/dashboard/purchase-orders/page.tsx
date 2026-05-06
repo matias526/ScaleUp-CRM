@@ -33,6 +33,9 @@ export default function PurchaseOrdersPage() {
   const [techCompanies, setTechCompanies] = useState<any[]>([])
   const [selectedPartner, setSelectedPartner] = useState<string>("")
   const [selectedTechCompany, setSelectedTechCompany] = useState<string>("")
+  const [selectedPoStatus, setSelectedPoStatus] = useState<string>("")
+  const [selectedFinancialStatus, setSelectedFinancialStatus] = useState<string>("")
+  const [selectedLogisticsStatus, setSelectedLogisticsStatus] = useState<string>("")
 
   useEffect(() => {
     if (!authLoading && userInfo) {
@@ -46,7 +49,7 @@ export default function PurchaseOrdersPage() {
       setError(t("po.errorNotAuthenticated"))
       setLoading(false)
     }
-  }, [userInfo, authLoading, selectedPartner, selectedTechCompany])
+  }, [userInfo, authLoading, selectedPartner, selectedTechCompany, selectedPoStatus, selectedFinancialStatus, selectedLogisticsStatus])
 
   const loadPurchaseOrders = async () => {
     try {
@@ -126,7 +129,38 @@ export default function PurchaseOrdersPage() {
         })
       )
 
-      setPurchaseOrders(posWithDetails || [])
+      // Aplicar filtros por estado
+      let filtered = posWithDetails || []
+
+      // Filtro por PO Status
+      if (selectedPoStatus) {
+        filtered = filtered.filter(po => po.status === selectedPoStatus)
+      }
+
+      // Filtro por Financial Status (Milestones)
+      if (selectedFinancialStatus) {
+        filtered = filtered.filter(po => {
+          const milestones = po.milestones || []
+          const totalMilestones = milestones.length
+          const paidMilestones = milestones.filter((m: any) => m.status === "paid").length
+
+          if (selectedFinancialStatus === "none") return paidMilestones === 0
+          if (selectedFinancialStatus === "partial") return paidMilestones > 0 && paidMilestones < totalMilestones
+          if (selectedFinancialStatus === "full") return paidMilestones === totalMilestones && totalMilestones > 0
+          return true
+        })
+      }
+
+      // Filtro por Logistics Status
+      if (selectedLogisticsStatus) {
+        filtered = filtered.filter(po => {
+          const shipping = po.shipping || []
+          if (shipping.length === 0) return selectedLogisticsStatus === "not_started"
+          return shipping[0].status === selectedLogisticsStatus
+        })
+      }
+
+      setPurchaseOrders(filtered)
     } catch (error) {
       console.error("[v0] Error loading purchase orders:", error)
       setError(t("po.errorLoadingOrders"))
@@ -263,6 +297,50 @@ export default function PurchaseOrdersPage() {
             </div>
           </div>
         )}
+        {["Admin", "BDD", "TechUser", "TechLogistic", "PartnerUser"].includes(userInfo?.roleCode || "") && (
+          <div className="px-6 pt-0 pb-4 flex gap-4 flex-wrap items-end">
+            <div className="flex-1 min-w-[180px]">
+              <label className="text-sm font-medium block mb-2">{t("po.filter.byPoStatus")}</label>
+              <select
+                value={selectedPoStatus}
+                onChange={(e) => setSelectedPoStatus(e.target.value)}
+                className="w-full px-3 py-2 border rounded-md text-sm"
+              >
+                <option value="">{t("po.filter.selectPoStatus")}</option>
+                <option value="sent">{t("po.status.sent")}</option>
+                <option value="accepted">{t("po.status.accepted")}</option>
+                <option value="pending">{t("po.status.pending")}</option>
+              </select>
+            </div>
+            <div className="flex-1 min-w-[180px]">
+              <label className="text-sm font-medium block mb-2">{t("po.filter.byFinancialStatus")}</label>
+              <select
+                value={selectedFinancialStatus}
+                onChange={(e) => setSelectedFinancialStatus(e.target.value)}
+                className="w-full px-3 py-2 border rounded-md text-sm"
+              >
+                <option value="">{t("po.filter.selectFinancialStatus")}</option>
+                <option value="none">{t("po.filter.nopayment")}</option>
+                <option value="partial">{t("po.filter.somepayment")}</option>
+                <option value="full">{t("po.filter.fullpayment")}</option>
+              </select>
+            </div>
+            <div className="flex-1 min-w-[180px]">
+              <label className="text-sm font-medium block mb-2">{t("po.filter.byLogisticsStatus")}</label>
+              <select
+                value={selectedLogisticsStatus}
+                onChange={(e) => setSelectedLogisticsStatus(e.target.value)}
+                className="w-full px-3 py-2 border rounded-md text-sm"
+              >
+                <option value="">{t("po.filter.selectLogisticsStatus")}</option>
+                <option value="not_started">{t("po.logistics.notStarted")}</option>
+                <option value="in_process">{t("po.logistics.inProcess")}</option>
+                <option value="shipped">{t("po.logistics.shipped")}</option>
+                <option value="delivered">{t("po.logistics.delivered")}</option>
+              </select>
+            </div>
+          </div>
+        )}
         <CardContent>
           {purchaseOrders.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
@@ -276,8 +354,12 @@ export default function PurchaseOrdersPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>{t("po.table.poNumber")}</TableHead>
-                    <TableHead>{t("po.table.partner")}</TableHead>
-                    <TableHead>{t("po.table.techCompany")}</TableHead>
+                    {userInfo?.roleCode !== "PartnerUser" && (
+                      <TableHead>{t("po.table.partner")}</TableHead>
+                    )}
+                    {!["TechUser", "TechLogistic"].includes(userInfo?.roleCode || "") && (
+                      <TableHead>{t("po.table.techCompany")}</TableHead>
+                    )}
                     <TableHead className="text-right">{t("po.table.totalAmount")}</TableHead>
                     <TableHead>{t("po.table.date")}</TableHead>
                     <TableHead colSpan={3} className="text-center">{t("po.table.statusGroup")}</TableHead>
@@ -285,9 +367,9 @@ export default function PurchaseOrdersPage() {
                   </TableRow>
                   {/* Subheader for status columns */}
                   <TableRow className="bg-gray-50">
-                    <TableHead colSpan={5}></TableHead>
+                    <TableHead colSpan={userInfo?.roleCode === "PartnerUser" || ["TechUser", "TechLogistic"].includes(userInfo?.roleCode || "") ? 4 : 5}></TableHead>
                     <TableHead className="text-center text-xs font-normal">{t("po.table.poStatus")}</TableHead>
-                    <TableHead className="text-center text-xs font-normal">{t("po.table.milestonesStatus")}</TableHead>
+                    <TableHead className="text-center text-xs font-normal">{t("po.table.financialStatus")}</TableHead>
                     <TableHead className="text-center text-xs font-normal">{t("po.table.logisticsStatus")}</TableHead>
                     <TableHead></TableHead>
                   </TableRow>
@@ -302,11 +384,15 @@ export default function PurchaseOrdersPage() {
                         {/* PO Number */}
                         <TableCell className="font-medium font-mono">{po.po_number}</TableCell>
                         
-                        {/* Partner */}
-                        <TableCell>{po.partners?.name || "-"}</TableCell>
+                        {/* Partner - Hidden for PartnerUser */}
+                        {userInfo?.roleCode !== "PartnerUser" && (
+                          <TableCell>{po.partners?.name || "-"}</TableCell>
+                        )}
                         
-                        {/* Tech Company */}
-                        <TableCell>{po.tech_companies?.name || "-"}</TableCell>
+                        {/* Tech Company - Hidden for TechUser/TechLogistic */}
+                        {!["TechUser", "TechLogistic"].includes(userInfo?.roleCode || "") && (
+                          <TableCell>{po.tech_companies?.name || "-"}</TableCell>
+                        )}
                         
                         {/* Total Amount with breakdown */}
                         <TableCell className="text-right">
@@ -327,7 +413,7 @@ export default function PurchaseOrdersPage() {
                           </Badge>
                         </TableCell>
                         
-                        {/* Milestones Status */}
+                        {/* Financial Status (renamed from Milestones) */}
                         <TableCell className="text-center">
                           <div className="flex flex-col items-center gap-1">
                             <div className="text-xs font-semibold text-gray-700">
