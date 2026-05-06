@@ -62,7 +62,7 @@ export default function PurchaseOrdersPage() {
       
       let query = supabase
         .from("purchase_orders")
-        .select("id, po_number, subtotal_amount, shipping_amount, total_amount, status, created_at, partner_user_id, partner_id, tech_company_id, partners!partner_id(name), tech_companies!tech_company_id(name), milestones(id, status, amount), shipping(id, status, carrier, tracking_number)")
+        .select("id, po_number, subtotal_amount, shipping_amount, total_amount, status, created_at, partner_user_id, partner_id, tech_company_id, partners!partner_id(name), tech_companies!tech_company_id(name)")
 
       // Role-based filtering
       const userRole = userInfo.roleCode
@@ -102,8 +102,31 @@ export default function PurchaseOrdersPage() {
         setLoading(false)
         return
       }
-      
-      setPurchaseOrders(data || [])
+
+      // Cargar milestones y shipping para cada PO
+      const posWithDetails = await Promise.all(
+        (data || []).map(async (po) => {
+          // Cargar milestones
+          const { data: milestones } = await supabase
+            .from("milestones")
+            .select("id, status, amount")
+            .eq("purchase_order_id", po.id)
+
+          // Cargar shipping
+          const { data: shipping } = await supabase
+            .from("shipping")
+            .select("id, status, carrier, tracking_number, estimated_delivery_date")
+            .eq("purchase_order_id", po.id)
+
+          return {
+            ...po,
+            milestones: milestones || [],
+            shipping: shipping || [],
+          }
+        })
+      )
+
+      setPurchaseOrders(posWithDetails || [])
     } catch (error) {
       console.error("[v0] Error loading purchase orders:", error)
       setError(t("po.errorLoadingOrders"))
