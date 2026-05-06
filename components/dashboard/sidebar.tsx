@@ -10,7 +10,6 @@ import {
   Users,
   Handshake,
   ClipboardList,
-  ShoppingCart,
   ChevronLeft,
   ChevronRight,
   PresentationIcon,
@@ -20,6 +19,7 @@ import {
   UserCheck,
   Zap,
 } from "lucide-react"
+import { OrderIcon } from "@/components/icons/order-icon"
 import { useTranslations } from "@/hooks/use-translations"
 import { useState, useEffect, useRef } from "react"
 import { useAuth } from "@/components/auth/auth-provider"
@@ -253,7 +253,7 @@ export function Sidebar() {
     },
     {
       href: "/dashboard/purchase-orders",
-      icon: ShoppingCart,
+      icon: OrderIcon,
       labelKey: "sidebar.orders",
     },
     {
