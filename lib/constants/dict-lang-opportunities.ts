@@ -173,6 +173,11 @@ export const DICT_LANG_OPPORTUNITIES = {
     en: "Opportunity Summary",
     pt: "Resumo da Oportunidade",
   },
+  "opportunities.form.summaryDescription": {
+    es: "Revisa los detalles de la oportunidad antes de crear",
+    en: "Review the opportunity details before creating",
+    pt: "Revise os detalhes da oportunidade antes de criar",
+  },
   "opportunities.form.creating": {
     es: "Creando...",
     en: "Creating...",
