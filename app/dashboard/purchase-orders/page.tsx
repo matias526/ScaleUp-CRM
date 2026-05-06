@@ -54,7 +54,7 @@ export default function PurchaseOrdersPage() {
       setError(t("po.errorNotAuthenticated"))
       setLoading(false)
     }
-  }, [userInfo, authLoading, selectedPartner, selectedTechCompany, selectedPoStatus, selectedFinancialStatus, selectedLogisticsStatus])
+  }, [userInfo, authLoading, selectedPartner, selectedTechCompany, selectedPoStatus, selectedFinancialStatus, selectedLogisticsStatus, searchTerm])
 
   const loadPurchaseOrders = async () => {
     try {
@@ -231,7 +231,25 @@ export default function PurchaseOrdersPage() {
     }
   }
 
-  const getStatusBadgeColor = (status: string) => {
+  const getUniqueTechCompanies = () => {
+    const uniqueCompanies = new Map()
+    purchaseOrders.forEach(po => {
+      if (po.tech_company_id && po.tech_companies?.name) {
+        uniqueCompanies.set(po.tech_company_id, po.tech_companies)
+      }
+    })
+    return Array.from(uniqueCompanies.values())
+  }
+
+  const getUniquePartners = () => {
+    const uniquePartners = new Map()
+    purchaseOrders.forEach(po => {
+      if (po.partner_id && po.partners?.name) {
+        uniquePartners.set(po.partner_id, po.partners)
+      }
+    })
+    return Array.from(uniquePartners.values())
+  }
     switch (status) {
       case "sent":
         return "bg-blue-100 text-blue-800"
@@ -290,9 +308,6 @@ export default function PurchaseOrdersPage() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>{t("po.listTitle")}</CardTitle>
-        </CardHeader>
         {/* New Modern Filter Bar */}
         <CardContent className="border-b px-6 py-3 bg-muted/40">
           <div className="flex gap-2 items-center flex-wrap">
@@ -328,7 +343,7 @@ export default function PurchaseOrdersPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t("po.table.techCompany") || "Todas"}</SelectItem>
-                  {techCompanies.map((company) => (
+                  {getUniqueTechCompanies().map((company) => (
                     <SelectItem key={company.id} value={company.id}>{company.name}</SelectItem>
                   ))}
                 </SelectContent>
@@ -346,7 +361,7 @@ export default function PurchaseOrdersPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t("po.table.partner") || "Todos"}</SelectItem>
-                  {partners.map((partner) => (
+                  {getUniquePartners().map((partner) => (
                     <SelectItem key={partner.id} value={partner.id}>{partner.name}</SelectItem>
                   ))}
                 </SelectContent>
