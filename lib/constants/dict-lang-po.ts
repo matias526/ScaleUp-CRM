@@ -66,65 +66,87 @@ export const DICT_LANG_PO = {
     pt: "Número PO",
   },
   "po.table.poNumber": {
-    es: "Número de PO",
-    en: "PO Number",
-    pt: "Número PO",
-  },
-  "po.partner": {
-    es: "Partner",
-    en: "Partner",
-    pt: "Partner",
+    es: "PO#",
+    en: "PO#",
+    pt: "PO#",
   },
   "po.table.partner": {
     es: "Partner",
     en: "Partner",
     pt: "Partner",
   },
-  "po.status": {
-    es: "Estado",
-    en: "Status",
-    pt: "Status",
-  },
-  "po.table.status": {
-    es: "Estado",
-    en: "Status",
-    pt: "Status",
-  },
-  "po.totalAmount": {
-    es: "Monto Total",
-    en: "Total Amount",
-    pt: "Valor Total",
+  "po.table.techCompany": {
+    es: "Empresa Tech",
+    en: "Tech Company",
+    pt: "Empresa Tech",
   },
   "po.table.totalAmount": {
     es: "Monto Total",
     en: "Total Amount",
     pt: "Valor Total",
   },
-  "po.date": {
-    es: "Fecha",
-    en: "Date",
-    pt: "Data",
+  "po.table.subtotal": {
+    es: "Subtotal",
+    en: "Subtotal",
+    pt: "Subtotal",
+  },
+  "po.table.shipping": {
+    es: "Envío",
+    en: "Shipping",
+    pt: "Envio",
   },
   "po.table.date": {
     es: "Fecha",
     en: "Date",
     pt: "Data",
   },
-  "po.actions": {
-    es: "Acciones",
-    en: "Actions",
-    pt: "Ações",
+  "po.table.status": {
+    es: "Estado",
+    en: "Status",
+    pt: "Status",
+  },
+  "po.table.statusGroup": {
+    es: "Estado",
+    en: "Status",
+    pt: "Estado",
+  },
+  "po.table.poStatus": {
+    es: "PO",
+    en: "PO",
+    pt: "PO",
+  },
+  "po.table.milestonesStatus": {
+    es: "Milestones",
+    en: "Milestones",
+    pt: "Marcos",
+  },
+  "po.table.logisticsStatus": {
+    es: "Logística",
+    en: "Logistics",
+    pt: "Logística",
   },
   "po.table.actions": {
     es: "Acciones",
     en: "Actions",
     pt: "Ações",
   },
-  "po.view": {
+  "po.table.view": {
     es: "Ver",
     en: "View",
     pt: "Ver",
   },
+  "po.table.messages": {
+    es: "Mensajes",
+    en: "Messages",
+    pt: "Mensagens",
+  },
+  "po.detail.techCompany": {
+    es: "Empresa Tecnológica",
+    en: "Tech Company",
+    pt: "Empresa Tecnológica",
+  },
+
+  // Existing translations to preserve
   "po.notFound": {
     es: "Orden de compra no encontrada",
     en: "Purchase order not found",

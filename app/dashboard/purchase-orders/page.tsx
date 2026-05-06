@@ -20,6 +20,8 @@ import {
 } from "@/components/ui/table"
 import Link from "next/link"
 import { TableSkeleton } from "@/components/purchase-orders/skeletons"
+import { Eye, MessageSquare, TrendingUp, Truck, CheckCircle, Clock, Package } from "lucide-react"
+import { Progress } from "@/components/ui/progress"
 
 export default function PurchaseOrdersPage() {
   const { t } = useTranslations(DICT_LANG_PO)
@@ -60,7 +62,7 @@ export default function PurchaseOrdersPage() {
       
       let query = supabase
         .from("purchase_orders")
-        .select("id, po_number, total_amount, status, created_at, partner_user_id, partner_id, partners!partner_id(name), tech_companies!tech_company_id(name)")
+        .select("id, po_number, subtotal_amount, shipping_amount, total_amount, status, created_at, partner_user_id, partner_id, tech_company_id, partners!partner_id(name), tech_companies!tech_company_id(name), milestones(id, status, amount), shipping(id, status, carrier, tracking_number)")
 
       // Role-based filtering
       const userRole = userInfo.roleCode
@@ -159,6 +161,19 @@ export default function PurchaseOrdersPage() {
     }
   }
 
+  const getMilestonesStatus = (milestones: any[] | null) => {
+    if (!milestones || milestones.length === 0) return { paid: 0, total: 0, percentage: 0 }
+    const paidCount = milestones.filter(m => m.status === "paid").length
+    const percentage = milestones.length > 0 ? Math.round((paidCount / milestones.length) * 100) : 0
+    return { paid: paidCount, total: milestones.length, percentage }
+  }
+
+  const getLogisticsStatus = (shipping: any[] | null) => {
+    if (!shipping || shipping.length === 0) return { status: "not_started", carrier: null }
+    const lastShipping = shipping[0]
+    return { status: lastShipping.status || "not_started", carrier: lastShipping.carrier }
+  }
+
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -237,39 +252,124 @@ export default function PurchaseOrdersPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t("po.poNumber")}</TableHead>
-                    <TableHead>{t("po.partner")}</TableHead>
-                    <TableHead>{t("po.detail.techCompany")}</TableHead>
-                    <TableHead>{t("po.totalAmount")}</TableHead>
-                    <TableHead>{t("po.status")}</TableHead>
-                    <TableHead>{t("po.date")}</TableHead>
-                    <TableHead>{t("po.actions")}</TableHead>
+                    <TableHead>{t("po.table.poNumber")}</TableHead>
+                    <TableHead>{t("po.table.partner")}</TableHead>
+                    <TableHead>{t("po.table.techCompany")}</TableHead>
+                    <TableHead className="text-right">{t("po.table.totalAmount")}</TableHead>
+                    <TableHead>{t("po.table.date")}</TableHead>
+                    <TableHead colSpan={3} className="text-center">{t("po.table.statusGroup")}</TableHead>
+                    <TableHead className="text-center">{t("po.table.actions")}</TableHead>
+                  </TableRow>
+                  {/* Subheader for status columns */}
+                  <TableRow className="bg-gray-50">
+                    <TableHead colSpan={5}></TableHead>
+                    <TableHead className="text-center text-xs font-normal">{t("po.table.poStatus")}</TableHead>
+                    <TableHead className="text-center text-xs font-normal">{t("po.table.milestonesStatus")}</TableHead>
+                    <TableHead className="text-center text-xs font-normal">{t("po.table.logisticsStatus")}</TableHead>
+                    <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {purchaseOrders.map((po) => (
-                    <TableRow key={po.id}>
-                      <TableCell className="font-medium">{po.po_number}</TableCell>
-                      <TableCell>{po.partners?.name || "-"}</TableCell>
-                      <TableCell>{po.tech_companies?.name || "-"}</TableCell>
-                      <TableCell>${po.total_amount?.toFixed(2) || "0.00"}</TableCell>
-                      <TableCell>
-                        <Badge className={getStatusBadgeColor(po.status)}>
-                          {t(`po.status.${po.status}`)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {format(new Date(po.created_at), "dd/MM/yyyy")}
-                      </TableCell>
-                      <TableCell>
-                        <Link href={`/dashboard/purchase-orders/${po.id}`}>
-                          <Button variant="outline" size="sm">
-                            {t("po.view")}
-                          </Button>
-                        </Link>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {purchaseOrders.map((po) => {
+                    const milestonesStatus = getMilestonesStatus(po.milestones)
+                    const logisticsStatus = getLogisticsStatus(po.shipping)
+                    
+                    return (
+                      <TableRow key={po.id} className="hover:bg-gray-50">
+                        {/* PO Number */}
+                        <TableCell className="font-medium font-mono">{po.po_number}</TableCell>
+                        
+                        {/* Partner */}
+                        <TableCell>{po.partners?.name || "-"}</TableCell>
+                        
+                        {/* Tech Company */}
+                        <TableCell>{po.tech_companies?.name || "-"}</TableCell>
+                        
+                        {/* Total Amount with breakdown */}
+                        <TableCell className="text-right">
+                          <div className="font-semibold">${po.total_amount?.toFixed(2) || "0.00"}</div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            <div>{t("po.table.subtotal")}: ${po.subtotal_amount?.toFixed(2) || "0.00"}</div>
+                            <div>{t("po.table.shipping")}: ${po.shipping_amount?.toFixed(2) || "0.00"}</div>
+                          </div>
+                        </TableCell>
+                        
+                        {/* Date */}
+                        <TableCell className="text-sm">{format(new Date(po.created_at), "dd/MM/yyyy")}</TableCell>
+                        
+                        {/* PO Status */}
+                        <TableCell className="text-center">
+                          <Badge className={getStatusBadgeColor(po.status)} variant="secondary">
+                            {t(`po.status.${po.status}`)}
+                          </Badge>
+                        </TableCell>
+                        
+                        {/* Milestones Status */}
+                        <TableCell className="text-center">
+                          <div className="flex flex-col items-center gap-1">
+                            <div className="text-xs font-semibold text-gray-700">
+                              {milestonesStatus.paid}/{milestonesStatus.total}
+                            </div>
+                            <Progress value={milestonesStatus.percentage} className="w-16 h-1" />
+                            <div className="text-xs text-gray-500">{milestonesStatus.percentage}%</div>
+                          </div>
+                        </TableCell>
+                        
+                        {/* Logistics Status */}
+                        <TableCell className="text-center">
+                          <div className="flex items-center justify-center">
+                            {logisticsStatus.status === "delivered" && (
+                              <div className="flex items-center gap-1">
+                                <CheckCircle className="h-4 w-4 text-emerald-600" />
+                                <span className="text-xs font-semibold text-emerald-600">{t("po.logistics.delivered")}</span>
+                              </div>
+                            )}
+                            {logisticsStatus.status === "shipped" && (
+                              <div className="flex items-center gap-1">
+                                <Truck className="h-4 w-4 text-amber-600" />
+                                <span className="text-xs font-semibold text-amber-600">{t("po.logistics.shipped")}</span>
+                              </div>
+                            )}
+                            {logisticsStatus.status === "in_process" && (
+                              <div className="flex items-center gap-1">
+                                <Clock className="h-4 w-4 text-blue-600" />
+                                <span className="text-xs font-semibold text-blue-600">{t("po.logistics.inProcess")}</span>
+                              </div>
+                            )}
+                            {logisticsStatus.status === "not_started" && (
+                              <div className="flex items-center gap-1">
+                                <Package className="h-4 w-4 text-gray-500" />
+                                <span className="text-xs font-semibold text-gray-500">{t("po.logistics.notStarted")}</span>
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        
+                        {/* Actions */}
+                        <TableCell className="text-center">
+                          <div className="flex gap-2 justify-center">
+                            <Link href={`/dashboard/purchase-orders/${po.id}`}>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title={t("po.table.view")}>
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </Link>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 w-8 p-0" 
+                              title={t("po.table.messages")}
+                              onClick={() => {
+                                // Aquí irá la lógica de mensajes
+                                console.log("[v0] Messages clicked for PO:", po.id)
+                              }}
+                            >
+                              <MessageSquare className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
                 </TableBody>
               </Table>
             </div>
