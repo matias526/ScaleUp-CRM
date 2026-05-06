@@ -275,6 +275,26 @@ export const DICT_LANG_PO = {
     en: "Pending",
     pt: "Pendente",
   },
+  "po.milestone.progress": {
+    es: "Progreso",
+    en: "Progress",
+    pt: "Progresso",
+  },
+  "po.milestone.paid": {
+    es: "pagados",
+    en: "paid",
+    pt: "pagos",
+  },
+  "po.milestone.collected": {
+    es: "Recaudado",
+    en: "Collected",
+    pt: "Coletado",
+  },
+  "po.milestone.percentageCollected": {
+    es: "% recaudado",
+    en: "% collected",
+    pt: "% coletado",
+  },
 
   // Logistics Tab
   "po.logistics.destination": {
@@ -318,6 +338,11 @@ export const DICT_LANG_PO = {
     es: "Editar Hito",
     en: "Edit Milestone",
     pt: "Editar Marco",
+  },
+  "po.milestone.create": {
+    es: "Crear Hito",
+    en: "Create Milestone",
+    pt: "Criar Marco",
   },
   "po.milestone.configureDescription": {
     es: "Configura los detalles del hito. Puedes usar un monto fijo o un porcentaje del total.",
@@ -937,6 +962,26 @@ export const DICT_LANG_PO = {
     es: "Fecha Estimada de Entrega",
     en: "Estimated Delivery Date",
     pt: "Data Estimada de Entrega",
+  },
+  "po.logistics.noShippingInfo": {
+    es: "Sin información de envío",
+    en: "No shipping information",
+    pt: "Sem informações de envio",
+  },
+  "po.logistics.logisticsWidget": {
+    es: "Logística",
+    en: "Logistics",
+    pt: "Logística",
+  },
+  "po.logistics.status": {
+    es: "Estado",
+    en: "Status",
+    pt: "Status",
+  },
+  "po.milestone.milestonesWidget": {
+    es: "Milestones",
+    en: "Milestones",
+    pt: "Marcos",
   },
   "po.logistics.saveDispatchData": {
     es: "Guardar Datos de Despacho",
