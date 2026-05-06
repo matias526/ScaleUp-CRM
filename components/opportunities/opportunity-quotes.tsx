@@ -582,6 +582,7 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
             partner_id: partnerId,
             tech_company_id: opportunity?.tech_company_id,
             partner_user_id: currentUser?.id,
+            created_by: currentUser?.id,
             accepted_by: isAdminOrBDD ? currentUser?.id : null,
             accepted_at: isAdminOrBDD ? new Date().toISOString() : null,
           } as any,
