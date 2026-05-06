@@ -34,7 +34,12 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
   const [showConfirmPaymentDialog, setShowConfirmPaymentDialog] = useState(false)
   const [showViewDocumentDialog, setShowViewDocumentDialog] = useState(false)
   const [selectedMilestone, setSelectedMilestone] = useState<any | null>(null)
-  const [editFormData, setEditFormData] = useState({ title: '', amount: 0, due_date: '' })
+  const [editFormData, setEditFormData] = useState({ 
+    title: '', 
+    amount: 0, 
+    due_date: '',
+    type: 'fixed', // 'fixed' or 'percentage'
+  })
   const [uploadFile, setUploadFile] = useState<File | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [documents, setDocuments] = useState<{ [key: string]: any }>({})
@@ -99,6 +104,7 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
       title: milestone.title,
       amount: milestone.amount,
       due_date: milestone.due_date ? milestone.due_date.split('T')[0] : '',
+      type: milestone.type || 'fixed',
     })
     setShowEditDialog(true)
   }
@@ -110,6 +116,7 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
       title: '',
       amount: 0,
       due_date: '',
+      type: 'fixed',
     })
     setShowEditDialog(true)
   }
@@ -655,7 +662,7 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
 
       {/* Edit/Create Milestone Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>
               {selectedMilestone ? t('po.milestone.editMilestone') : t('po.milestone.createMilestone')}
@@ -665,6 +672,7 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            {/* Title */}
             <div>
               <Label htmlFor="title">{t('po.milestone.title')}</Label>
               <Input
@@ -674,17 +682,85 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
                 placeholder={t('po.milestone.titlePlaceholder')}
               />
             </div>
+
+            {/* Type selection: Fixed amount or Percentage */}
             <div>
-              <Label htmlFor="amount">{t('po.milestone.amount')}</Label>
-              <Input
-                id="amount"
-                type="number"
-                step="0.01"
-                value={editFormData.amount}
-                onChange={(e) => setEditFormData({ ...editFormData, amount: parseFloat(e.target.value) || 0 })}
-                placeholder="0.00"
-              />
+              <Label htmlFor="type">{t('po.milestone.amountType') || 'Tipo de monto'}</Label>
+              <div className="flex gap-4 mt-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="type"
+                    value="fixed"
+                    checked={editFormData.type === 'fixed'}
+                    onChange={(e) => setEditFormData({ ...editFormData, type: 'fixed' })}
+                  />
+                  <span className="text-sm">{t('po.milestone.fixedAmount') || 'Monto fijo'}</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="type"
+                    value="percentage"
+                    checked={editFormData.type === 'percentage'}
+                    onChange={(e) => setEditFormData({ ...editFormData, type: 'percentage' })}
+                  />
+                  <span className="text-sm">{t('po.milestone.percentage') || 'Porcentaje'}</span>
+                </label>
+              </div>
             </div>
+
+            {/* Amount or Percentage */}
+            <div>
+              <Label htmlFor="amount">
+                {editFormData.type === 'percentage' 
+                  ? (t('po.milestone.percentageValue') || 'Porcentaje')
+                  : (t('po.milestone.amount') || 'Monto')}
+              </Label>
+              <div className="flex gap-2 items-center">
+                <Input
+                  id="amount"
+                  type="number"
+                  step={editFormData.type === 'percentage' ? '0.01' : '0.01'}
+                  min="0"
+                  max={editFormData.type === 'percentage' ? '100' : undefined}
+                  value={editFormData.amount}
+                  onChange={(e) => setEditFormData({ ...editFormData, amount: parseFloat(e.target.value) || 0 })}
+                  placeholder={editFormData.type === 'percentage' ? '0-100' : '0.00'}
+                />
+                {editFormData.type === 'percentage' && <span className="text-sm text-gray-600">%</span>}
+              </div>
+              {editFormData.type === 'percentage' && (
+                <p className="text-xs text-gray-500 mt-1">
+                  {t('po.milestone.percentageNote') || `Equivalente a: $${((subtotal * editFormData.amount) / 100).toFixed(2)}`}
+                </p>
+              )}
+            </div>
+
+            {/* Validation message */}
+            {editFormData.type === 'fixed' && (
+              <div className="text-sm">
+                <p className="text-gray-700">
+                  {t('po.milestone.total') || 'Total de PO'}: ${subtotal.toFixed(2)}
+                </p>
+                <p className="text-gray-700">
+                  {t('po.milestone.collectedAmount') || 'Ya asignado'}: $
+                  {milestones
+                    .filter(m => m.id !== selectedMilestone?.id)
+                    .reduce((sum, m) => sum + (m.amount || 0), 0)
+                    .toFixed(2)}
+                </p>
+                <p className="text-gray-700">
+                  {t('po.milestone.remainingAmount') || 'Disponible'}: $
+                  {(subtotal - milestones
+                    .filter(m => m.id !== selectedMilestone?.id)
+                    .reduce((sum, m) => sum + (m.amount || 0), 0))
+                    .toFixed(2)}
+                </p>
+              </div>
+            )}
+
+            {/* Due Date */}
             <div>
               <Label htmlFor="due_date">{t('po.milestone.dueDate')}</Label>
               <Input

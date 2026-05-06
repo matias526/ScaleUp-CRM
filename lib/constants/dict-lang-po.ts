@@ -446,6 +446,41 @@ export const DICT_LANG_PO = {
     en: "Amount Type",
     pt: "Tipo de Valor",
   },
+  "po.milestone.fixedAmount": {
+    es: "Monto fijo",
+    en: "Fixed Amount",
+    pt: "Valor Fixo",
+  },
+  "po.milestone.percentage": {
+    es: "Porcentaje",
+    en: "Percentage",
+    pt: "Porcentagem",
+  },
+  "po.milestone.percentageValue": {
+    es: "Porcentaje",
+    en: "Percentage Value",
+    pt: "Valor em Porcentagem",
+  },
+  "po.milestone.percentageNote": {
+    es: "Equivalente a",
+    en: "Equivalent to",
+    pt: "Equivalente a",
+  },
+  "po.milestone.total": {
+    es: "Total de PO",
+    en: "PO Total",
+    pt: "Total do PO",
+  },
+  "po.milestone.collectedAmount": {
+    es: "Ya asignado",
+    en: "Already assigned",
+    pt: "Já atribuído",
+  },
+  "po.milestone.remainingAmount": {
+    es: "Disponible",
+    en: "Available",
+    pt: "Disponível",
+  },
   "po.milestone.fixed": {
     es: "Monto Fijo",
     en: "Fixed Amount",
