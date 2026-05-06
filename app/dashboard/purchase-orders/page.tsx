@@ -20,8 +20,11 @@ import {
 } from "@/components/ui/table"
 import Link from "next/link"
 import { TableSkeleton } from "@/components/purchase-orders/skeletons"
-import { Eye, MessageSquare, TrendingUp, Truck, CheckCircle, Clock, Package } from "lucide-react"
+import { Eye, MessageSquare, TrendingUp, Truck, CheckCircle, Clock, Package, Plus, Search, X } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 export default function PurchaseOrdersPage() {
   const { t } = useTranslations(DICT_LANG_PO)
@@ -36,6 +39,8 @@ export default function PurchaseOrdersPage() {
   const [selectedPoStatus, setSelectedPoStatus] = useState<string>("")
   const [selectedFinancialStatus, setSelectedFinancialStatus] = useState<string>("")
   const [selectedLogisticsStatus, setSelectedLogisticsStatus] = useState<string>("")
+  const [searchTerm, setSearchTerm] = useState<string>("")
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false)
 
   useEffect(() => {
     if (!authLoading && userInfo) {
@@ -131,6 +136,27 @@ export default function PurchaseOrdersPage() {
 
       // Aplicar filtros por estado
       let filtered = posWithDetails || []
+
+      // Filtro por búsqueda (PO Number, Partner, TechCompany)
+      if (searchTerm) {
+        filtered = filtered.filter((po) => {
+          const poNumber = po.po_number?.toLowerCase() || ""
+          const partner = po.partners?.name?.toLowerCase() || ""
+          const techCompany = po.tech_companies?.name?.toLowerCase() || ""
+          const searchLower = searchTerm.toLowerCase()
+          return poNumber.includes(searchLower) || partner.includes(searchLower) || techCompany.includes(searchLower)
+        })
+      }
+
+      // Filtro por Partner
+      if (selectedPartner) {
+        filtered = filtered.filter(po => po.partner_id === selectedPartner)
+      }
+
+      // Filtro por Tech Company
+      if (selectedTechCompany) {
+        filtered = filtered.filter(po => po.tech_company_id === selectedTechCompany)
+      }
 
       // Filtro por PO Status
       if (selectedPoStatus) {
@@ -267,81 +293,154 @@ export default function PurchaseOrdersPage() {
         <CardHeader>
           <CardTitle>{t("po.listTitle")}</CardTitle>
         </CardHeader>
-        {["Admin", "BDD"].includes(userInfo?.roleCode || "") && (
-          <div className="px-6 pt-0 pb-4 flex gap-4 flex-wrap items-end">
-            <div className="flex-1 min-w-[200px]">
-              <label className="text-sm font-medium block mb-2">{t("po.filter.byPartner")}</label>
-              <select
-                value={selectedPartner}
-                onChange={(e) => setSelectedPartner(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md text-sm"
-              >
-                <option value="">{t("po.filter.selectPartner")}</option>
-                {partners.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
+        {/* New Modern Filter Bar */}
+        <CardContent className="border-b px-6 py-3 bg-muted/40">
+          <div className="flex gap-2 items-center flex-wrap">
+            {/* Search */}
+            <div className="relative w-56">
+              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder={t("po.search.placeholder") || "Buscar órdenes..."}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-8 h-9"
+              />
+              {searchTerm && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7"
+                  onClick={() => setSearchTerm("")}
+                >
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              )}
             </div>
-            <div className="flex-1 min-w-[200px]">
-              <label className="text-sm font-medium block mb-2">{t("po.filter.byTechCompany")}</label>
-              <select
-                value={selectedTechCompany}
-                onChange={(e) => setSelectedTechCompany(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md text-sm"
+
+            {/* Tech Company Filter - for Admin/BDD/PartnerUser */}
+            {["Admin", "BDD", "PartnerUser"].includes(userInfo?.roleCode || "") && (
+              <Select
+                value={selectedTechCompany || "all"}
+                onValueChange={(value) => setSelectedTechCompany(value === "all" ? "" : value)}
               >
-                <option value="">{t("po.filter.selectTechCompany")}</option>
-                {techCompanies.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
+                <SelectTrigger className="w-40 h-9">
+                  <SelectValue placeholder={t("po.table.techCompany") || "Tech Company"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("po.table.techCompany") || "Todas"}</SelectItem>
+                  {techCompanies.map((company) => (
+                    <SelectItem key={company.id} value={company.id}>{company.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+
+            {/* Partner Filter - for Admin/BDD/TechUser/TechLogistic */}
+            {["Admin", "BDD", "TechUser", "TechLogistic"].includes(userInfo?.roleCode || "") && (
+              <Select
+                value={selectedPartner || "all"}
+                onValueChange={(value) => setSelectedPartner(value === "all" ? "" : value)}
+              >
+                <SelectTrigger className="w-40 h-9">
+                  <SelectValue placeholder={t("po.table.partner") || "Partner"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("po.table.partner") || "Todos"}</SelectItem>
+                  {partners.map((partner) => (
+                    <SelectItem key={partner.id} value={partner.id}>{partner.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+
+            {/* More Filters Button with Popover */}
+            <Popover open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="h-9 bg-transparent">
+                  <Plus className="h-4 w-4 mr-1" />
+                  {t("po.filter.title") || "Filtros"}
+                  {(selectedPoStatus || selectedFinancialStatus || selectedLogisticsStatus) && (
+                    <Badge variant="secondary" className="ml-2 h-5 px-1">
+                      {[
+                        selectedPoStatus ? 1 : 0,
+                        selectedFinancialStatus ? 1 : 0,
+                        selectedLogisticsStatus ? 1 : 0,
+                      ].reduce((a, b) => a + b, 0)}
+                    </Badge>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-72">
+                <div className="space-y-4">
+                  <h4 className="font-medium text-sm">{t("po.filter.advanced") || "Filtros adicionales"}</h4>
+
+                  {/* PO Status */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">{t("po.filter.byPoStatus")}</label>
+                    <Select
+                      value={selectedPoStatus || "all"}
+                      onValueChange={(value) => setSelectedPoStatus(value === "all" ? "" : value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={t("po.filter.selectPoStatus")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{t("po.filter.selectPoStatus")}</SelectItem>
+                        <SelectItem value="sent">{t("po.status.sent")}</SelectItem>
+                        <SelectItem value="accepted">{t("po.status.accepted")}</SelectItem>
+                        <SelectItem value="pending">{t("po.status.pending")}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Financial Status */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">{t("po.filter.byFinancialStatus")}</label>
+                    <Select
+                      value={selectedFinancialStatus || "all"}
+                      onValueChange={(value) => setSelectedFinancialStatus(value === "all" ? "" : value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={t("po.filter.selectFinancialStatus")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{t("po.filter.selectFinancialStatus")}</SelectItem>
+                        <SelectItem value="none">{t("po.filter.nopayment")}</SelectItem>
+                        <SelectItem value="partial">{t("po.filter.somepayment")}</SelectItem>
+                        <SelectItem value="full">{t("po.filter.fullpayment")}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Logistics Status */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">{t("po.filter.byLogisticsStatus")}</label>
+                    <Select
+                      value={selectedLogisticsStatus || "all"}
+                      onValueChange={(value) => setSelectedLogisticsStatus(value === "all" ? "" : value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={t("po.filter.selectLogisticsStatus")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{t("po.filter.selectLogisticsStatus")}</SelectItem>
+                        <SelectItem value="not_started">{t("po.logistics.notStarted")}</SelectItem>
+                        <SelectItem value="in_process">{t("po.logistics.inProcess")}</SelectItem>
+                        <SelectItem value="shipped">{t("po.logistics.shipped")}</SelectItem>
+                        <SelectItem value="delivered">{t("po.logistics.delivered")}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            {/* Results counter */}
+            <div className="ml-auto text-sm text-muted-foreground">
+              {purchaseOrders.length} {t("po.results") || "órdenes"}
             </div>
           </div>
-        )}
-        {["Admin", "BDD", "TechUser", "TechLogistic", "PartnerUser"].includes(userInfo?.roleCode || "") && (
-          <div className="px-6 pt-0 pb-4 flex gap-4 flex-wrap items-end">
-            <div className="flex-1 min-w-[180px]">
-              <label className="text-sm font-medium block mb-2">{t("po.filter.byPoStatus")}</label>
-              <select
-                value={selectedPoStatus}
-                onChange={(e) => setSelectedPoStatus(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md text-sm"
-              >
-                <option value="">{t("po.filter.selectPoStatus")}</option>
-                <option value="sent">{t("po.status.sent")}</option>
-                <option value="accepted">{t("po.status.accepted")}</option>
-                <option value="pending">{t("po.status.pending")}</option>
-              </select>
-            </div>
-            <div className="flex-1 min-w-[180px]">
-              <label className="text-sm font-medium block mb-2">{t("po.filter.byFinancialStatus")}</label>
-              <select
-                value={selectedFinancialStatus}
-                onChange={(e) => setSelectedFinancialStatus(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md text-sm"
-              >
-                <option value="">{t("po.filter.selectFinancialStatus")}</option>
-                <option value="none">{t("po.filter.nopayment")}</option>
-                <option value="partial">{t("po.filter.somepayment")}</option>
-                <option value="full">{t("po.filter.fullpayment")}</option>
-              </select>
-            </div>
-            <div className="flex-1 min-w-[180px]">
-              <label className="text-sm font-medium block mb-2">{t("po.filter.byLogisticsStatus")}</label>
-              <select
-                value={selectedLogisticsStatus}
-                onChange={(e) => setSelectedLogisticsStatus(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md text-sm"
-              >
-                <option value="">{t("po.filter.selectLogisticsStatus")}</option>
-                <option value="not_started">{t("po.logistics.notStarted")}</option>
-                <option value="in_process">{t("po.logistics.inProcess")}</option>
-                <option value="shipped">{t("po.logistics.shipped")}</option>
-                <option value="delivered">{t("po.logistics.delivered")}</option>
-              </select>
-            </div>
-          </div>
-        )}
-        <CardContent>
+        </CardContent>
           {purchaseOrders.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               {t("po.noOrders")}

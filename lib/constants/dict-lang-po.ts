@@ -887,6 +887,26 @@ export const DICT_LANG_PO = {
     en: "Select logistics status",
     pt: "Selecionar status logístico",
   },
+  "po.filter.title": {
+    es: "Filtros",
+    en: "Filters",
+    pt: "Filtros",
+  },
+  "po.filter.advanced": {
+    es: "Filtros adicionales",
+    en: "Additional Filters",
+    pt: "Filtros Adicionais",
+  },
+  "po.search.placeholder": {
+    es: "Buscar órdenes...",
+    en: "Search orders...",
+    pt: "Pesquisar pedidos...",
+  },
+  "po.results": {
+    es: "órdenes",
+    en: "orders",
+    pt: "pedidos",
+  },
   "common.success": {
     es: "Éxito",
     en: "Success",
