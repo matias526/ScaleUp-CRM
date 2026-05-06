@@ -107,25 +107,38 @@ export default function PurchaseOrdersPage() {
       const posWithDetails = await Promise.all(
         (data || []).map(async (po) => {
           // Cargar milestones
-          const { data: milestones } = await supabase
+          const { data: milestones, error: milestonesError } = await supabase
             .from("milestones")
             .select("id, status, amount")
             .eq("purchase_order_id", po.id)
 
+          if (milestonesError) {
+            console.error("[v0] Error loading milestones for PO", po.id, milestonesError)
+          }
+
           // Cargar shipping
-          const { data: shipping } = await supabase
+          const { data: shipping, error: shippingError } = await supabase
             .from("shipping")
             .select("id, status, carrier, tracking_number, estimated_delivery_date")
             .eq("purchase_order_id", po.id)
 
-          return {
+          if (shippingError) {
+            console.error("[v0] Error loading shipping for PO", po.id, shippingError)
+          }
+
+          const result = {
             ...po,
             milestones: milestones || [],
             shipping: shipping || [],
           }
+
+          console.log("[v0] PO", po.id, "- Milestones:", result.milestones, "- Shipping:", result.shipping)
+
+          return result
         })
       )
 
+      console.log("[v0] All POs with details:", posWithDetails)
       setPurchaseOrders(posWithDetails || [])
     } catch (error) {
       console.error("[v0] Error loading purchase orders:", error)
@@ -185,16 +198,34 @@ export default function PurchaseOrdersPage() {
   }
 
   const getMilestonesStatus = (milestones: any[] | null) => {
-    if (!milestones || milestones.length === 0) return { paid: 0, total: 0, percentage: 0 }
-    const paidCount = milestones.filter(m => m.status === "paid").length
-    const percentage = milestones.length > 0 ? Math.round((paidCount / milestones.length) * 100) : 0
-    return { paid: paidCount, total: milestones.length, percentage }
+    const result = {
+      paid: 0,
+      total: 0,
+      percentage: 0,
+    }
+
+    if (!milestones || milestones.length === 0) {
+      return result
+    }
+
+    result.total = milestones.length
+    result.paid = milestones.filter(m => m.status === "paid").length
+    result.percentage = result.total > 0 ? Math.round((result.paid / result.total) * 100) : 0
+
+    console.log("[v0] getMilestonesStatus:", milestones, "->", result)
+    return result
   }
 
   const getLogisticsStatus = (shipping: any[] | null) => {
-    if (!shipping || shipping.length === 0) return { status: "not_started", carrier: null }
+    if (!shipping || shipping.length === 0) {
+      console.log("[v0] getLogisticsStatus: no shipping data")
+      return { status: "not_started", carrier: null }
+    }
+
     const lastShipping = shipping[0]
-    return { status: lastShipping.status || "not_started", carrier: lastShipping.carrier }
+    const result = { status: lastShipping.status || "not_started", carrier: lastShipping.carrier }
+    console.log("[v0] getLogisticsStatus:", shipping, "->", result)
+    return result
   }
 
   if (authLoading) {
