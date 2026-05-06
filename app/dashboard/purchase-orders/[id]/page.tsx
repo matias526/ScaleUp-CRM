@@ -157,6 +157,18 @@ export default function PurchaseOrderDetailPage() {
         // Don't fail the whole page if opportunities fail
         setOpportunities([])
       }
+
+      // Load PO document
+      const { data: poDocData } = await supabase
+        .from("documents")
+        .select("*")
+        .eq("parent_id", poId)
+        .eq("parent_type", "purchase_order")
+        .single()
+      
+      if (poDocData) {
+        setPo((prev) => prev ? { ...prev, _document: poDocData } : prev)
+      }
     } catch (error) {
       console.error("[v0] Error loading purchase order:", error)
       setError(t("po.errorLoadingOrder"))
@@ -348,6 +360,7 @@ export default function PurchaseOrderDetailPage() {
                     getStatusBadgeColor={getStatusBadgeColor}
                     approverName={approverName}
                     creatorName={creatorName}
+                    poDocument={po?._document}
                   />
                 </TabsContent>
 

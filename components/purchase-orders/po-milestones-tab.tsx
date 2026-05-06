@@ -652,6 +652,134 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
           })
         )}
       </div>
+
+      {/* Edit/Create Milestone Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {selectedMilestone ? t('po.milestone.editMilestone') : t('po.milestone.createMilestone')}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedMilestone ? t('po.milestone.editDescription') : t('po.milestone.createDescription')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="title">{t('po.milestone.title')}</Label>
+              <Input
+                id="title"
+                value={editFormData.title}
+                onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+                placeholder={t('po.milestone.titlePlaceholder')}
+              />
+            </div>
+            <div>
+              <Label htmlFor="amount">{t('po.milestone.amount')}</Label>
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                value={editFormData.amount}
+                onChange={(e) => setEditFormData({ ...editFormData, amount: parseFloat(e.target.value) || 0 })}
+                placeholder="0.00"
+              />
+            </div>
+            <div>
+              <Label htmlFor="due_date">{t('po.milestone.dueDate')}</Label>
+              <Input
+                id="due_date"
+                type="date"
+                value={editFormData.due_date}
+                onChange={(e) => setEditFormData({ ...editFormData, due_date: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button onClick={handleSaveEdit} disabled={isLoading}>
+              {isLoading ? t('common.saving') : t('common.save')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Upload Document Dialog */}
+      <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('po.milestone.uploadDocument')}</DialogTitle>
+            <DialogDescription>
+              {t('po.milestone.uploadDescription')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="file">{t('po.milestone.selectFile')}</Label>
+              <Input
+                id="file"
+                type="file"
+                onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowUploadDialog(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button onClick={handleUploadDocument} disabled={isLoading || !uploadFile}>
+              {isLoading ? t('common.uploading') : t('common.upload')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirm Payment Dialog */}
+      <Dialog open={showConfirmPaymentDialog} onOpenChange={setShowConfirmPaymentDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('po.milestone.confirmPayment')}</DialogTitle>
+            <DialogDescription>
+              {t('po.milestone.confirmPaymentDescription')}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedMilestone && documents[selectedMilestone.id] && (
+            <div className="border rounded p-3 bg-gray-50">
+              <p className="text-sm font-medium">{t('po.milestone.relatedDocument')}:</p>
+              <p className="text-sm text-gray-600">{documents[selectedMilestone.id].file_name}</p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowConfirmPaymentDialog(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button onClick={handleConfirmPayment} disabled={isLoading}>
+              {isLoading ? t('common.confirming') : t('common.confirm')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Document Dialog */}
+      <Dialog open={showViewDocumentDialog} onOpenChange={setShowViewDocumentDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{t('po.milestone.viewDocument')}</DialogTitle>
+          </DialogHeader>
+          {selectedMilestone && documents[selectedMilestone.id] && (
+            <div className="space-y-4">
+              <div className="border rounded p-4 bg-gray-50">
+                <p className="text-sm font-medium">{documents[selectedMilestone.id].file_name}</p>
+                <p className="text-xs text-gray-600 mt-1">
+                  {t('po.milestone.uploadedAt')}: {format(new Date(documents[selectedMilestone.id].created_at), 'dd/MM/yyyy HH:mm')}
+                </p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

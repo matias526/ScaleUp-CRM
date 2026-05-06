@@ -34,6 +34,7 @@ interface POGeneralTabProps {
   getStatusBadgeColor?: (status: string) => string
   approverName?: string
   creatorName?: string
+  poDocument?: any
 }
 
 export function POGeneralTab({
@@ -48,6 +49,7 @@ export function POGeneralTab({
   getStatusBadgeColor,
   approverName,
   creatorName,
+  poDocument,
 }: POGeneralTabProps) {
   const { t } = useTranslations(DICT_LANG_PO)
   const [showApproveDialog, setShowApproveDialog] = useState(false)
@@ -194,6 +196,22 @@ export function POGeneralTab({
               {t("po.general.confirmApprove")}
             </DialogDescription>
           </DialogHeader>
+          {poDocument && (
+            <div className="border rounded p-3 bg-gray-50 space-y-2">
+              <p className="text-sm font-medium text-gray-700">{t("po.detail.relatedDocument")}:</p>
+              <div className="flex items-center gap-2 p-2 bg-white rounded border">
+                <FileText className="h-4 w-4 text-blue-600" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">{poDocument.file_name}</p>
+                  {poDocument.created_at && (
+                    <p className="text-xs text-gray-500">
+                      {format(new Date(poDocument.created_at), "dd/MM/yyyy HH:mm")}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowApproveDialog(false)}>
               {t("common.cancel")}
