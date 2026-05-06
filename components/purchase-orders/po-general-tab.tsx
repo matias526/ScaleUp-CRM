@@ -28,11 +28,12 @@ interface POGeneralTabProps {
   shipping: any | null
   opportunities: any[]
   canApprove: boolean
-  onApproveClick: () => void
-  onMilestonesTabClick: () => void
-  onLogisticsTabClick: () => void
-  getStatusBadgeColor: (status: string) => string
+  onApproveClick?: () => void
+  onMilestonesTabClick?: () => void
+  onLogisticsTabClick?: () => void
+  getStatusBadgeColor?: (status: string) => string
   approverName?: string
+  creatorName?: string
 }
 
 export function POGeneralTab({
@@ -46,6 +47,7 @@ export function POGeneralTab({
   onLogisticsTabClick,
   getStatusBadgeColor,
   approverName,
+  creatorName,
 }: POGeneralTabProps) {
   const { t } = useTranslations(DICT_LANG_PO)
   const [showApproveDialog, setShowApproveDialog] = useState(false)
@@ -122,9 +124,9 @@ export function POGeneralTab({
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-xs text-gray-600">
                 <User className="h-3.5 w-3.5" />
-                Creado Por
+                {t("po.detail.createdBy") || "Creado Por"}
               </div>
-              <div className="font-medium text-sm">{po.created_by || "-"}</div>
+              <div className="font-medium text-sm">{creatorName || "-"}</div>
             </div>
 
             {/* Approval Info - if exists */}

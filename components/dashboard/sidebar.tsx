@@ -10,6 +10,7 @@ import {
   Users,
   Handshake,
   ClipboardList,
+  ShoppingCart,
   ChevronLeft,
   ChevronRight,
   PresentationIcon,
@@ -252,7 +253,7 @@ export function Sidebar() {
     },
     {
       href: "/dashboard/purchase-orders",
-      icon: ClipboardList,
+      icon: ShoppingCart,
       labelKey: "sidebar.orders",
     },
     {

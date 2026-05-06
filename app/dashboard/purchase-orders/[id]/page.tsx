@@ -32,6 +32,7 @@ export default function PurchaseOrderDetailPage() {
   const [shippings, setShippings] = useState<any[]>([])
   const [opportunities, setOpportunities] = useState<any[]>([])
   const [approverName, setApproverName] = useState<string>("")
+  const [creatorName, setCreatorName] = useState<string>("")
   const [approving, setApproving] = useState(false)
   const [activeTab, setActiveTab] = useState("general")
 
@@ -80,6 +81,19 @@ export default function PurchaseOrderDetailPage() {
 
         if (approverData) {
           setApproverName(`${approverData.first_name} ${approverData.last_name}`)
+        }
+      }
+
+      // Load creator info if PO has created_by
+      if (poData.created_by) {
+        const { data: creatorData } = await supabase
+          .from("users")
+          .select("first_name, last_name")
+          .eq("id", poData.created_by)
+          .single()
+
+        if (creatorData) {
+          setCreatorName(`${creatorData.first_name} ${creatorData.last_name}`)
         }
       }
 
@@ -333,6 +347,7 @@ export default function PurchaseOrderDetailPage() {
                     onLogisticsTabClick={() => setActiveTab("logistics")}
                     getStatusBadgeColor={getStatusBadgeColor}
                     approverName={approverName}
+                    creatorName={creatorName}
                   />
                 </TabsContent>
 
