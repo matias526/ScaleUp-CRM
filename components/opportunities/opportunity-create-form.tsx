@@ -691,14 +691,29 @@ export default function OpportunityCreateForm() {
       // Obtener el manager de ScaleUp que maneja la relación entre Tech Company y Partner (solo si hay Partner y no es prospecto)
       let assignedToUserId = data.assigned_to || null
 
-      if (data.partner_id && data.tech_company_id && isScaleUpUser && !data.is_prospect) {
+      if (data.partner_id && data.tech_company_id && !data.is_prospect) {
         try {
-          const manager = await getScaleUpManager(data.tech_company_id, data.partner_id)
-          if (manager) {
-            assignedToUserId = manager
+          if (isScaleUpUser) {
+            // Para ScaleUp Users, obtener el manager de la relación
+            const manager = await getScaleUpManager(data.tech_company_id, data.partner_id)
+            if (manager) {
+              assignedToUserId = manager
+            }
+          } else if (userRole.toLowerCase() === "partneruser") {
+            // Para PartnerUsers, obtener el scaleup_manager_id de partner_tech_companies
+            const { data: partnerTechData, error } = await supabase
+              .from("partner_tech_companies")
+              .select("scaleup_manager_id")
+              .eq("partner_id", data.partner_id)
+              .eq("tech_company_id", data.tech_company_id)
+              .single()
+
+            if (!error && partnerTechData?.scaleup_manager_id) {
+              assignedToUserId = partnerTechData.scaleup_manager_id
+            }
           }
         } catch (error) {
-          console.error("Error al obtener el manager de ScaleUp:", error)
+          console.error("[v0] Error al obtener el manager de ScaleUp:", error)
         }
       }
 
