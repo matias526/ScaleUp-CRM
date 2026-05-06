@@ -221,7 +221,31 @@ export const DICT_LANG_PO = {
     en: "Created By",
     pt: "Criado por",
   },
-  "po.detail.approvedDate": {
+  "po.detail.detailedInfo": {
+    es: "Información Detallada",
+    en: "Detailed Information",
+    pt: "Informações Detalhadas",
+  },
+  "po.detail.approveDescription": {
+    es: "Revisa los detalles de la orden y apruébala para proceder con los hitos y logística.",
+    en: "Review the order details and approve it to proceed with milestones and logistics.",
+    pt: "Revise os detalhes do pedido e aprove-o para prosseguir com os marcos e logística.",
+  },
+  "po.approvedDate": {
+    es: "Fecha de Aprobación",
+    en: "Approval Date",
+    pt: "Data de Aprovação",
+  },
+  "po.approvedBy": {
+    es: "Aprobado por",
+    en: "Approved By",
+    pt: "Aprovado por",
+  },
+  "po.approvePO": {
+    es: "Aprobar Orden de Compra",
+    en: "Approve Purchase Order",
+    pt: "Aprovar Ordem de Compra",
+  },
     es: "Fecha de Aprobación",
     en: "Approved Date",
     pt: "Data de Aprovação",

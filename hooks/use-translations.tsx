@@ -40,6 +40,16 @@ export function useTranslations(localDictionary?: Record<string, Record<string, 
           console.log("✅ TranslationService ya está inicializado")
           setIsLoaded(true)
           setError(null)
+          
+          // Si el servicio ya está inicializado, establecer el idioma desde el usuario
+          if (user) {
+            const dbLanguage = await fetchUserLanguagePreference(user.id)
+            if (dbLanguage) {
+              console.log("🌍 Idioma obtenido de la base de datos (paso rápido):", dbLanguage)
+              setLanguage(dbLanguage)
+              localStorage.setItem("userLanguage", dbLanguage)
+            }
+          }
           return
         }
 

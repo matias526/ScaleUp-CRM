@@ -95,7 +95,7 @@ export function POGeneralTab({
       {/* Metadata Section - Enhanced */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">{t("po.detail.detailedInfo") || "Información Detallada"}</CardTitle>
+          <CardTitle className="text-base">{t("po.detail.detailedInfo")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -103,7 +103,7 @@ export function POGeneralTab({
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-xs text-gray-600">
                 <Calendar className="h-3.5 w-3.5" />
-                {t("po.detail.createdDate") || "Fecha de Creación"}
+                {t("po.detail.createdDate")}
               </div>
               <div className="font-medium text-sm">
                 {po.created_at
@@ -124,7 +124,7 @@ export function POGeneralTab({
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-xs text-gray-600">
                 <User className="h-3.5 w-3.5" />
-                {t("po.detail.createdBy") || "Creado Por"}
+                {t("po.detail.createdBy")}
               </div>
               <div className="font-medium text-sm">{creatorName || "-"}</div>
             </div>
@@ -135,7 +135,7 @@ export function POGeneralTab({
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 text-xs text-gray-600">
                     <CheckCircle className="h-3.5 w-3.5 text-green-600" />
-                    Aprobado En
+                    {t("po.detail.approvedDate")}
                   </div>
                   <div className="font-medium text-sm">
                     {format(new Date(po.accepted_at), "dd MMM yyyy", { locale: es })}
@@ -151,7 +151,7 @@ export function POGeneralTab({
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 text-xs text-gray-600">
                     <User className="h-3.5 w-3.5" />
-                    Aprobado Por
+                    {t("po.detail.approvedBy")}
                   </div>
                   <div className="font-medium text-sm">{approverName || "-"}</div>
                 </div>
@@ -172,7 +172,7 @@ export function POGeneralTab({
           </CardHeader>
           <CardContent>
             <p className="text-sm text-green-800 mb-4">
-              {t("po.detail.approveDescription") || "Revisa los detalles de la orden y apruébala para proceder con los hitos y logística."}
+              {t("po.detail.approveDescription")}
             </p>
             <Button
               onClick={() => setShowApproveDialog(true)}
