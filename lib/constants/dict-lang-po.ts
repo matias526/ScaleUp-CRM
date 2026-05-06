@@ -887,6 +887,7 @@ export const DICT_LANG_PO = {
     en: "Select logistics status",
     pt: "Selecionar status logístico",
   },
+  "common.success": {
     es: "Éxito",
     en: "Success",
     pt: "Sucesso",
