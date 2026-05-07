@@ -1008,12 +1008,14 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
                     </div>
                   </div>
                 ) : signedUrls[selectedMilestone.id] && milestoneDocuments[selectedMilestone.id].file_url.toLowerCase().includes('pdf') ? (
-                  // PDF Notice with Download
-                  <div className="flex flex-col items-center space-y-3 py-8">
-                    <FileText className="h-16 w-16 text-red-600" />
-                    <p className="text-sm text-gray-600 text-center">
-                      {t('po.milestone.pdfViewerNotAvailable') || 'Visualizador de PDF no disponible'}
-                    </p>
+                  // PDF Preview with Embed
+                  <div className="flex flex-col items-center space-y-3 w-full">
+                    <iframe 
+                      src={`${signedUrls[selectedMilestone.id]}#toolbar=0`}
+                      className="w-full h-96 rounded-lg border border-gray-300"
+                      title="PDF Preview"
+                      style={{ minHeight: '400px' }}
+                    />
                     <Button 
                       onClick={() => {
                         const fileUrl = signedUrls[selectedMilestone.id]
@@ -1040,25 +1042,11 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
                   </div>
                 )}
                 
-                {/* Document Info and Download */}
-                <div className="border-t pt-4 flex items-center justify-between">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">
-                      {t('po.milestone.relatedDocument')}
-                    </p>
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {milestoneDocuments[selectedMilestone.id].file_url.split('/').pop()?.replace(/^\d+-\d+-/, '') || 'documento'}
-                    </p>
-                    {milestoneDocuments[selectedMilestone.id].uploaded_at && (
-                      <p className="text-xs text-gray-500 mt-2">
-                        {new Date(milestoneDocuments[selectedMilestone.id].uploaded_at).toLocaleDateString()} {new Date(milestoneDocuments[selectedMilestone.id].uploaded_at).toLocaleTimeString()}
-                      </p>
-                    )}
-                  </div>
+                {/* Download Button Only - No file name shown */}
+                <div className="flex justify-end">
                   <Button
                     variant="outline"
                     size="sm"
-                    className="ml-4 flex-shrink-0"
                     disabled={!signedUrls[selectedMilestone.id] && !milestoneDocuments[selectedMilestone.id].file_url.startsWith('http')}
                     onClick={() => {
                       const fileUrl = signedUrls[selectedMilestone.id] || milestoneDocuments[selectedMilestone.id].file_url
