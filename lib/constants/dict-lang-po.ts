@@ -1336,4 +1336,64 @@ export const DICT_LANG_PO = {
     en: "Estimated Delivery",
     pt: "Entrega Estimada",
   },
+  "po.milestone.action.edit": {
+    es: "Editar",
+    en: "Edit",
+    pt: "Editar",
+  },
+  "po.milestone.action.delete": {
+    es: "Eliminar",
+    en: "Delete",
+    pt: "Excluir",
+  },
+  "po.milestone.action.uploadDoc": {
+    es: "Cargar Comprobante",
+    en: "Upload Document",
+    pt: "Enviar Comprovante",
+  },
+  "po.milestone.action.deleteDoc": {
+    es: "Eliminar Comprobante",
+    en: "Delete Document",
+    pt: "Excluir Comprovante",
+  },
+  "po.milestone.action.confirmPayment": {
+    es: "Confirmar Pago",
+    en: "Confirm Payment",
+    pt: "Confirmar Pagamento",
+  },
+  "po.milestone.confirmDelete": {
+    es: "¿Estás seguro de que deseas eliminar este hito?",
+    en: "Are you sure you want to delete this milestone?",
+    pt: "Tem certeza de que deseja excluir este marco?",
+  },
+  "po.milestone.confirmDeleteDoc": {
+    es: "¿Estás seguro de que deseas eliminar el comprobante?",
+    en: "Are you sure you want to delete the document?",
+    pt: "Tem certeza de que deseja excluir o comprovante?",
+  },
+  "common.actions": {
+    es: "Acciones",
+    en: "Actions",
+    pt: "Ações",
+  },
+  "common.confirming": {
+    es: "Confirmando...",
+    en: "Confirming...",
+    pt: "Confirmando...",
+  },
+  "common.uploading": {
+    es: "Cargando...",
+    en: "Uploading...",
+    pt: "Enviando...",
+  },
+  "po.milestone.relatedDocument": {
+    es: "Documento Relacionado",
+    en: "Related Document",
+    pt: "Documento Relacionado",
+  },
+  "po.milestone.selectFile": {
+    es: "Selecciona un archivo",
+    en: "Select a file",
+    pt: "Selecione um arquivo",
+  },
 }
