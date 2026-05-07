@@ -248,14 +248,14 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
       // Upload file to bucket
       const fileName = `${selectedMilestone.id}-${Date.now()}-${uploadFile.name}`
       const { error: uploadError } = await supabase.storage
-        .from('po-documents')
+        .from('po_documents')
         .upload(fileName, uploadFile)
 
       if (uploadError) throw uploadError
 
       // Get public URL
       const { data } = supabase.storage
-        .from('po-documents')
+        .from('po_documents')
         .getPublicUrl(fileName)
 
       // Create document record
@@ -324,7 +324,7 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
         const fileName = doc.file_url.split('/').pop()
         if (fileName) {
           await supabase.storage
-            .from('po-documents')
+            .from('po_documents')
             .remove([fileName])
         }
 
