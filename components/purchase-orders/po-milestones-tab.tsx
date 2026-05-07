@@ -303,7 +303,6 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
           parent_type: 'po_milestone',
           doc_type: 'proof',
           file_url: fileName, // Store only the relative path!
-          file_name: uploadFile.name,
           uploaded_at: new Date().toISOString(),
           status: 'pending',
         })
@@ -961,13 +960,11 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
                     <FileText className="h-6 w-6 text-blue-600 flex-shrink-0 mt-1" />
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-gray-900 break-words">
-                        {milestoneDocuments[selectedMilestone.id].file_name || 
-                         milestoneDocuments[selectedMilestone.id].file_url.split('/').pop() ||
-                         'documento.pdf'}
+                        {milestoneDocuments[selectedMilestone.id].file_url.split('/').pop() || 'documento.pdf'}
                       </p>
-                      {milestoneDocuments[selectedMilestone.id].created_at && (
+                      {milestoneDocuments[selectedMilestone.id].uploaded_at && (
                         <p className="text-xs text-gray-500 mt-1">
-                          {new Date(milestoneDocuments[selectedMilestone.id].created_at).toLocaleDateString()} {new Date(milestoneDocuments[selectedMilestone.id].created_at).toLocaleTimeString()}
+                          {new Date(milestoneDocuments[selectedMilestone.id].uploaded_at).toLocaleDateString()} {new Date(milestoneDocuments[selectedMilestone.id].uploaded_at).toLocaleTimeString()}
                         </p>
                       )}
                     </div>
@@ -981,7 +978,7 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
                       const fileUrl = signedUrls[milestoneDocuments[selectedMilestone.id].id] || milestoneDocuments[selectedMilestone.id].file_url
                       const link = document.createElement('a')
                       link.href = fileUrl
-                      link.download = milestoneDocuments[selectedMilestone.id].file_name || 'documento'
+                      link.download = milestoneDocuments[selectedMilestone.id].file_url.split('/').pop() || 'documento'
                       document.body.appendChild(link)
                       link.click()
                       document.body.removeChild(link)
