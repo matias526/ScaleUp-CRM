@@ -68,6 +68,8 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
   const [showEditModal, setShowEditModal] = useState(false)
   const [uploadFile, setUploadFile] = useState<File | null>(null)
   const [milestoneDocuments, setMilestoneDocuments] = useState<{ [key: string]: any }>({})
+  const [signedUrls, setSignedUrls] = useState<{ [key: string]: string }>({})
+  const [legacyUrlWarning, setLegacyUrlWarning] = useState<string | null>(null)
   
   // Edit form
   const [editFormData, setEditFormData] = useState({
@@ -79,6 +81,46 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
   // Role-based permissions
   const isAdmin = ['Admin', 'BDD'].includes(userRole)
   const canCreate = isAdmin
+
+  // Generate signed URLs for milestone documents
+  useEffect(() => {
+    const generateSignedUrls = async () => {
+      const newSignedUrls: { [key: string]: string } = {}
+      const warnings: string[] = []
+
+      for (const doc of Object.values(milestoneDocuments)) {
+        if (!doc.file_url) continue
+
+        // Check for legacy URLs (starting with http)
+        if (doc.file_url.startsWith('http')) {
+          warnings.push(doc.id)
+          continue
+        }
+
+        try {
+          // Generate 7-day signed URL
+          const { data, error } = await supabase.storage
+            .from('po_documents')
+            .createSignedUrl(doc.file_url, 604800) // 7 days
+
+          if (!error && data?.signedUrl) {
+            newSignedUrls[doc.id] = data.signedUrl
+          }
+        } catch (error) {
+          console.error('[v0] Error generating signed URL for', doc.file_url, error)
+        }
+      }
+
+      setSignedUrls(newSignedUrls)
+      if (warnings.length > 0) {
+        setLegacyUrlWarning(warnings.join(', '))
+      }
+    }
+
+    if (Object.keys(milestoneDocuments).length > 0) {
+      generateSignedUrls()
+    }
+  }, [milestoneDocuments])
 
   // Calculate totals
   const calculateTotal = () => {
@@ -246,26 +288,22 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
     setIsLoading(true)
     try {
       // Upload file to bucket
-      const fileName = `${selectedMilestone.id}-${Date.now()}-${uploadFile.name}`
+      const fileName = `milestones/${selectedMilestone.id}-${Date.now()}-${uploadFile.name}`
       const { error: uploadError } = await supabase.storage
         .from('po_documents')
         .upload(fileName, uploadFile)
 
       if (uploadError) throw uploadError
 
-      // Get public URL
-      const { data } = supabase.storage
-        .from('po_documents')
-        .getPublicUrl(fileName)
-
-      // Create document record
+      // Create document record with ONLY the relative path, not the full URL
       const { data: docData, error: docError } = await supabase
         .from('documents')
         .insert({
           parent_id: selectedMilestone.id,
           parent_type: 'po_milestone',
           doc_type: 'proof',
-          file_url: data.publicUrl,
+          file_url: fileName, // Store only the relative path!
+          file_name: uploadFile.name,
           uploaded_at: new Date().toISOString(),
           status: 'pending',
         })
@@ -283,7 +321,7 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
 
       setMilestoneDocuments({
         ...milestoneDocuments,
-        [selectedMilestone.id]: docData[0],
+        [docData[0].id]: docData[0],
       })
       setDbMilestones(dbMilestones.map(m =>
         m.id === selectedMilestone.id ? { ...m, status: 'in_process' } : m
@@ -320,13 +358,51 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
       if (docs && docs.length > 0) {
         const doc = docs[0]
         
-        // Delete from storage
-        const fileName = doc.file_url.split('/').pop()
-        if (fileName) {
+        // Delete from storage - file_url now contains the relative path
+        const filePath = doc.file_url.startsWith('http') ? null : doc.file_url
+        if (filePath) {
           await supabase.storage
             .from('po_documents')
-            .remove([fileName])
+            .remove([filePath])
         }
+
+        // Delete document record
+        await supabase
+          .from('documents')
+          .delete()
+          .eq('id', doc.id)
+      }
+
+      // Update milestone status back to pending
+      await supabase
+        .from('po_milestones')
+        .update({ status: 'pending' })
+        .eq('id', milestone.id)
+
+      const newDocs = { ...milestoneDocuments }
+      delete newDocs[milestone.id]
+      setMilestoneDocuments(newDocs)
+      
+      const newUrls = { ...signedUrls }
+      delete newUrls[milestone.id]
+      setSignedUrls(newUrls)
+      
+      setDbMilestones(dbMilestones.map(m =>
+        m.id === milestone.id ? { ...m, status: 'pending' } : m
+      ))
+      toast({
+        description: 'Documento eliminado',
+      })
+      onMilestonesUpdate()
+    } catch (error) {
+      toast({
+        description: 'Error al eliminar documento',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
         // Delete document record
         await supabase
@@ -905,6 +981,14 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
             <div className="border rounded-lg p-6 bg-white space-y-4">
               <p className="text-sm font-medium text-gray-700">{t('po.milestone.relatedDocument')}</p>
               <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                {/* Legacy URL Warning */}
+                {milestoneDocuments[selectedMilestone.id].file_url.startsWith('http') && (
+                  <div className="bg-amber-50 border border-amber-200 rounded p-3 mb-2">
+                    <p className="text-sm text-amber-800">
+                      ⚠️ {t('po.milestone.legacyUrlWarning') || 'Este documento usa un formato antiguo. Se recomienda re-subir el documento para renovar el acceso.'}
+                    </p>
+                  </div>
+                )}
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-3 flex-1 min-w-0">
                     <FileText className="h-6 w-6 text-blue-600 flex-shrink-0 mt-1" />
@@ -925,9 +1009,11 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
                     variant="ghost"
                     size="sm"
                     className="flex-shrink-0 ml-2"
+                    disabled={!signedUrls[milestoneDocuments[selectedMilestone.id].id] && !milestoneDocuments[selectedMilestone.id].file_url.startsWith('http')}
                     onClick={() => {
+                      const fileUrl = signedUrls[milestoneDocuments[selectedMilestone.id].id] || milestoneDocuments[selectedMilestone.id].file_url
                       const link = document.createElement('a')
-                      link.href = milestoneDocuments[selectedMilestone.id].file_url
+                      link.href = fileUrl
                       link.download = milestoneDocuments[selectedMilestone.id].file_name || 'documento'
                       document.body.appendChild(link)
                       link.click()
@@ -939,12 +1025,13 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
                   </Button>
                 </div>
                 {/* Document Preview for Images */}
-                {['jpg', 'jpeg', 'png', 'gif', 'webp'].some(ext => 
-                  (milestoneDocuments[selectedMilestone.id].file_url.toLowerCase().includes(ext))
-                ) && (
+                {signedUrls[milestoneDocuments[selectedMilestone.id].id] && 
+                  ['jpg', 'jpeg', 'png', 'gif', 'webp'].some(ext => 
+                    (milestoneDocuments[selectedMilestone.id].file_url.toLowerCase().includes(ext))
+                  ) && (
                   <div className="mt-4 max-h-64 overflow-auto rounded border bg-white">
                     <img 
-                      src={milestoneDocuments[selectedMilestone.id].file_url}
+                      src={signedUrls[milestoneDocuments[selectedMilestone.id].id]}
                       alt="Document preview"
                       className="w-full h-auto"
                     />

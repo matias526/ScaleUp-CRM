@@ -1401,4 +1401,9 @@ export const DICT_LANG_PO = {
     en: "Download",
     pt: "Baixar",
   },
+  "po.milestone.legacyUrlWarning": {
+    es: "⚠️ Este documento usa un formato antiguo. Se recomienda re-subir el documento para renovar el acceso.",
+    en: "⚠️ This document uses an old format. It is recommended to re-upload the document to renew access.",
+    pt: "⚠️ Este documento usa um formato antigo. Recomenda-se re-fazer o upload do documento para renovar o acesso.",
+  },
 }
