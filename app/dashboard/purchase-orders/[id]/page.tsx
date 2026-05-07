@@ -208,6 +208,27 @@ export default function PurchaseOrderDetailPage() {
 
       if (poError) throw poError
 
+      // Get all opportunities related to this PO
+      const { data: relatedOpportunities, error: oppFetchError } = await supabase
+        .from("opportunities")
+        .select("id")
+        .eq("purchase_order_id", poId)
+
+      if (oppFetchError) throw oppFetchError
+
+      // Update all related opportunities to won status
+      if (relatedOpportunities && relatedOpportunities.length > 0) {
+        const oppIds = relatedOpportunities.map(opp => opp.id)
+        const { error: oppUpdateError } = await supabase
+          .from("opportunities")
+          .update({
+            pipeline_stage_id: "6ce3c904-c927-4e11-91f8-d25674d642ac"
+          })
+          .in("id", oppIds)
+
+        if (oppUpdateError) throw oppUpdateError
+      }
+
       toast({
         title: "Éxito",
         description: "Orden de compra aprobada",
