@@ -981,34 +981,84 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
           </DialogHeader>
           {selectedMilestone && milestoneDocuments[selectedMilestone.id] && (
             <div className="border rounded-lg p-6 bg-white space-y-4">
-              <p className="text-sm font-medium text-gray-700">{t('po.milestone.relatedDocument')}</p>
-              <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                {/* Legacy URL Warning */}
-                {milestoneDocuments[selectedMilestone.id].file_url.startsWith('http') && (
-                  <div className="bg-amber-50 border border-amber-200 rounded p-3 mb-2">
-                    <p className="text-sm text-amber-800">
-                      ⚠️ {t('po.milestone.legacyUrlWarning') || 'Este documento usa un formato antiguo. Se recomienda re-subir el documento para renovar el acceso.'}
+              {/* Legacy URL Warning */}
+              {milestoneDocuments[selectedMilestone.id].file_url.startsWith('http') && (
+                <div className="bg-amber-50 border border-amber-200 rounded p-3 mb-2">
+                  <p className="text-sm text-amber-800">
+                    ⚠️ {t('po.milestone.legacyUrlWarning') || 'Este documento usa un formato antiguo. Se recomienda re-subir el documento para renovar el acceso.'}
+                  </p>
+                </div>
+              )}
+              
+              {/* Document Display */}
+              <div className="space-y-4">
+                {/* Check if image or PDF */}
+                {signedUrls[selectedMilestone.id] && 
+                  ['jpg', 'jpeg', 'png', 'gif', 'webp'].some(ext => 
+                    (milestoneDocuments[selectedMilestone.id].file_url.toLowerCase().includes(ext))
+                  ) ? (
+                  // Image Preview
+                  <div className="flex flex-col items-center space-y-3">
+                    <div className="w-full max-h-96 overflow-auto rounded-lg border bg-gray-50 flex items-center justify-center">
+                      <img 
+                        src={signedUrls[selectedMilestone.id]}
+                        alt="Document preview"
+                        className="max-w-full h-auto"
+                      />
+                    </div>
+                  </div>
+                ) : signedUrls[selectedMilestone.id] && milestoneDocuments[selectedMilestone.id].file_url.toLowerCase().includes('pdf') ? (
+                  // PDF Notice with Download
+                  <div className="flex flex-col items-center space-y-3 py-8">
+                    <FileText className="h-16 w-16 text-red-600" />
+                    <p className="text-sm text-gray-600 text-center">
+                      {t('po.milestone.pdfViewerNotAvailable') || 'Visualizador de PDF no disponible'}
+                    </p>
+                    <Button 
+                      onClick={() => {
+                        const fileUrl = signedUrls[selectedMilestone.id]
+                        const link = document.createElement('a')
+                        link.href = fileUrl
+                        link.download = milestoneDocuments[selectedMilestone.id].file_url.split('/').pop() || 'documento.pdf'
+                        document.body.appendChild(link)
+                        link.click()
+                        document.body.removeChild(link)
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      {t('common.download')}
+                    </Button>
+                  </div>
+                ) : (
+                  // File Info
+                  <div className="flex flex-col items-center space-y-3 py-8">
+                    <FileText className="h-16 w-16 text-blue-600" />
+                    <p className="text-sm text-gray-600 text-center">
+                      {t('po.milestone.documentReady') || 'Documento listo para descargar'}
                     </p>
                   </div>
                 )}
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-3 flex-1 min-w-0">
-                    <FileText className="h-6 w-6 text-blue-600 flex-shrink-0 mt-1" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-gray-900 break-words">
-                        {milestoneDocuments[selectedMilestone.id].file_url.split('/').pop() || 'documento.pdf'}
+                
+                {/* Document Info and Download */}
+                <div className="border-t pt-4 flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">
+                      {t('po.milestone.relatedDocument')}
+                    </p>
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {milestoneDocuments[selectedMilestone.id].file_url.split('/').pop()?.replace(/^\d+-\d+-/, '') || 'documento'}
+                    </p>
+                    {milestoneDocuments[selectedMilestone.id].uploaded_at && (
+                      <p className="text-xs text-gray-500 mt-2">
+                        {new Date(milestoneDocuments[selectedMilestone.id].uploaded_at).toLocaleDateString()} {new Date(milestoneDocuments[selectedMilestone.id].uploaded_at).toLocaleTimeString()}
                       </p>
-                      {milestoneDocuments[selectedMilestone.id].uploaded_at && (
-                        <p className="text-xs text-gray-500 mt-1">
-                          {new Date(milestoneDocuments[selectedMilestone.id].uploaded_at).toLocaleDateString()} {new Date(milestoneDocuments[selectedMilestone.id].uploaded_at).toLocaleTimeString()}
-                        </p>
-                      )}
-                    </div>
+                    )}
                   </div>
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
-                    className="flex-shrink-0 ml-2"
+                    className="ml-4 flex-shrink-0"
                     disabled={!signedUrls[selectedMilestone.id] && !milestoneDocuments[selectedMilestone.id].file_url.startsWith('http')}
                     onClick={() => {
                       const fileUrl = signedUrls[selectedMilestone.id] || milestoneDocuments[selectedMilestone.id].file_url
@@ -1024,19 +1074,6 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
                     <Download className="h-4 w-4" />
                   </Button>
                 </div>
-                {/* Document Preview for Images */}
-                {signedUrls[selectedMilestone.id] && 
-                  ['jpg', 'jpeg', 'png', 'gif', 'webp'].some(ext => 
-                    (milestoneDocuments[selectedMilestone.id].file_url.toLowerCase().includes(ext))
-                  ) && (
-                  <div className="mt-4 max-h-64 overflow-auto rounded border bg-white">
-                    <img 
-                      src={signedUrls[selectedMilestone.id]}
-                      alt="Document preview"
-                      className="w-full h-auto"
-                    />
-                  </div>
-                )}
               </div>
             </div>
           )}

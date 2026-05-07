@@ -1406,4 +1406,14 @@ export const DICT_LANG_PO = {
     en: "⚠️ This document uses an old format. It is recommended to re-upload the document to renew access.",
     pt: "⚠️ Este documento usa um formato antigo. Recomenda-se re-fazer o upload do documento para renovar o acesso.",
   },
+  "po.milestone.pdfViewerNotAvailable": {
+    es: "Visualizador de PDF no disponible",
+    en: "PDF viewer not available",
+    pt: "Visualizador de PDF não disponível",
+  },
+  "po.milestone.documentReady": {
+    es: "Documento listo para descargar",
+    en: "Document ready to download",
+    pt: "Documento pronto para download",
+  },
 }
