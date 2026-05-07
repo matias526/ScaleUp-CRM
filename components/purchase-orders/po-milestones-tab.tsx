@@ -1016,21 +1016,6 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
                       title="PDF Preview"
                       style={{ minHeight: '400px' }}
                     />
-                    <Button 
-                      onClick={() => {
-                        const fileUrl = signedUrls[selectedMilestone.id]
-                        const link = document.createElement('a')
-                        link.href = fileUrl
-                        link.download = milestoneDocuments[selectedMilestone.id].file_url.split('/').pop() || 'documento.pdf'
-                        document.body.appendChild(link)
-                        link.click()
-                        document.body.removeChild(link)
-                      }}
-                      className="bg-blue-600 hover:bg-blue-700"
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      {t('common.download')}
-                    </Button>
                   </div>
                 ) : (
                   // File Info
@@ -1041,31 +1026,24 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
                     </p>
                   </div>
                 )}
-                
-                {/* Download Button Only - No file name shown */}
-                <div className="flex justify-end">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={!signedUrls[selectedMilestone.id] && !milestoneDocuments[selectedMilestone.id].file_url.startsWith('http')}
-                    onClick={() => {
-                      const fileUrl = signedUrls[selectedMilestone.id] || milestoneDocuments[selectedMilestone.id].file_url
-                      const link = document.createElement('a')
-                      link.href = fileUrl
-                      link.download = milestoneDocuments[selectedMilestone.id].file_url.split('/').pop() || 'documento'
-                      document.body.appendChild(link)
-                      link.click()
-                      document.body.removeChild(link)
-                    }}
-                    title={t('common.download')}
-                  >
-                    <Download className="h-4 w-4" />
-                  </Button>
-                </div>
               </div>
             </div>
           )}
           <DialogFooter>
+            <Button 
+              variant="outline"
+              onClick={() => {
+                const fileUrl = signedUrls[selectedMilestone.id] || milestoneDocuments[selectedMilestone.id]?.file_url
+                if (fileUrl) {
+                  window.open(fileUrl, '_blank')
+                }
+              }}
+              disabled={!selectedMilestone || !milestoneDocuments[selectedMilestone.id]}
+              title={t('common.download')}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              {t('common.download')}
+            </Button>
             <Button variant="outline" onClick={() => setShowConfirmPaymentModal(false)}>
               {t('common.cancel')}
             </Button>
