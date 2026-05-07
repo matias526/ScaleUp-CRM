@@ -139,7 +139,6 @@ export function POGeneralTab({
       )}
 
       {/* Approve Dialog */}
-      <Card>
         <CardHeader>
           <CardTitle className="text-base">{t("po.detail.detailedInfo")}</CardTitle>
         </CardHeader>
@@ -206,6 +205,11 @@ export function POGeneralTab({
           </div>
         </CardContent>
       </Card>
+
+      {/* Related Opportunities Section - After Detailed Information */}
+      {opportunities && opportunities.length > 0 && (
+        <RelatedOpportunitiesSection opportunities={opportunities} />
+      )}
 
       {/* Approve Section */}
       {canApprove && po.status === "sent" && (
