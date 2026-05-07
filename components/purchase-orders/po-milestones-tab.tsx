@@ -404,39 +404,6 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
     }
   }
 
-        // Delete document record
-        await supabase
-          .from('documents')
-          .delete()
-          .eq('id', doc.id)
-      }
-
-      // Update milestone status back to pending
-      await supabase
-        .from('po_milestones')
-        .update({ status: 'pending' })
-        .eq('id', milestone.id)
-
-      const newDocs = { ...milestoneDocuments }
-      delete newDocs[milestone.id]
-      setMilestoneDocuments(newDocs)
-      setDbMilestones(dbMilestones.map(m =>
-        m.id === milestone.id ? { ...m, status: 'pending' } : m
-      ))
-      toast({
-        description: 'Documento eliminado',
-      })
-      onMilestonesUpdate()
-    } catch (error) {
-      toast({
-        description: 'Error al eliminar documento',
-        variant: 'destructive',
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   // Confirm payment
   const handleOpenConfirmPaymentModal = async (milestone: any) => {
     setSelectedMilestone(milestone)
