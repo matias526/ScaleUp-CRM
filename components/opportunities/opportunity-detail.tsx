@@ -2021,10 +2021,13 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                 </div>
               </div>
             )}
-            <OpportunityContactsSection
-              opportunityId={opportunity?.id}
-              onSendMessage={() => setShowPulseMessageSender(true)}
-            />
+            {/* Contacts Section - Only visible to Admin and BDD */}
+            {currentUser && ["Admin", "BDD"].includes(currentUser.role_code) && (
+              <OpportunityContactsSection
+                opportunityId={opportunity?.id}
+                onSendMessage={() => setShowPulseMessageSender(true)}
+              />
+            )}
           </div>
 
           {/* Quotes Section */}
