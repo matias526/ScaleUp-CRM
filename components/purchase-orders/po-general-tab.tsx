@@ -138,7 +138,8 @@ export function POGeneralTab({
         <RelatedOpportunitiesSection opportunities={opportunities} />
       )}
 
-      {/* Approve Dialog */}
+      {/* Detailed Information */}
+      <Card>
         <CardHeader>
           <CardTitle className="text-base">{t("po.detail.detailedInfo")}</CardTitle>
         </CardHeader>
