@@ -1491,4 +1491,69 @@ export const DICT_LANG_PO = {
     en: "Detailed Information",
     pt: "Informações Detalhadas",
   },
+  "po.notes.dialog.title": {
+    es: "Agregar Nota",
+    en: "Add Note",
+    pt: "Adicionar Nota",
+  },
+  "po.notes.dialog.contentLabel": {
+    es: "Contenido de la nota",
+    en: "Note Content",
+    pt: "Conteúdo da Nota",
+  },
+  "po.notes.dialog.contentPlaceholder": {
+    es: "Escribe tu nota aquí...",
+    en: "Write your note here...",
+    pt: "Escreva sua nota aqui...",
+  },
+  "po.notes.dialog.contentEmpty": {
+    es: "El contenido de la nota no puede estar vacío",
+    en: "Note content cannot be empty",
+    pt: "O conteúdo da nota não pode estar vazio",
+  },
+  "po.notes.dialog.successTitle": {
+    es: "Éxito",
+    en: "Success",
+    pt: "Sucesso",
+  },
+  "po.notes.dialog.successMessage": {
+    es: "Nota agregada correctamente",
+    en: "Note added successfully",
+    pt: "Nota adicionada com sucesso",
+  },
+  "po.notes.dialog.errorMessage": {
+    es: "No se pudo agregar la nota",
+    en: "Could not add the note",
+    pt: "Não foi possível adicionar a nota",
+  },
+  "po.notes.dialog.privateNote": {
+    es: "Nota privada",
+    en: "Private Note",
+    pt: "Nota Privada",
+  },
+  "po.notes.dialog.publicNote": {
+    es: "Nota pública",
+    en: "Public Note",
+    pt: "Nota Pública",
+  },
+  "po.notes.dialog.publicInfo": {
+    es: "Esta nota será pública",
+    en: "This note will be public",
+    pt: "Esta nota será pública",
+  },
+  "po.notes.dialog.cancel": {
+    es: "Cancelar",
+    en: "Cancel",
+    pt: "Cancelar",
+  },
+  "po.notes.dialog.submit": {
+    es: "Agregar nota",
+    en: "Add note",
+    pt: "Adicionar nota",
+  },
+  "po.notes.dialog.submitting": {
+    es: "Guardando...",
+    en: "Saving...",
+    pt: "Salvando...",
+  },
 }

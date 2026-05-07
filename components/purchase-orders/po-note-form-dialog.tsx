@@ -10,6 +10,8 @@ import { toast } from "@/components/ui/use-toast"
 import { Lock, Globe } from "lucide-react"
 import { useAuth } from "@/components/auth/auth-provider"
 import { supabase } from "@/lib/supabase/client"
+import { useTranslations } from "@/hooks/use-translations"
+import { DICT_LANG_PO } from "@/lib/constants/dict-lang-po"
 
 interface PONoteFormDialogProps {
   isOpen: boolean
@@ -32,6 +34,7 @@ export function PONoteFormDialog({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isPrivate, setIsPrivate] = useState(false)
   const { userInfo } = useAuth()
+  const { t } = useTranslations(DICT_LANG_PO)
 
   // Solo Admin y BDD pueden crear notas privadas
   const isScaleUpUser = userRole === "Admin" || userRole === "BDD"
@@ -39,8 +42,8 @@ export function PONoteFormDialog({
   const handleSubmit = async () => {
     if (!content.trim()) {
       toast({
-        title: "Error",
-        description: "El contenido de la nota no puede estar vacío",
+        title: t("common.error"),
+        description: t("po.notes.dialog.contentEmpty"),
         variant: "destructive",
       })
       return
@@ -62,8 +65,8 @@ export function PONoteFormDialog({
       if (error) throw error
 
       toast({
-        title: "Éxito",
-        description: "Nota agregada correctamente",
+        title: t("po.notes.dialog.successTitle"),
+        description: t("po.notes.dialog.successMessage"),
       })
       
       setContent("")
@@ -73,8 +76,8 @@ export function PONoteFormDialog({
     } catch (error) {
       console.error("Error adding note:", error)
       toast({
-        title: "Error",
-        description: "No se pudo agregar la nota",
+        title: t("common.error"),
+        description: t("po.notes.dialog.errorMessage"),
         variant: "destructive",
       })
     } finally {
@@ -86,19 +89,19 @@ export function PONoteFormDialog({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Agregar Nota</DialogTitle>
+          <DialogTitle>{t("po.notes.dialog.title")}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <div>
             <Label htmlFor="note-content" className="text-sm">
-              Contenido de la nota
+              {t("po.notes.dialog.contentLabel")}
             </Label>
             <Textarea
               id="note-content"
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="Escribe tu nota aquí..."
+              placeholder={t("po.notes.dialog.contentPlaceholder")}
               className="mt-2 min-h-24"
             />
           </div>
@@ -113,7 +116,7 @@ export function PONoteFormDialog({
                   <Globe className="h-4 w-4 text-green-600" />
                 )}
                 <Label className="text-sm font-medium">
-                  {isPrivate ? "Nota privada" : "Nota pública"}
+                  {isPrivate ? t("po.notes.dialog.privateNote") : t("po.notes.dialog.publicNote")}
                 </Label>
               </div>
               <Switch checked={isPrivate} onCheckedChange={setIsPrivate} />
@@ -125,7 +128,7 @@ export function PONoteFormDialog({
             <div className="p-2 border rounded bg-blue-50 text-sm text-blue-700">
               <p className="flex items-center gap-2">
                 <Globe className="h-4 w-4" />
-                Esta nota será pública
+                {t("po.notes.dialog.publicInfo")}
               </p>
             </div>
           )}
@@ -133,10 +136,10 @@ export function PONoteFormDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
-            Cancelar
+            {t("po.notes.dialog.cancel")}
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting || !content.trim()}>
-            {isSubmitting ? "Guardando..." : "Agregar nota"}
+            {isSubmitting ? t("po.notes.dialog.submitting") : t("po.notes.dialog.submit")}
           </Button>
         </DialogFooter>
       </DialogContent>
