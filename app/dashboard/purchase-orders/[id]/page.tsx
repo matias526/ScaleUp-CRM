@@ -186,8 +186,10 @@ export default function PurchaseOrderDetailPage() {
     try {
       setApproving(true)
       const userRole = userInfo?.roleCode
+      console.log("[v0] Starting handleApprovePO, userRole:", userRole, "poId:", poId)
 
       if (!["Admin", "BDD", "TechUser", "TechLogistic"].includes(userRole || "")) {
+        console.log("[v0] User role not authorized for approval")
         toast({
           title: t("common.error"),
           description: t("po.unauthorizedApprove"),
@@ -197,6 +199,7 @@ export default function PurchaseOrderDetailPage() {
       }
 
       // Update PO status to accepted
+      console.log("[v0] Updating PO status to accepted")
       const { error: poError } = await supabase
         .from("purchase_orders")
         .update({
@@ -207,18 +210,23 @@ export default function PurchaseOrderDetailPage() {
         .eq("id", poId)
 
       if (poError) throw poError
+      console.log("[v0] PO updated successfully")
 
       // Get all opportunities related to this PO
+      console.log("[v0] Fetching opportunities for poId:", poId)
       const { data: relatedOpportunities, error: oppFetchError } = await supabase
         .from("opportunities")
         .select("id")
         .eq("purchase_order_id", poId)
+
+      console.log("[v0] Related opportunities found:", relatedOpportunities?.length || 0, "Error:", oppFetchError)
 
       if (oppFetchError) throw oppFetchError
 
       // Update all related opportunities to won status
       if (relatedOpportunities && relatedOpportunities.length > 0) {
         const oppIds = relatedOpportunities.map(opp => opp.id)
+        console.log("[v0] Updating opportunities to won status, ids:", oppIds)
         const { error: oppUpdateError } = await supabase
           .from("opportunities")
           .update({
@@ -226,7 +234,11 @@ export default function PurchaseOrderDetailPage() {
           })
           .in("id", oppIds)
 
+        console.log("[v0] Opportunities update error:", oppUpdateError)
         if (oppUpdateError) throw oppUpdateError
+        console.log("[v0] Opportunities updated successfully")
+      } else {
+        console.log("[v0] No related opportunities found to update")
       }
 
       toast({
