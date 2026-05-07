@@ -526,6 +526,111 @@ export const DICT_LANG_PO = {
     en: "E.g: Initial Payment, Delivery, Completion",
     pt: "Ex: Pagamento Inicial, Entrega, Conclusão",
   },
+  "po.milestone.createdSuccess": {
+    es: "Hitos generados exitosamente",
+    en: "Milestones created successfully",
+    pt: "Marcos criados com sucesso",
+  },
+  "po.milestone.existingMilestones": {
+    es: "Hitos Existentes",
+    en: "Existing Milestones",
+    pt: "Marcos Existentes",
+  },
+  "po.milestone.createNew": {
+    es: "Crear Nuevos Hitos",
+    en: "Create New Milestones",
+    pt: "Criar Novos Marcos",
+  },
+  "po.milestone.addToList": {
+    es: "Agregar a la lista",
+    en: "Add to List",
+    pt: "Adicionar à lista",
+  },
+  "po.milestone.previewToCreate": {
+    es: "Vista Previa de Hitos a Crear",
+    en: "Preview of Milestones to Create",
+    pt: "Visualização de Marcos a Criar",
+  },
+  "po.milestone.totalMatches": {
+    es: "Total correcto",
+    en: "Total matches",
+    pt: "Total corresponde",
+  },
+  "po.milestone.value": {
+    es: "Valor",
+    en: "Value",
+    pt: "Valor",
+  },
+  "po.milestone.finalAmount": {
+    es: "Monto Final",
+    en: "Final Amount",
+    pt: "Valor Final",
+  },
+  "po.milestone.assignedAmount": {
+    es: "Asignado",
+    en: "Assigned",
+    pt: "Atribuído",
+  },
+  "po.milestone.generateMilestones": {
+    es: "Generar Hitos",
+    en: "Generate Milestones",
+    pt: "Gerar Marcos",
+  },
+  "po.milestone.totalMustMatch": {
+    es: "El total debe coincidir exactamente con el monto del PO",
+    en: "Total must match exactly with the PO amount",
+    pt: "O total deve corresponder exatamente ao valor do PO",
+  },
+  "po.milestone.confirmDelete": {
+    es: "¿Eliminar hito?",
+    en: "Delete milestone?",
+    pt: "Excluir marco?",
+  },
+  "po.milestone.deleteWarning": {
+    es: "Esta acción no se puede deshacer.",
+    en: "This action cannot be undone.",
+    pt: "Esta ação não pode ser desfeita.",
+  },
+  "po.milestone.totalMismatch": {
+    es: "Error: Total no coincide",
+    en: "Error: Total does not match",
+    pt: "Erro: Total não corresponde",
+  },
+  "po.milestone.mismatchMessage": {
+    es: "El total asignado no coincide con el total del PO. Ajusta los hitos para que coincida exactamente.",
+    en: "The assigned total does not match the PO total. Adjust the milestones so they match exactly.",
+    pt: "O total atribuído não corresponde ao total do PO. Ajuste os marcos para que correspondam exatamente.",
+  },
+  "po.milestone.noMilestonesToCreate": {
+    es: "Agrega al menos un hito",
+    en: "Add at least one milestone",
+    pt: "Adicione pelo menos um marco",
+  },
+  "po.milestone.added": {
+    es: "Hito agregado",
+    en: "Milestone added",
+    pt: "Marco adicionado",
+  },
+  "po.milestone.removed": {
+    es: "Hito eliminado",
+    en: "Milestone removed",
+    pt: "Marco removido",
+  },
+  "po.milestone.fillRequired": {
+    es: "Completa todos los campos",
+    en: "Fill all required fields",
+    pt: "Preencha todos os campos obrigatórios",
+  },
+  "common.generating": {
+    es: "Generando...",
+    en: "Generating...",
+    pt: "Gerando...",
+  },
+  "common.understood": {
+    es: "Entendido",
+    en: "Understood",
+    pt: "Entendido",
+  },
   "po.milestone.percentageMax": {
     es: "El porcentaje no puede exceder 100%",
     en: "Percentage cannot exceed 100%",
