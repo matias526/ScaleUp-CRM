@@ -658,6 +658,24 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
                             <Check className="h-4 w-4" />
                           </Button>
                         )}
+
+                        {/* Download Document - Any role, Paid only */}
+                        {milestone.status === 'paid' && milestoneDocuments[milestone.id] && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            title={t('common.download')}
+                            onClick={() => {
+                              const fileUrl = signedUrls[milestone.id] || milestoneDocuments[milestone.id].file_url
+                              if (fileUrl) {
+                                window.open(fileUrl, '_blank')
+                              }
+                            }}
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -668,8 +686,8 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
         </Card>
       )}
 
-      {/* Form to Add New Milestones */}
-      {canCreate && (
+      {/* Form to Add New Milestones - only show if no milestones exist in DB */}
+      {canCreate && (!dbMilestones || dbMilestones.length === 0) && (
         <Card className="bg-blue-50">
           <CardHeader>
             <CardTitle>{t('po.milestone.createNew') || 'Crear Nuevos Hitos'}</CardTitle>
