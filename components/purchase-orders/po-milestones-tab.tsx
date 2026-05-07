@@ -82,18 +82,54 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
   const isAdmin = ['Admin', 'BDD'].includes(userRole)
   const canCreate = isAdmin
 
+  // Load documents for existing milestones from BD
+  useEffect(() => {
+    const loadDocumentsForMilestones = async () => {
+      if (!dbMilestones || dbMilestones.length === 0) {
+        setMilestoneDocuments({})
+        return
+      }
+
+      try {
+        const milestoneIds = dbMilestones.map(m => m.id)
+        const { data: docs, error } = await supabase
+          .from('documents')
+          .select()
+          .in('parent_id', milestoneIds)
+          .eq('parent_type', 'po_milestone')
+
+        if (error) throw error
+
+        // Map documents by milestone ID for easy access
+        const docsMap: { [key: string]: any } = {}
+        if (docs) {
+          for (const doc of docs) {
+            // Store by milestone ID so it's easy to find the document for a milestone
+            docsMap[doc.parent_id] = doc
+          }
+        }
+
+        setMilestoneDocuments(docsMap)
+      } catch (error) {
+        console.error('[v0] Error loading milestone documents:', error)
+      }
+    }
+
+    loadDocumentsForMilestones()
+  }, [dbMilestones])
+
   // Generate signed URLs for milestone documents
   useEffect(() => {
     const generateSignedUrls = async () => {
       const newSignedUrls: { [key: string]: string } = {}
       const warnings: string[] = []
 
-      for (const doc of Object.values(milestoneDocuments)) {
+      for (const [milestoneId, doc] of Object.entries(milestoneDocuments)) {
         if (!doc.file_url) continue
 
         // Check for legacy URLs (starting with http)
         if (doc.file_url.startsWith('http')) {
-          warnings.push(doc.id)
+          warnings.push(milestoneId)
           continue
         }
 
@@ -104,7 +140,7 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
             .createSignedUrl(doc.file_url, 604800) // 7 days
 
           if (!error && data?.signedUrl) {
-            newSignedUrls[doc.id] = data.signedUrl
+            newSignedUrls[milestoneId] = data.signedUrl
           }
         } catch (error) {
           console.error('[v0] Error generating signed URL for', doc.file_url, error)
@@ -973,9 +1009,9 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
                     variant="ghost"
                     size="sm"
                     className="flex-shrink-0 ml-2"
-                    disabled={!signedUrls[milestoneDocuments[selectedMilestone.id].id] && !milestoneDocuments[selectedMilestone.id].file_url.startsWith('http')}
+                    disabled={!signedUrls[selectedMilestone.id] && !milestoneDocuments[selectedMilestone.id].file_url.startsWith('http')}
                     onClick={() => {
-                      const fileUrl = signedUrls[milestoneDocuments[selectedMilestone.id].id] || milestoneDocuments[selectedMilestone.id].file_url
+                      const fileUrl = signedUrls[selectedMilestone.id] || milestoneDocuments[selectedMilestone.id].file_url
                       const link = document.createElement('a')
                       link.href = fileUrl
                       link.download = milestoneDocuments[selectedMilestone.id].file_url.split('/').pop() || 'documento'
@@ -989,13 +1025,13 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
                   </Button>
                 </div>
                 {/* Document Preview for Images */}
-                {signedUrls[milestoneDocuments[selectedMilestone.id].id] && 
+                {signedUrls[selectedMilestone.id] && 
                   ['jpg', 'jpeg', 'png', 'gif', 'webp'].some(ext => 
                     (milestoneDocuments[selectedMilestone.id].file_url.toLowerCase().includes(ext))
                   ) && (
                   <div className="mt-4 max-h-64 overflow-auto rounded border bg-white">
                     <img 
-                      src={signedUrls[milestoneDocuments[selectedMilestone.id].id]}
+                      src={signedUrls[selectedMilestone.id]}
                       alt="Document preview"
                       className="w-full h-auto"
                     />
