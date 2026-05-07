@@ -1416,4 +1416,14 @@ export const DICT_LANG_PO = {
     en: "Document ready to download",
     pt: "Documento pronto para download",
   },
+  "common.viewDocument": {
+    es: "Ver Documento",
+    en: "View Document",
+    pt: "Ver Documento",
+  },
+  "common.close": {
+    es: "Cerrar",
+    en: "Close",
+    pt: "Fechar",
+  },
 }

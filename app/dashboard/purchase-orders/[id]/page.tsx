@@ -187,7 +187,7 @@ export default function PurchaseOrderDetailPage() {
       setApproving(true)
       const userRole = userInfo?.roleCode
 
-      if (!["Admin", "BDD"].includes(userRole || "")) {
+      if (!["Admin", "BDD", "PartnerUser", "PartnerLogistic"].includes(userRole || "")) {
         toast({
           title: t("common.error"),
           description: t("po.unauthorizedApprove"),
@@ -238,7 +238,7 @@ export default function PurchaseOrderDetailPage() {
     return colors[status] || "bg-gray-200 text-gray-900"
   }
 
-  const canApprove = po?.status === "sent" && ["Admin", "BDD"].includes(userInfo?.roleCode || "")
+  const canApprove = po?.status === "sent" && ["Admin", "BDD", "PartnerUser", "PartnerLogistic"].includes(userInfo?.roleCode || "")
 
   if (authLoading) {
     return <DetailPageSkeleton />

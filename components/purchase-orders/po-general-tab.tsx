@@ -54,6 +54,7 @@ export function POGeneralTab({
 }: POGeneralTabProps) {
   const { t } = useTranslations(DICT_LANG_PO)
   const [showApproveDialog, setShowApproveDialog] = useState(false)
+  const [showDocumentViewer, setShowDocumentViewer] = useState(false)
   const [signedUrl, setSignedUrl] = useState<string | null>(null)
   const supabase = createClient()
 
@@ -113,6 +114,15 @@ export function POGeneralTab({
             <div className="text-xs text-gray-500">
               PO #{po.purchase_order_number || po.id.slice(0, 8)}
             </div>
+            {poDocument && signedUrl && (
+              <button
+                onClick={() => setShowDocumentViewer(true)}
+                className="mt-3 pt-3 border-t w-full text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center justify-center gap-2 transition-colors"
+              >
+                <Download className="h-4 w-4" />
+                {t('common.viewDocument')}
+              </button>
+            )}
           </CardContent>
         </Card>
 
@@ -123,12 +133,12 @@ export function POGeneralTab({
         <LogisticsStatusWidget shipping={shipping} onViewClick={onLogisticsTabClick} />
       </div>
 
-      {/* Related Opportunities Section */}
+      {/* Related Opportunities Section - After Detailed Information */}
       {opportunities && opportunities.length > 0 && (
         <RelatedOpportunitiesSection opportunities={opportunities} />
       )}
 
-      {/* Metadata Section - Enhanced */}
+      {/* Approve Dialog */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">{t("po.detail.detailedInfo")}</CardTitle>
@@ -297,6 +307,78 @@ export function POGeneralTab({
               }}
             >
               {t("common.confirm")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Document Viewer Modal - No Approval Actions */}
+      <Dialog open={showDocumentViewer} onOpenChange={setShowDocumentViewer}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{t("common.viewDocument")}</DialogTitle>
+            <DialogDescription>
+              {t("po.detail.relatedDocument")}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {poDocument && signedUrl && (
+            <div className="border rounded-lg p-6 bg-white space-y-4">
+              {/* Document Display */}
+              <div className="space-y-4">
+                {/* Check if image or PDF */}
+                {['jpg', 'jpeg', 'png', 'gif', 'webp'].some(ext => 
+                  (poDocument.file_url.toLowerCase().includes(ext))
+                ) ? (
+                  // Image Preview
+                  <div className="flex flex-col items-center space-y-3">
+                    <div className="w-full max-h-96 overflow-auto rounded-lg border bg-gray-50 flex items-center justify-center">
+                      <img 
+                        src={signedUrl}
+                        alt="Document preview"
+                        className="max-w-full h-auto"
+                      />
+                    </div>
+                  </div>
+                ) : poDocument.file_url.toLowerCase().includes('pdf') ? (
+                  // PDF Preview with Embed
+                  <div className="flex flex-col items-center space-y-3 w-full">
+                    <iframe 
+                      src={`${signedUrl}#toolbar=0`}
+                      className="w-full h-96 rounded-lg border border-gray-300"
+                      title="PDF Preview"
+                      style={{ minHeight: '400px' }}
+                    />
+                  </div>
+                ) : (
+                  // File Info
+                  <div className="flex flex-col items-center space-y-3 py-8">
+                    <FileText className="h-16 w-16 text-blue-600" />
+                    <p className="text-sm text-gray-600 text-center">
+                      {t('po.detail.relatedDocument')}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button 
+              variant="outline"
+              onClick={() => {
+                if (signedUrl) {
+                  window.open(signedUrl, '_blank')
+                }
+              }}
+              disabled={!signedUrl}
+              title={t('common.download')}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              {t('common.download')}
+            </Button>
+            <Button variant="outline" onClick={() => setShowDocumentViewer(false)}>
+              {t("common.close")}
             </Button>
           </DialogFooter>
         </DialogContent>
