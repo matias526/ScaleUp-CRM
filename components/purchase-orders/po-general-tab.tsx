@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -21,6 +21,7 @@ import { MilestonesStatusWidget } from "./po-milestones-status-widget"
 import { LogisticsStatusWidget } from "./po-logistics-status-widget"
 import { RelatedOpportunitiesSection } from "./po-related-opportunities"
 import { formatCurrency } from "@/lib/utils/format"
+import { createClient } from "@/lib/supabase/client"
 
 interface POGeneralTabProps {
   po: any
@@ -53,6 +54,39 @@ export function POGeneralTab({
 }: POGeneralTabProps) {
   const { t } = useTranslations(DICT_LANG_PO)
   const [showApproveDialog, setShowApproveDialog] = useState(false)
+  const [signedUrl, setSignedUrl] = useState<string | null>(null)
+  const supabase = createClient()
+
+  // Generate signed URL for PO document
+  useEffect(() => {
+    const generateSignedUrl = async () => {
+      if (!poDocument?.file_url) {
+        setSignedUrl(null)
+        return
+      }
+
+      try {
+        // Check if it's a legacy URL (starts with http)
+        if (poDocument.file_url.startsWith('http')) {
+          setSignedUrl(poDocument.file_url)
+          return
+        }
+
+        // Generate 7-day signed URL for relative path
+        const { data, error } = await supabase.storage
+          .from('po_documents')
+          .createSignedUrl(poDocument.file_url, 604800)
+
+        if (!error && data?.signedUrl) {
+          setSignedUrl(data.signedUrl)
+        }
+      } catch (error) {
+        console.error('[v0] Error generating signed URL:', error)
+      }
+    }
+
+    generateSignedUrl()
+  }, [poDocument?.file_url])
 
   // Calculate PO status summary
   const poAmount = po.total_amount || 0
@@ -189,30 +223,69 @@ export function POGeneralTab({
 
       {/* Approve Dialog */}
       <Dialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{t("po.approvePO")}</DialogTitle>
             <DialogDescription>
               {t("po.general.confirmApprove")}
             </DialogDescription>
           </DialogHeader>
-          {poDocument && (
-            <div className="border rounded p-3 bg-gray-50 space-y-2">
-              <p className="text-sm font-medium text-gray-700">{t("po.detail.relatedDocument")}:</p>
-              <div className="flex items-center gap-2 p-2 bg-white rounded border">
-                <FileText className="h-4 w-4 text-blue-600" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">{poDocument.file_name}</p>
-                  {poDocument.created_at && (
-                    <p className="text-xs text-gray-500">
-                      {format(new Date(poDocument.created_at), "dd/MM/yyyy HH:mm")}
+          
+          {poDocument && signedUrl && (
+            <div className="border rounded-lg p-6 bg-white space-y-4">
+              {/* Document Display */}
+              <div className="space-y-4">
+                {/* Check if image or PDF */}
+                {['jpg', 'jpeg', 'png', 'gif', 'webp'].some(ext => 
+                  (poDocument.file_url.toLowerCase().includes(ext))
+                ) ? (
+                  // Image Preview
+                  <div className="flex flex-col items-center space-y-3">
+                    <div className="w-full max-h-96 overflow-auto rounded-lg border bg-gray-50 flex items-center justify-center">
+                      <img 
+                        src={signedUrl}
+                        alt="Document preview"
+                        className="max-w-full h-auto"
+                      />
+                    </div>
+                  </div>
+                ) : poDocument.file_url.toLowerCase().includes('pdf') ? (
+                  // PDF Preview with Embed
+                  <div className="flex flex-col items-center space-y-3 w-full">
+                    <iframe 
+                      src={`${signedUrl}#toolbar=0`}
+                      className="w-full h-96 rounded-lg border border-gray-300"
+                      title="PDF Preview"
+                      style={{ minHeight: '400px' }}
+                    />
+                  </div>
+                ) : (
+                  // File Info
+                  <div className="flex flex-col items-center space-y-3 py-8">
+                    <FileText className="h-16 w-16 text-blue-600" />
+                    <p className="text-sm text-gray-600 text-center">
+                      Documento listo para revisar
                     </p>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
+          
           <DialogFooter>
+            <Button 
+              variant="outline"
+              onClick={() => {
+                if (signedUrl) {
+                  window.open(signedUrl, '_blank')
+                }
+              }}
+              disabled={!signedUrl}
+              title={t('common.download')}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              {t('common.download')}
+            </Button>
             <Button variant="outline" onClick={() => setShowApproveDialog(false)}>
               {t("common.cancel")}
             </Button>

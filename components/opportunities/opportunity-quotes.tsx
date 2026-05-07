@@ -528,13 +528,9 @@ export function OpportunityQuotes({ opportunityId, lang, userRole }: Opportunity
         .upload(poPath, poFormData.po_file)
       if (uploadError) throw uploadError
 
-      // Generate signed URL
-      const { data: signedData, error: signedError } = await supabase.storage
-        .from("po_documents")
-        .createSignedUrl(poPath, 604800)
-      if (signedError) throw signedError
-
-      const poFileUrl = signedData.signedUrl
+      // Store only the relative path, not the signed URL
+      // Signed URLs will be generated dynamically when needed
+      const poFileUrl = poPath
 
       // Determine role-based status
       const isAdminOrBDD = ["Admin", "BDD"].includes(userRoleCode)
