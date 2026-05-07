@@ -83,7 +83,7 @@ export function PONotes({ poId, currentUserId, userRole = "" }: PONotesProps) {
   }
 
   const handleDeleteNote = async (noteId: string) => {
-    if (!window.confirm("¿Estás seguro de que deseas eliminar esta nota?")) return
+    if (!window.confirm(t("po.notes.deleteConfirm"))) return
 
     setIsDeleting((prev) => ({ ...prev, [noteId]: true }))
     try {
@@ -94,13 +94,13 @@ export function PONotes({ poId, currentUserId, userRole = "" }: PONotesProps) {
       setNotes((prev) => prev.filter((n) => n.id !== noteId))
       toast({
         title: "Éxito",
-        description: "Nota eliminada correctamente",
+        description: t("po.notes.deleteSuccess"),
       })
     } catch (error) {
       console.error("Error deleting note:", error)
       toast({
         title: "Error",
-        description: "No se pudo eliminar la nota",
+        description: t("po.notes.deleteError"),
         variant: "destructive",
       })
     } finally {
@@ -129,7 +129,7 @@ export function PONotes({ poId, currentUserId, userRole = "" }: PONotesProps) {
           variant="outline"
         >
           <PlusCircle className="h-4 w-4 mr-2" />
-          Agregar Nota
+          {t("po.notes.addNote")}
         </Button>
 
         {/* Note Form Dialog */}
@@ -144,9 +144,9 @@ export function PONotes({ poId, currentUserId, userRole = "" }: PONotesProps) {
 
         {/* Notes List */}
         {isLoading ? (
-          <div className="text-center py-4 text-gray-500 text-sm">Cargando notas...</div>
+          <div className="text-center py-4 text-gray-500 text-sm">{t("po.notes.loadingNotes")}</div>
         ) : notes.length === 0 ? (
-          <div className="text-center py-4 text-gray-500 text-sm">No hay notas aún</div>
+          <div className="text-center py-4 text-gray-500 text-sm">{t("po.notes.noNotes")}</div>
         ) : (
           <div className="space-y-3">
             {notes.map((note) => (
@@ -158,7 +158,7 @@ export function PONotes({ poId, currentUserId, userRole = "" }: PONotesProps) {
                       {note.is_private && (
                         <span className="ml-2 inline-flex items-center gap-1 text-amber-600">
                           <Lock className="h-3 w-3" />
-                          Privada
+                          {t("po.notes.private")}
                         </span>
                       )}
                     </div>

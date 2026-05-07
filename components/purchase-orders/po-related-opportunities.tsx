@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation"
 import { formatCurrency } from "@/lib/utils/format"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
+import { useTranslations } from "@/hooks/use-translations"
+import { DICT_LANG_PO } from "@/lib/constants/dict-lang-po"
 
 interface RelatedOpportunitiesProps {
   opportunities: any[]
@@ -14,6 +16,7 @@ interface RelatedOpportunitiesProps {
 
 export function RelatedOpportunitiesSection({ opportunities }: RelatedOpportunitiesProps) {
   const router = useRouter()
+  const { t } = useTranslations(DICT_LANG_PO)
 
   if (!opportunities || opportunities.length === 0) {
     return (
@@ -21,12 +24,12 @@ export function RelatedOpportunitiesSection({ opportunities }: RelatedOpportunit
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <LinkIcon className="h-4 w-4" />
-            Oportunidades Relacionadas
+            {t("po.relatedOpportunities")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8 text-gray-500">
-            No hay oportunidades relacionadas con esta orden de compra
+            {t("po.relatedOpportunities.noOpportunities")}
           </div>
         </CardContent>
       </Card>
@@ -38,7 +41,7 @@ export function RelatedOpportunitiesSection({ opportunities }: RelatedOpportunit
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
           <LinkIcon className="h-4 w-4" />
-          Oportunidades Relacionadas ({opportunities.length})
+          {t("po.relatedOpportunities")} ({opportunities.length})
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -46,8 +49,7 @@ export function RelatedOpportunitiesSection({ opportunities }: RelatedOpportunit
           {opportunities.map((opp) => (
             <div
               key={opp.id}
-              className="p-3 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
-              onClick={() => router.push(`/dashboard/opportunities/${opp.id}`)}
+              className="p-3 border rounded-lg hover:bg-gray-50 transition-colors"
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -61,8 +63,13 @@ export function RelatedOpportunitiesSection({ opportunities }: RelatedOpportunit
                     </div>
                   )}
                 </div>
-                <Button variant="ghost" size="sm" className="ml-2">
-                  Ver →
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="ml-2"
+                  onClick={() => window.open(`/dashboard/opportunities/${opp.id}`, '_blank')}
+                >
+                  {t("po.relatedOpportunities.view")} →
                 </Button>
               </div>
             </div>

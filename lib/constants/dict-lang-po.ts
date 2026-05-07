@@ -1426,4 +1426,64 @@ export const DICT_LANG_PO = {
     en: "Close",
     pt: "Fechar",
   },
+  "po.status": {
+    es: "Estado",
+    en: "Status",
+    pt: "Status",
+  },
+  "po.relatedOpportunities": {
+    es: "Oportunidades Relacionadas",
+    en: "Related Opportunities",
+    pt: "Oportunidades Relacionadas",
+  },
+  "po.relatedOpportunities.noOpportunities": {
+    es: "No hay oportunidades relacionadas con esta orden de compra",
+    en: "No related opportunities with this purchase order",
+    pt: "Nenhuma oportunidade relacionada com este pedido de compra",
+  },
+  "po.relatedOpportunities.view": {
+    es: "Ver",
+    en: "View",
+    pt: "Ver",
+  },
+  "po.notes.addNote": {
+    es: "Agregar Nota",
+    en: "Add Note",
+    pt: "Adicionar Nota",
+  },
+  "po.notes.noNotes": {
+    es: "No hay notas aún",
+    en: "No notes yet",
+    pt: "Sem notas ainda",
+  },
+  "po.notes.loadingNotes": {
+    es: "Cargando notas...",
+    en: "Loading notes...",
+    pt: "Carregando notas...",
+  },
+  "po.notes.private": {
+    es: "Privada",
+    en: "Private",
+    pt: "Privada",
+  },
+  "po.notes.deleteConfirm": {
+    es: "¿Estás seguro de que deseas eliminar esta nota?",
+    en: "Are you sure you want to delete this note?",
+    pt: "Tem certeza de que deseja deletar esta nota?",
+  },
+  "po.notes.deleteSuccess": {
+    es: "Nota eliminada correctamente",
+    en: "Note deleted successfully",
+    pt: "Nota deletada com sucesso",
+  },
+  "po.notes.deleteError": {
+    es: "No se pudo eliminar la nota",
+    en: "Could not delete the note",
+    pt: "Não foi possível deletar a nota",
+  },
+  "po.detail.detailedInfo": {
+    es: "Información Detallada",
+    en: "Detailed Information",
+    pt: "Informações Detalhadas",
+  },
 }
