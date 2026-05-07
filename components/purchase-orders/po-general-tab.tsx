@@ -133,11 +133,6 @@ export function POGeneralTab({
         <LogisticsStatusWidget shipping={shipping} onViewClick={onLogisticsTabClick} />
       </div>
 
-      {/* Related Opportunities Section - After Detailed Information */}
-      {opportunities && opportunities.length > 0 && (
-        <RelatedOpportunitiesSection opportunities={opportunities} />
-      )}
-
       {/* Detailed Information */}
       <Card>
         <CardHeader>
