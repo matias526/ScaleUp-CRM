@@ -146,7 +146,7 @@ export default function PurchaseOrderDetailPage() {
       // Load related opportunities
       const { data: opportunitiesData, error: oppError } = await supabase
         .from("opportunities")
-        .select("id, title, stage, amount, created_at")
+        .select("id, title, estimated_value, created_at")
         .eq("purchase_order_id", poId)
         .order("created_at", { ascending: false })
 

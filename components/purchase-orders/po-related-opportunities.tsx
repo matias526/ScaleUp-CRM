@@ -53,7 +53,6 @@ export function RelatedOpportunitiesSection({ opportunities }: RelatedOpportunit
                 <div className="flex-1">
                   <h4 className="font-semibold text-sm">{opp.title}</h4>
                   <div className="flex gap-3 mt-2 text-xs text-gray-600">
-                    {opp.stage && <span>Etapa: {opp.stage}</span>}
                     {opp.amount && <span>{formatCurrency(opp.amount)}</span>}
                   </div>
                   {opp.created_at && (
