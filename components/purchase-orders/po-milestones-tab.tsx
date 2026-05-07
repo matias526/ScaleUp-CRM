@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label'
 import { toast } from '@/components/ui/use-toast'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Edit2, Trash2, Plus, Upload, FileText, Check, X } from 'lucide-react'
+import { Edit2, Trash2, Plus, Upload, FileText, Check, X, Download } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -894,7 +894,7 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
 
       {/* Confirm Payment Modal */}
       <Dialog open={showConfirmPaymentModal} onOpenChange={setShowConfirmPaymentModal}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{t('po.milestone.action.confirmPayment') || 'Confirmar Pago'}</DialogTitle>
             <DialogDescription>
@@ -902,18 +902,54 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
             </DialogDescription>
           </DialogHeader>
           {selectedMilestone && milestoneDocuments[selectedMilestone.id] && (
-            <div className="border rounded p-3 bg-gray-50 space-y-2">
-              <p className="text-sm font-medium">{t('po.milestone.relatedDocument')}</p>
-              <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-blue-600" />
-                <a 
-                  href={milestoneDocuments[selectedMilestone.id].file_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-blue-600 hover:underline truncate"
-                >
-                  {milestoneDocuments[selectedMilestone.id].file_url.split('/').pop()}
-                </a>
+            <div className="border rounded-lg p-6 bg-white space-y-4">
+              <p className="text-sm font-medium text-gray-700">{t('po.milestone.relatedDocument')}</p>
+              <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <FileText className="h-6 w-6 text-blue-600 flex-shrink-0 mt-1" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-gray-900 break-words">
+                        {milestoneDocuments[selectedMilestone.id].file_name || 
+                         milestoneDocuments[selectedMilestone.id].file_url.split('/').pop() ||
+                         'documento.pdf'}
+                      </p>
+                      {milestoneDocuments[selectedMilestone.id].created_at && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          {new Date(milestoneDocuments[selectedMilestone.id].created_at).toLocaleDateString()} {new Date(milestoneDocuments[selectedMilestone.id].created_at).toLocaleTimeString()}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="flex-shrink-0 ml-2"
+                    onClick={() => {
+                      const link = document.createElement('a')
+                      link.href = milestoneDocuments[selectedMilestone.id].file_url
+                      link.download = milestoneDocuments[selectedMilestone.id].file_name || 'documento'
+                      document.body.appendChild(link)
+                      link.click()
+                      document.body.removeChild(link)
+                    }}
+                    title={t('common.download')}
+                  >
+                    <Download className="h-4 w-4" />
+                  </Button>
+                </div>
+                {/* Document Preview for Images */}
+                {['jpg', 'jpeg', 'png', 'gif', 'webp'].some(ext => 
+                  (milestoneDocuments[selectedMilestone.id].file_url.toLowerCase().includes(ext))
+                ) && (
+                  <div className="mt-4 max-h-64 overflow-auto rounded border bg-white">
+                    <img 
+                      src={milestoneDocuments[selectedMilestone.id].file_url}
+                      alt="Document preview"
+                      className="w-full h-auto"
+                    />
+                  </div>
+                )}
               </div>
             </div>
           )}

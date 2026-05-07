@@ -1396,4 +1396,9 @@ export const DICT_LANG_PO = {
     en: "Select a file",
     pt: "Selecione um arquivo",
   },
+  "common.download": {
+    es: "Descargar",
+    en: "Download",
+    pt: "Baixar",
+  },
 }
