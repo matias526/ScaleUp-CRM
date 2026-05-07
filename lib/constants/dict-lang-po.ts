@@ -206,6 +206,11 @@ export const DICT_LANG_PO = {
     en: "Subtotal",
     pt: "Subtotal",
   },
+  "po.totalAmount": {
+    es: "Total",
+    en: "Amount",
+    pt: "Total",
+  },
   "po.shipping": {
     es: "Envío",
     en: "Shipping",
@@ -1072,7 +1077,7 @@ export const DICT_LANG_PO = {
     en: "Save",
     pt: "Salvar",
   },
-  
+
   // General Tab
   "po.general.approveDescription": {
     es: "Aprueba esta orden de compra para proceder con el flujo. Esto marcará la oportunidad como 'ganada' y actualizará el estado de la PO a aceptada.",
