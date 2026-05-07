@@ -150,6 +150,12 @@ export const DICT_LANG_PO = {
     en: "Tech Company",
     pt: "Empresa Tecnológica",
   },
+  "po.detail.relatedDocument": {
+    es: "Documento relacionado",
+    en: "Related Document",
+    pt: "Documento relacionado",
+  },
+
 
   // Existing translations to preserve
   "po.notFound": {
