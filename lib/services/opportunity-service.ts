@@ -19,22 +19,30 @@ export async function getOpportunities(userInfo?: any): Promise<OpportunityWithR
     let query = supabase.from("opportunities").select(`
         *,
         stage:pipeline_stages(id, code, display_order),
-        tech_company:tech_companies(id, name, logo_url),
+        tech_company:tech_companies(id, name, logo_url, is_active),
         partner:partners(id, name, logo_url),
         end_customer:end_customers(id, name),
         notes(id, created_at),
         tasks(id, created_at)
       `)
 
+    // Filtrar solo oportunidades de tech_companies activas (is_active = true)
+    // Se hace mediante inner join con tech_companies
+    query = query.eq("tech_company.is_active", true)
+
     // Aplicar filtros según el rol del usuario
     if (userInfo) {
       console.log("Rol del usuario:", userInfo.roleCode)
       console.log("ID del usuario:", userInfo.id)
-      console.log("¿Es admin?:", userInfo.isAdmin)
-      console.log("Partner ID:", userInfo.partnerId)
+      console.log("Tech Company ID del usuario:", userInfo.tech_company_id)
 
+      // Si es un usuario TechUser o TechLogistic, filtrar por su tech_company
+      if ((userInfo.roleCode === "TechUser" || userInfo.roleCode === "TechLogistic") && userInfo.tech_company_id) {
+        console.log(`Filtrando oportunidades para la TechCompany: ${userInfo.tech_company_id}`)
+        query = query.eq("tech_company_id", userInfo.tech_company_id)
+      }
       // Si es un usuario Partner, filtrar por partner_id
-      if (userInfo.partnerId) {
+      else if (userInfo.partnerId) {
         console.log(`Filtrando oportunidades para el partner: ${userInfo.partnerId}`)
         query = query.eq("partner_id", userInfo.partnerId)
       } else if (userInfo.roleCode && userInfo.roleCode.toLowerCase() === "bdd" && userInfo.id) {
@@ -74,6 +82,7 @@ export async function getOpportunities(userInfo?: any): Promise<OpportunityWithR
           name: op.name,
           assigned_to: op.assigned_to,
           partner_id: op.partner_id,
+          tech_company_id: op.tech_company_id,
         })),
       )
     }
@@ -93,22 +102,29 @@ export async function getOpportunitiesClient(userInfo?: any): Promise<Opportunit
     let query = supabase.from("opportunities").select(`
       *,
       stage:pipeline_stages(id, code, display_order),
-      tech_company:tech_companies(id, name, logo_url),
+      tech_company:tech_companies(id, name, logo_url, is_active),
       partner:partners(id, name, logo_url),
       end_customer:end_customers(id, name),
       notes(id, created_at),
       tasks(id, created_at)
     `)
 
+    // Filtrar solo oportunidades de tech_companies activas (is_active = true)
+    query = query.eq("tech_company.is_active", true)
+
     // Aplicar filtros según el rol del usuario
     if (userInfo) {
       console.log("Rol del usuario:", userInfo.roleCode)
       console.log("ID del usuario:", userInfo.id)
-      console.log("¿Es admin?:", userInfo.isAdmin)
-      console.log("Partner ID:", userInfo.partnerId)
+      console.log("Tech Company ID del usuario:", userInfo.tech_company_id)
 
+      // Si es un usuario TechUser o TechLogistic, filtrar por su tech_company
+      if ((userInfo.roleCode === "TechUser" || userInfo.roleCode === "TechLogistic") && userInfo.tech_company_id) {
+        console.log(`Filtrando oportunidades para la TechCompany: ${userInfo.tech_company_id}`)
+        query = query.eq("tech_company_id", userInfo.tech_company_id)
+      }
       // Si es un usuario Partner, filtrar por partner_id
-      if (userInfo.partnerId) {
+      else if (userInfo.partnerId) {
         console.log(`Filtrando oportunidades para el partner: ${userInfo.partnerId}`)
         query = query.eq("partner_id", userInfo.partnerId)
       } else if (userInfo.roleCode && userInfo.roleCode.toLowerCase() === "bdd" && userInfo.id) {
@@ -148,6 +164,7 @@ export async function getOpportunitiesClient(userInfo?: any): Promise<Opportunit
           name: op.name,
           assigned_to: op.assigned_to,
           partner_id: op.partner_id,
+          tech_company_id: op.tech_company_id,
         })),
       )
     }

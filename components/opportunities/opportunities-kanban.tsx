@@ -114,11 +114,15 @@ export const OpportunitiesKanban = ({
 
   // Extraer listas únicas de tech companies y partners para los filtros
   const techCompanies = useMemo(() => {
-    let companies = opportunities
-      .filter((opp) => opp.tech_company && opp.tech_company.is_active === true)
-      .map((opp) => JSON.stringify({ id: opp.tech_company_id, name: opp.tech_company?.name }))
+    const uniqueCompanies = Array.from(
+      new Set(
+        opportunities
+          .filter((opp) => opp.tech_company)
+          .map((opp) => JSON.stringify({ id: opp.tech_company_id, name: opp.tech_company?.name })),
+      ),
+    ).map((company) => JSON.parse(company))
 
-    const uniqueCompanies = Array.from(new Set(companies)).map((company) => JSON.parse(company))
+    // Ordenar alfabéticamente
     return uniqueCompanies.sort((a, b) => a.name.localeCompare(b.name))
   }, [opportunities])
 
