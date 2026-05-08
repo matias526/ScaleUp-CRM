@@ -782,7 +782,8 @@ export const DICT_LANG_OPPORTUNITIES = {
     en: "No data",
     pt: "Sem dados",
   },
-}
+  "opportunities.quotes.discountPercent": {
+    es: "Descuento %",
     en: "Discount %",
     pt: "Desconto %",
   },
