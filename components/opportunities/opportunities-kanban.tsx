@@ -110,22 +110,27 @@ export const OpportunitiesKanban = ({
   const [filterNoValue, setFilterNoValue] = useState<boolean>(false)
   const [filterNoCloseDate, setFilterNoCloseDate] = useState<boolean>(false)
   const [stagnantDays, setStagnantDays] = useState<number>(20)
+  const [partnerTechCompanies, setPartnerTechCompanies] = useState<any[]>([])
 
   // Extraer listas únicas de tech companies y partners para los filtros
   const techCompanies = useMemo(() => {
-    const uniqueCompanies = Array.from(
-      new Set(
-        opportunities
-          .filter((opp) => opp.tech_company)
-          .map((opp) => JSON.stringify({ id: opp.tech_company_id, name: opp.tech_company?.name })),
-      ),
-    ).map((company) => JSON.parse(company))
+    let companies = opportunities
+      .filter((opp) => opp.tech_company && opp.tech_company.is_active === true)
+      .map((opp) => JSON.stringify({ id: opp.tech_company_id, name: opp.tech_company?.name }))
 
-    // Ordenar alfabéticamente
+    const uniqueCompanies = Array.from(new Set(companies)).map((company) => JSON.parse(company))
     return uniqueCompanies.sort((a, b) => a.name.localeCompare(b.name))
   }, [opportunities])
 
   const partners = useMemo(() => {
+    const isTechUser = ["TechUser", "TechLogistic"].includes(userRoleDebug)
+    
+    // Si es TechUser o TechLogistic, usar partners de su tech_company
+    if (isTechUser && partnerTechCompanies.length > 0) {
+      return partnerTechCompanies
+    }
+
+    // Si no, usar todos los partners de las oportunidades
     const uniquePartners = Array.from(
       new Set(
         opportunities
@@ -134,9 +139,8 @@ export const OpportunitiesKanban = ({
       ),
     ).map((partner) => JSON.parse(partner))
 
-    // Ordenar alfabéticamente
     return uniquePartners.sort((a, b) => a.name.localeCompare(b.name))
-  }, [opportunities])
+  }, [opportunities, partnerTechCompanies, userRoleDebug])
 
   // Cargar el usuario actual y los usuarios de ScaleUp
   useEffect(() => {
@@ -147,10 +151,10 @@ export const OpportunitiesKanban = ({
           data: { user },
         } = await supabase.auth.getUser()
         if (user) {
-          // Obtener el usuario con su rol
+          // Obtener el usuario con su rol y tech_company_id
           const { data: userData, error: userError } = await supabase
             .from("users")
-            .select("id, first_name, last_name, email, role_id, role:roles(code)")
+            .select("id, first_name, last_name, email, role_id, tech_company_id, role:roles(code)")
             .eq("id", user.id)
             .single()
 
@@ -216,6 +220,38 @@ export const OpportunitiesKanban = ({
     }
     loadCurrentUser()
   }, [])
+
+  // Cargar partners asociados a la tech_company del usuario si es TechUser o TechLogistic
+  useEffect(() => {
+    const loadTechCompanyPartners = async () => {
+      const isTechUser = ["TechUser", "TechLogistic"].includes(userRoleDebug)
+      if (isTechUser && currentUser?.tech_company_id) {
+        try {
+          const { data: partnerData, error } = await supabase
+            .from("partner_tech_companies")
+            .select("partner_id, partners(id, name)")
+            .eq("tech_company_id", currentUser.tech_company_id)
+
+          if (error) {
+            console.error("Error al cargar partners:", error)
+            return
+          }
+
+          if (partnerData) {
+            const partners = partnerData
+              .map((ptc: any) => ({ id: ptc.partner_id, name: ptc.partners?.name }))
+              .filter((p: any) => p.name)
+              .sort((a: any, b: any) => a.name.localeCompare(b.name))
+            setPartnerTechCompanies(partners)
+          }
+        } catch (error) {
+          console.error("Error en la carga de partners:", error)
+        }
+      }
+    }
+
+    loadTechCompanyPartners()
+  }, [currentUser?.tech_company_id, userRoleDebug])
 
   // Verificar oportunidades sin tareas futuras
   useEffect(() => {
@@ -362,6 +398,12 @@ export const OpportunitiesKanban = ({
   // Aplicar filtros y ordenación
   useEffect(() => {
     let result = [...opportunities]
+
+    // Si el usuario es TechUser o TechLogistic, filtrar solo sus oportunidades
+    const isTechUser = ["TechUser", "TechLogistic"].includes(userRoleDebug)
+    if (isTechUser && currentUser?.tech_company_id) {
+      result = result.filter((opp) => opp.tech_company_id === currentUser.tech_company_id)
+    }
 
     // Aplicar búsqueda
     if (searchTerm) {
@@ -995,23 +1037,25 @@ export const OpportunitiesKanban = ({
             )}
           </div>
 
-          {/* Filtro de Tech Company */}
-          <Select
-            value={filterTechCompany || "all"}
-            onValueChange={(value) => setFilterTechCompany(value === "all" ? null : value)}
-          >
-            <SelectTrigger className="w-40 h-9">
-              <SelectValue placeholder="Tech Companies" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">TechCompanies</SelectItem>
-              {techCompanies.map((company: any) => (
-                <SelectItem key={company.id} value={company.id}>
-                  {company.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Filtro de Tech Company - Solo mostrar si NO es TechUser o TechLogistic */}
+          {!["TechUser", "TechLogistic"].includes(userRoleDebug) && (
+            <Select
+              value={filterTechCompany || "all"}
+              onValueChange={(value) => setFilterTechCompany(value === "all" ? null : value)}
+            >
+              <SelectTrigger className="w-40 h-9">
+                <SelectValue placeholder="Tech Companies" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">TechCompanies</SelectItem>
+                {techCompanies.map((company: any) => (
+                  <SelectItem key={company.id} value={company.id}>
+                    {company.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
 
           {/* Filtro de Partner */}
           <Select
