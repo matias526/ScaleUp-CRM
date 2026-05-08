@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/hooks/use-auth"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -366,6 +367,11 @@ interface OpportunityDetailProps {
 
 export function OpportunityDetail({ opportunity: initialOpportunity }: OpportunityDetailProps) {
   const router = useRouter()
+  const { userInfo } = useAuth()
+  
+  // Determinar si es TechUser o TechLogistic
+  const isTechUser = ["TechUser", "TechLogistic"].includes(userInfo?.roleCode || "")
+  
   // 1. OBTENER EL IDIOMA (Buscamos el lang del path de la URL)
   // Como usas useTranslations, necesitamos saber qué idioma pasarle a OpportunityQuotes
   const lang = (typeof window !== 'undefined' ? window.location.pathname.split('/')[1]?.toUpperCase() : 'es') as "es" | "en" | "pt";
@@ -1427,14 +1433,16 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                 {opportunity?.title}
                 {opportunity?.end_customer && ` - ${opportunity.end_customer.name}`}
               </h1>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={() => startEditing("title")}
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
+              {!isTechUser && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => startEditing("title")}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           )}
           <div className="flex items-center gap-2 mt-2">
@@ -1482,14 +1490,16 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                     <div className="group">
                       <div className="flex items-start">
                         <p className="text-gray-700 flex-grow">{opportunity?.description || "Sin descripción"}</p>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => startEditing("description")}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
+                        {!isTechUser && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => startEditing("description")}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </div>
                   )}
@@ -1744,7 +1754,9 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                             <span className="text-gray-400">{t("opportunities.no_close_date", "No close date")}</span>
                           )}
                         </span>
-                        <Pencil className="h-3.5 w-3.5 text-gray-400 opacity-0 group-hover:opacity-100" />
+                        {!isTechUser && (
+                          <Pencil className="h-3.5 w-3.5 text-gray-400 opacity-0 group-hover:opacity-100" />
+                        )}
                       </div>
                     )}
                   </div>
@@ -1809,15 +1821,17 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                         <span className="flex-grow">
                           {assignedUser ? `${assignedUser.first_name} ${assignedUser.last_name}` : "No asignado"}
                         </span>
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                        </DialogTrigger>
+                        {!isTechUser && (
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                          </DialogTrigger>
+                        )}
                       </div>
                       <DialogContent>
                         <DialogHeader>
@@ -1866,15 +1880,17 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                             ? `${partnerResponsible.first_name} ${partnerResponsible.last_name}`
                             : "No asignado"}
                         </span>
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                        </DialogTrigger>
+                        {!isTechUser && (
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                          </DialogTrigger>
+                        )}
                       </div>
                       <DialogContent>
                         <DialogHeader>
