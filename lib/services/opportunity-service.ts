@@ -30,12 +30,14 @@ export async function getOpportunities(userInfo?: any): Promise<OpportunityWithR
     if (userInfo) {
       console.log("[v0] Rol del usuario:", userInfo.roleCode)
       console.log("[v0] ID del usuario:", userInfo.id)
-      console.log("[v0] Tech Company ID del usuario:", userInfo.tech_company_id)
+      console.log("[v0] Tech Company ID del usuario (tech_company_id):", userInfo.tech_company_id)
+      console.log("[v0] Tech Company ID del usuario (techCompanyId):", userInfo.techCompanyId)
 
       // Si es un usuario TechUser o TechLogistic, filtrar por su tech_company
-      if ((userInfo.roleCode === "TechUser" || userInfo.roleCode === "TechLogistic") && userInfo.tech_company_id) {
-        console.log(`[v0] Filtrando oportunidades para la TechCompany: ${userInfo.tech_company_id}`)
-        query = query.eq("tech_company_id", userInfo.tech_company_id)
+      const techCompanyId = userInfo.tech_company_id || userInfo.techCompanyId
+      if ((userInfo.roleCode === "TechUser" || userInfo.roleCode === "TechLogistic") && techCompanyId) {
+        console.log(`[v0] Filtrando oportunidades para la TechCompany: ${techCompanyId}`)
+        query = query.eq("tech_company_id", techCompanyId)
       }
       // Si es un usuario Partner, filtrar por partner_id
       else if (userInfo.partnerId) {
@@ -109,12 +111,14 @@ export async function getOpportunitiesClient(userInfo?: any): Promise<Opportunit
     if (userInfo) {
       console.log("[v0] Rol del usuario:", userInfo.roleCode)
       console.log("[v0] ID del usuario:", userInfo.id)
-      console.log("[v0] Tech Company ID del usuario:", userInfo.tech_company_id)
+      console.log("[v0] Tech Company ID del usuario (tech_company_id):", userInfo.tech_company_id)
+      console.log("[v0] Tech Company ID del usuario (techCompanyId):", userInfo.techCompanyId)
 
       // Si es un usuario TechUser o TechLogistic, filtrar por su tech_company
-      if ((userInfo.roleCode === "TechUser" || userInfo.roleCode === "TechLogistic") && userInfo.tech_company_id) {
-        console.log(`[v0] Filtrando oportunidades para la TechCompany: ${userInfo.tech_company_id}`)
-        query = query.eq("tech_company_id", userInfo.tech_company_id)
+      const techCompanyId = userInfo.tech_company_id || userInfo.techCompanyId
+      if ((userInfo.roleCode === "TechUser" || userInfo.roleCode === "TechLogistic") && techCompanyId) {
+        console.log(`[v0] Filtrando oportunidades para la TechCompany: ${techCompanyId}`)
+        query = query.eq("tech_company_id", techCompanyId)
       }
       // Si es un usuario Partner, filtrar por partner_id
       else if (userInfo.partnerId) {
