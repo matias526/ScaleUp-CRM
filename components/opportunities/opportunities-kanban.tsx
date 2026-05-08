@@ -1096,34 +1096,35 @@ export const OpportunitiesKanban = ({
             </Select>
           )}
 
-          {/* Botón de más filtros */}
-          <Popover open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="h-9 bg-transparent">
-                <Plus className="h-4 w-4 mr-1" />
-                Filtros
-                {(filterValidation ||
-                  filterStagnant ||
-                  filterOldOpportunities ||
-                  filterNoValue ||
-                  filterNoCloseDate ||
-                  selectedStages.length < allStages.length ||
-                  sortBy !== "title" ||
-                  sortDirection !== "asc") && (
-                    <Badge variant="secondary" className="ml-2 h-5 px-1">
-                      {[
-                        filterValidation ? 1 : 0,
-                        filterStagnant ? 1 : 0,
-                        filterOldOpportunities ? 1 : 0,
-                        filterNoValue ? 1 : 0,
-                        filterNoCloseDate ? 1 : 0,
-                        selectedStages.length < allStages.length ? 1 : 0,
-                        sortBy !== "title" || sortDirection !== "asc" ? 1 : 0,
-                      ].reduce((a, b) => a + b, 0)}
-                    </Badge>
-                  )}
-              </Button>
-            </PopoverTrigger>
+          {/* Botón de más filtros - Solo mostrar si NO es TechUser o TechLogistic */}
+          {!["TechUser", "TechLogistic"].includes(userRoleDebug) && (
+            <Popover open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="h-9 bg-transparent">
+                  <Plus className="h-4 w-4 mr-1" />
+                  Filtros
+                  {(filterValidation ||
+                    filterStagnant ||
+                    filterOldOpportunities ||
+                    filterNoValue ||
+                    filterNoCloseDate ||
+                    selectedStages.length < allStages.length ||
+                    sortBy !== "title" ||
+                    sortDirection !== "asc") && (
+                      <Badge variant="secondary" className="ml-2 h-5 px-1">
+                        {[
+                          filterValidation ? 1 : 0,
+                          filterStagnant ? 1 : 0,
+                          filterOldOpportunities ? 1 : 0,
+                          filterNoValue ? 1 : 0,
+                          filterNoCloseDate ? 1 : 0,
+                          selectedStages.length < allStages.length ? 1 : 0,
+                          sortBy !== "title" || sortDirection !== "asc" ? 1 : 0,
+                        ].reduce((a, b) => a + b, 0)}
+                      </Badge>
+                    )}
+                </Button>
+              </PopoverTrigger>
             <PopoverContent className="w-80">
               <div className="space-y-4">
                 <h4 className="font-medium">Filtros avanzados</h4>
@@ -1282,7 +1283,8 @@ export const OpportunitiesKanban = ({
                 </div>
               </div>
             </PopoverContent>
-          </Popover>
+            </Popover>
+          )}
 
           {/* Contador de oportunidades */}
           <div className="text-sm text-muted-foreground ml-auto">
