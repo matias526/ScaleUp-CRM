@@ -14,7 +14,7 @@ export type OpportunityWithRelations = Tables<"opportunities"> & {
 // Modificar la función getOpportunities para añadir logs detallados del query
 export async function getOpportunities(userInfo?: any): Promise<OpportunityWithRelations[]> {
   try {
-    console.log("getOpportunities recibió userInfo:", JSON.stringify(userInfo, null, 2))
+    console.log("[v0] getOpportunities recibió userInfo:", JSON.stringify(userInfo, null, 2))
 
     let query = supabase.from("opportunities").select(`
         *,
@@ -26,58 +26,54 @@ export async function getOpportunities(userInfo?: any): Promise<OpportunityWithR
         tasks(id, created_at)
       `)
 
-    // Filtrar solo oportunidades de tech_companies activas (is_active = true)
-    // Se hace mediante inner join con tech_companies
-    query = query.eq("tech_company.is_active", true)
-
     // Aplicar filtros según el rol del usuario
     if (userInfo) {
-      console.log("Rol del usuario:", userInfo.roleCode)
-      console.log("ID del usuario:", userInfo.id)
-      console.log("Tech Company ID del usuario:", userInfo.tech_company_id)
+      console.log("[v0] Rol del usuario:", userInfo.roleCode)
+      console.log("[v0] ID del usuario:", userInfo.id)
+      console.log("[v0] Tech Company ID del usuario:", userInfo.tech_company_id)
 
       // Si es un usuario TechUser o TechLogistic, filtrar por su tech_company
       if ((userInfo.roleCode === "TechUser" || userInfo.roleCode === "TechLogistic") && userInfo.tech_company_id) {
-        console.log(`Filtrando oportunidades para la TechCompany: ${userInfo.tech_company_id}`)
+        console.log(`[v0] Filtrando oportunidades para la TechCompany: ${userInfo.tech_company_id}`)
         query = query.eq("tech_company_id", userInfo.tech_company_id)
       }
       // Si es un usuario Partner, filtrar por partner_id
       else if (userInfo.partnerId) {
-        console.log(`Filtrando oportunidades para el partner: ${userInfo.partnerId}`)
+        console.log(`[v0] Filtrando oportunidades para el partner: ${userInfo.partnerId}`)
         query = query.eq("partner_id", userInfo.partnerId)
       } else if (userInfo.roleCode && userInfo.roleCode.toLowerCase() === "bdd" && userInfo.id) {
-        console.log(`Filtrando oportunidades para el BDD asignado o creadas por: ${userInfo.id}`)
+        console.log(`[v0] Filtrando oportunidades para el BDD asignado o creadas por: ${userInfo.id}`)
         query = query.or(`assigned_to.eq.${userInfo.id},created_by.eq.${userInfo.id}`)
 
         // Imprimir el query SQL generado (aproximado)
         const queryStr = `SELECT * FROM opportunities WHERE assigned_to = '${userInfo.id}' OR created_by = '${userInfo.id}' ORDER BY created_at DESC`
-        console.log("Query SQL aproximado:", queryStr)
+        console.log("[v0] Query SQL aproximado:", queryStr)
       } else {
-        console.log("No se aplicó ningún filtro específico por rol")
+        console.log("[v0] No se aplicó ningún filtro específico por rol")
       }
     } else {
-      console.log("No se recibió información del usuario, mostrando todas las oportunidades")
+      console.log("[v0] No se recibió información del usuario, mostrando todas las oportunidades")
     }
 
     // Ordenar por fecha de creación descendente
     query = query.order("created_at", { ascending: false })
 
     // Ejecutar la consulta
-    console.log("Ejecutando consulta a Supabase...")
+    console.log("[v0] Ejecutando consulta a Supabase...")
     const { data, error } = await query
 
     if (error) {
-      console.error("Error al obtener oportunidades:", error)
+      console.error("[v0] Error al obtener oportunidades:", error)
       return []
     }
 
-    console.log(`Se encontraron ${data?.length || 0} oportunidades después de aplicar filtros`)
+    console.log(`[v0] Se encontraron ${data?.length || 0} oportunidades después de aplicar filtros`)
 
     // Mostrar los primeros 3 resultados para debug
     if (data && data.length > 0) {
       console.log(
-        "Primeras 3 oportunidades:",
-        data.slice(0, 3).map((op) => ({
+        "[v0] Primeras 3 oportunidades:",
+        data.slice(0, 3).map((op: any) => ({
           id: op.id,
           name: op.name,
           assigned_to: op.assigned_to,
@@ -89,7 +85,7 @@ export async function getOpportunities(userInfo?: any): Promise<OpportunityWithR
 
     return (data as OpportunityWithRelations[]) || []
   } catch (error) {
-    console.error("Error inesperado al obtener oportunidades:", error)
+    console.error("[v0] Error inesperado al obtener oportunidades:", error)
     return []
   }
 }
@@ -97,7 +93,7 @@ export async function getOpportunities(userInfo?: any): Promise<OpportunityWithR
 // También actualizar la versión cliente con los mismos logs
 export async function getOpportunitiesClient(userInfo?: any): Promise<OpportunityWithRelations[]> {
   try {
-    console.log("getOpportunitiesClient recibió userInfo:", JSON.stringify(userInfo, null, 2))
+    console.log("[v0] getOpportunitiesClient recibió userInfo:", JSON.stringify(userInfo, null, 2))
 
     let query = supabase.from("opportunities").select(`
       *,
@@ -109,57 +105,54 @@ export async function getOpportunitiesClient(userInfo?: any): Promise<Opportunit
       tasks(id, created_at)
     `)
 
-    // Filtrar solo oportunidades de tech_companies activas (is_active = true)
-    query = query.eq("tech_company.is_active", true)
-
     // Aplicar filtros según el rol del usuario
     if (userInfo) {
-      console.log("Rol del usuario:", userInfo.roleCode)
-      console.log("ID del usuario:", userInfo.id)
-      console.log("Tech Company ID del usuario:", userInfo.tech_company_id)
+      console.log("[v0] Rol del usuario:", userInfo.roleCode)
+      console.log("[v0] ID del usuario:", userInfo.id)
+      console.log("[v0] Tech Company ID del usuario:", userInfo.tech_company_id)
 
       // Si es un usuario TechUser o TechLogistic, filtrar por su tech_company
       if ((userInfo.roleCode === "TechUser" || userInfo.roleCode === "TechLogistic") && userInfo.tech_company_id) {
-        console.log(`Filtrando oportunidades para la TechCompany: ${userInfo.tech_company_id}`)
+        console.log(`[v0] Filtrando oportunidades para la TechCompany: ${userInfo.tech_company_id}`)
         query = query.eq("tech_company_id", userInfo.tech_company_id)
       }
       // Si es un usuario Partner, filtrar por partner_id
       else if (userInfo.partnerId) {
-        console.log(`Filtrando oportunidades para el partner: ${userInfo.partnerId}`)
+        console.log(`[v0] Filtrando oportunidades para el partner: ${userInfo.partnerId}`)
         query = query.eq("partner_id", userInfo.partnerId)
       } else if (userInfo.roleCode && userInfo.roleCode.toLowerCase() === "bdd" && userInfo.id) {
-        console.log(`Filtrando oportunidades para el BDD asignado o creadas por: ${userInfo.id}`)
+        console.log(`[v0] Filtrando oportunidades para el BDD asignado o creadas por: ${userInfo.id}`)
         query = query.or(`assigned_to.eq.${userInfo.id},created_by.eq.${userInfo.id}`)
 
         // Imprimir el query SQL generado (aproximado)
         const queryStr = `SELECT * FROM opportunities WHERE assigned_to = '${userInfo.id}' OR created_by = '${userInfo.id}' ORDER BY created_at DESC`
-        console.log("Query SQL aproximado:", queryStr)
+        console.log("[v0] Query SQL aproximado:", queryStr)
       } else {
-        console.log("No se aplicó ningún filtro específico por rol")
+        console.log("[v0] No se aplicó ningún filtro específico por rol")
       }
     } else {
-      console.log("No se recibió información del usuario, mostrando todas las oportunidades")
+      console.log("[v0] No se recibió información del usuario, mostrando todas las oportunidades")
     }
 
     // Ordenar por fecha de creación descendente
     query = query.order("created_at", { ascending: false })
 
     // Ejecutar la consulta
-    console.log("Ejecutando consulta a Supabase...")
+    console.log("[v0] Ejecutando consulta a Supabase...")
     const { data, error } = await query
 
     if (error) {
-      console.error("Error al obtener oportunidades:", error)
+      console.error("[v0] Error al obtener oportunidades:", error)
       return []
     }
 
-    console.log(`Se encontraron ${data?.length || 0} oportunidades después de aplicar filtros`)
+    console.log(`[v0] Se encontraron ${data?.length || 0} oportunidades después de aplicar filtros`)
 
     // Mostrar los primeros 3 resultados para debug
     if (data && data.length > 0) {
       console.log(
-        "Primeras 3 oportunidades:",
-        data.slice(0, 3).map((op) => ({
+        "[v0] Primeras 3 oportunidades:",
+        data.slice(0, 3).map((op: any) => ({
           id: op.id,
           name: op.name,
           assigned_to: op.assigned_to,
@@ -171,7 +164,7 @@ export async function getOpportunitiesClient(userInfo?: any): Promise<Opportunit
 
     return (data as OpportunityWithRelations[]) || []
   } catch (error) {
-    console.error("Error inesperado al obtener oportunidades:", error)
+    console.error("[v0] Error inesperado al obtener oportunidades:", error)
     return []
   }
 }
