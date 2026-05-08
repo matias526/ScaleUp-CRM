@@ -4,35 +4,20 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { formatCurrency, formatDate } from "@/lib/utils"
 import { useTranslations } from "@/hooks/use-translations"
-import type { Opportunity } from "@/types/supabase"
+import { DICT_LANG_OPPORTUNITIES } from "@/lib/constants/dict-lang-opportunities"
+import type { OpportunityWithRelations } from "@/lib/services/opportunity-service"
 
 interface OpportunitiesTableProps {
-  opportunities: Opportunity[]
+  opportunities: OpportunityWithRelations[]
 }
 
-// Exportamos el componente como una exportación nombrada
 export const OpportunitiesTable = ({ opportunities }: OpportunitiesTableProps) => {
-  const { t } = useTranslations()
+  const { t } = useTranslations(DICT_LANG_OPPORTUNITIES)
   const router = useRouter()
-  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({})
-
-  const toggleRow = (id: string) => {
-    setExpandedRows((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }))
-  }
-
-  const formatStageCode = (code: string) => {
-    if (!code) return "Sin etapa"
-    return code.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
-  }
 
   const handleViewDetails = (id: string) => {
-    console.log(`Navigating to opportunity details: ${id}`)
     router.push(`/dashboard/opportunities/${id}`)
   }
 
@@ -45,43 +30,58 @@ export const OpportunitiesTable = ({ opportunities }: OpportunitiesTableProps) =
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>{t("opportunity.name")}</TableHead>
-            <TableHead>{t("opportunity.stage")}</TableHead>
-            <TableHead>{t("opportunity.value")}</TableHead>
-            <TableHead>{t("opportunity.probability")}</TableHead>
-            <TableHead>{t("opportunity.expected_close_date")}</TableHead>
-            <TableHead>{t("opportunity.actions")}</TableHead>
+            <TableHead>{t("opp.table.name")}</TableHead>
+            <TableHead>{t("opp.table.techCompany")}</TableHead>
+            <TableHead>{t("opp.table.partner")}</TableHead>
+            <TableHead>{t("opp.table.country")}</TableHead>
+            <TableHead>{t("opp.table.estimatedAmount")}</TableHead>
+            <TableHead>{t("opp.table.estimatedCloseDate")}</TableHead>
+            <TableHead>{t("opp.table.actions")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {opportunities.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="text-center py-8">
-                {t("opportunity.no_opportunities")}
+              <TableCell colSpan={7} className="text-center py-8">
+                {t("opp.table.noOpportunities")}
               </TableCell>
             </TableRow>
           ) : (
             opportunities.map((opportunity) => (
               <TableRow key={opportunity.id} className="cursor-pointer">
-                <TableCell className="font-medium">
-                  {opportunity.name}
-                  {opportunity.end_customer && ` - ${opportunity.end_customer.name}`}
+                <TableCell className="font-medium max-w-xs truncate">
+                  {opportunity.title || t("opp.table.noData")}
                 </TableCell>
                 <TableCell>
-                  <Badge variant="outline">
-                    {opportunity.stage ? formatStageCode(opportunity.stage.code) : "Sin etapa"}
-                  </Badge>
+                  {opportunity.tech_company?.name || t("opp.table.noData")}
                 </TableCell>
-                <TableCell>{formatCurrency(opportunity.estimated_value)}</TableCell>
-                <TableCell>{opportunity.probability}%</TableCell>
-                <TableCell>{formatDate(opportunity.expected_close_date)}</TableCell>
+                <TableCell>
+                  {opportunity.partner?.name || t("opp.table.noData")}
+                </TableCell>
+                <TableCell>
+                  {opportunity.country || t("opp.table.noData")}
+                </TableCell>
+                <TableCell>
+                  {opportunity.estimated_value ? formatCurrency(opportunity.estimated_value) : t("opp.table.noData")}
+                </TableCell>
+                <TableCell>
+                  {opportunity.expected_close_date ? formatDate(opportunity.expected_close_date) : t("opp.table.noData")}
+                </TableCell>
                 <TableCell>
                   <div className="flex space-x-2">
-                    <Button variant="outline" size="sm" onClick={() => handleViewDetails(opportunity.id)}>
-                      {t("common.view")}
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleViewDetails(opportunity.id)}
+                    >
+                      {t("opp.table.view")}
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => handleEdit(opportunity.id)}>
-                      {t("common.edit")}
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleEdit(opportunity.id)}
+                    >
+                      {t("opp.table.edit")}
                     </Button>
                   </div>
                 </TableCell>
@@ -94,5 +94,4 @@ export const OpportunitiesTable = ({ opportunities }: OpportunitiesTableProps) =
   )
 }
 
-// Mantenemos la exportación por defecto para compatibilidad
 export default OpportunitiesTable

@@ -726,13 +726,63 @@ export const DICT_LANG_OPPORTUNITIES = {
     en: "Quote notes...",
     pt: "Notas do orçamento...",
   },
-  "opportunities.quotes.unitPrice": {
-    es: "Precio Unit.",
-    en: "Unit Price",
-    pt: "Preço Unit.",
+  // Table view translations
+  "opp.table.name": {
+    es: "Nombre",
+    en: "Name",
+    pt: "Nome",
   },
-  "opportunities.quotes.discountPercent": {
-    es: "Descuento %",
+  "opp.table.techCompany": {
+    es: "Empresa Tecnológica",
+    en: "Tech Company",
+    pt: "Empresa Tecnológica",
+  },
+  "opp.table.partner": {
+    es: "Partner",
+    en: "Partner",
+    pt: "Partner",
+  },
+  "opp.table.country": {
+    es: "País",
+    en: "Country",
+    pt: "País",
+  },
+  "opp.table.estimatedAmount": {
+    es: "Monto Estimado",
+    en: "Estimated Amount",
+    pt: "Valor Estimado",
+  },
+  "opp.table.estimatedCloseDate": {
+    es: "Fecha Estimada de Cierre",
+    en: "Estimated Close Date",
+    pt: "Data Estimada de Fechamento",
+  },
+  "opp.table.actions": {
+    es: "Acciones",
+    en: "Actions",
+    pt: "Ações",
+  },
+  "opp.table.view": {
+    es: "Ver",
+    en: "View",
+    pt: "Ver",
+  },
+  "opp.table.edit": {
+    es: "Editar",
+    en: "Edit",
+    pt: "Editar",
+  },
+  "opp.table.noOpportunities": {
+    es: "No hay oportunidades",
+    en: "No opportunities",
+    pt: "Sem oportunidades",
+  },
+  "opp.table.noData": {
+    es: "Sin datos",
+    en: "No data",
+    pt: "Sem dados",
+  },
+}
     en: "Discount %",
     pt: "Desconto %",
   },
