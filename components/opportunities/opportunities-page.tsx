@@ -64,6 +64,8 @@ export function OpportunitiesPage() {
   const [opportunities, setOpportunities] = useState([])
   const [stages, setStages] = useState<Tables<"pipeline_stages">[]>([])
   const [loading, setLoading] = useState(true)
+  const [filterTechCompany, setFilterTechCompany] = useState<string | null>(null)
+  const [filterPartner, setFilterPartner] = useState<string | null>(null)
   const { userInfo } = useAuth() // Obtener la información del usuario
   const { toast } = useToast()
   const router = useRouter()
@@ -73,6 +75,9 @@ export function OpportunitiesPage() {
 
   // Determinar si el usuario es un Partner
   const isPartnerUser = userInfo?.roleCode?.toLowerCase() === "partneruser"
+  
+  // Determinar si es TechUser o TechLogistic
+  const isTechUser = ["TechUser", "TechLogistic"].includes(userInfo?.roleCode || "")
 
   useEffect(() => {
     const loadData = async () => {
@@ -133,10 +138,12 @@ export function OpportunitiesPage() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">{getTranslation("opportunities.title", language, t)}</h1>
-        <Button onClick={handleCreateOpportunity}>
-          <Plus className="mr-2 h-4 w-4" />
-          {getTranslation("opportunities.create", language, t)}
-        </Button>
+        {!isTechUser && (
+          <Button onClick={handleCreateOpportunity}>
+            <Plus className="mr-2 h-4 w-4" />
+            {getTranslation("opportunities.create", language, t)}
+          </Button>
+        )}
       </div>
 
       <Tabs defaultValue="kanban" value={view} onValueChange={(value) => setView(value as "table" | "kanban")}>
@@ -145,7 +152,14 @@ export function OpportunitiesPage() {
           <TabsTrigger value="kanban">{getTranslation("opportunities.kanban_view", language, t)}</TabsTrigger>
         </TabsList>
         <TabsContent value="table">
-          <OpportunitiesTable opportunities={opportunities} userRole={userInfo?.roleCode} />
+          <OpportunitiesTable 
+            opportunities={opportunities} 
+            userRole={userInfo?.roleCode}
+            filterTechCompany={filterTechCompany}
+            setFilterTechCompany={setFilterTechCompany}
+            filterPartner={filterPartner}
+            setFilterPartner={setFilterPartner}
+          />
         </TabsContent>
         <TabsContent value="kanban">
           <OpportunitiesKanban opportunities={opportunities} stages={stages} />
