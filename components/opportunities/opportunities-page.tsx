@@ -145,7 +145,7 @@ export function OpportunitiesPage() {
           <TabsTrigger value="kanban">{getTranslation("opportunities.kanban_view", language, t)}</TabsTrigger>
         </TabsList>
         <TabsContent value="table">
-          <OpportunitiesTable opportunities={opportunities} />
+          <OpportunitiesTable opportunities={opportunities} userRole={userInfo?.roleCode} />
         </TabsContent>
         <TabsContent value="kanban">
           <OpportunitiesKanban opportunities={opportunities} stages={stages} />
