@@ -375,7 +375,12 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
   // 1. OBTENER EL IDIOMA (Buscamos el lang del path de la URL)
   // Como usas useTranslations, necesitamos saber qué idioma pasarle a OpportunityQuotes
   const lang = (typeof window !== 'undefined' ? window.location.pathname.split('/')[1]?.toUpperCase() : 'es') as "es" | "en" | "pt";
-  const { t } = useTranslations(DICT_LANG_OPPORTUNITIES)
+  const { t, language } = useTranslations(DICT_LANG_OPPORTUNITIES)
+  
+  // Debug: log cuando el idioma cambia
+  useEffect(() => {
+    console.log("[v0] Idioma actual en opportunity-detail:", language)
+  }, [language])
   const [isDeleting, setIsDeleting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [opportunity, setOpportunity] = useState<any>(initialOpportunity)
@@ -1746,12 +1751,12 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                         <Calendar className="h-4 w-4 text-gray-400" />
                         <span className="text-sm">
                           <span className="text-gray-500">
-                            {t("opportunities.estimated_close_date", "Estimated close date")}:
+                            {t("opp.table.estimatedCloseDate")}:
                           </span>{" "}
                           {opportunity.estimated_close_date ? (
                             format(new Date(opportunity.estimated_close_date), "PPP", { locale: getDateFnsLocale() })
                           ) : (
-                            <span className="text-gray-400">{t("opportunities.no_close_date", "No close date")}</span>
+                            <span className="text-gray-400">{t("opp.table.noData")}</span>
                           )}
                         </span>
                         {!isTechUser && (
@@ -2057,7 +2062,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
           <div className="mt-6">
             <RelatedTasksList
               opportunityId={opportunity?.id}
-              title={t("opportunities.related_tasks", "Tareas relacionadas")}
+              title={t("opp.table.estimatedCloseDate")}
               description={t(
                 "opportunities.related_tasks_description",
                 "Gestiona las tareas relacionadas a esta oportunidad",
