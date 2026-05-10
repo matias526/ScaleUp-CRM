@@ -366,6 +366,8 @@ interface OpportunityDetailProps {
 }
 
 export function OpportunityDetail({ opportunity: initialOpportunity }: OpportunityDetailProps) {
+  console.log("[v0] OpportunityDetail: Componente renderizado - iniciando")
+  
   const router = useRouter()
   const { userInfo } = useAuth()
   
@@ -376,6 +378,8 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
   // Como usas useTranslations, necesitamos saber qué idioma pasarle a OpportunityQuotes
   const lang = (typeof window !== 'undefined' ? window.location.pathname.split('/')[1]?.toUpperCase() : 'es') as "es" | "en" | "pt";
   const { t, language } = useTranslations(DICT_LANG_OPPORTUNITIES)
+  
+  console.log("[v0] OpportunityDetail: language =", language)
   
   // Log para mostrar el idioma que se está usando en las traducciones
   useEffect(() => {
