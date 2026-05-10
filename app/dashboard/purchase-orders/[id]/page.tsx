@@ -402,6 +402,7 @@ export default function PurchaseOrderDetailPage() {
                     po={po}
                     milestones={milestones}
                     subtotal={po.subtotal_amount || 0}
+                    total={(po.subtotal_amount || 0) + (shippings[0]?.cost || 0)}
                     userRole={userInfo?.roleCode || ""}
                     onMilestonesUpdate={loadPurchaseOrder}
                   />

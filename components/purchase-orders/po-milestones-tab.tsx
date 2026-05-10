@@ -26,6 +26,7 @@ interface POMilestonesTabProps {
   po: any
   milestones: any[]
   subtotal: number
+  total?: number
   userRole: string
   onMilestonesUpdate: () => void
 }
@@ -38,9 +39,12 @@ interface LocalMilestone {
   due_date: string
 }
 
-export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, userRole, onMilestonesUpdate }: POMilestonesTabProps) {
+export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, total, userRole, onMilestonesUpdate }: POMilestonesTabProps) {
   const { t } = useTranslations(DICT_LANG_PO)
   const supabase = createClient()
+
+  // Use total if provided, otherwise use subtotal (for backward compatibility)
+  const validationAmount = total !== undefined ? total : subtotal
 
   // State for milestones being created (not yet in BD)
   const [localMilestones, setLocalMilestones] = useState<LocalMilestone[]>([])
@@ -162,15 +166,15 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
   const calculateTotal = () => {
     return localMilestones.reduce((sum, m) => {
       if (m.type === 'percentage') {
-        return sum + (subtotal * m.amount / 100)
+        return sum + (validationAmount * m.amount / 100)
       }
       return sum + m.amount
     }, 0)
   }
 
   const totalAmount = calculateTotal()
-  const remainingAmount = subtotal - totalAmount
-  const isComplete = Math.abs(totalAmount - subtotal) < 0.01
+  const remainingAmount = validationAmount - totalAmount
+  const isComplete = Math.abs(totalAmount - validationAmount) < 0.01
 
   // Add milestone to local list (not DB)
   const handleAddMilestone = () => {
@@ -519,7 +523,7 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, u
       const milestonesToInsert = localMilestones.map(m => ({
         po_id: po.id,
         title: m.title,
-        amount: m.type === 'percentage' ? (subtotal * m.amount / 100) : m.amount,
+        amount: m.type === 'percentage' ? (validationAmount * m.amount / 100) : m.amount,
         due_date: m.due_date || null,
         status: 'pending',
       }))
