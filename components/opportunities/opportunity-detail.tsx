@@ -1374,7 +1374,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                         <Textarea
                           value={rejectionReason}
                           onChange={(e) => setRejectionReason(e.target.value)}
-                          placeholder=t("opportunities.detail.rejectReason")
+                          placeholder={t("opportunities.detail.rejectReason")}
                           className="w-full min-h-[100px]"
                         />
                       </div>
