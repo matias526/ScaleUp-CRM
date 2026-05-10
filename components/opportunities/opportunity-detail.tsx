@@ -375,7 +375,12 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
   // 1. OBTENER EL IDIOMA (Buscamos el lang del path de la URL)
   // Como usas useTranslations, necesitamos saber qué idioma pasarle a OpportunityQuotes
   const lang = (typeof window !== 'undefined' ? window.location.pathname.split('/')[1]?.toUpperCase() : 'es') as "es" | "en" | "pt";
-  const { t } = useTranslations(DICT_LANG_OPPORTUNITIES)
+  const { t, language } = useTranslations(DICT_LANG_OPPORTUNITIES)
+  
+  // Log para mostrar el idioma que se está usando en las traducciones
+  useEffect(() => {
+    console.log("[v0] IDIOMA USER:", language)
+  }, [language])
   const [isDeleting, setIsDeleting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [opportunity, setOpportunity] = useState<any>(initialOpportunity)
