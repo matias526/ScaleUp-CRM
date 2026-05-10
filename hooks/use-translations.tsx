@@ -12,8 +12,6 @@ export function useTranslations(localDictionary?: Record<string, Record<string, 
   const [retryCount, setRetryCount] = useState<number>(0)
   const { user } = useAuth()
 
-  console.log("[v0] useTranslations initialized with language:", "es", "hasLocalDictionary:", !!localDictionary)
-
   // Función para obtener el idioma preferido del usuario desde la base de datos
   const fetchUserLanguagePreference = useCallback(async (userId: string) => {
     try {
@@ -151,31 +149,21 @@ export function useTranslations(localDictionary?: Record<string, Record<string, 
 
   const t = useCallback(
     (key: string, defaultValue = ""): string => {
-      // 1. Buscar primero en el diccionario local
+      // 1. Si hay diccionario local, buscar primero ahí
       if (localDictionary && localDictionary[key]) {
         const translation = localDictionary[key][language]
         if (translation) {
-          console.log("[v0] Found in localDictionary:", key, "=>", translation, "lang:", language)
           return translation
-        } else {
-          console.log("[v0] Key exists in localDictionary but no translation for language:", key, "lang:", language)
         }
       }
 
-      // 2. Si no está en el diccionario local, buscar en la base de datos
+      // 2. Si no está en diccionario local, buscar en la base de datos
       if (!isLoaded || !TranslationService.isInitialized) {
-        console.log(`⚠️ [useTranslations] Traducciones no disponibles para: ${key}, isLoaded: ${isLoaded}, returning: ${defaultValue || key}`)
         return defaultValue || key
       }
 
-      // Intentar obtener la traducción
+      // Obtener la traducción del servicio
       const translation = TranslationService.getTranslation(key, language, defaultValue || key)
-
-      // Debug solo si la traducción es igual a la clave (no encontrada)
-      if (translation === key) {
-        console.log(`🔍 [useTranslations] Traducción no encontrada para: ${key} en idioma: ${language}`)
-      }
-
       return translation
     },
     [language, isLoaded, localDictionary],
