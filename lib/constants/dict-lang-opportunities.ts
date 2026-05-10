@@ -962,756 +962,186 @@ export const DICT_LANG_OPPORTUNITIES = {
     en: "Uploading...",
     pt: "Carregando...",
   },
-  "opportunities.prospect.selectPartner": {
-    es: "Seleccionar Partner",
-    en: "Select Partner",
-    pt: "Selecionar Partner",
+  // Note form dialog translations
+  "notes.form.title": {
+    es: "Agregar entrada a la reseña histórica",
+    en: "Add entry to history review",
+    pt: "Adicionar entrada ao histórico",
   },
-  "opportunities.prospect.selectPartnerDescription": {
-    es: "Selecciona el partner responsable de esta oportunidad",
-    en: "Select the partner responsible for this opportunity",
-    pt: "Selecione o partner responsável por esta oportunidade",
+  "notes.form.content_label": {
+    es: "Contenido",
+    en: "Content",
+    pt: "Conteúdo",
   },
-  "opportunities.prospect.name": {
-    es: "Nombre",
-    en: "Name",
-    pt: "Nome",
+  "notes.form.content_placeholder": {
+    es: "Escribe el contenido de la nota...",
+    en: "Write the note content...",
+    pt: "Escreva o conteúdo da nota...",
   },
-  "opportunities.prospect.noProspectsFound": {
-    es: "No se encontraron prospectos",
-    en: "No prospects found",
-    pt: "Nenhum prospecto encontrado",
+  "notes.form.content_required": {
+    es: "El contenido de la nota no puede estar vacío",
+    en: "Note content cannot be empty",
+    pt: "O conteúdo da nota não pode estar vazio",
   },
-  "opportunities.prospect.selectContact": {
-    es: "Seleccionar Contacto",
-    en: "Select Contact",
-    pt: "Selecionar Contato",
+  "notes.form.internal_note": {
+    es: "Nota interna de ScaleUp (solo visible para ScaleUp)",
+    en: "Internal ScaleUp note (visible only to ScaleUp)",
+    pt: "Nota interna da ScaleUp (visível apenas para ScaleUp)",
   },
-  "opportunities.prospect.relationshipSaved": {
-    es: "Relación guardada",
-    en: "Relationship saved",
-    pt: "Relacionamento salvo",
+  "notes.form.public_note": {
+    es: "Nota pública (visible para todos)",
+    en: "Public note (visible to everyone)",
+    pt: "Nota pública (visível para todos)",
   },
-  "opportunities.prospect.saving": {
+  "notes.form.save_button": {
+    es: "Guardar nota",
+    en: "Save note",
+    pt: "Salvar nota",
+  },
+  "notes.form.saving_button": {
     es: "Guardando...",
     en: "Saving...",
     pt: "Salvando...",
   },
-  "opportunities.prospect.save": {
-    es: "Guardar",
-    en: "Save",
-    pt: "Salvar",
+  "notes.form.success_title": {
+    es: "Nota agregada",
+    en: "Note added",
+    pt: "Nota adicionada",
   },
-  "opportunities.prospect.title": {
-    es: "Prospecto",
-    en: "Prospect",
-    pt: "Prospecto",
+  "notes.form.success_message": {
+    es: "La nota se ha agregado correctamente",
+    en: "The note has been added successfully",
+    pt: "A nota foi adicionada com sucesso",
   },
-  "opportunities.prospect.step1Description": {
-    es: "Crea o selecciona una empresa",
-    en: "Create or select a company",
-    pt: "Criar ou selecionar uma empresa",
-  },
-  "opportunities.prospect.searchOrCreate": {
-    es: "Buscar o crear",
-    en: "Search or create",
-    pt: "Pesquisar ou criar",
-  },
-  "opportunities.prospect.noResults": {
-    es: "Sin resultados",
-    en: "No results",
-    pt: "Sem resultados",
-  },
-  "opportunities.prospect.searchHint": {
-    es: "Presiona Enter para buscar",
-    en: "Press Enter to search",
-    pt: "Pressione Enter para pesquisar",
-  },
-  "opportunities.prospect.createNewHint": {
-    es: "Presiona Enter para crear",
-    en: "Press Enter to create",
-    pt: "Pressione Enter para criar",
-  },
-  "opportunities.prospect.createNew": {
-    es: "Crear Nuevo",
-    en: "Create New",
-    pt: "Criar Novo",
-  },
-  "opportunities.prospect.website": {
-    es: "Sitio Web",
-    en: "Website",
-    pt: "Site",
-  },
-  "opportunities.prospect.country": {
-    es: "País",
-    en: "Country",
-    pt: "País",
-  },
-  "opportunities.prospect.leadSource": {
-    es: "Fuente de Oportunidad",
-    en: "Lead Source",
-    pt: "Fonte de Oportunidade",
-  },
-  "opportunities.form.selectOption": {
-    es: "Seleccionar opción",
-    en: "Select option",
-    pt: "Selecionar opção",
-  },
-  "opportunities.leadSource.direct": {
-    es: "Directo",
-    en: "Direct",
-    pt: "Direto",
-  },
-  "opportunities.leadSource.referral": {
-    es: "Referencia",
-    en: "Referral",
-    pt: "Indicação",
-  },
-  "opportunities.leadSource.event": {
-    es: "Evento",
-    en: "Event",
-    pt: "Evento",
-  },
-  "opportunities.leadSource.coldCall": {
-    es: "Llamada Fría",
-    en: "Cold Call",
-    pt: "Prospecção",
-  },
-  "opportunities.leadSource.linkedin": {
-    es: "LinkedIn",
-    en: "LinkedIn",
-    pt: "LinkedIn",
-  },
-  "opportunities.leadSource.other": {
-    es: "Otro",
-    en: "Other",
-    pt: "Outro",
-  },
-  "opportunities.prospect.back": {
-    es: "Atrás",
-    en: "Back",
-    pt: "Voltar",
-  },
-  "opportunities.prospect.first_name": {
-    es: "Nombre",
-    en: "First Name",
-    pt: "Nome",
-  },
-  "opportunities.prospect.last_name": {
-    es: "Apellido",
-    en: "Last Name",
-    pt: "Sobrenome",
-  },
-  "opportunities.prospect.email": {
-    es: "Email",
-    en: "Email",
-    pt: "Email",
-  },
-  "opportunities.prospect.phone": {
-    es: "Teléfono",
-    en: "Phone",
-    pt: "Telefone",
-  },
-  "opportunities.prospect.createContact": {
-    es: "Crear Contacto",
-    en: "Create Contact",
-    pt: "Criar Contato",
-  },
-  "opportunities.detail.endCustomer": {
-    es: "Cliente final",
-    en: "End Customer",
-    pt: "Cliente final",
-  },
-  "opportunities.detail.responsableScaleup": {
-    es: "Responsable ScaleUp",
-    en: "ScaleUp Responsible",
-    pt: "Responsável ScaleUp",
-  },
-  "opportunities.detail.responsablePartner": {
-    es: "Responsable Partner",
-    en: "Partner Responsible",
-    pt: "Responsável Partner",
-  },
-  "opportunities.detail.prospect": {
-    es: "Prospecto",
-    en: "Prospect",
-    pt: "Prospecto",
-  },
-  "opportunities.detail.enterpriseProspect": {
-    es: "Empresa (Prospecto)",
-    en: "Company (Prospect)",
-    pt: "Empresa (Prospecto)",
-  },
-  "opportunities.detail.noAssigned": {
-    es: "No asignado",
-    en: "Not assigned",
-    pt: "Não atribuído",
-  },
-  "opportunities.detail.noDescription": {
-    es: "Sin descripción",
-    en: "No description",
-    pt: "Sem descrição",
-  },
-  "opportunities.detail.noSpecified": {
-    es: "No especificado",
-    en: "Not specified",
-    pt: "Não especificado",
-  },
-  "opportunities.detail.relatedTasks": {
-    es: "Tareas relacionadas",
-    en: "Related Tasks",
-    pt: "Tarefas relacionadas",
-  },
-  "opportunities.detail.notes": {
-    es: "Notas",
-    en: "Notes",
-    pt: "Notas",
-  },
-  "opportunities.detail.documents": {
-    es: "Documentos",
-    en: "Documents",
-    pt: "Documentos",
-  },
-  "opportunities.detail.quotes": {
-    es: "Presupuestos",
-    en: "Quotes",
-    pt: "Orçamentos",
-  },
-  "opportunities.detail.createdDate": {
-    es: "Fecha de creación",
-    en: "Created Date",
-    pt: "Data de criação",
-  },
-  "opportunities.detail.createdBy": {
-    es: "Creado por",
-    en: "Created by",
-    pt: "Criado por",
-  },
-  "opportunities.detail.selectStage": {
-    es: "Seleccionar etapa",
-    en: "Select stage",
-    pt: "Selecionar etapa",
-  },
-  "opportunities.detail.estimatedCloseDate": {
-    es: "Fecha estimada de cierre",
-    en: "Estimated close date",
-    pt: "Data estimada de fechamento",
-  },
-  "opportunities.detail.estimatedValue": {
-    es: "Valor estimado",
-    en: "Estimated value",
-    pt: "Valor estimado",
-  },
-  "opportunities.detail.techCompany": {
-    es: "Empresa tecnológica",
-    en: "Tech company",
-    pt: "Empresa tecnológica",
-  },
-  "opportunities.detail.assignPartnerResponsible": {
-    es: "Asignar responsable del Partner",
-    en: "Assign partner responsible",
-    pt: "Atribuir responsável do Partner",
-  },
-  "opportunities.detail.selectPartnerUser": {
-    es: "Selecciona el usuario del Partner que será responsable de esta oportunidad.",
-    en: "Select the partner user who will be responsible for this opportunity.",
-    pt: "Selecione o usuário do Partner que será responsável por esta oportunidade.",
-  },
-  "opportunities.detail.assignScaleupResponsible": {
-    es: "Asignar responsable de ScaleUp",
-    en: "Assign ScaleUp responsible",
-    pt: "Atribuir responsável ScaleUp",
-  },
-  "opportunities.detail.selectScaleupUser": {
-    es: "Selecciona el usuario de ScaleUp que será responsable de esta oportunidad.",
-    en: "Select the ScaleUp user who will be responsible for this opportunity.",
-    pt: "Selecione o usuário de ScaleUp que será responsável por esta oportunidade.",
-  },
-  "opportunities.detail.scaleupUser": {
-    es: "Usuario de ScaleUp",
-    en: "ScaleUp user",
-    pt: "Usuário ScaleUp",
-  },
-  "opportunities.detail.stage": {
-    es: "Etapa",
-    en: "Stage",
-    pt: "Estágio",
-  },
-  "opportunities.detail.noStage": {
-    es: "Sin etapa",
-    en: "No stage",
-    pt: "Sem estágio",
-  },
-  "opportunities.detail.gestureRelatedTasks": {
-    es: "Gestiona las tareas relacionadas a esta oportunidad",
-    en: "Manage tasks related to this opportunity",
-    pt: "Gerenciar tarefas relacionadas a esta oportunidade",
-  },
-  "opportunities.detail.rejectReason": {
-    es: "Motivo del rechazo",
-    en: "Rejection reason",
-    pt: "Motivo da rejeição",
-  },
-  "opportunities.detail.reject": {
-    es: "Rechazar",
-    en: "Reject",
-    pt: "Rejeitar",
-  },
-  "opportunities.detail.validate": {
-    es: "Validar",
-    en: "Validate",
-    pt: "Validar",
-  },
-  "opportunities.detail.delete": {
-    es: "Eliminar",
-    en: "Delete",
-    pt: "Eliminar",
-  },
-  "opportunities.detail.processing": {
-    es: "Procesando...",
-    en: "Processing...",
-    pt: "Processando...",
-  },
-  "opportunities.detail.saving": {
-    es: "Guardando...",
-    en: "Saving...",
-    pt: "Salvando...",
-  },
-  "opportunities.detail.validatedSuccessfully": {
-    es: "Oportunidad validada correctamente",
-    en: "Opportunity validated successfully",
-    pt: "Oportunidade validada com sucesso",
-  },
-  "opportunities.detail.rejectedSuccessfully": {
-    es: "Oportunidad rechazada correctamente",
-    en: "Opportunity rejected successfully",
-    pt: "Oportunidade rejeitada com sucesso",
-  },
-  "opportunities.detail.deletedSuccessfully": {
-    es: "Oportunidad eliminada correctamente",
-    en: "Opportunity deleted successfully",
-    pt: "Oportunidade deletada com sucesso",
-  },
-  "opportunities.detail.error": {
+  "notes.form.error_title": {
     es: "Error",
     en: "Error",
     pt: "Erro",
   },
-  "opportunities.detail.errorSaving": {
-    es: "Error al guardar los cambios:",
-    en: "Error saving changes:",
-    pt: "Erro ao salvar alterações:",
+  "notes.form.error_message": {
+    es: "No se pudo agregar la nota. Verifica la consola para más detalles.",
+    en: "Could not add the note. Check the console for more details.",
+    pt: "Não foi possível adicionar a nota. Verifique o console para mais detalhes.",
   },
-  "opportunities.detail.selectUser": {
-    es: "Selecciona un usuario",
-    en: "Select a user",
-    pt: "Selecione um usuário",
+  "notes.form.error_occurred": {
+    es: "Ocurrió un error al agregar la nota",
+    en: "An error occurred while adding the note",
+    pt: "Ocorreu um erro ao adicionar a nota",
   },
-  "opportunities.detail.mustSelectUser": {
-    es: "Debes seleccionar un usuario",
-    en: "You must select a user",
-    pt: "Você deve selecionar um usuário",
+  // Task creation dialog translations
+  "tasks.create.title": {
+    es: "Crear Nueva Tarea",
+    en: "Create New Task",
+    pt: "Criar Nova Tarefa",
   },
-  "opportunities.detail.mustSelectPartner": {
-    es: "Debes seleccionar un partner",
-    en: "You must select a partner",
-    pt: "Você deve selecionar um partner",
+  "tasks.form.title": {
+    es: "Título",
+    en: "Title",
+    pt: "Título",
   },
-  "opportunities.detail.noAssignedPartner": {
-    es: "No hay responsable del partner para esta oportunidad",
-    en: "No partner responsible for this opportunity",
-    pt: "Sem responsável do partner para esta oportunidade",
+  "tasks.form.title_placeholder": {
+    es: "Ingrese el título de la tarea",
+    en: "Enter task title",
+    pt: "Digite o título da tarefa",
   },
-  "opportunities.detail.noAssignedUser": {
-    es: "No hay usuario asignado para esta oportunidad",
-    en: "No user assigned for this opportunity",
-    pt: "Nenhum usuário atribuído para esta oportunidade",
-  },
-  "opportunities.detail.unknownUser": {
-    es: "Usuario desconocido",
-    en: "Unknown user",
-    pt: "Usuário desconhecido",
-  },
-  "opportunities.detail.noPartnerTechCompany": {
-    es: "No se encontraron partners asociados con esta tech company",
-    en: "No partners found associated with this tech company",
-    pt: "Nenhum partner encontrado associado a esta empresa tecnológica",
-  },
-  "opportunities.detail.noCurrencyProvided": {
-    es: "No se proporcionó tech company ID para cargar partners",
-    en: "No tech company ID provided to load partners",
-    pt: "Nenhuma ID de empresa tecnológica fornecida para carregar partners",
-  },
-  "opportunities.detail.website": {
-    es: "Sitio Web",
-    en: "Website",
-    pt: "Site",
-  },
-  "opportunities.detail.noWebsite": {
-    es: "Sin website",
-    en: "No website",
-    pt: "Sem website",
-  },
-  "opportunities.detail.country": {
-    es: "País",
-    en: "Country",
-    pt: "País",
-  },
-  "opportunities.detail.loadingInitialData": {
-    es: "Cargando datos iniciales para detalle de oportunidad",
-    en: "Loading initial data for opportunity detail",
-    pt: "Carregando dados iniciais para detalhes de oportunidade",
-  },
-  "opportunities.detail.loadingStages": {
-    es: "Cargando etapas del pipeline...",
-    en: "Loading pipeline stages...",
-    pt: "Carregando etapas do pipeline...",
-  },
-  "opportunities.detail.loadingUser": {
-    es: "Cargando usuario actual...",
-    en: "Loading current user...",
-    pt: "Carregando usuário atual...",
-  },
-  "opportunities.detail.componentMounted": {
-    es: "Componente OpportunityDetail montado",
-    en: "OpportunityDetail component mounted",
-    pt: "Componente OpportunityDetail montado",
-  },
-  "opportunities.detail.dataValidation": {
-    es: "No se pudieron validar los datos necesarios para guardar",
-    en: "Could not validate necessary data to save",
-    pt: "Não foi possível validar os dados necessários para salvar",
-  },
-  "opportunities.detail.contact": {
-    es: "Contacto",
-    en: "Contact",
-    pt: "Contato",
-  },
-  "opportunities.detail.companyName": {
-    es: "Nombre de la empresa",
-    en: "Company name",
-    pt: "Nome da empresa",
-  },
-  "opportunities.detail.firstName": {
-    es: "Nombre",
-    en: "First name",
-    pt: "Nome",
-  },
-  "opportunities.detail.lastName": {
-    es: "Apellido",
-    en: "Last name",
-    pt: "Sobrenome",
-  },
-  "opportunities.detail.unsuccessfulDelete": {
-    es: "No se pudo eliminar la oportunidad",
-    en: "Could not delete the opportunity",
-    pt: "Não foi possível deletar a oportunidade",
-  },
-  "opportunities.detail.unsuccessfulReject": {
-    es: "No se pudo rechazar la oportunidad",
-    en: "Could not reject the opportunity",
-    pt: "Não foi possível rejeitar a oportunidade",
-  },
-  "opportunities.detail.unsuccessfulValidate": {
-    es: "No se pudo validar la oportunidad",
-    en: "Could not validate the opportunity",
-    pt: "Não foi possível validar a oportunidade",
-  },
-  "opportunities.detail.unsuccessfulContact": {
-    es: "No se pudo crear el contacto",
-    en: "Could not create contact",
-    pt: "Não foi possível criar contato",
-  },
-  "opportunities.detail.unsuccessfulProspect": {
-    es: "No se pudo crear el prospect partner",
-    en: "Could not create prospect partner",
-    pt: "Não foi possível criar prospect partner",
-  },
-  "opportunities.detail.unsuccessfulNote": {
-    es: "No se pudo crear la nota",
-    en: "Could not create note",
-    pt: "Não foi possível criar nota",
-  },
-  "opportunities.detail.unsuccessfulCurrentUser": {
-    es: "No se pudo identificar al usuario actual",
-    en: "Could not identify current user",
-    pt: "Não foi possível identificar o usuário atual",
-  },
-  "opportunities.detail.unsuccessfulGetCurrentUser": {
-    es: "No se pudo obtener el usuario actual",
-    en: "Could not get current user",
-    pt: "Não foi possível obter o usuário atual",
-  },
-  "opportunities.detail.noFound": {
-    es: "No se encontró la oportunidad",
-    en: "Opportunity not found",
-    pt: "Oportunidade não encontrada",
-  },
-  "opportunities.detail.back": {
-    es: "Volver",
-    en: "Back",
-    pt: "Voltar",
-  },
-  "opportunities.detail.viewEndCustomerInfo": {
-    es: "Ver info Cliente Final",
-    en: "View End Customer Info",
-    pt: "Ver Informações do Cliente Final",
-  },
-  "opportunities.detail.rejectTitle": {
-    es: "Rechazar oportunidad",
-    en: "Reject opportunity",
-    pt: "Rejeitar oportunidade",
-  },
-  "opportunities.detail.selectRejectReason": {
-    es: "Por favor, indica el motivo del rechazo de esta oportunidad.",
-    en: "Please indicate the reason for rejecting this opportunity.",
-    pt: "Por favor, indique o motivo para rejeitar esta oportunidade.",
-  },
-  "opportunities.detail.areYouSure": {
-    es: "¿Estás seguro?",
-    en: "Are you sure?",
-    pt: "Tem certeza?",
-  },
-  "opportunities.detail.deleteWarning": {
-    es: "Esta acción no se puede deshacer. Se eliminará permanentemente la oportunidad.",
-    en: "This action cannot be undone. The opportunity will be permanently deleted.",
-    pt: "Esta ação não pode ser desfeita. A oportunidade será deletada permanentemente.",
-  },
-  "opportunities.detail.deleting": {
-    es: "Eliminando...",
-    en: "Deleting...",
-    pt: "Deletando...",
-  },
-  "opportunities.detail.opportunityTitle": {
-    es: "Título de la oportunidad",
-    en: "Opportunity title",
-    pt: "Título da oportunidade",
-  },
-  "opportunities.detail.validated": {
-    es: "Validada",
-    en: "Validated",
-    pt: "Validada",
-  },
-  "opportunities.detail.rejectedStatus": {
-    es: "Rechazada",
-    en: "Rejected",
-    pt: "Rejeitada",
-  },
-  "opportunities.detail.pendingValidation": {
-    es: "Pendiente de validación",
-    en: "Pending validation",
-    pt: "Pendente de validação",
-  },
-  "opportunities.detail.opportunityDetails": {
-    es: "Detalles de la oportunidad",
-    en: "Opportunity Details",
-    pt: "Detalhes da Oportunidade",
-  },
-  "opportunities.detail.description": {
+  "tasks.form.description": {
     es: "Descripción",
     en: "Description",
     pt: "Descrição",
   },
-  "opportunities.detail.opportunityDescription": {
-    es: "Descripción de la oportunidad",
-    en: "Opportunity description",
-    pt: "Descrição da oportunidade",
+  "tasks.form.description_placeholder": {
+    es: "Ingrese una descripción detallada",
+    en: "Enter a detailed description",
+    pt: "Digite uma descrição detalhada",
   },
-  "opportunities.detail.notSpecified": {
-    es: "No especificado",
-    en: "Not specified",
-    pt: "Não especificado",
+  "tasks.form.status": {
+    es: "Estado",
+    en: "Status",
+    pt: "Estado",
   },
-  "opportunities.detail.partner": {
-    es: "Partner",
-    en: "Partner",
-    pt: "Partner",
+  "tasks.form.select_status": {
+    es: "Seleccione un estado",
+    en: "Select a status",
+    pt: "Selecione um estado",
   },
-  "opportunities.detail.assignPartner": {
-    es: "Asignar Partner",
-    en: "Assign Partner",
-    pt: "Atribuir Partner",
+  "tasks.form.priority": {
+    es: "Prioridad",
+    en: "Priority",
+    pt: "Prioridade",
   },
-  "opportunities.detail.selectPartnerForOpportunity": {
-    es: "Selecciona el partner que trabajará en esta oportunidad.",
-    en: "Select the partner who will work on this opportunity.",
-    pt: "Selecione o partner que trabalhará nesta oportunidade.",
+  "tasks.form.select_priority": {
+    es: "Seleccione una prioridad",
+    en: "Select a priority",
+    pt: "Selecione uma prioridade",
   },
-  "opportunities.detail.loadingPartners": {
-    es: "Cargando partners...",
-    en: "Loading partners...",
-    pt: "Carregando partners...",
+  "tasks.priority.low": {
+    es: "Baja",
+    en: "Low",
+    pt: "Baixa",
   },
-  "opportunities.detail.selectPartnerPlaceholder": {
-    es: "Selecciona un partner",
-    en: "Select a partner",
-    pt: "Selecione um partner",
+  "tasks.priority.medium": {
+    es: "Media",
+    en: "Medium",
+    pt: "Média",
   },
-  "opportunities.detail.noPartnersAvailable": {
-    es: "No hay partners disponibles para esta tech company",
-    en: "No partners available for this tech company",
-    pt: "Nenhum partner disponível para esta empresa tecnológica",
+  "tasks.priority.high": {
+    es: "Alta",
+    en: "High",
+    pt: "Alta",
   },
-  "opportunities.detail.save": {
-    es: "Guardar",
-    en: "Save",
-    pt: "Salvar",
+  "tasks.priority.urgent": {
+    es: "Urgente",
+    en: "Urgent",
+    pt: "Urgente",
   },
-  "opportunities.detail.cancel": {
-    es: "Cancelar",
-    en: "Cancel",
-    pt: "Cancelar",
-  },
-  "opportunities.detail.unknown": {
-    es: "Desconocida",
-    en: "Unknown",
-    pt: "Desconhecida",
-  },
-  // Tasks translations
-  "tasks.status.completed": {
-    es: "Completada",
-    en: "Completed",
-    pt: "Concluída",
-  },
-  "tasks.status.in_progress": {
-    es: "En progreso",
-    en: "In progress",
-    pt: "Em progresso",
-  },
-  "tasks.status.cancelled": {
-    es: "Cancelada",
-    en: "Cancelled",
-    pt: "Cancelada",
-  },
-  "tasks.status.pending": {
-    es: "Pendiente",
-    en: "Pending",
-    pt: "Pendente",
-  },
-  "tasks.create_task": {
-    es: "Crear tarea",
-    en: "Create task",
-    pt: "Criar tarefa",
-  },
-  "tasks.no_tasks": {
-    es: "No hay tareas relacionadas",
-    en: "No related tasks",
-    pt: "Nenhuma tarefa relacionada",
-  },
-  "tasks.add_subtask": {
-    es: "Añadir subtarea",
-    en: "Add subtask",
-    pt: "Adicionar subtarefa",
-  },
-  "tasks.assigned_to": {
-    es: "Asignada a",
-    en: "Assigned to",
-    pt: "Atribuída a",
-  },
-  "tasks.due_date": {
+  "tasks.form.due_date": {
     es: "Fecha límite",
     en: "Due date",
     pt: "Data de vencimento",
   },
-  "tasks.no_date": {
-    es: "Sin fecha",
-    en: "No date",
-    pt: "Sem data",
+  "tasks.form.select_date": {
+    es: "Seleccione una fecha",
+    en: "Select a date",
+    pt: "Selecione uma data",
   },
-  "tasks.mark_completed": {
-    es: "Marcar como completada",
-    en: "Mark as completed",
-    pt: "Marcar como concluída",
+  "tasks.form.assigned_to": {
+    es: "Asignado a",
+    en: "Assigned to",
+    pt: "Atribuído a",
   },
-  "tasks.mark_in_progress": {
-    es: "Marcar en progreso",
-    en: "Mark in progress",
-    pt: "Marcar em progresso",
+  "tasks.form.select_user": {
+    es: "Seleccione un usuario",
+    en: "Select a user",
+    pt: "Selecione um usuário",
   },
-  // Notes translations
-  "notes.history_title": {
-    es: "Reseña histórica",
-    en: "History Review",
-    pt: "Revisão Histórica",
+  "tasks.form.no_users_available": {
+    es: "No hay usuarios disponibles",
+    en: "No users available",
+    pt: "Nenhum usuário disponível",
   },
-  "notes.refresh_title": {
-    es: "Recargar notas",
-    en: "Refresh notes",
-    pt: "Recarregar notas",
+  "tasks.form.task_type": {
+    es: "Tipo de tarea",
+    en: "Task type",
+    pt: "Tipo de tarefa",
   },
-  "notes.add_entry": {
-    es: "Agregar entrada",
-    en: "Add entry",
-    pt: "Adicionar entrada",
+  "tasks.form.select_task_type": {
+    es: "Seleccione un tipo de tarea",
+    en: "Select a task type",
+    pt: "Selecione um tipo de tarefa",
   },
-  "notes.loading_user": {
-    es: "Cargando información de usuario...",
-    en: "Loading user information...",
-    pt: "Carregando informações do usuário...",
+  "tasks.form.no_task_types_available": {
+    es: "No hay tipos de tareas disponibles",
+    en: "No task types available",
+    pt: "Nenhum tipo de tarefa disponível",
   },
-  "notes.loading_notes": {
-    es: "Cargando notas...",
-    en: "Loading notes...",
-    pt: "Carregando notas...",
+  "common.saving": {
+    es: "Guardando...",
+    en: "Saving...",
+    pt: "Salvando...",
   },
-  "notes.no_entries": {
-    es: "No hay entradas en la reseña histórica",
-    en: "No entries in history review",
-    pt: "Nenhuma entrada na revisão histórica",
-  },
-  "notes.private": {
-    es: "Privada",
-    en: "Private",
-    pt: "Privada",
-  },
-  "notes.unknown_date": {
-    es: "Fecha desconocida",
-    en: "Unknown date",
-    pt: "Data desconhecida",
-  },
-  "notes.edited": {
-    es: "(editada)",
-    en: "(edited)",
-    pt: "(editada)",
-  },
-  "notes.edit_note": {
-    es: "Editar nota",
-    en: "Edit note",
-    pt: "Editar nota",
-  },
-  "notes.delete_note": {
-    es: "Eliminar nota",
-    en: "Delete note",
-    pt: "Deletar nota",
-  },
-  "notes.confirm_delete": {
-    es: "¿Estás seguro de que deseas eliminar esta nota?",
-    en: "Are you sure you want to delete this note?",
-    pt: "Você tem certeza de que deseja deletar esta nota?",
-  },
-  "notes.delete_title": {
-    es: "Nota eliminada",
-    en: "Note deleted",
-    pt: "Nota deletada",
-  },
-  "notes.delete_success": {
-    es: "La nota se ha eliminado correctamente",
-    en: "The note has been deleted successfully",
-    pt: "A nota foi deletada com sucesso",
-  },
-  "notes.delete_error": {
-    es: "No se pudo eliminar la nota",
-    en: "Could not delete the note",
-    pt: "Não foi possível deletar a nota",
-  },
-  "notes.delete_error_occurred": {
-    es: "Ocurrió un error al eliminar la nota",
-    en: "An error occurred while deleting the note",
-    pt: "Ocorreu um erro ao deletar a nota",
-  },
-  "notes.invalid_date": {
-    es: "Fecha inválida",
-    en: "Invalid date",
-    pt: "Data inválida",
+  "common.create": {
+    es: "Crear",
+    en: "Create",
+    pt: "Criar",
   },
 }

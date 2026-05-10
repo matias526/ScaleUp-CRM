@@ -10,6 +10,8 @@ import { createNote as createNoteApi } from "@/lib/services/notes-service-api"
 import { toast } from "@/components/ui/use-toast"
 import { Lock, Globe } from "lucide-react"
 import { useAuth } from "@/components/auth/auth-provider"
+import { useTranslations } from "@/hooks/use-translations"
+import { DICT_LANG_OPPORTUNITIES } from "@/lib/constants/dict-lang-opportunities"
 
 interface NoteFormDialogProps {
   isOpen: boolean
@@ -32,6 +34,7 @@ export function NoteFormDialog({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isPrivate, setIsPrivate] = useState(false)
   const { userInfo } = useAuth()
+  const { t } = useTranslations(DICT_LANG_OPPORTUNITIES)
 
   // Determinar si el usuario es de ScaleUp basado en el contexto de autenticación
   const isUserScaleUp =
@@ -49,8 +52,8 @@ export function NoteFormDialog({
   const handleSubmit = async () => {
     if (!content.trim()) {
       toast({
-        title: "Error",
-        description: "El contenido de la nota no puede estar vacío",
+        title: t("notes.form.error_title"),
+        description: t("notes.form.content_required"),
         variant: "destructive",
       })
       return
@@ -76,8 +79,8 @@ export function NoteFormDialog({
 
       if (result) {
         toast({
-          title: "Nota agregada",
-          description: "La nota se ha agregado correctamente",
+          title: t("notes.form.success_title"),
+          description: t("notes.form.success_message"),
         })
         setContent("")
         setIsPrivate(false)
@@ -85,16 +88,16 @@ export function NoteFormDialog({
         onClose()
       } else {
         toast({
-          title: "Error",
-          description: "No se pudo agregar la nota. Verifica la consola para más detalles.",
+          title: t("notes.form.error_title"),
+          description: t("notes.form.error_message"),
           variant: "destructive",
         })
       }
     } catch (error) {
       console.error("Error al agregar nota:", error)
       toast({
-        title: "Error",
-        description: `Ocurrió un error al agregar la nota: ${error instanceof Error ? error.message : String(error)}`,
+        title: t("notes.form.error_title"),
+        description: `${t("notes.form.error_occurred")}: ${error instanceof Error ? error.message : String(error)}`,
         variant: "destructive",
       })
     } finally {
@@ -106,16 +109,16 @@ export function NoteFormDialog({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Agregar entrada a la reseña histórica</DialogTitle>
+          <DialogTitle>{t("notes.form.title")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="content">Contenido</Label>
+            <Label htmlFor="content">{t("notes.form.content_label")}</Label>
             <Textarea
               id="content"
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="Escribe el contenido de la nota..."
+              placeholder={t("notes.form.content_placeholder")}
               className="min-h-[120px]"
             />
           </div>
@@ -138,12 +141,12 @@ export function NoteFormDialog({
                 {isPrivate ? (
                   <>
                     <Lock className="h-4 w-4 mr-2 text-amber-500" />
-                    <span>Nota interna de ScaleUp (solo visible para ScaleUp)</span>
+                    <span>{t("notes.form.internal_note")}</span>
                   </>
                 ) : (
                   <>
                     <Globe className="h-4 w-4 mr-2 text-green-500" />
-                    <span>Nota pública (visible para todos)</span>
+                    <span>{t("notes.form.public_note")}</span>
                   </>
                 )}
               </Label>
@@ -152,10 +155,10 @@ export function NoteFormDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
-            Cancelar
+            {t("common.cancel")}
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? "Guardando..." : "Guardar nota"}
+            {isSubmitting ? t("notes.form.saving_button") : t("notes.form.save_button")}
           </Button>
         </DialogFooter>
       </DialogContent>

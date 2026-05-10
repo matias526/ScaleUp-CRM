@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useTaskService } from "@/lib/services/task-service-client"
 import { useTranslations } from "@/hooks/use-translations"
+import { DICT_LANG_OPPORTUNITIES } from "@/lib/constants/dict-lang-opportunities"
 import { DatePicker } from "@/components/ui/date-picker"
 import { Loader2 } from "lucide-react"
 import { supabase } from "@/lib/supabase/client"
@@ -59,7 +60,7 @@ export function TaskCreateDialog({
   const [partnerId, setPartnerId] = useState<string | undefined>(propPartnerId)
   const [techCompanyId, setTechCompanyId] = useState<string | undefined>(propTechCompanyId)
   const taskService = useTaskService()
-  const { t } = useTranslations()
+  const { t } = useTranslations(DICT_LANG_OPPORTUNITIES)
   
   // Códigos de roles con case sensitive correcto
   const ROLE_CODES = {
@@ -293,7 +294,7 @@ export function TaskCreateDialog({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>{t("tasks.create.title", "Crear Nueva Tarea")}</DialogTitle>
+          <DialogTitle>{t("tasks.create.title")}</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -303,10 +304,10 @@ export function TaskCreateDialog({
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("tasks.form.title", "Título")}</FormLabel>
+                  <FormLabel>{t("tasks.form.title")}</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder={t("tasks.form.title_placeholder", "Ingrese el título de la tarea")}
+                      placeholder={t("tasks.form.title_placeholder")}
                       {...field}
                     />
                   </FormControl>
@@ -320,10 +321,10 @@ export function TaskCreateDialog({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("tasks.form.description", "Descripción")}</FormLabel>
+                  <FormLabel>{t("tasks.form.description")}</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder={t("tasks.form.description_placeholder", "Ingrese una descripción detallada")}
+                      placeholder={t("tasks.form.description_placeholder")}
                       {...field}
                       value={field.value || ""}
                     />
@@ -339,18 +340,18 @@ export function TaskCreateDialog({
                 name="status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("tasks.form.status", "Estado")}</FormLabel>
+                    <FormLabel>{t("tasks.form.status")}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder={t("tasks.form.select_status", "Seleccione un estado")} />
+                          <SelectValue placeholder={t("tasks.form.select_status")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="pending">{t("tasks.status.pending", "Pendiente")}</SelectItem>
-                        <SelectItem value="in_progress">{t("tasks.status.in_progress", "En Progreso")}</SelectItem>
-                        <SelectItem value="completed">{t("tasks.status.completed", "Completada")}</SelectItem>
-                        <SelectItem value="cancelled">{t("tasks.status.cancelled", "Cancelada")}</SelectItem>
+                        <SelectItem value="pending">{t("tasks.status.pending")}</SelectItem>
+                        <SelectItem value="in_progress">{t("tasks.status.in_progress")}</SelectItem>
+                        <SelectItem value="completed">{t("tasks.status.completed")}</SelectItem>
+                        <SelectItem value="cancelled">{t("tasks.status.cancelled")}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -363,18 +364,18 @@ export function TaskCreateDialog({
                 name="priority"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("tasks.form.priority", "Prioridad")}</FormLabel>
+                    <FormLabel>{t("tasks.form.priority")}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder={t("tasks.form.select_priority", "Seleccione una prioridad")} />
+                          <SelectValue placeholder={t("tasks.form.select_priority")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="low">{t("tasks.priority.low", "Baja")}</SelectItem>
-                        <SelectItem value="medium">{t("tasks.priority.medium", "Media")}</SelectItem>
-                        <SelectItem value="high">{t("tasks.priority.high", "Alta")}</SelectItem>
-                        <SelectItem value="urgent">{t("tasks.priority.urgent", "Urgente")}</SelectItem>
+                        <SelectItem value="low">{t("tasks.priority.low")}</SelectItem>
+                        <SelectItem value="medium">{t("tasks.priority.medium")}</SelectItem>
+                        <SelectItem value="high">{t("tasks.priority.high")}</SelectItem>
+                        <SelectItem value="urgent">{t("tasks.priority.urgent")}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -389,11 +390,11 @@ export function TaskCreateDialog({
                 name="due_date"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>{t("tasks.form.due_date", "Fecha límite")}</FormLabel>
+                    <FormLabel>{t("tasks.form.due_date")}</FormLabel>
                     <DatePicker
                       date={field.value ? new Date(field.value) : undefined}
                       setDate={(date) => field.onChange(date)}
-                      placeholder={t("tasks.form.select_date", "Seleccione una fecha")}
+                      placeholder={t("tasks.form.select_date")}
                     />
                     <FormMessage />
                   </FormItem>
@@ -405,17 +406,17 @@ export function TaskCreateDialog({
                 name="assigned_to"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("tasks.form.assigned_to", "Asignado a")}</FormLabel>
+                    <FormLabel>{t("tasks.form.assigned_to")}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value || ""}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder={t("tasks.form.select_user", "Seleccione un usuario")} />
+                          <SelectValue placeholder={t("tasks.form.select_user")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {users.length === 0 ? (
                           <SelectItem value="no-users" disabled>
-                            No hay usuarios disponibles
+                            {t("tasks.form.no_users_available")}
                           </SelectItem>
                         ) : (
                           users.map((user) => (
@@ -438,17 +439,17 @@ export function TaskCreateDialog({
               name="task_type_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("tasks.form.task_type", "Tipo de tarea")}</FormLabel>
+                  <FormLabel>{t("tasks.form.task_type")}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value || ""}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder={t("tasks.form.select_task_type", "Seleccione un tipo de tarea")} />
+                        <SelectValue placeholder={t("tasks.form.select_task_type")} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {taskTypes.length === 0 ? (
                         <SelectItem value="no-types" disabled>
-                          No hay tipos de tareas disponibles
+                          {t("tasks.form.no_task_types_available")}
                         </SelectItem>
                       ) : (
                         taskTypes.map((type) => (
@@ -466,16 +467,16 @@ export function TaskCreateDialog({
 
             <div className="flex justify-end space-x-2 pt-4">
               <Button variant="outline" type="button" onClick={onClose}>
-                {t("common.cancel", "Cancelar")}
+                {t("common.cancel")}
               </Button>
               <Button type="submit" disabled={isLoading || isLoadingData}>
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {t("common.saving", "Guardando...")}
+                    {t("common.saving")}
                   </>
                 ) : (
-                  t("common.create", "Crear")
+                  t("common.create")
                 )}
               </Button>
             </div>
