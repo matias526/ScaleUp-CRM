@@ -1117,4 +1117,64 @@ export const DICT_LANG_OPPORTUNITIES = {
     en: "Create Contact",
     pt: "Criar Contato",
   },
+  "opportunities.detail.endCustomer": {
+    es: "Cliente final",
+    en: "End Customer",
+    pt: "Cliente final",
+  },
+  "opportunities.detail.responsableScaleup": {
+    es: "Responsable ScaleUp",
+    en: "ScaleUp Responsible",
+    pt: "Responsável ScaleUp",
+  },
+  "opportunities.detail.responsablePartner": {
+    es: "Responsable Partner",
+    en: "Partner Responsible",
+    pt: "Responsável Partner",
+  },
+  "opportunities.detail.prospect": {
+    es: "Prospecto",
+    en: "Prospect",
+    pt: "Prospecto",
+  },
+  "opportunities.detail.enterpriseProspect": {
+    es: "Empresa (Prospecto)",
+    en: "Company (Prospect)",
+    pt: "Empresa (Prospecto)",
+  },
+  "opportunities.detail.noAssigned": {
+    es: "No asignado",
+    en: "Not assigned",
+    pt: "Não atribuído",
+  },
+  "opportunities.detail.noDescription": {
+    es: "Sin descripción",
+    en: "No description",
+    pt: "Sem descrição",
+  },
+  "opportunities.detail.noSpecified": {
+    es: "No especificado",
+    en: "Not specified",
+    pt: "Não especificado",
+  },
+  "opportunities.detail.relatedTasks": {
+    es: "Tareas relacionadas",
+    en: "Related Tasks",
+    pt: "Tarefas relacionadas",
+  },
+  "opportunities.detail.notes": {
+    es: "Notas",
+    en: "Notes",
+    pt: "Notas",
+  },
+  "opportunities.detail.documents": {
+    es: "Documentos",
+    en: "Documents",
+    pt: "Documentos",
+  },
+  "opportunities.detail.quotes": {
+    es: "Presupuestos",
+    en: "Quotes",
+    pt: "Orçamentos",
+  },
 }

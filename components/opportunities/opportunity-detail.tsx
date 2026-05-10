@@ -244,8 +244,8 @@ function InlineEdit({
             : type === "number" && value
               ? formatDollarValue(value)
               : type === "select"
-                ? formatter(value) || placeholder || "No especificado"
-                : formatter(value) || placeholder || "No especificado"}
+                ? formatter(value) || placeholder || t("opportunities.detail.noSpecified")
+                : formatter(value) || placeholder || t("opportunities.detail.noSpecified")}
         </div>
         <Button
           variant="ghost"
@@ -366,8 +366,6 @@ interface OpportunityDetailProps {
 }
 
 export function OpportunityDetail({ opportunity: initialOpportunity }: OpportunityDetailProps) {
-  console.log("[v0] OpportunityDetail: Componente renderizado - iniciando")
-  
   const router = useRouter()
   const { userInfo } = useAuth()
   
@@ -377,14 +375,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
   // 1. OBTENER EL IDIOMA (Buscamos el lang del path de la URL)
   // Como usas useTranslations, necesitamos saber qué idioma pasarle a OpportunityQuotes
   const lang = (typeof window !== 'undefined' ? window.location.pathname.split('/')[1]?.toUpperCase() : 'es') as "es" | "en" | "pt";
-  const { t, language } = useTranslations(DICT_LANG_OPPORTUNITIES)
-  
-  console.log("[v0] OpportunityDetail: language =", language)
-  
-  // Log para mostrar el idioma que se está usando en las traducciones
-  useEffect(() => {
-    console.log("[v0] IDIOMA USER:", language)
-  }, [language])
+  const { t } = useTranslations(DICT_LANG_OPPORTUNITIES)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [opportunity, setOpportunity] = useState<any>(initialOpportunity)
@@ -1498,7 +1489,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                   ) : (
                     <div className="group">
                       <div className="flex items-start">
-                        <p className="text-gray-700 flex-grow">{opportunity?.description || "Sin descripción"}</p>
+                        <p className="text-gray-700 flex-grow">{opportunity?.description || t("opportunities.detail.noDescription")}</p>
                         {!isTechUser && (
                           <Button
                             variant="ghost"
@@ -1548,7 +1539,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                               <span className="ml-2">{opportunity.partner.name}</span>
                             </>
                           ) : (
-                            <span className="text-gray-500">No especificado</span>
+                            <span className="text-gray-500">{t("opportunities.detail.noSpecified")}</span>
                           )}
                         </div>
                         <DialogTrigger asChild>
@@ -1623,7 +1614,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                   <div>
                     <h3 className="text-sm font-medium text-gray-500 mb-1 flex items-center">
                       <Building2 className="h-4 w-4 mr-1" />
-                      Cliente final
+                      {t("opportunities.detail.endCustomer")}
                     </h3>
                     <span>{opportunity?.end_customer?.name || "No especificado"}</span>
                   </div>
@@ -1820,15 +1811,15 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                   </div>
 
                   {/* Responsable de ScaleUp */}
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-1 flex items-center">
-                      <User className="h-4 w-4 mr-1" />
-                      Responsable ScaleUp
+                  <div className="border-l-4 border-blue-400 pl-4">
+                    <h3 className="text-sm font-medium text-gray-500 mb-3 flex items-center">
+                      <User className="h-4 w-4 mr-2" />
+                      {t("opportunities.detail.responsableScaleup")}
                     </h3>
                     <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
                       <div className="flex items-center group">
                         <span className="flex-grow">
-                          {assignedUser ? `${assignedUser.first_name} ${assignedUser.last_name}` : "No asignado"}
+                          {assignedUser ? `${assignedUser.first_name} ${assignedUser.last_name}` : t("opportunities.detail.noAssigned")}
                         </span>
                         {!isTechUser && (
                           <DialogTrigger asChild>
@@ -1877,17 +1868,17 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                   </div>
 
                   {/* Responsable del Partner */}
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-1 flex items-center">
-                      <User className="h-4 w-4 mr-1" />
-                      Responsable Partner
+                  <div className="border-l-4 border-purple-400 pl-4">
+                    <h3 className="text-sm font-medium text-gray-500 mb-3 flex items-center">
+                      <User className="h-4 w-4 mr-2" />
+                      {t("opportunities.detail.responsablePartner")}
                     </h3>
                     <Dialog open={isPartnerResponsibleDialogOpen} onOpenChange={setIsPartnerResponsibleDialogOpen}>
                       <div className="flex items-center group">
                         <span className="flex-grow">
                           {partnerResponsible
                             ? `${partnerResponsible.first_name} ${partnerResponsible.last_name}`
-                            : "No asignado"}
+                            : t("opportunities.detail.noAssigned")}
                         </span>
                         {!isTechUser && (
                           <DialogTrigger asChild>
@@ -2035,7 +2026,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                     <Building2 className="h-4 w-4 text-blue-600 flex-shrink-0" />
                     <div className="flex-1">
                       <p className="text-[10px] uppercase tracking-wider font-semibold text-slate-600 mb-1">
-                        Empresa (Prospecto)
+                        {t("opportunities.detail.enterpriseProspect")}
                       </p>
                       <p className="text-sm font-bold text-slate-900">{opportunity.prospect.name}</p>
                     </div>

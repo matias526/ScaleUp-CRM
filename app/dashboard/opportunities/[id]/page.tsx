@@ -20,8 +20,6 @@ export default async function OpportunityPage({ params }: OpportunityPageProps) 
   }
 
   try {
-    console.log("[v0] Oportunidad [id]/page.tsx: Intentando obtener oportunidad con ID:", id)
-
     const supabase = createServerClient()
 
     // 3. Verificamos existencia
