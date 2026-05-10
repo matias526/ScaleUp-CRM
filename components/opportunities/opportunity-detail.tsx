@@ -515,7 +515,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
       await updateField("estimated_close_date", dateEditValue)
       handleDateCancelEditing()
     } catch (error) {
-      console.error("Error al guardar los cambios:", error)
+      console.error(t("opportunities.detail.errorSaving"), error)
     } finally {
       setIsSubmitting(false)
     }
@@ -580,7 +580,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
   // Función para cargar partners que trabajan con la tech company
   const loadAvailablePartners = async (techCompanyId: string) => {
     if (!techCompanyId) {
-      logDebug("No se proporcionó tech company ID para cargar partners")
+      logDebug(t("opportunities.detail.noCurrencyProvided"))
       return
     }
 
@@ -600,7 +600,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
       }
 
       if (!partnerTechData || partnerTechData.length === 0) {
-        logDebug("No se encontraron partners asociados con esta tech company")
+        logDebug(t("opportunities.detail.noPartnerTechCompany"))
         setAvailablePartners([])
         return
       }
@@ -705,7 +705,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
             setIsLoadingUser(false)
           }
         } else {
-          logDebug("No hay usuario asignado para esta oportunidad")
+          logDebug(t("opportunities.detail.noAssignedUser"))
         }
 
         // Cargar responsable del partner si existe
@@ -729,7 +729,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
             logDebug(`Error al cargar responsable del partner: ${errorMessage}`)
           }
         } else {
-          logDebug("No hay responsable del partner para esta oportunidad")
+          logDebug(t("opportunities.detail.noAssignedPartner"))
         }
 
         // Cargar usuarios de ScaleUp para el selector
@@ -805,7 +805,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
 
       if (error) throw error
 
-      logDebug("Oportunidad eliminada correctamente")
+      logDebug(t("opportunities.detail.deletedSuccessfully"))
 
       toast({
         title: "Oportunidad eliminada",
@@ -1023,7 +1023,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
     if (!selectedScaleupUser) {
       toast({
         title: "Error",
-        description: "Debes seleccionar un usuario",
+        description: t("opportunities.detail.mustSelectUser"),
         variant: "destructive",
       })
       return
@@ -1039,7 +1039,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
     if (!selectedPartnerUser) {
       toast({
         title: "Error",
-        description: "Debes seleccionar un usuario",
+        description: t("opportunities.detail.mustSelectUser"),
         variant: "destructive",
       })
       return
@@ -1055,7 +1055,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
     if (!selectedPartnerId) {
       toast({
         title: "Error",
-        description: "Debes seleccionar un partner",
+        description: t("opportunities.detail.mustSelectPartner"),
         variant: "destructive",
       })
       return
@@ -1374,14 +1374,14 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                         <Textarea
                           value={rejectionReason}
                           onChange={(e) => setRejectionReason(e.target.value)}
-                          placeholder="Motivo del rechazo"
+                          placeholder=t("opportunities.detail.rejectReason")
                           className="w-full min-h-[100px]"
                         />
                       </div>
                       <AlertDialogFooter>
                         <AlertDialogCancel onClick={() => setRejectionReason("")}>Cancelar</AlertDialogCancel>
                         <AlertDialogAction onClick={handleRejectOpportunity} disabled={isSaving || !rejectionReason.trim()}>
-                          {isSaving ? "Procesando..." : "Rechazar"}
+                          {isSaving ? t("opportunities.detail.processing") : t("opportunities.detail.reject")}
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
@@ -1451,7 +1451,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                 ? opportunity.stage.code
                   ? opportunity.stage.code.replace(/_/g, " ").replace(/\b\w/g, (l: any) => l.toUpperCase())
                   : opportunity.stage.name
-                : "Sin etapa"}
+                : t("opportunities.detail.noStage")}
             </Badge>
             {opportunity?.validation_status === "validated" ? (
               <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Validada</Badge>
@@ -1604,7 +1604,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                             onClick={handleAssignPartner}
                             disabled={isSaving || !selectedPartnerId || isLoadingPartners}
                           >
-                            {isSaving ? "Guardando..." : "Guardar"}
+                            {isSaving ? t("opportunities.detail.saving") : "Guardar"}
                           </Button>
                         </DialogFooter>
                       </DialogContent>
@@ -1676,7 +1676,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                             onEdit={() => { }}
                             onCancel={() => cancelEditing("estimated_value")}
                             type="number"
-                            placeholder="Valor estimado"
+                            placeholder=t("opportunities.detail.estimatedValue")
                           />
                         ) : (
                           <InlineEdit
@@ -1781,7 +1781,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                             ? stage.code.replace(/_/g, " ").replace(/\b\w/g, (l: any) => l.toUpperCase())
                             : stage.name,
                         }))}
-                        placeholder="Seleccionar etapa"
+                        placeholder=t("opportunities.detail.selectStage")
                       />
                     ) : (
                       <InlineEdit
@@ -1797,14 +1797,14 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                             ? stage.code.replace(/_/g, " ").replace(/\b\w/g, (l: any) => l.toUpperCase())
                             : stage.name,
                         }))}
-                        placeholder="Sin etapa"
+                        placeholder=t("opportunities.detail.noStage")
                         formatter={(value) => {
                           const selectedStage = stages.find((stage) => stage.id === value)
                           return selectedStage
                             ? selectedStage.code
                               ? selectedStage.code.replace(/_/g, " ").replace(/\b\w/g, (l: any) => l.toUpperCase())
                               : selectedStage.name
-                            : "Sin etapa"
+                            : t("opportunities.detail.noStage")
                         }}
                       />
                     )}
@@ -1860,7 +1860,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                             Cancelar
                           </Button>
                           <Button onClick={handleAssignScaleupUser} disabled={isSaving || !selectedScaleupUser}>
-                            {isSaving ? "Guardando..." : "Guardar"}
+                            {isSaving ? t("opportunities.detail.saving") : "Guardar"}
                           </Button>
                         </DialogFooter>
                       </DialogContent>
@@ -1919,7 +1919,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                             Cancelar
                           </Button>
                           <Button onClick={handleAssignPartnerUser} disabled={isSaving || !selectedPartnerUser}>
-                            {isSaving ? "Guardando..." : "Guardar"}
+                            {isSaving ? t("opportunities.detail.saving") : "Guardar"}
                           </Button>
                         </DialogFooter>
                       </DialogContent>
@@ -1934,7 +1934,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                     <span>
                       {opportunity?.creator
                         ? `${opportunity.creator.first_name} ${opportunity.creator.last_name}`
-                        : "Usuario desconocido"}
+                        : t("opportunities.detail.unknownUser")}
                     </span>
                   </div>
 
@@ -2060,7 +2060,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
               title={t("opp.table.estimatedCloseDate")}
               description={t(
                 "opportunities.related_tasks_description",
-                "Gestiona las tareas relacionadas a esta oportunidad",
+                t("opportunities.detail.gestureRelatedTasks"),
               )}
             />
           </div>
@@ -2159,7 +2159,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                         }`}
                     >
                       <div className="font-medium text-sm">{prospect.name}</div>
-                      <div className="text-xs text-gray-500">{prospect.website || "Sin website"}</div>
+                      <div className="text-xs text-gray-500">{prospect.website || t("opportunities.detail.noWebsite")}</div>
                     </button>
                   ))
                 ) : (
@@ -2319,7 +2319,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                               className="w-full text-left px-3 py-2 hover:bg-blue-50 border-b border-gray-100 last:border-b-0 transition-colors"
                             >
                               <div className="font-medium text-sm">{prospect.name}</div>
-                              <div className="text-xs text-gray-500">{prospect.website || "Sin website"}</div>
+                              <div className="text-xs text-gray-500">{prospect.website || t("opportunities.detail.noWebsite")}</div>
                             </button>
                           ))}
                         </div>
@@ -2654,7 +2654,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                       contactId,
                       opportunityId: opportunity?.id,
                     })
-                    throw new Error("No se pudieron validar los datos necesarios para guardar")
+                    throw new Error(t("opportunities.detail.dataValidation"))
                   }
                 } catch (err) {
                   console.error("[v0] Error saving relationship:", err)
