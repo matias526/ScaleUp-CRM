@@ -1325,4 +1325,25 @@ export const DICT_LANG_OPPORTUNITIES = {
     en: "Unknown",
     pt: "Desconhecida",
   },
+  // Task status translations (these were missing!)
+  "tasks.status.pending": {
+    es: "Pendiente",
+    en: "Pending",
+    pt: "Pendente",
+  },
+  "tasks.status.in_progress": {
+    es: "En progreso",
+    en: "In progress",
+    pt: "Em progresso",
+  },
+  "tasks.status.completed": {
+    es: "Completada",
+    en: "Completed",
+    pt: "Concluída",
+  },
+  "tasks.status.cancelled": {
+    es: "Cancelada",
+    en: "Cancelled",
+    pt: "Cancelada",
+  },
 }
