@@ -1676,7 +1676,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                             onEdit={() => { }}
                             onCancel={() => cancelEditing("estimated_value")}
                             type="number"
-                            placeholder=t("opportunities.detail.estimatedValue")
+                            placeholder={t("opportunities.detail.estimatedValue")}
                           />
                         ) : (
                           <InlineEdit
@@ -1781,7 +1781,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                             ? stage.code.replace(/_/g, " ").replace(/\b\w/g, (l: any) => l.toUpperCase())
                             : stage.name,
                         }))}
-                        placeholder=t("opportunities.detail.selectStage")
+                        placeholder={t("opportunities.detail.selectStage")}
                       />
                     ) : (
                       <InlineEdit
@@ -1797,7 +1797,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                             ? stage.code.replace(/_/g, " ").replace(/\b\w/g, (l: any) => l.toUpperCase())
                             : stage.name,
                         }))}
-                        placeholder=t("opportunities.detail.noStage")
+                        placeholder={t("opportunities.detail.noStage")}
                         formatter={(value) => {
                           const selectedStage = stages.find((stage) => stage.id === value)
                           return selectedStage
