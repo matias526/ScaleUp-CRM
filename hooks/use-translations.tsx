@@ -12,6 +12,8 @@ export function useTranslations(localDictionary?: Record<string, Record<string, 
   const [retryCount, setRetryCount] = useState<number>(0)
   const { user } = useAuth()
 
+  console.log("[v0] useTranslations initialized with language:", "es", "hasLocalDictionary:", !!localDictionary)
+
   // Función para obtener el idioma preferido del usuario desde la base de datos
   const fetchUserLanguagePreference = useCallback(async (userId: string) => {
     try {
@@ -153,13 +155,16 @@ export function useTranslations(localDictionary?: Record<string, Record<string, 
       if (localDictionary && localDictionary[key]) {
         const translation = localDictionary[key][language]
         if (translation) {
+          console.log("[v0] Found in localDictionary:", key, "=>", translation, "lang:", language)
           return translation
+        } else {
+          console.log("[v0] Key exists in localDictionary but no translation for language:", key, "lang:", language)
         }
       }
 
       // 2. Si no está en el diccionario local, buscar en la base de datos
       if (!isLoaded || !TranslationService.isInitialized) {
-        console.log(`⚠️ [useTranslations] Traducciones no disponibles para: ${key}`)
+        console.log(`⚠️ [useTranslations] Traducciones no disponibles para: ${key}, isLoaded: ${isLoaded}, returning: ${defaultValue || key}`)
         return defaultValue || key
       }
 
