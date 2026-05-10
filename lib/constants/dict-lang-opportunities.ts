@@ -1177,4 +1177,269 @@ export const DICT_LANG_OPPORTUNITIES = {
     en: "Quotes",
     pt: "Orçamentos",
   },
+  "opportunities.detail.createdDate": {
+    es: "Fecha de creación",
+    en: "Created Date",
+    pt: "Data de criação",
+  },
+  "opportunities.detail.createdBy": {
+    es: "Creado por",
+    en: "Created by",
+    pt: "Criado por",
+  },
+  "opportunities.detail.selectStage": {
+    es: "Seleccionar etapa",
+    en: "Select stage",
+    pt: "Selecionar etapa",
+  },
+  "opportunities.detail.estimatedCloseDate": {
+    es: "Fecha estimada de cierre",
+    en: "Estimated close date",
+    pt: "Data estimada de fechamento",
+  },
+  "opportunities.detail.estimatedValue": {
+    es: "Valor estimado",
+    en: "Estimated value",
+    pt: "Valor estimado",
+  },
+  "opportunities.detail.techCompany": {
+    es: "Empresa tecnológica",
+    en: "Tech company",
+    pt: "Empresa tecnológica",
+  },
+  "opportunities.detail.assignPartnerResponsible": {
+    es: "Asignar responsable del Partner",
+    en: "Assign partner responsible",
+    pt: "Atribuir responsável do Partner",
+  },
+  "opportunities.detail.selectPartnerUser": {
+    es: "Selecciona el usuario del Partner que será responsable de esta oportunidad.",
+    en: "Select the partner user who will be responsible for this opportunity.",
+    pt: "Selecione o usuário do Partner que será responsável por esta oportunidade.",
+  },
+  "opportunities.detail.assignScaleupResponsible": {
+    es: "Asignar responsable de ScaleUp",
+    en: "Assign ScaleUp responsible",
+    pt: "Atribuir responsável ScaleUp",
+  },
+  "opportunities.detail.selectScaleupUser": {
+    es: "Selecciona el usuario de ScaleUp que será responsable de esta oportunidad.",
+    en: "Select the ScaleUp user who will be responsible for this opportunity.",
+    pt: "Selecione o usuário de ScaleUp que será responsável por esta oportunidade.",
+  },
+  "opportunities.detail.scaleupUser": {
+    es: "Usuario de ScaleUp",
+    en: "ScaleUp user",
+    pt: "Usuário ScaleUp",
+  },
+  "opportunities.detail.stage": {
+    es: "Etapa",
+    en: "Stage",
+    pt: "Estágio",
+  },
+  "opportunities.detail.noStage": {
+    es: "Sin etapa",
+    en: "No stage",
+    pt: "Sem estágio",
+  },
+  "opportunities.detail.gestureRelatedTasks": {
+    es: "Gestiona las tareas relacionadas a esta oportunidad",
+    en: "Manage tasks related to this opportunity",
+    pt: "Gerenciar tarefas relacionadas a esta oportunidade",
+  },
+  "opportunities.detail.rejectReason": {
+    es: "Motivo del rechazo",
+    en: "Rejection reason",
+    pt: "Motivo da rejeição",
+  },
+  "opportunities.detail.reject": {
+    es: "Rechazar",
+    en: "Reject",
+    pt: "Rejeitar",
+  },
+  "opportunities.detail.validate": {
+    es: "Validar",
+    en: "Validate",
+    pt: "Validar",
+  },
+  "opportunities.detail.delete": {
+    es: "Eliminar",
+    en: "Delete",
+    pt: "Eliminar",
+  },
+  "opportunities.detail.processing": {
+    es: "Procesando...",
+    en: "Processing...",
+    pt: "Processando...",
+  },
+  "opportunities.detail.saving": {
+    es: "Guardando...",
+    en: "Saving...",
+    pt: "Salvando...",
+  },
+  "opportunities.detail.validatedSuccessfully": {
+    es: "Oportunidad validada correctamente",
+    en: "Opportunity validated successfully",
+    pt: "Oportunidade validada com sucesso",
+  },
+  "opportunities.detail.rejectedSuccessfully": {
+    es: "Oportunidad rechazada correctamente",
+    en: "Opportunity rejected successfully",
+    pt: "Oportunidade rejeitada com sucesso",
+  },
+  "opportunities.detail.deletedSuccessfully": {
+    es: "Oportunidad eliminada correctamente",
+    en: "Opportunity deleted successfully",
+    pt: "Oportunidade deletada com sucesso",
+  },
+  "opportunities.detail.error": {
+    es: "Error",
+    en: "Error",
+    pt: "Erro",
+  },
+  "opportunities.detail.errorSaving": {
+    es: "Error al guardar los cambios:",
+    en: "Error saving changes:",
+    pt: "Erro ao salvar alterações:",
+  },
+  "opportunities.detail.selectUser": {
+    es: "Selecciona un usuario",
+    en: "Select a user",
+    pt: "Selecione um usuário",
+  },
+  "opportunities.detail.mustSelectUser": {
+    es: "Debes seleccionar un usuario",
+    en: "You must select a user",
+    pt: "Você deve selecionar um usuário",
+  },
+  "opportunities.detail.mustSelectPartner": {
+    es: "Debes seleccionar un partner",
+    en: "You must select a partner",
+    pt: "Você deve selecionar um partner",
+  },
+  "opportunities.detail.noAssignedPartner": {
+    es: "No hay responsable del partner para esta oportunidad",
+    en: "No partner responsible for this opportunity",
+    pt: "Sem responsável do partner para esta oportunidade",
+  },
+  "opportunities.detail.noAssignedUser": {
+    es: "No hay usuario asignado para esta oportunidad",
+    en: "No user assigned for this opportunity",
+    pt: "Nenhum usuário atribuído para esta oportunidade",
+  },
+  "opportunities.detail.unknownUser": {
+    es: "Usuario desconocido",
+    en: "Unknown user",
+    pt: "Usuário desconhecido",
+  },
+  "opportunities.detail.noPartnerTechCompany": {
+    es: "No se encontraron partners asociados con esta tech company",
+    en: "No partners found associated with this tech company",
+    pt: "Nenhum partner encontrado associado a esta empresa tecnológica",
+  },
+  "opportunities.detail.noCurrencyProvided": {
+    es: "No se proporcionó tech company ID para cargar partners",
+    en: "No tech company ID provided to load partners",
+    pt: "Nenhuma ID de empresa tecnológica fornecida para carregar partners",
+  },
+  "opportunities.detail.website": {
+    es: "Sitio Web",
+    en: "Website",
+    pt: "Site",
+  },
+  "opportunities.detail.noWebsite": {
+    es: "Sin website",
+    en: "No website",
+    pt: "Sem website",
+  },
+  "opportunities.detail.country": {
+    es: "País",
+    en: "Country",
+    pt: "País",
+  },
+  "opportunities.detail.loadingInitialData": {
+    es: "Cargando datos iniciales para detalle de oportunidad",
+    en: "Loading initial data for opportunity detail",
+    pt: "Carregando dados iniciais para detalhes de oportunidade",
+  },
+  "opportunities.detail.loadingStages": {
+    es: "Cargando etapas del pipeline...",
+    en: "Loading pipeline stages...",
+    pt: "Carregando etapas do pipeline...",
+  },
+  "opportunities.detail.loadingUser": {
+    es: "Cargando usuario actual...",
+    en: "Loading current user...",
+    pt: "Carregando usuário atual...",
+  },
+  "opportunities.detail.componentMounted": {
+    es: "Componente OpportunityDetail montado",
+    en: "OpportunityDetail component mounted",
+    pt: "Componente OpportunityDetail montado",
+  },
+  "opportunities.detail.dataValidation": {
+    es: "No se pudieron validar los datos necesarios para guardar",
+    en: "Could not validate necessary data to save",
+    pt: "Não foi possível validar os dados necessários para salvar",
+  },
+  "opportunities.detail.contact": {
+    es: "Contacto",
+    en: "Contact",
+    pt: "Contato",
+  },
+  "opportunities.detail.companyName": {
+    es: "Nombre de la empresa",
+    en: "Company name",
+    pt: "Nome da empresa",
+  },
+  "opportunities.detail.firstName": {
+    es: "Nombre",
+    en: "First name",
+    pt: "Nome",
+  },
+  "opportunities.detail.lastName": {
+    es: "Apellido",
+    en: "Last name",
+    pt: "Sobrenome",
+  },
+  "opportunities.detail.unsuccessfulDelete": {
+    es: "No se pudo eliminar la oportunidad",
+    en: "Could not delete the opportunity",
+    pt: "Não foi possível deletar a oportunidade",
+  },
+  "opportunities.detail.unsuccessfulReject": {
+    es: "No se pudo rechazar la oportunidad",
+    en: "Could not reject the opportunity",
+    pt: "Não foi possível rejeitar a oportunidade",
+  },
+  "opportunities.detail.unsuccessfulValidate": {
+    es: "No se pudo validar la oportunidad",
+    en: "Could not validate the opportunity",
+    pt: "Não foi possível validar a oportunidade",
+  },
+  "opportunities.detail.unsuccessfulContact": {
+    es: "No se pudo crear el contacto",
+    en: "Could not create contact",
+    pt: "Não foi possível criar contato",
+  },
+  "opportunities.detail.unsuccessfulProspect": {
+    es: "No se pudo crear el prospect partner",
+    en: "Could not create prospect partner",
+    pt: "Não foi possível criar prospect partner",
+  },
+  "opportunities.detail.unsuccessfulNote": {
+    es: "No se pudo crear la nota",
+    en: "Could not create note",
+    pt: "Não foi possível criar nota",
+  },
+  "opportunities.detail.unsuccessfulCurrentUser": {
+    es: "No se pudo identificar al usuario actual",
+    en: "Could not identify current user",
+    pt: "Não foi possível identificar o usuário atual",
+  },
+  "opportunities.detail.unsuccessfulGetCurrentUser": {
+    es: "No se pudo obtener el usuario actual",
+    en: "Could not get current user",
+    pt: "Não foi possível obter o usuário atual",
+  },
 }
