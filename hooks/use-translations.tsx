@@ -153,12 +153,14 @@ export function useTranslations(localDictionary?: Record<string, Record<string, 
       if (localDictionary && localDictionary[key]) {
         const translation = localDictionary[key][language]
         if (translation) {
+          console.log(`[v0] T() - Found "${key}" in localDict:`, translation)
           return translation
         }
       }
 
       // 2. Si no está en diccionario local, buscar en la base de datos
       if (!isLoaded || !TranslationService.isInitialized) {
+        console.log(`[v0] T() - Key "${key}" not found in localDict, isLoaded=${isLoaded}, returning key`)
         return defaultValue || key
       }
 
