@@ -1442,4 +1442,124 @@ export const DICT_LANG_OPPORTUNITIES = {
     en: "Could not get current user",
     pt: "Não foi possível obter o usuário atual",
   },
+  "opportunities.detail.noFound": {
+    es: "No se encontró la oportunidad",
+    en: "Opportunity not found",
+    pt: "Oportunidade não encontrada",
+  },
+  "opportunities.detail.back": {
+    es: "Volver",
+    en: "Back",
+    pt: "Voltar",
+  },
+  "opportunities.detail.viewEndCustomerInfo": {
+    es: "Ver info Cliente Final",
+    en: "View End Customer Info",
+    pt: "Ver Informações do Cliente Final",
+  },
+  "opportunities.detail.rejectTitle": {
+    es: "Rechazar oportunidad",
+    en: "Reject opportunity",
+    pt: "Rejeitar oportunidade",
+  },
+  "opportunities.detail.selectRejectReason": {
+    es: "Por favor, indica el motivo del rechazo de esta oportunidad.",
+    en: "Please indicate the reason for rejecting this opportunity.",
+    pt: "Por favor, indique o motivo para rejeitar esta oportunidade.",
+  },
+  "opportunities.detail.areYouSure": {
+    es: "¿Estás seguro?",
+    en: "Are you sure?",
+    pt: "Tem certeza?",
+  },
+  "opportunities.detail.deleteWarning": {
+    es: "Esta acción no se puede deshacer. Se eliminará permanentemente la oportunidad.",
+    en: "This action cannot be undone. The opportunity will be permanently deleted.",
+    pt: "Esta ação não pode ser desfeita. A oportunidade será deletada permanentemente.",
+  },
+  "opportunities.detail.deleting": {
+    es: "Eliminando...",
+    en: "Deleting...",
+    pt: "Deletando...",
+  },
+  "opportunities.detail.opportunityTitle": {
+    es: "Título de la oportunidad",
+    en: "Opportunity title",
+    pt: "Título da oportunidade",
+  },
+  "opportunities.detail.validated": {
+    es: "Validada",
+    en: "Validated",
+    pt: "Validada",
+  },
+  "opportunities.detail.rejectedStatus": {
+    es: "Rechazada",
+    en: "Rejected",
+    pt: "Rejeitada",
+  },
+  "opportunities.detail.pendingValidation": {
+    es: "Pendiente de validación",
+    en: "Pending validation",
+    pt: "Pendente de validação",
+  },
+  "opportunities.detail.opportunityDetails": {
+    es: "Detalles de la oportunidad",
+    en: "Opportunity Details",
+    pt: "Detalhes da Oportunidade",
+  },
+  "opportunities.detail.description": {
+    es: "Descripción",
+    en: "Description",
+    pt: "Descrição",
+  },
+  "opportunities.detail.opportunityDescription": {
+    es: "Descripción de la oportunidad",
+    en: "Opportunity description",
+    pt: "Descrição da oportunidade",
+  },
+  "opportunities.detail.notSpecified": {
+    es: "No especificado",
+    en: "Not specified",
+    pt: "Não especificado",
+  },
+  "opportunities.detail.partner": {
+    es: "Partner",
+    en: "Partner",
+    pt: "Partner",
+  },
+  "opportunities.detail.assignPartner": {
+    es: "Asignar Partner",
+    en: "Assign Partner",
+    pt: "Atribuir Partner",
+  },
+  "opportunities.detail.selectPartnerForOpportunity": {
+    es: "Selecciona el partner que trabajará en esta oportunidad.",
+    en: "Select the partner who will work on this opportunity.",
+    pt: "Selecione o partner que trabalhará nesta oportunidade.",
+  },
+  "opportunities.detail.loadingPartners": {
+    es: "Cargando partners...",
+    en: "Loading partners...",
+    pt: "Carregando partners...",
+  },
+  "opportunities.detail.selectPartnerPlaceholder": {
+    es: "Selecciona un partner",
+    en: "Select a partner",
+    pt: "Selecione um partner",
+  },
+  "opportunities.detail.noPartnersAvailable": {
+    es: "No hay partners disponibles para esta tech company",
+    en: "No partners available for this tech company",
+    pt: "Nenhum partner disponível para esta empresa tecnológica",
+  },
+  "opportunities.detail.save": {
+    es: "Guardar",
+    en: "Save",
+    pt: "Salvar",
+  },
+  "opportunities.detail.cancel": {
+    es: "Cancelar",
+    en: "Cancel",
+    pt: "Cancelar",
+  },
 }

@@ -1288,7 +1288,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
   }
 
   if (!opportunity) {
-    return <div className="p-4 bg-amber-50 text-amber-800 rounded-md">No se encontró la oportunidad</div>
+    return <div className="p-4 bg-amber-50 text-amber-800 rounded-md">{t("opportunities.detail.noFound")}</div>
   }
 
   return (
@@ -1298,7 +1298,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
       <div className="flex items-center justify-between">
         <Button variant="outline" size="sm" onClick={() => router.push("/dashboard/opportunities")}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Volver
+          {t("opportunities.detail.back")}
         </Button>
 
         <div className="flex space-x-2">
@@ -1315,7 +1315,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                     onClick={() => setShowEndCustomerInfo(true)}
                   >
                     <Building2 className="h-4 w-4 mr-1" />
-                    Ver info Cliente Final
+                    {t("opportunities.detail.viewEndCustomerInfo")}
                   </Button>
 
                   <Button
@@ -1349,7 +1349,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                     ) : (
                       <Check className="h-4 w-4 mr-1" />
                     )}
-                    Validar
+                    {t("opportunities.detail.validate")}
                   </Button>
 
                   <AlertDialog open={isRejectionDialogOpen} onOpenChange={setIsRejectionDialogOpen}>
@@ -1360,14 +1360,14 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                         className="bg-red-50 text-red-600 hover:bg-red-100 border-red-200"
                       >
                         <X className="mr-2 h-4 w-4" />
-                        Rechazar
+                        {t("opportunities.detail.reject")}
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Rechazar oportunidad</AlertDialogTitle>
+                        <AlertDialogTitle>{t("opportunities.detail.rejectTitle")}</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Por favor, indica el motivo del rechazo de esta oportunidad.
+                          {t("opportunities.detail.selectRejectReason")}
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <div className="py-4">
@@ -1379,7 +1379,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                         />
                       </div>
                       <AlertDialogFooter>
-                        <AlertDialogCancel onClick={() => setRejectionReason("")}>Cancelar</AlertDialogCancel>
+                        <AlertDialogCancel onClick={() => setRejectionReason("")}>{t("opportunities.detail.cancel")}</AlertDialogCancel>
                         <AlertDialogAction onClick={handleRejectOpportunity} disabled={isSaving || !rejectionReason.trim()}>
                           {isSaving ? t("opportunities.detail.processing") : t("opportunities.detail.reject")}
                         </AlertDialogAction>
@@ -1393,20 +1393,20 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                 <AlertDialogTrigger asChild>
                   <Button variant="destructive" size="sm">
                     <Trash className="mr-2 h-4 w-4" />
-                    Eliminar
+                    {t("opportunities.detail.delete")}
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                    <AlertDialogTitle>{t("opportunities.detail.areYouSure")}</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Esta acción no se puede deshacer. Se eliminará permanentemente la oportunidad.
+                      {t("opportunities.detail.deleteWarning")}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogCancel>{t("opportunities.detail.cancel")}</AlertDialogCancel>
                     <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
-                      {isDeleting ? "Eliminando..." : "Eliminar"}
+                      {isDeleting ? t("opportunities.detail.deleting") : t("opportunities.detail.delete")}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
@@ -1454,12 +1454,12 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                 : t("opportunities.detail.noStage")}
             </Badge>
             {opportunity?.validation_status === "validated" ? (
-              <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Validada</Badge>
+              <Badge className="bg-green-100 text-green-800 hover:bg-green-200">{t("opportunities.detail.validated")}</Badge>
             ) : opportunity?.validation_status === "rejected" ? (
-              <Badge className="bg-red-100 text-red-800 hover:bg-red-200">Rechazada</Badge>
+              <Badge className="bg-red-100 text-red-800 hover:bg-red-200">{t("opportunities.detail.rejectedStatus")}</Badge>
             ) : (
               <Badge variant="outline" className="bg-amber-50 text-amber-800 hover:bg-amber-100">
-                Pendiente de validación
+                {t("opportunities.detail.pendingValidation")}
               </Badge>
             )}
           </div>
@@ -1470,12 +1470,12 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
         <div className="md:col-span-2 space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Detalles de la oportunidad</CardTitle>
+              <CardTitle className="text-lg">{t("opportunities.detail.opportunityDetails")}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">Descripción</h3>
+                  <h3 className="text-sm font-medium text-gray-500 mb-1">{t("opportunities.detail.description")}</h3>
                   {editMode.description ? (
                     <InlineEdit
                       value={opportunity?.description}
@@ -1509,7 +1509,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                   <div>
                     <h3 className="text-sm font-medium text-gray-500 mb-1 flex items-center">
                       <Building2 className="h-4 w-4 mr-1" />
-                      Empresa tecnológica
+                      {t("opportunities.detail.techCompany")}
                     </h3>
                     <div className="flex items-center">
                       <OrganizationAvatar
@@ -1517,14 +1517,14 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                         imageUrl={opportunity?.tech_company?.logo_url}
                         size="sm"
                       />
-                      <span className="ml-2">{opportunity?.tech_company?.name || "No especificada"}</span>
+                      <span className="ml-2">{opportunity?.tech_company?.name || t("opportunities.detail.notSpecified")}</span>
                     </div>
                   </div>
 
                   <div>
                     <h3 className="text-sm font-medium text-gray-500 mb-1 flex items-center">
                       <Building2 className="h-4 w-4 mr-1" />
-                      Partner
+                      {t("opportunities.detail.partner")}
                     </h3>
                     <Dialog open={isPartnerAssignDialogOpen} onOpenChange={setIsPartnerAssignDialogOpen}>
                       <div className="flex items-center group">
@@ -1560,27 +1560,27 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                       </div>
                       <DialogContent>
                         <DialogHeader>
-                          <DialogTitle>Asignar Partner</DialogTitle>
+                          <DialogTitle>{t("opportunities.detail.assignPartner")}</DialogTitle>
                           <DialogDescription>
-                            Selecciona el partner que trabajará en esta oportunidad.
+                            {t("opportunities.detail.selectPartnerForOpportunity")}
                           </DialogDescription>
                         </DialogHeader>
                         <div className="py-4">
-                          <Label htmlFor="partner-select">Partner</Label>
+                          <Label htmlFor="partner-select">{t("opportunities.detail.partner")}</Label>
                           {isLoadingPartners ? (
                             <div className="flex items-center justify-center py-4">
                               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                              <span className="ml-2">Cargando partners...</span>
+                              <span className="ml-2">{t("opportunities.detail.loadingPartners")}</span>
                             </div>
                           ) : (
                             <Select value={selectedPartnerId} onValueChange={setSelectedPartnerId}>
                               <SelectTrigger id="partner-select">
-                                <SelectValue placeholder="Selecciona un partner" />
+                                <SelectValue placeholder={t("opportunities.detail.selectPartnerPlaceholder")} />
                               </SelectTrigger>
                               <SelectContent>
                                 {availablePartners.length === 0 ? (
                                   <div className="p-2 text-sm text-gray-500">
-                                    No hay partners disponibles para esta tech company
+                                    {t("opportunities.detail.noPartnersAvailable")}
                                   </div>
                                 ) : (
                                   availablePartners.map((partner) => (
@@ -1598,13 +1598,13 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                         </div>
                         <DialogFooter>
                           <Button variant="outline" onClick={() => setIsPartnerAssignDialogOpen(false)}>
-                            Cancelar
+                            {t("opportunities.detail.cancel")}
                           </Button>
                           <Button
                             onClick={handleAssignPartner}
                             disabled={isSaving || !selectedPartnerId || isLoadingPartners}
                           >
-                            {isSaving ? t("opportunities.detail.saving") : "Guardar"}
+                            {isSaving ? t("opportunities.detail.saving") : t("opportunities.detail.save")}
                           </Button>
                         </DialogFooter>
                       </DialogContent>
@@ -1616,13 +1616,13 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                       <Building2 className="h-4 w-4 mr-1" />
                       {t("opportunities.detail.endCustomer")}
                     </h3>
-                    <span>{opportunity?.end_customer?.name || "No especificado"}</span>
+                    <span>{opportunity?.end_customer?.name || t("opportunities.detail.notSpecified")}</span>
                   </div>
 
                   <div>
                     <h3 className="text-sm font-medium text-gray-500 mb-1 flex items-center">
                       <MapPin className="h-4 w-4 mr-1" />
-                      País
+                      {t("opportunities.detail.country")}
                     </h3>
                     {editMode.country ? (
                       <InlineEdit
@@ -1654,7 +1654,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                         // Función para mostrar el nombre del país en lugar del código
                         formatter={(value) => {
                           const country = partnerCountries.find((c) => c.code === value)
-                          return country ? country.name : value || "No especificado"
+                          return country ? country.name : value || t("opportunities.detail.notSpecified")
                         }}
                       />
                     )}
@@ -1666,7 +1666,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                       <div>
                         <h3 className="text-sm font-medium text-gray-500 mb-1 flex items-center">
                           <DollarSign className="h-4 w-4 mr-1" />
-                          Valor estimado
+                          {t("opportunities.detail.estimatedValue")}
                         </h3>
                         {editMode.estimated_value ? (
                           <InlineEdit
