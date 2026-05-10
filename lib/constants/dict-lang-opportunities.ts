@@ -962,4 +962,159 @@ export const DICT_LANG_OPPORTUNITIES = {
     en: "Uploading...",
     pt: "Carregando...",
   },
+  "opportunities.prospect.selectPartner": {
+    es: "Seleccionar Partner",
+    en: "Select Partner",
+    pt: "Selecionar Partner",
+  },
+  "opportunities.prospect.selectPartnerDescription": {
+    es: "Selecciona el partner responsable de esta oportunidad",
+    en: "Select the partner responsible for this opportunity",
+    pt: "Selecione o partner responsável por esta oportunidade",
+  },
+  "opportunities.prospect.name": {
+    es: "Nombre",
+    en: "Name",
+    pt: "Nome",
+  },
+  "opportunities.prospect.noProspectsFound": {
+    es: "No se encontraron prospectos",
+    en: "No prospects found",
+    pt: "Nenhum prospecto encontrado",
+  },
+  "opportunities.prospect.selectContact": {
+    es: "Seleccionar Contacto",
+    en: "Select Contact",
+    pt: "Selecionar Contato",
+  },
+  "opportunities.prospect.relationshipSaved": {
+    es: "Relación guardada",
+    en: "Relationship saved",
+    pt: "Relacionamento salvo",
+  },
+  "opportunities.prospect.saving": {
+    es: "Guardando...",
+    en: "Saving...",
+    pt: "Salvando...",
+  },
+  "opportunities.prospect.save": {
+    es: "Guardar",
+    en: "Save",
+    pt: "Salvar",
+  },
+  "opportunities.prospect.title": {
+    es: "Prospecto",
+    en: "Prospect",
+    pt: "Prospecto",
+  },
+  "opportunities.prospect.step1Description": {
+    es: "Crea o selecciona una empresa",
+    en: "Create or select a company",
+    pt: "Criar ou selecionar uma empresa",
+  },
+  "opportunities.prospect.searchOrCreate": {
+    es: "Buscar o crear",
+    en: "Search or create",
+    pt: "Pesquisar ou criar",
+  },
+  "opportunities.prospect.noResults": {
+    es: "Sin resultados",
+    en: "No results",
+    pt: "Sem resultados",
+  },
+  "opportunities.prospect.searchHint": {
+    es: "Presiona Enter para buscar",
+    en: "Press Enter to search",
+    pt: "Pressione Enter para pesquisar",
+  },
+  "opportunities.prospect.createNewHint": {
+    es: "Presiona Enter para crear",
+    en: "Press Enter to create",
+    pt: "Pressione Enter para criar",
+  },
+  "opportunities.prospect.createNew": {
+    es: "Crear Nuevo",
+    en: "Create New",
+    pt: "Criar Novo",
+  },
+  "opportunities.prospect.website": {
+    es: "Sitio Web",
+    en: "Website",
+    pt: "Site",
+  },
+  "opportunities.prospect.country": {
+    es: "País",
+    en: "Country",
+    pt: "País",
+  },
+  "opportunities.prospect.leadSource": {
+    es: "Fuente de Oportunidad",
+    en: "Lead Source",
+    pt: "Fonte de Oportunidade",
+  },
+  "opportunities.form.selectOption": {
+    es: "Seleccionar opción",
+    en: "Select option",
+    pt: "Selecionar opção",
+  },
+  "opportunities.leadSource.direct": {
+    es: "Directo",
+    en: "Direct",
+    pt: "Direto",
+  },
+  "opportunities.leadSource.referral": {
+    es: "Referencia",
+    en: "Referral",
+    pt: "Indicação",
+  },
+  "opportunities.leadSource.event": {
+    es: "Evento",
+    en: "Event",
+    pt: "Evento",
+  },
+  "opportunities.leadSource.coldCall": {
+    es: "Llamada Fría",
+    en: "Cold Call",
+    pt: "Prospecção",
+  },
+  "opportunities.leadSource.linkedin": {
+    es: "LinkedIn",
+    en: "LinkedIn",
+    pt: "LinkedIn",
+  },
+  "opportunities.leadSource.other": {
+    es: "Otro",
+    en: "Other",
+    pt: "Outro",
+  },
+  "opportunities.prospect.back": {
+    es: "Atrás",
+    en: "Back",
+    pt: "Voltar",
+  },
+  "opportunities.prospect.first_name": {
+    es: "Nombre",
+    en: "First Name",
+    pt: "Nome",
+  },
+  "opportunities.prospect.last_name": {
+    es: "Apellido",
+    en: "Last Name",
+    pt: "Sobrenome",
+  },
+  "opportunities.prospect.email": {
+    es: "Email",
+    en: "Email",
+    pt: "Email",
+  },
+  "opportunities.prospect.phone": {
+    es: "Teléfono",
+    en: "Phone",
+    pt: "Telefone",
+  },
+  "opportunities.prospect.createContact": {
+    es: "Crear Contacto",
+    en: "Create Contact",
+    pt: "Criar Contato",
+  },
 }
