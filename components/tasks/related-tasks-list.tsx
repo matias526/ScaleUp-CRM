@@ -9,6 +9,7 @@ import { useTaskService } from "@/lib/services/task-service-client"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useTranslations } from "@/hooks/use-translations"
+import { DICT_LANG_OPPORTUNITIES } from "@/lib/constants/dict-lang-opportunities"
 import { TaskCreateDialog } from "./task-create-dialog"
 import { toast } from "@/components/ui/use-toast"
 import { format } from "date-fns"
@@ -30,7 +31,7 @@ export function RelatedTasksList({
   description,
 }: RelatedTasksListProps) {
   const router = useRouter()
-  const { t } = useTranslations()
+  const { t } = useTranslations(DICT_LANG_OPPORTUNITIES)
   const taskService = useTaskService()
   const [tasks, setTasks] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -131,31 +132,31 @@ export function RelatedTasksList({
     switch (status) {
       case "completed":
         return (
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-            <CheckCircle2 className="h-3 w-3 mr-1" />
-            {t("tasks.status.completed", "Completada")}
-          </Badge>
+                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                    {t("tasks.status.completed")}
+                  </Badge>
         )
       case "in_progress":
         return (
-          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-            <Clock className="h-3 w-3 mr-1" />
-            {t("tasks.status.in_progress", "En progreso")}
-          </Badge>
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                    <Clock className="h-3 w-3 mr-1" />
+                    {t("tasks.status.in_progress")}
+                  </Badge>
         )
       case "cancelled":
         return (
-          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-            <XCircle className="h-3 w-3 mr-1" />
-            {t("tasks.status.cancelled", "Cancelada")}
-          </Badge>
+                  <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                    <XCircle className="h-3 w-3 mr-1" />
+                    {t("tasks.status.cancelled")}
+                  </Badge>
         )
       default:
         return (
-          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
-            <AlertCircle className="h-3 w-3 mr-1" />
-            {t("tasks.status.pending", "Pendiente")}
-          </Badge>
+                  <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                    <AlertCircle className="h-3 w-3 mr-1" />
+                    {t("tasks.status.pending")}
+                  </Badge>
         )
     }
   }
@@ -176,7 +177,7 @@ export function RelatedTasksList({
           </div>
           <Button size="sm" onClick={() => setIsCreateDialogOpen(true)}>
             <PlusCircle className="h-4 w-4 mr-2" />
-            {t("tasks.create_task", "Crear tarea")}
+            {t("tasks.create_task")}
           </Button>
         </CardHeader>
         <CardContent>
@@ -188,7 +189,7 @@ export function RelatedTasksList({
             </div>
           ) : tasks.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              <p>{t("tasks.no_tasks", "No hay tareas relacionadas")}</p>
+              <p>{t("tasks.no_tasks")}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -212,21 +213,21 @@ export function RelatedTasksList({
                         }}
                       >
                         <PlusCircle className="h-4 w-4" />
-                        <span className="sr-only">{t("tasks.add_subtask", "Añadir subtarea")}</span>
+                        <span className="sr-only">{t("tasks.add_subtask")}</span>
                       </Button>
                     </div>
                   </div>
                   <div className="text-sm text-muted-foreground mt-1">
                     {task.assigned_to_user && (
                       <span>
-                        {t("tasks.assigned_to", "Asignada a")}: {task.assigned_to_user.first_name}{" "}
+                        {t("tasks.assigned_to")}: {task.assigned_to_user.first_name}{" "}
                         {task.assigned_to_user.last_name}
                       </span>
                     )}
                     {task.due_date && (
                       <span className="ml-3">
-                        {t("tasks.due_date", "Fecha límite")}:{" "}
-                        {task.due_date ? format(new Date(task.due_date), "PPP", { locale: es }) : "Sin fecha"}
+                        {t("tasks.due_date")}:{" "}
+                        {task.due_date ? format(new Date(task.due_date), "PPP", { locale: es }) : t("tasks.no_date")}
                       </span>
                     )}
                   </div>
@@ -242,7 +243,7 @@ export function RelatedTasksList({
                         }}
                       >
                         <CheckCircle2 className="h-3 w-3 mr-1" />
-                        {t("tasks.mark_completed", "Marcar como completada")}
+                        {t("tasks.mark_completed")}
                       </Button>
                     )}
                     {task.status === "pending" && (
@@ -256,7 +257,7 @@ export function RelatedTasksList({
                         }}
                       >
                         <Clock className="h-3 w-3 mr-1" />
-                        {t("tasks.mark_in_progress", "Marcar en progreso")}
+                        {t("tasks.mark_in_progress")}
                       </Button>
                     )}
                   </div>

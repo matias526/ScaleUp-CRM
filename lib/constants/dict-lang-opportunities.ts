@@ -1567,4 +1567,151 @@ export const DICT_LANG_OPPORTUNITIES = {
     en: "Unknown",
     pt: "Desconhecida",
   },
+  // Tasks translations
+  "tasks.status.completed": {
+    es: "Completada",
+    en: "Completed",
+    pt: "Concluída",
+  },
+  "tasks.status.in_progress": {
+    es: "En progreso",
+    en: "In progress",
+    pt: "Em progresso",
+  },
+  "tasks.status.cancelled": {
+    es: "Cancelada",
+    en: "Cancelled",
+    pt: "Cancelada",
+  },
+  "tasks.status.pending": {
+    es: "Pendiente",
+    en: "Pending",
+    pt: "Pendente",
+  },
+  "tasks.create_task": {
+    es: "Crear tarea",
+    en: "Create task",
+    pt: "Criar tarefa",
+  },
+  "tasks.no_tasks": {
+    es: "No hay tareas relacionadas",
+    en: "No related tasks",
+    pt: "Nenhuma tarefa relacionada",
+  },
+  "tasks.add_subtask": {
+    es: "Añadir subtarea",
+    en: "Add subtask",
+    pt: "Adicionar subtarefa",
+  },
+  "tasks.assigned_to": {
+    es: "Asignada a",
+    en: "Assigned to",
+    pt: "Atribuída a",
+  },
+  "tasks.due_date": {
+    es: "Fecha límite",
+    en: "Due date",
+    pt: "Data de vencimento",
+  },
+  "tasks.no_date": {
+    es: "Sin fecha",
+    en: "No date",
+    pt: "Sem data",
+  },
+  "tasks.mark_completed": {
+    es: "Marcar como completada",
+    en: "Mark as completed",
+    pt: "Marcar como concluída",
+  },
+  "tasks.mark_in_progress": {
+    es: "Marcar en progreso",
+    en: "Mark in progress",
+    pt: "Marcar em progresso",
+  },
+  // Notes translations
+  "notes.history_title": {
+    es: "Reseña histórica",
+    en: "History Review",
+    pt: "Revisão Histórica",
+  },
+  "notes.refresh_title": {
+    es: "Recargar notas",
+    en: "Refresh notes",
+    pt: "Recarregar notas",
+  },
+  "notes.add_entry": {
+    es: "Agregar entrada",
+    en: "Add entry",
+    pt: "Adicionar entrada",
+  },
+  "notes.loading_user": {
+    es: "Cargando información de usuario...",
+    en: "Loading user information...",
+    pt: "Carregando informações do usuário...",
+  },
+  "notes.loading_notes": {
+    es: "Cargando notas...",
+    en: "Loading notes...",
+    pt: "Carregando notas...",
+  },
+  "notes.no_entries": {
+    es: "No hay entradas en la reseña histórica",
+    en: "No entries in history review",
+    pt: "Nenhuma entrada na revisão histórica",
+  },
+  "notes.private": {
+    es: "Privada",
+    en: "Private",
+    pt: "Privada",
+  },
+  "notes.unknown_date": {
+    es: "Fecha desconocida",
+    en: "Unknown date",
+    pt: "Data desconhecida",
+  },
+  "notes.edited": {
+    es: "(editada)",
+    en: "(edited)",
+    pt: "(editada)",
+  },
+  "notes.edit_note": {
+    es: "Editar nota",
+    en: "Edit note",
+    pt: "Editar nota",
+  },
+  "notes.delete_note": {
+    es: "Eliminar nota",
+    en: "Delete note",
+    pt: "Deletar nota",
+  },
+  "notes.confirm_delete": {
+    es: "¿Estás seguro de que deseas eliminar esta nota?",
+    en: "Are you sure you want to delete this note?",
+    pt: "Você tem certeza de que deseja deletar esta nota?",
+  },
+  "notes.delete_title": {
+    es: "Nota eliminada",
+    en: "Note deleted",
+    pt: "Nota deletada",
+  },
+  "notes.delete_success": {
+    es: "La nota se ha eliminado correctamente",
+    en: "The note has been deleted successfully",
+    pt: "A nota foi deletada com sucesso",
+  },
+  "notes.delete_error": {
+    es: "No se pudo eliminar la nota",
+    en: "Could not delete the note",
+    pt: "Não foi possível deletar a nota",
+  },
+  "notes.delete_error_occurred": {
+    es: "Ocurrió un error al eliminar la nota",
+    en: "An error occurred while deleting the note",
+    pt: "Ocorreu um erro ao deletar a nota",
+  },
+  "notes.invalid_date": {
+    es: "Fecha inválida",
+    en: "Invalid date",
+    pt: "Data inválida",
+  },
 }

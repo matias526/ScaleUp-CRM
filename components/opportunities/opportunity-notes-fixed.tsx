@@ -14,6 +14,8 @@ import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
 import { supabase } from "@/lib/supabase/client"
 import { format } from "date-fns"
+import { useTranslations } from "@/hooks/use-translations"
+import { DICT_LANG_OPPORTUNITIES } from "@/lib/constants/dict-lang-opportunities"
 
 interface OpportunityNotesProps {
   opportunityId: string
@@ -29,6 +31,7 @@ export function OpportunityNotesFixed({ opportunityId }: OpportunityNotesProps) 
   const [refreshKey, setRefreshKey] = useState(0)
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [isUserScaleUp, setIsUserScaleUp] = useState<boolean>(false)
+  const { t } = useTranslations(DICT_LANG_OPPORTUNITIES)
   
   // Obtener el usuario actual y verificar si es ScaleUp
   useEffect(() => {
@@ -111,20 +114,20 @@ export function OpportunityNotesFixed({ opportunityId }: OpportunityNotesProps) 
   const handleDeleteNote = async (noteId: string) => {
     if (!currentUser) return // No permitir eliminar si no hay usuario
 
-    if (window.confirm("¿Estás seguro de que deseas eliminar esta nota?")) {
+    if (window.confirm(t("notes.confirm_delete"))) {
       setIsDeleting((prev) => ({ ...prev, [noteId]: true }))
       try {
         const success = await deleteNote(noteId)
         if (success) {
           setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId))
           toast({
-            title: "Nota eliminada",
-            description: "La nota se ha eliminado correctamente",
+            title: t("notes.delete_title"),
+            description: t("notes.delete_success"),
           })
         } else {
           toast({
             title: "Error",
-            description: "No se pudo eliminar la nota",
+            description: t("notes.delete_error"),
             variant: "destructive",
           })
         }
@@ -132,7 +135,7 @@ export function OpportunityNotesFixed({ opportunityId }: OpportunityNotesProps) 
         console.error("Error al eliminar nota:", error)
         toast({
           title: "Error",
-          description: "Ocurrió un error al eliminar la nota",
+          description: t("notes.delete_error_occurred"),
           variant: "destructive",
         })
       } finally {
@@ -157,36 +160,36 @@ export function OpportunityNotesFixed({ opportunityId }: OpportunityNotesProps) 
   }
 
   const formatNoteDate = (dateString: string | null | undefined) => {
-    if (!dateString) return "Fecha desconocida"
+    if (!dateString) return t("notes.unknown_date")
     try {
       return format(new Date(dateString), "PPP", { locale: es })
     } catch (error) {
       console.error("Error al formatear fecha:", error)
-      return "Fecha inválida"
+      return t("notes.invalid_date")
     }
   }
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Reseña histórica</CardTitle>
+        <CardTitle>{t("notes.history_title")}</CardTitle>
         <div className="flex space-x-2">
-          <Button onClick={handleRefresh} size="sm" variant="outline" title="Recargar notas">
+          <Button onClick={handleRefresh} size="sm" variant="outline" title={t("notes.refresh_title")}>
             <RefreshCw className="h-4 w-4" />
           </Button>
           <Button onClick={() => setIsDialogOpen(true)} size="sm" disabled={!currentUser}>
             <PlusCircle className="h-4 w-4 mr-2" />
-            Agregar entrada
+            {t("notes.add_entry")}
           </Button>
         </div>
       </CardHeader>
       <CardContent>
         {!currentUser ? (
-          <div className="text-center py-4">Cargando información de usuario...</div>
+          <div className="text-center py-4">{t("notes.loading_user")}</div>
         ) : isLoading ? (
-          <div className="text-center py-4">Cargando notas...</div>
+          <div className="text-center py-4">{t("notes.loading_notes")}</div>
         ) : notes.length === 0 ? (
-          <div className="text-center py-4 text-muted-foreground">No hay entradas en la reseña histórica</div>
+          <div className="text-center py-4 text-muted-foreground">{t("notes.no_entries")}</div>
         ) : (
           <div className="space-y-4">
             {notes.map((note) => (
@@ -205,16 +208,16 @@ export function OpportunityNotesFixed({ opportunityId }: OpportunityNotesProps) 
                         {note.is_private && (
                           <span className="ml-2 inline-flex items-center">
                             <Lock className="h-3 w-3 text-amber-500" />
-                            <span className="ml-1 text-xs text-amber-500">Privada</span>
+                            <span className="ml-1 text-xs text-amber-500">{t("notes.private")}</span>
                           </span>
                         )}
                       </div>
                       <div className="text-xs text-muted-foreground">
                         {note.created_at
                           ? formatDistanceToNow(new Date(note.created_at), { addSuffix: true, locale: es })
-                          : "Fecha desconocida"}
+                          : t("notes.unknown_date")}
                         {note.updated_at && note.updated_at !== note.created_at && (
-                          <span className="ml-2 italic">(editada)</span>
+                          <span className="ml-2 italic">{t("notes.edited")}</span>
                         )}
                       </div>
                     </div>
@@ -226,7 +229,7 @@ export function OpportunityNotesFixed({ opportunityId }: OpportunityNotesProps) 
                         size="icon"
                         className="h-8 w-8"
                         onClick={() => handleEditNote(note)}
-                        title="Editar nota"
+                        title={t("notes.edit_note")}
                       >
                         <Edit className="h-4 w-4 text-muted-foreground" />
                       </Button>
@@ -238,7 +241,7 @@ export function OpportunityNotesFixed({ opportunityId }: OpportunityNotesProps) 
                         className="h-8 w-8"
                         onClick={() => handleDeleteNote(note.id)}
                         disabled={isDeleting[note.id]}
-                        title="Eliminar nota"
+                        title={t("notes.delete_note")}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
