@@ -1562,4 +1562,9 @@ export const DICT_LANG_OPPORTUNITIES = {
     en: "Cancel",
     pt: "Cancelar",
   },
+  "opportunities.detail.unknown": {
+    es: "Desconocida",
+    en: "Unknown",
+    pt: "Desconhecida",
+  },
 }

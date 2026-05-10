@@ -1695,7 +1695,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                   <div>
                     <h3 className="text-sm font-medium text-gray-500 mb-1 flex items-center">
                       <Calendar className="h-4 w-4 mr-1" />
-                      Fecha estimada de cierre
+                      {t("opportunities.detail.estimatedCloseDate")}
                     </h3>
                     {editingField === "estimated_close_date" ? (
                       <div className="flex items-center gap-2">
@@ -1765,7 +1765,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                   <div>
                     <h3 className="text-sm font-medium text-gray-500 mb-1 flex items-center">
                       <Tag className="h-4 w-4 mr-1" />
-                      Etapa
+                      {t("opportunities.detail.stage")}
                     </h3>
                     {editMode.pipeline_stage_id ? (
                       <InlineEdit
@@ -1929,7 +1929,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                   <div>
                     <h3 className="text-sm font-medium text-gray-500 mb-1 flex items-center">
                       <User className="h-4 w-4 mr-1" />
-                      Creado por
+                      {t("opportunities.detail.createdBy")}
                     </h3>
                     <span>
                       {opportunity?.creator
@@ -1941,12 +1941,12 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                   <div>
                     <h3 className="text-sm font-medium text-gray-500 mb-1 flex items-center">
                       <Calendar className="h-4 w-4 mr-1" />
-                      Fecha de creación
+                      {t("opportunities.detail.createdDate")}
                     </h3>
                     <span>
                       {opportunity?.created_at
                         ? format(new Date(opportunity.created_at), "PPP", { locale: es })
-                        : "Desconocida"}
+                        : t("opportunities.detail.unknown")}
                     </span>
                   </div>
 
