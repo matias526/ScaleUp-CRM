@@ -108,10 +108,24 @@ export function TechCompanyDashboard() {
         loadPartnersData(techCompanyId),
       ])
 
+      console.log("[v0] Dashboard data loaded:", {
+        opportunities: oppData.length,
+        tasks: taskData.length,
+        purchase_orders: poData.length,
+        partners: partnerData.length,
+        oppData,
+      })
+
       // Calculate metrics
       const totalValue = oppData.reduce((sum, opp) => sum + (opp.estimated_value || 0), 0)
       const convertedOpps = oppData.filter((opp) => opp.stage_name === "Won").length
       const conversionRate = oppData.length > 0 ? (convertedOpps / oppData.length) * 100 : 0
+
+      console.log("[v0] Calculated metrics:", {
+        totalValue,
+        convertedOpps,
+        conversionRate,
+      })
 
       setMetrics({
         total_pipeline_value: totalValue,
@@ -138,10 +152,11 @@ export function TechCompanyDashboard() {
       .select(
         `
         id,
-        description,
+        title,
         estimated_value,
         updated_at,
-        stage
+        pipeline_stage_id,
+        pipeline_stages(name)
       `,
       )
       .eq("tech_company_id", techCompanyId)
@@ -155,9 +170,9 @@ export function TechCompanyDashboard() {
     return (
       data?.map((opp: any) => ({
         id: opp.id,
-        title: opp.description || "Untitled Opportunity",
-        stage_name: opp.stage || "Unknown",
-        estimated_value: opp.estimated_value,
+        title: opp.title || "Untitled Opportunity",
+        stage_name: opp.pipeline_stages?.name || "Unknown",
+        estimated_value: opp.estimated_value || 0,
         partner_name: undefined,
         updated_at: opp.updated_at,
       })) || []
@@ -190,6 +205,26 @@ export function TechCompanyDashboard() {
   }
 
   const loadPurchaseOrdersData = async (techCompanyId: string) => {
+    // First get all opportunities for this tech company
+    const { data: opportunities, error: oppError } = await supabase
+      .from("opportunities")
+      .select("purchase_order_id")
+      .eq("tech_company_id", techCompanyId)
+      .not("purchase_order_id", "is", null)
+
+    if (oppError) {
+      console.error("[v0] Error loading opportunities for PO:", oppError)
+      return []
+    }
+
+    if (!opportunities || opportunities.length === 0) {
+      return []
+    }
+
+    // Get unique PO IDs
+    const poIds = Array.from(new Set(opportunities.map((opp: any) => opp.purchase_order_id)))
+
+    // Get purchase orders with partner info
     const { data, error } = await supabase
       .from("purchase_orders")
       .select(
@@ -199,10 +234,10 @@ export function TechCompanyDashboard() {
         status,
         total_amount,
         created_at,
-        partner:partner_id(name)
+        partners(name)
       `,
       )
-      .eq("tech_company_id", techCompanyId)
+      .in("id", poIds)
       .order("created_at", { ascending: false })
 
     if (error) {
@@ -215,8 +250,8 @@ export function TechCompanyDashboard() {
         id: po.id,
         po_number: po.po_number,
         status: po.status,
-        total_amount: po.total_amount,
-        partner_name: po.partner?.name,
+        total_amount: po.total_amount || 0,
+        partner_name: po.partners?.name,
         created_at: po.created_at,
       })) || []
     )
