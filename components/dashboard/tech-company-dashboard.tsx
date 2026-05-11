@@ -138,11 +138,10 @@ export function TechCompanyDashboard() {
       .select(
         `
         id,
-        title,
+        description,
         estimated_value,
         updated_at,
-        pipeline_stage:pipeline_stage_id(name),
-        partner:partner_id(name)
+        stage
       `,
       )
       .eq("tech_company_id", techCompanyId)
@@ -156,10 +155,10 @@ export function TechCompanyDashboard() {
     return (
       data?.map((opp: any) => ({
         id: opp.id,
-        title: opp.title,
-        stage_name: opp.pipeline_stage?.name || "Unknown",
+        title: opp.description || "Untitled Opportunity",
+        stage_name: opp.stage || "Unknown",
         estimated_value: opp.estimated_value,
-        partner_name: opp.partner?.name,
+        partner_name: undefined,
         updated_at: opp.updated_at,
       })) || []
     )
@@ -179,7 +178,8 @@ export function TechCompanyDashboard() {
       `,
       )
       .eq("tech_company_id", techCompanyId)
-      .order("updated_at", { ascending: false })
+      .eq("status", "pending")
+      .order("due_date", { ascending: true })
 
     if (error) {
       console.error("[v0] Error loading tasks:", error)
@@ -223,31 +223,73 @@ export function TechCompanyDashboard() {
   }
 
   const loadPartnersData = async (techCompanyId: string) => {
-    const { data, error } = await supabase
-      .from("partners")
+    // First get all partners for this tech company
+    const { data: partnerTechComps, error: ptcError } = await supabase
+      .from("partner_tech_companies")
       .select(
         `
-        id,
-        name,
-        opportunities:opportunities(id),
-        purchase_orders:purchase_orders(total_amount)
+        partner_id,
+        partners(id, name)
       `,
       )
       .eq("tech_company_id", techCompanyId)
 
-    if (error) {
-      console.error("[v0] Error loading partners:", error)
+    if (ptcError) {
+      console.error("[v0] Error loading partner_tech_companies:", ptcError)
       return []
     }
 
-    return (
-      data?.map((partner: any) => ({
-        id: partner.id,
-        name: partner.name,
-        opportunities_count: partner.opportunities?.length || 0,
-        total_value: partner.purchase_orders?.reduce((sum: number, po: any) => sum + (po.total_amount || 0), 0) || 0,
-      })) || []
-    )
+    if (!partnerTechComps || partnerTechComps.length === 0) {
+      return []
+    }
+
+    // Get partner IDs
+    const partnerIds = partnerTechComps.map((ptc: any) => ptc.partner_id)
+
+    // Get opportunities and purchase orders for these partners
+    const { data: opportunities, error: oppError } = await supabase
+      .from("opportunities")
+      .select("partner_id, estimated_value")
+      .in("partner_id", partnerIds)
+
+    const { data: purchaseOrders, error: poError } = await supabase
+      .from("purchase_orders")
+      .select("partner_id, total_amount")
+      .in("partner_id", partnerIds)
+
+    if (oppError) console.error("[v0] Error loading opportunities for partners:", oppError)
+    if (poError) console.error("[v0] Error loading purchase orders for partners:", poError)
+
+    // Group and calculate metrics
+    const partnerMetrics = new Map()
+
+    partnerTechComps.forEach((ptc: any) => {
+      const partnerId = ptc.partner_id
+      const partnerName = ptc.partners?.name || "Unknown Partner"
+
+      partnerMetrics.set(partnerId, {
+        id: partnerId,
+        name: partnerName,
+        opportunities_count: 0,
+        total_value: 0,
+      })
+    })
+
+    opportunities?.forEach((opp: any) => {
+      const metric = partnerMetrics.get(opp.partner_id)
+      if (metric) {
+        metric.opportunities_count++
+      }
+    })
+
+    purchaseOrders?.forEach((po: any) => {
+      const metric = partnerMetrics.get(po.partner_id)
+      if (metric) {
+        metric.total_value += po.total_amount || 0
+      }
+    })
+
+    return Array.from(partnerMetrics.values())
   }
 
   if (loading) {
