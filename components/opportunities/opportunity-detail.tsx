@@ -2057,9 +2057,9 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
           <div className="mt-6">
             <RelatedTasksList
               opportunityId={opportunity?.id}
-              title={t("opportunities.detail.relatedTasks")}
+              title={t("tasks.relatedTasks.title")}
               description={t(
-                "opportunities.related_tasks_description",
+                "tasks.relatedTasks.description",
                 t("opportunities.detail.gestureRelatedTasks"),
               )}
             />

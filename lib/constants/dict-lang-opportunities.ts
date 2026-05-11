@@ -963,6 +963,16 @@ export const DICT_LANG_OPPORTUNITIES = {
     pt: "Carregando...",
   },
   // Note form dialog translations
+  "notes.history_title": {
+    es: "Reseña histórica",
+    en: "History Review",
+    pt: "Histórico",
+  },
+  "notes.add_entry": {
+    es: "Agregar entrada",
+    en: "Add entry",
+    pt: "Adicionar entrada",
+  },
   "notes.form.title": {
     es: "Agregar entrada a la reseña histórica",
     en: "Add entry to history review",
@@ -1029,6 +1039,21 @@ export const DICT_LANG_OPPORTUNITIES = {
     pt: "Ocorreu um erro ao adicionar a nota",
   },
   // Task creation dialog translations
+  "tasks.relatedTasks.title": {
+    es: "Tareas Relacionadas",
+    en: "Related Tasks",
+    pt: "Tarefas",
+  },
+  "tasks.relatedTasks.description": {
+    es: "Tareas de esta Oportunidad",
+    en: "Tasks of this Opportunity",
+    pt: "Tarefas da oportunidad",
+  },
+  "tasks.create_task": {
+    es: "Agregar tarea",
+    en: "Add task",
+    pt: "Adicionar tarefa",
+  },
   "tasks.create.title": {
     es: "Crear Nueva Tarea",
     en: "Create New Task",

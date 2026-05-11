@@ -172,7 +172,7 @@ export function OpportunityNotesFixed({ opportunityId }: OpportunityNotesProps) 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>{t("notes.history_title")}</CardTitle>
+        <CardTitle>{t("opportunities.quotes.notesLabel")}</CardTitle>
         <div className="flex space-x-2">
           <Button onClick={handleRefresh} size="sm" variant="outline" title={t("notes.refresh_title")}>
             <RefreshCw className="h-4 w-4" />
