@@ -2,6 +2,7 @@ import { Suspense } from "react"
 import { NewAdminDashboard } from "@/components/dashboard/new-admin-dashboard"
 import { BddDashboard } from "@/components/dashboard/bdd-dashboard"
 import { PartnerDashboard } from "@/components/dashboard/partner-dashboard"
+import { TechCompanyDashboard } from "@/components/dashboard/tech-company-dashboard"
 import { DashboardSkeleton } from "@/components/dashboard/dashboard-skeleton"
 //import {  } from "@supabase/auth-helpers-nextjs"
 import { createServerClient } from "@/lib/supabase/server"
@@ -58,10 +59,23 @@ export default async function DashboardPage() {
   // Verificar si es un usuario BDD
   const isBddUser = roleCodeLower === "bdd"
 
+  // Verificar si es un usuario TechUser o TechLogistic
+  const isTechUser = roleCodeLower === "techuser"
+  const isTechLogistic = roleCodeLower === "techlogistic"
+  const isTechCompanyUser = isTechUser || isTechLogistic
+
   return (
     <div className="w-full">
       <Suspense fallback={<DashboardSkeleton />}>
-        {isPartnerUser ? <PartnerDashboard /> : isBddUser ? <BddDashboard /> : <NewAdminDashboard />}
+        {isTechCompanyUser ? (
+          <TechCompanyDashboard />
+        ) : isPartnerUser ? (
+          <PartnerDashboard />
+        ) : isBddUser ? (
+          <BddDashboard />
+        ) : (
+          <NewAdminDashboard />
+        )}
       </Suspense>
     </div>
   )
