@@ -847,7 +847,7 @@ export function POMilestonesTab({ po, milestones: initialMilestones, subtotal, t
             <div className="mt-6 space-y-2 p-4 bg-gray-50 rounded">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-700">{t('po.milestone.total') || 'Total PO'}:</span>
-                <span className="font-bold">${validationAmount.toFixed(2)}</span>
+                <span className="font-bold">${subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-700">{t('po.milestone.assignedAmount') || 'Asignado'}:</span>
