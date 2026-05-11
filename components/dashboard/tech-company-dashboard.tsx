@@ -108,24 +108,10 @@ export function TechCompanyDashboard() {
         loadPartnersData(techCompanyId),
       ])
 
-      console.log("[v0] Dashboard data loaded:", {
-        opportunities: oppData.length,
-        tasks: taskData.length,
-        purchase_orders: poData.length,
-        partners: partnerData.length,
-        oppData,
-      })
-
       // Calculate metrics
       const totalValue = oppData.reduce((sum, opp) => sum + (opp.estimated_value || 0), 0)
       const convertedOpps = oppData.filter((opp) => opp.stage_name === "Won").length
       const conversionRate = oppData.length > 0 ? (convertedOpps / oppData.length) * 100 : 0
-
-      console.log("[v0] Calculated metrics:", {
-        totalValue,
-        convertedOpps,
-        conversionRate,
-      })
 
       setMetrics({
         total_pipeline_value: totalValue,
@@ -155,8 +141,7 @@ export function TechCompanyDashboard() {
         title,
         estimated_value,
         updated_at,
-        pipeline_stage_id,
-        pipeline_stages(name)
+        pipeline_stages(code)
       `,
       )
       .eq("tech_company_id", techCompanyId)
@@ -171,7 +156,7 @@ export function TechCompanyDashboard() {
       data?.map((opp: any) => ({
         id: opp.id,
         title: opp.title || "Untitled Opportunity",
-        stage_name: opp.pipeline_stages?.name || "Unknown",
+        stage_name: opp.pipeline_stages?.code || "Unknown",
         estimated_value: opp.estimated_value || 0,
         partner_name: undefined,
         updated_at: opp.updated_at,
