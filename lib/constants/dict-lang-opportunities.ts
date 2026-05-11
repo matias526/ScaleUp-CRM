@@ -1054,6 +1054,11 @@ export const DICT_LANG_OPPORTUNITIES = {
     en: "Add task",
     pt: "Adicionar tarefa",
   },
+  "tasks.no_tasks": {
+    es: "No hay tareas",
+    en: "No tasks",
+    pt: "Sem tarefas",
+  },
   "tasks.create.title": {
     es: "Crear Nueva Tarea",
     en: "Create New Task",
