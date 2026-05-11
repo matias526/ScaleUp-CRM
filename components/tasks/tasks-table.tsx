@@ -477,6 +477,11 @@ export default function TasksTable({
     return isAdmin || isBDD
   }, [userRoleInfo, userInfo])
 
+  const isTechUserOrLogistic = useMemo(() => {
+    const roleCode = userInfo?.roleCode?.toLowerCase() || ""
+    return roleCode === "techuser" || roleCode === "techlogistic"
+  }, [userInfo])
+
   if (!isLoaded) {
     return <div className="text-center py-10">{t("tasks.loading", "Loading tasks...")}</div>
   }
@@ -615,27 +620,29 @@ export default function TasksTable({
                 </Select>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t("tasks.filter_by_tech_company", "Filter by Tech Company")}
-                  {availableTechCompanies.length > 0 && (
-                    <span className="ml-1 text-xs text-gray-500">({availableTechCompanies.length})</span>
-                  )}
-                </label>
-                <Select value={techCompanyFilter} onValueChange={setTechCompanyFilter}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder={t("common.all_tech_companies", "All Tech Companies")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t("common.all", "All")}</SelectItem>
-                    {availableTechCompanies.map((company) => (
-                      <SelectItem key={company.id} value={company.id}>
-                        {company.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {!isTechUserOrLogistic && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {t("tasks.filter_by_tech_company", "Filter by Tech Company")}
+                    {availableTechCompanies.length > 0 && (
+                      <span className="ml-1 text-xs text-gray-500">({availableTechCompanies.length})</span>
+                    )}
+                  </label>
+                  <Select value={techCompanyFilter} onValueChange={setTechCompanyFilter}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={t("common.all_tech_companies", "All Tech Companies")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{t("common.all", "All")}</SelectItem>
+                      {availableTechCompanies.map((company) => (
+                        <SelectItem key={company.id} value={company.id}>
+                          {company.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">

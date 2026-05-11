@@ -141,6 +141,7 @@ type SidebarItemType = {
   adminOrBdd?: boolean // Nuevo flag para elementos visibles por Admin O BDD
   adminOrMarketing?: boolean // Nuevo flag para elementos visibles por Admin O Marketing
   adminOrBddOrMarketing?: boolean // Nuevo flag para elementos visibles por Admin O BDD O Marketing
+  excludeTechUserAndLogistic?: boolean // Ocultar para TechUser y TechLogistic
   settingsSubItems?: { href: string; labelKey: string }[]
 }
 
@@ -151,6 +152,8 @@ export function Sidebar() {
   const isAdmin = userInfo?.isAdmin || false
   const isBDD = userInfo?.roleCode?.toLowerCase() === "bdd" || false
   const isMarketing = userInfo?.roleCode?.toLowerCase() === "marketing" || false
+  const isTechUser = userInfo?.roleCode?.toLowerCase() === "techuser" || false
+  const isTechLogistic = userInfo?.roleCode?.toLowerCase() === "techlogistic" || false
 
   console.log("[v0] Sidebar - User Info:", {
     roleCode: userInfo?.roleCode, // Mostrar roleCode en lugar de role
@@ -265,6 +268,7 @@ export function Sidebar() {
       href: "/dashboard/follow-up-meetings",
       icon: PresentationIcon,
       labelKey: "sidebar.follow_up_meetings",
+      excludeTechUserAndLogistic: true,
     },
     {
       href: "/dashboard/internal-meetings",
@@ -335,6 +339,10 @@ export function Sidebar() {
   // Filtrar los elementos del sidebar según el rol del usuario
   const filteredSidebarItems = sidebarItems.filter((item) => {
     const shouldShow = (() => {
+      // Si el elemento debe excluirse para TechUser y TechLogistic
+      if (item.excludeTechUserAndLogistic && (isTechUser || isTechLogistic)) {
+        return false
+      }
       // Si el elemento es para Admin O BDD O Marketing, mostrar si el usuario es cualquiera de los tres
       if (item.adminOrBddOrMarketing) {
         return isAdmin || isBDD || isMarketing
@@ -365,10 +373,13 @@ export function Sidebar() {
       adminOrBdd: item.adminOrBdd,
       adminOnly: item.adminOnly,
       bddOnly: item.bddOnly,
+      excludeTechUserAndLogistic: item.excludeTechUserAndLogistic,
       shouldShow,
       isAdmin,
       isBDD,
       isMarketing,
+      isTechUser,
+      isTechLogistic,
     })
 
     return shouldShow
