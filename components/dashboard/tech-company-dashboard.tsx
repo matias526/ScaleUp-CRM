@@ -165,6 +165,24 @@ export function TechCompanyDashboard() {
   }
 
   const loadTasksData = async (techCompanyId: string) => {
+    // Get all users from this tech company
+    const { data: techUsers, error: usersError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("tech_company_id", techCompanyId)
+
+    if (usersError) {
+      console.error("[v0] Error loading tech company users:", usersError)
+      return []
+    }
+
+    if (!techUsers || techUsers.length === 0) {
+      return []
+    }
+
+    const userIds = techUsers.map((u: any) => u.id)
+
+    // Get pending tasks for any user in this tech company
     const { data, error } = await supabase
       .from("tasks")
       .select(
@@ -177,7 +195,7 @@ export function TechCompanyDashboard() {
         updated_at
       `,
       )
-      .eq("tech_company_id", techCompanyId)
+      .in("assigned_to", userIds)
       .eq("status", "pending")
       .order("due_date", { ascending: true })
 
@@ -520,11 +538,6 @@ export function TechCompanyDashboard() {
                     </div>
                   </div>
                 ))}
-                <Link href="/dashboard/partners">
-                  <Button variant="ghost" className="w-full mt-2">
-                    {t("tech_dashboard.partners.view_all")}
-                  </Button>
-                </Link>
               </div>
             ) : (
               <div className="text-center py-8">
