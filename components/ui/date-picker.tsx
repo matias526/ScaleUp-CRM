@@ -33,7 +33,15 @@ export function DatePicker({ date, setDate, className, placeholder = "Pick a dat
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0 z-[9999]" align="start">
           {/* Usar CalendarComponent exactamente como en la creación de oportunidades */}
-          <CalendarComponent mode="single" selected={date || undefined} onSelect={setDate} initialFocus />
+          <CalendarComponent 
+            mode="single" 
+            selected={date || undefined} 
+            onSelect={(d) => {
+              console.log("[v0] Date selected from calendar:", d)
+              setDate(d)
+            }} 
+            initialFocus 
+          />
         </PopoverContent>
       </Popover>
     </div>
