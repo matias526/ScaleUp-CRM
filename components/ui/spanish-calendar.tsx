@@ -46,7 +46,10 @@ export function SpanishCalendar({ className, classNames, showOutsideDays = true,
         head_cell: "text-muted-foreground text-center text-xs font-medium w-9 h-9 py-2",
         row: "grid grid-cols-7 mt-2",
         cell: "relative p-0 text-center focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent",
-        day: cn(buttonVariants({ variant: "ghost" }), "h-9 w-9 p-0 font-normal aria-selected:opacity-100"),
+        day: cn(
+          buttonVariants({ variant: "ghost" }),
+          "h-9 w-9 p-0 font-normal aria-selected:opacity-100 cursor-pointer relative z-10",
+        ),
         day_selected:
           "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
         day_today: "bg-accent text-accent-foreground",
