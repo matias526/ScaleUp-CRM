@@ -398,16 +398,11 @@ export default function PurchaseOrderDetailPage() {
                 </TabsContent>
 
                 <TabsContent value="milestones" className="mt-0">
-                  {console.log('[v0] POMilestonesTab props:', {
-                    subtotal: po.subtotal_amount || 0,
-                    shipping_cost: shippings[0]?.cost || 0,
-                    total: (po.subtotal_amount || 0) + (shippings[0]?.cost || 0),
-                  })}
                   <POMilestonesTab
                     po={po}
                     milestones={milestones}
                     subtotal={po.subtotal_amount || 0}
-                    total={(po.subtotal_amount || 0) + (shippings[0]?.cost || 0)}
+                    total={(po.subtotal_amount || 0) + (po.shipping_amount || 0)}
                     userRole={userInfo?.roleCode || ""}
                     onMilestonesUpdate={loadPurchaseOrder}
                   />
