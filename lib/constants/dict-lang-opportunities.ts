@@ -1298,9 +1298,24 @@ export const DICT_LANG_OPPORTUNITIES = {
     pt: "Descrição",
   },
   "opportunities.detail.opportunityDescription": {
-    es: "Descripción de la oportunidad",
-    en: "Opportunity description",
-    pt: "Descrição da oportunidade",
+    es: "Descripción de la Oportunidad",
+    en: "Opportunity Description",
+    pt: "Descrição da Oportunidade",
+  },
+  "opportunities.detail.endCustomer": {
+    es: "Cliente Final",
+    en: "End Customer",
+    pt: "Cliente Final",
+  },
+  "opportunities.detail.responsableScaleup": {
+    es: "Responsable ScaleUp",
+    en: "ScaleUp Responsible",
+    pt: "Responsável ScaleUp",
+  },
+  "opportunities.detail.responsablePartner": {
+    es: "Responsable Partner",
+    en: "Partner Responsible",
+    pt: "Responsável Partner",
   },
   "opportunities.detail.notSpecified": {
     es: "No especificado",
