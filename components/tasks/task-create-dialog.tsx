@@ -13,8 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useTaskService } from "@/lib/services/task-service-client"
 import { useTranslations } from "@/hooks/use-translations"
 import { DICT_LANG_OPPORTUNITIES } from "@/lib/constants/dict-lang-opportunities"
-import { DatePicker } from "@/components/ui/date-picker"
-import { Loader2 } from "lucide-react"
+import { Loader2, Calendar } from "lucide-react"
 import { supabase } from "@/lib/supabase/client"
 import type { Task } from "@/types/task"
 
@@ -391,11 +390,18 @@ export function TaskCreateDialog({
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>{t("tasks.form.due_date")}</FormLabel>
-                    <DatePicker
-                      date={field.value ? new Date(field.value) : undefined}
-                      setDate={(date) => field.onChange(date)}
-                      placeholder={t("tasks.form.select_date")}
-                    />
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                      <Input
+                        type="date"
+                        value={field.value ? new Date(field.value).toISOString().split("T")[0] : ""}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          field.onChange(value ? new Date(value) : null)
+                        }}
+                        className="pl-10 transition-all focus:ring-2 focus:ring-primary/20"
+                      />
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
