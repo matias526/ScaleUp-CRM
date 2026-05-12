@@ -620,6 +620,33 @@ export const DICT_LANG_OPPORTUNITIES = {
     en: "Select Prospect Partner",
     pt: "Selecionar Prospect Partner",
   },
+
+  // Notes and Tasks translations
+  "notes.edited": {
+    es: "Editada",
+    en: "Edited",
+    pt: "Editada",
+  },
+  "tasks.assigned_to": {
+    es: "Asignada a",
+    en: "Assigned to",
+    pt: "Atribuída a",
+  },
+  "tasks.due_date": {
+    es: "Fecha de vencimiento",
+    en: "Due date",
+    pt: "Data de vencimento",
+  },
+  "tasks.mark_completed": {
+    es: "Marcar como completada",
+    en: "Mark as completed",
+    pt: "Marcar como concluída",
+  },
+  "tasks.mark_in_progress": {
+    es: "Marcar como en progreso",
+    en: "Mark as in progress",
+    pt: "Marcar como em progresso",
+  },
   "opportunities.prospect.selectPartnerDescription": {
     es: "Selecciona un prospect partner existente y su contacto para asociarlos a esta oportunidad",
     en: "Select an existing prospect partner and their contact to associate with this opportunity",
