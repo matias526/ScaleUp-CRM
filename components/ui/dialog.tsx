@@ -24,6 +24,13 @@ const DialogOverlay = React.forwardRef<
       "fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       className,
     )}
+    onPointerDown={(e) => {
+      // Prevenir que el overlay capture clicks en elementos flotantes
+      const target = e.target as HTMLElement
+      if (target.closest('[role="dialog"]') === null) {
+        e.preventDefault()
+      }
+    }}
     {...props}
   />
 ))
@@ -42,9 +49,12 @@ const DialogContent = React.forwardRef<
         className,
       )}
       onPointerDownOutside={(e) => {
-        // No cerrar si el clic es en un popover o elemento flotante
+        // Prevenir que el diálogo se cierre si el click es en un popover, dropdown, o elemento flotante
         const target = e.target as HTMLElement
-        if (target.closest('[data-radix-popover-content]') || target.closest('[role="tooltip"]')) {
+        const popovers = document.querySelectorAll('[class*="popover"]')
+        const isInPopover = Array.from(popovers).some((p) => p.contains(target))
+        
+        if (isInPopover) {
           e.preventDefault()
         }
       }}
