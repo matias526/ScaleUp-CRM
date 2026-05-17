@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { WeeklyReportServiceV8 } from "@/lib/services/weekly-report-service-v8"
+import { WeeklyReportServiceV8 } from "@/lib/services/weekly-report-service-v8.tsx"
 
 // Esta función se ejecutará automáticamente todos los lunes a las 06:00 AM UTC (3:00 AM Argentina)
 export async function GET(request: NextRequest) {
