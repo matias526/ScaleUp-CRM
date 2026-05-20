@@ -68,7 +68,7 @@ export default async function TasksPage() {
           task_type:task_type_id(id, name, code)
         `)
         .is("parent_task_id", null) // Solo tareas principales
-        .order("due_date", { ascending: true, nullsLast: true })
+        .order("created_at", { ascending: false })
     } else if (isBDD || isPartnerUser || isTechUser) {
       // Para BDD, PartnerUser y TechUser: solo tareas que crearon o están asignadas a ellos
       tasksQuery = supabase
@@ -84,20 +84,14 @@ export default async function TasksPage() {
         `)
         .or(`assigned_to.eq.${user.id},assigned_by.eq.${user.id}`)
         .is("parent_task_id", null) // Solo tareas principales
-        .order("due_date", { ascending: true, nullsLast: true })
+        .order("created_at", { ascending: false })
     }
 
     if (tasksQuery) {
       const { data, error } = await tasksQuery
-      
-      console.log("[v0] Tasks query result:", { 
-        count: data?.length, 
-        error, 
-        isAdmin,
-        hasData: !!data 
-      })
+
       if (error) {
-        console.error("[v0] Tasks query error:", error)
+        console.error("Error al obtener tareas:", error)
       } else {
         tasks = data || []
       }
