@@ -69,6 +69,13 @@ export default async function TasksPage() {
         `)
         .is("parent_task_id", null) // Solo tareas principales
         .order("due_date", { ascending: true, nullsLast: true })
+      
+      const { data, error } = await tasksQuery
+      console.log("[v0] Admin tasks query result:", { count: data?.length, error, hasData: !!data })
+      if (error) {
+        console.error("[v0] Admin tasks query error:", error)
+      }
+      return NextResponse.json({ data, error })
     } else if (isBDD || isPartnerUser || isTechUser) {
       // Para BDD, PartnerUser y TechUser: solo tareas que crearon o están asignadas a ellos
       tasksQuery = supabase
