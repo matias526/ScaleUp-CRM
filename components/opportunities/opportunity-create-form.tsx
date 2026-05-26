@@ -732,6 +732,7 @@ export default function OpportunityCreateForm() {
         assigned_to: assignedToUserId,
         partner_responsible_id: data.partner_responsible_id || null,
         created_by: user?.id,
+        is_new_partner: data.is_prospect && prospectPartnerId ? true : false,
       }
 
       // 1. Definimos el array con el formato que la función createOpportunity espera
