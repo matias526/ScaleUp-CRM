@@ -21,8 +21,6 @@ import { type Partner, type PartnerFormData, PartnerService } from "@/lib/servic
 import { PartnerTechCompanyService } from "@/lib/services/partner-tech-company-service"
 import { TechCompanyService } from "@/lib/services/tech-company-service"
 import { UserService } from "@/lib/services/user-service"
-import { ProspectConversionService } from "@/lib/services/prospect-conversion-service"
-import type { ProspectPartner } from "@/types/prospect-partner"
 
 // Añadir importación del hook de traducciones
 import { useTranslations } from "@/hooks/use-translations"
@@ -45,10 +43,9 @@ const partnerSchema = z.object({
 
 interface PartnerFormProps {
   initialData?: Partner
-  initialProspect?: ProspectPartner | null
 }
 
-export function PartnerForm({ initialData, initialProspect }: PartnerFormProps) {
+export function PartnerForm({ initialData }: PartnerFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -121,11 +118,11 @@ export function PartnerForm({ initialData, initialProspect }: PartnerFormProps) 
   const form = useForm<z.infer<typeof partnerSchema>>({
     resolver: zodResolver(partnerSchema),
     defaultValues: {
-      name: initialData?.name || initialProspect?.name || "",
+      name: initialData?.name || "",
       logo: initialData?.logo_url || undefined,
-      website: initialData?.website || initialProspect?.website || "",
-      address: initialData?.address || initialProspect?.address || "",
-      main_country_id: initialData?.main_country_id || initialProspect?.main_country_id || undefined,
+      website: initialData?.website || "",
+      address: initialData?.address || "",
+      main_country_id: initialData?.main_country_id || undefined,
       city: initialData?.city || "",
       postal_code: initialData?.postal_code || "",
       is_active: initialData?.is_active !== undefined ? initialData.is_active : true,
@@ -174,19 +171,6 @@ export function PartnerForm({ initialData, initialProspect }: PartnerFormProps) 
         }
 
         if (result) {
-          // Si se creó el partner desde un prospect, actualizar el prospect y sus contacts
-          if (initialProspect && initialProspect.id) {
-            const conversionResult = await ProspectConversionService.convertProspectToPartner(
-              initialProspect.id,
-              result.id,
-            )
-
-            if (!conversionResult.success) {
-              console.error("Error en conversión de prospect:", conversionResult.error)
-              // No interrumpimos el flujo, el partner fue creado correctamente
-            }
-          }
-
           router.push("/dashboard/partners")
           router.refresh()
         } else {
