@@ -88,13 +88,11 @@ export function SelectProspectModal({ open, onOpenChange, onSelect }: SelectPros
                 {filteredProspects.map((prospect) => (
                   <div
                     key={prospect.id}
-                    className="p-4 hover:bg-accent transition-colors cursor-pointer flex justify-between items-center"
+                    className="p-3 hover:bg-accent transition-colors flex justify-between items-center gap-3"
                   >
-                    <div className="flex-1">
-                      <h3 className="font-medium">{prospect.name}</h3>
-                      {prospect.main_country_id && (
-                        <p className="text-sm text-muted-foreground">{prospect.website || "Sin sitio web"}</p>
-                      )}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-sm">{prospect.name}</h3>
+                      <p className="text-xs text-muted-foreground truncate">{prospect.website || "Sin sitio web"}</p>
                     </div>
                     <Button
                       size="sm"
@@ -102,6 +100,7 @@ export function SelectProspectModal({ open, onOpenChange, onSelect }: SelectPros
                         onSelect(prospect)
                         onOpenChange(false)
                       }}
+                      className="flex-shrink-0"
                     >
                       Seleccionar
                     </Button>
