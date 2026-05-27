@@ -21,7 +21,6 @@ import { type Partner, type PartnerFormData, PartnerService } from "@/lib/servic
 import { PartnerTechCompanyService } from "@/lib/services/partner-tech-company-service"
 import { TechCompanyService } from "@/lib/services/tech-company-service"
 import { UserService } from "@/lib/services/user-service"
-import { ProspectConversionService } from "@/lib/services/prospect-conversion-service"
 import type { ProspectPartner } from "@/types/prospect-partner"
 
 // Añadir importación del hook de traducciones
@@ -190,6 +189,7 @@ export function PartnerForm({ initialData, initialProspect }: PartnerFormProps) 
         if (result) {
           // Si se creó el partner desde un prospect, actualizar el prospect y sus contacts
           if (initialProspect && initialProspect.id) {
+            const { ProspectConversionService } = await import("@/lib/services/prospect-conversion-service")
             const conversionResult = await ProspectConversionService.convertProspectToPartner(
               initialProspect.id,
               result.id,
