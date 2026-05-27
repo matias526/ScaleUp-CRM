@@ -57,7 +57,7 @@ export function SelectProspectModal({ open, onOpenChange, onSelect }: SelectPros
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Seleccionar Prospect para Convertir</DialogTitle>
           <DialogDescription>
@@ -65,7 +65,7 @@ export function SelectProspectModal({ open, onOpenChange, onSelect }: SelectPros
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {/* Search input */}
           <Input
             placeholder="Buscar prospect por nombre..."
@@ -88,7 +88,7 @@ export function SelectProspectModal({ open, onOpenChange, onSelect }: SelectPros
                 {filteredProspects.map((prospect) => (
                   <div
                     key={prospect.id}
-                    className="py-2 px-3 hover:bg-accent transition-colors flex items-center justify-between gap-3 group"
+                    className="py-2 px-3 hover:bg-accent transition-colors flex items-center justify-between gap-2 group"
                   >
                     <div className="flex-1 min-w-0">
                       <h3 className="text-sm font-medium leading-tight">{prospect.name}</h3>
