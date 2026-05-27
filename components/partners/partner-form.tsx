@@ -43,9 +43,10 @@ const partnerSchema = z.object({
 
 interface PartnerFormProps {
   initialData?: Partner
+  initialProspect?: any
 }
 
-export function PartnerForm({ initialData }: PartnerFormProps) {
+export function PartnerForm({ initialData, initialProspect }: PartnerFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -113,6 +114,23 @@ export function PartnerForm({ initialData }: PartnerFormProps) {
 
     loadPartnerCountries()
   }, [isEditing, initialData])
+
+  // Actualizar formulario cuando se selecciona un prospect
+  useEffect(() => {
+    if (initialProspect) {
+      form.reset({
+        name: initialProspect.name || "",
+        logo: undefined,
+        website: initialProspect.website || "",
+        address: initialProspect.address || "",
+        main_country_id: initialProspect.main_country_id || undefined,
+        city: "",
+        postal_code: "",
+        is_active: true,
+        country_ids: [],
+      })
+    }
+  }, [initialProspect, form])
 
   // Inicializar el formulario
   const form = useForm<z.infer<typeof partnerSchema>>({
