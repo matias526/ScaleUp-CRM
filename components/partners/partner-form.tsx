@@ -130,15 +130,6 @@ export function PartnerForm({ initialData, initialProspect }: PartnerFormProps) 
       })
     }
   }, [initialProspect, form])
-        setSelectedCountries(countryIds)
-
-        // Actualizar el formulario con los países seleccionados
-        form.setValue("country_ids", countryIds)
-      }
-    }
-
-    loadPartnerCountries()
-  }, [isEditing, initialData])
 
   // Inicializar el formulario
   const form = useForm<z.infer<typeof partnerSchema>>({
