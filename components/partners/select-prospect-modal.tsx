@@ -71,16 +71,17 @@ export function SelectProspectModal({ open, onOpenChange, onSelect }: SelectPros
             placeholder="Buscar prospect por nombre..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full"
           />
 
           {/* Prospects list */}
           <div className="border rounded-lg max-h-96 overflow-y-auto">
             {loading ? (
-              <div className="flex items-center justify-center py-8">
+              <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-6 w-6 animate-spin" />
               </div>
             ) : filteredProspects.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="text-center py-12 text-muted-foreground">
                 {searchTerm ? "No se encontraron prospects" : "No hay prospects disponibles"}
               </div>
             ) : (
@@ -88,12 +89,17 @@ export function SelectProspectModal({ open, onOpenChange, onSelect }: SelectPros
                 {filteredProspects.map((prospect) => (
                   <div
                     key={prospect.id}
-                    className="p-4 hover:bg-accent transition-colors cursor-pointer flex justify-between items-center"
+                    className="p-4 hover:bg-accent/50 transition-colors flex justify-between items-start gap-4 group"
                   >
-                    <div className="flex-1">
-                      <h3 className="font-medium">{prospect.name}</h3>
-                      {prospect.main_country_id && (
-                        <p className="text-sm text-muted-foreground">{prospect.website || "Sin sitio web"}</p>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm">{prospect.name}</h3>
+                      <p className="text-xs text-muted-foreground mt-1 truncate">
+                        {prospect.website || "Sin sitio web"}
+                      </p>
+                      {prospect.lead_source && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Fuente: {prospect.lead_source}
+                        </p>
                       )}
                     </div>
                     <Button
@@ -102,6 +108,7 @@ export function SelectProspectModal({ open, onOpenChange, onSelect }: SelectPros
                         onSelect(prospect)
                         onOpenChange(false)
                       }}
+                      className="flex-shrink-0"
                     >
                       Seleccionar
                     </Button>
