@@ -108,6 +108,29 @@ export function PartnerForm({ initialData, initialProspect }: PartnerFormProps) 
       if (isEditing && initialData?.id) {
         const countryIds = await PartnerService.getPartnerCountryIds(initialData.id)
         setSelectedCountries(countryIds)
+      }
+    }
+
+    loadPartnerCountries()
+  }, [isEditing, initialData?.id])
+
+  // Actualizar valores del form cuando initialProspect cambia
+  useEffect(() => {
+    if (initialProspect) {
+      form.reset({
+        name: initialProspect.name || "",
+        logo: undefined,
+        website: initialProspect.website || "",
+        address: initialProspect.address || "",
+        main_country_id: initialProspect.main_country_id || undefined,
+        city: "",
+        postal_code: "",
+        is_active: true,
+        country_ids: [],
+      })
+    }
+  }, [initialProspect, form])
+        setSelectedCountries(countryIds)
 
         // Actualizar el formulario con los países seleccionados
         form.setValue("country_ids", countryIds)
