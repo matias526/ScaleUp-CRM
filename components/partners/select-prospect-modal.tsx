@@ -88,11 +88,11 @@ export function SelectProspectModal({ open, onOpenChange, onSelect }: SelectPros
                 {filteredProspects.map((prospect) => (
                   <div
                     key={prospect.id}
-                    className="p-3 hover:bg-accent transition-colors flex justify-between items-center gap-3"
+                    className="py-2 px-3 hover:bg-accent transition-colors flex items-center justify-between gap-3 group"
                   >
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-sm">{prospect.name}</h3>
-                      <p className="text-xs text-muted-foreground truncate">{prospect.website || "Sin sitio web"}</p>
+                      <h3 className="text-sm font-medium leading-tight">{prospect.name}</h3>
+                      <p className="text-xs text-muted-foreground truncate leading-tight">{prospect.website || "Sin sitio web"}</p>
                     </div>
                     <Button
                       size="sm"
