@@ -21,6 +21,7 @@ import { type Partner, type PartnerFormData, PartnerService } from "@/lib/servic
 import { PartnerTechCompanyService } from "@/lib/services/partner-tech-company-service"
 import { TechCompanyService } from "@/lib/services/tech-company-service"
 import { UserService } from "@/lib/services/user-service"
+import { supabase } from "@/lib/supabase/client"
 
 // Añadir importación del hook de traducciones
 import { useTranslations } from "@/hooks/use-translations"
@@ -43,9 +44,10 @@ const partnerSchema = z.object({
 
 interface PartnerFormProps {
   initialData?: Partner
+  initialProspect?: any
 }
 
-export function PartnerForm({ initialData }: PartnerFormProps) {
+export function PartnerForm({ initialData, initialProspect }: PartnerFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -115,6 +117,23 @@ export function PartnerForm({ initialData }: PartnerFormProps) {
     loadPartnerCountries()
   }, [isEditing, initialData])
 
+  // Cargar datos del prospect cuando se selecciona (solo si NO estamos editando)
+  useEffect(() => {
+    if (initialProspect && !isEditing) {
+      form.reset({
+        name: initialProspect.name || "",
+        logo: undefined,
+        website: initialProspect.website || "",
+        address: initialProspect.address || "",
+        main_country_id: initialProspect.main_country_id || undefined,
+        city: "",
+        postal_code: "",
+        is_active: true,
+        country_ids: [],
+      })
+    }
+  }, [initialProspect, isEditing, form])
+
   // Inicializar el formulario
   const form = useForm<z.infer<typeof partnerSchema>>({
     resolver: zodResolver(partnerSchema),
@@ -172,6 +191,28 @@ export function PartnerForm({ initialData }: PartnerFormProps) {
         }
 
         if (result) {
+          // Si se creó desde un prospect, actualizar el prospect como convertido
+          if (initialProspect && initialProspect.id && !isEditing) {
+            try {
+              const { ProspectPartnerService } = await import("@/lib/services/prospect-partner-service")
+              
+              // Actualizar prospect_partners con el partner convertido
+              await ProspectPartnerService.updateProspectPartner(initialProspect.id, {
+                converted_partner_id: result.id,
+                converted_at: new Date().toISOString(),
+              })
+              
+              // Obtener contactos del prospect y vincularlos al partner
+              const contacts = await ProspectPartnerService.getContactsByProspectPartner(initialProspect.id)
+              for (const contact of contacts) {
+                await supabase.from("contacts").update({ partner_id: result.id }).eq("id", contact.id)
+              }
+            } catch (conversionError) {
+              console.error("[v0] Error converting prospect:", conversionError)
+              // No interrumpimos el flujo, el partner fue creado correctamente
+            }
+          }
+
           router.push("/dashboard/partners")
           router.refresh()
         } else {
