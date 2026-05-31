@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     const roles = searchParams.get("roles")
     console.log("[v0] Requested roles:", roles)
 
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
 
     const query = supabase
       .from("users")
