@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const { data: users, error: usersError } = await supabase
       .from("users")
       .select("id, first_name, last_name, email, role_id, profile_image, roles!inner(code)")
-      .eq("roles.code", "BDD")
+      .in("roles.code", ["BDD", "Admin", "Marketing"])
       .eq("is_active", true)
 
     if (usersError) {

@@ -94,7 +94,7 @@ export default function InternalMeetingSummary({ meetingId, meetingDate, weeklyT
       }
 
       // Cargar usuarios ScaleUp para el selector de email
-      const usersResponse = await fetch("/api/users?roles=Admin,BDD")
+      const usersResponse = await fetch("/api/users?roles=Admin,BDD,Marketing")
       if (usersResponse.ok) {
         const usersResult = await usersResponse.json()
         if (usersResult.success) {

@@ -66,11 +66,11 @@ export function AddCommitmentDialog({
 
       setIsLoadingUsers(true)
       try {
-        // Obtener los IDs de los roles Admin y BDD
+        // Obtener los IDs de los roles Admin, BDD y Marketing
         const { data: roleIds, error: roleError } = await supabase
           .from("roles")
           .select("id, code")
-          .in("code", ["Admin", "BDD"])
+          .in("code", ["Admin", "BDD", "Marketing"])
 
         if (roleError) {
           console.error("Error al obtener roles:", roleError)

@@ -89,7 +89,7 @@ export default function InternalMeetingExecution() {
           }
         }
 
-        const participantsResponse = await fetch("/api/users?roles=Admin,BDD")
+        const participantsResponse = await fetch("/api/users?roles=Admin,BDD,Marketing")
         if (participantsResponse.ok) {
           const participantsResult = await participantsResponse.json()
           if (participantsResult.success) {
