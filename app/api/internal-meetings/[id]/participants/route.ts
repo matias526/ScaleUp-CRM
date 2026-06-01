@@ -13,7 +13,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     }
 
     // 2. Simplificamos la query para evitar que el Join rompa todo
-    // Primero traemos los participantes
+    // Primero traemos los participantes SOLO con usuarios activos
     const { data: participants, error } = await supabase
       .from("internal_meeting_participants")
       .select(`
@@ -24,10 +24,12 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
           first_name,
           last_name,
           email,
-          role_code
+          role_code,
+          is_active
         )
       `)
       .eq("meeting_id", meetingId)
+      .filter("users.is_active", "eq", true)
 
     if (error) {
       console.error("[v0] Error fetching meeting participants:", error)

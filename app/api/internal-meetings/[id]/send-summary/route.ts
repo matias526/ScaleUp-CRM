@@ -116,7 +116,7 @@ export async function POST(
 
     console.log("[v0] Current commitments loaded:", currentCommitments.length)
 
-    // Get participants
+    // Get participants (ONLY active users)
     const { data: participantIds } = await supabase
       .from("internal_meeting_participants")
       .select("user_id")
@@ -132,6 +132,7 @@ export async function POST(
           "id",
           participantIds.map((p) => p.user_id),
         )
+        .eq("is_active", true)
 
       participants = participantData || []
     }
