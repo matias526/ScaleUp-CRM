@@ -188,7 +188,6 @@ export default function PulseMessagesPage() {
         let query = supabase
           .from("contacts")
           .select("id, first_name, last_name, email, partner_id")
-          .eq("is_active", true)
           .not("partner_id", "is", null)
 
         if (selectedPartner && recipientType === "partner") {
@@ -202,8 +201,6 @@ export default function PulseMessagesPage() {
         }
 
         const { data: contacts, error: partnerContactError } = await query
-
-        console.log("[v0] Partner contacts query result:", { count: contacts?.length, error: partnerContactError })
 
         if (contacts && contacts.length > 0) {
           // Obtener información de los partners para cada contacto
@@ -225,28 +222,17 @@ export default function PulseMessagesPage() {
         }
       }
 
-      // Contactos Sueltos: contacts sin partner_id, sin prospect_partner_id y sin tech_company_id
+      // Contactos Sueltos: contacts sin partner_id y sin tech_company_id y sin end_customer_id
       if (recipientType === "all" || recipientType === "standalone_contact") {
         const { data: allContacts, error: allContactsError } = await supabase
           .from("contacts")
-          .select("id, first_name, last_name, email, partner_id, prospect_partner_id, tech_company_id")
-          .eq("is_active", true)
-
-        console.log("[v0] All contacts fetched:", {
-          count: allContacts?.length,
-          error: allContactsError,
-        })
+          .select("id, first_name, last_name, email, partner_id, tech_company_id, end_customer_id")
 
         if (allContacts) {
           // Filtrar localmente los contactos que no tengan ninguna entidad asociada
           const standaloneContacts = allContacts.filter(
-            (c) => !c.partner_id && !c.prospect_partner_id && !c.tech_company_id,
+            (c) => !c.partner_id && !c.tech_company_id && !c.end_customer_id,
           )
-
-          console.log("[v0] Standalone contacts after filtering:", {
-            total: allContacts.length,
-            standalone: standaloneContacts.length,
-          })
 
           if (searchTerm) {
             // Filtrar por búsqueda si es necesario
