@@ -187,7 +187,7 @@ export default function PulseMessagesPage() {
       if (recipientType === "all" || recipientType === "partner") {
         let query = supabase
           .from("contacts")
-          .select("id, first_name, last_name, email, partner_id, partners!inner(name)")
+          .select("id, first_name, last_name, email, partner_id")
           .eq("is_active", true)
           .not("partner_id", "is", null)
 
@@ -201,9 +201,17 @@ export default function PulseMessagesPage() {
           )
         }
 
-        const { data: contacts } = await query
+        const { data: contacts, error: partnerContactError } = await query
 
-        if (contacts) {
+        console.log("[v0] Partner contacts query result:", { count: contacts?.length, error: partnerContactError })
+
+        if (contacts && contacts.length > 0) {
+          // Obtener información de los partners para cada contacto
+          const partnerIds = [...new Set(contacts.map((c) => c.partner_id))]
+          const { data: partnerData } = await supabase.from("partners").select("id, name").in("id", partnerIds)
+
+          const partnerMap = new Map(partnerData?.map((p) => [p.id, p.name]) || [])
+
           newRecipients.push(
             ...contacts.map((c: any) => ({
               id: `partner_contact_${c.id}`,
@@ -211,47 +219,7 @@ export default function PulseMessagesPage() {
               email: c.email,
               type: "partner" as const,
               recipientSubType: "partner_contact" as const,
-              entityName: c.partners?.name,
-            })),
-          )
-        }
-      }
-
-      // Contactos Prospects: contacts con prospect_partner_id
-      if (recipientType === "all" || recipientType === "prospect_contact") {
-        let query = supabase
-          .from("contacts")
-          .select("id, first_name, last_name, email, prospect_partner_id")
-          .eq("is_active", true)
-          .not("prospect_partner_id", "is", null)
-
-        if (searchTerm) {
-          query = query.or(
-            `first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`,
-          )
-        }
-
-        const { data: contacts, error: prospectError } = await query
-
-        console.log("[v0] Prospect contacts query result:", { contacts, error: prospectError })
-
-        if (contacts && contacts.length > 0) {
-          // Obtener información de los prospect partners para cada contacto
-          const prospectIds = [...new Set(contacts.map((c) => c.prospect_partner_id))]
-          const { data: prospectData } = await supabase
-            .from("prospect_partners")
-            .select("id, name")
-            .in("id", prospectIds)
-
-          const prospectMap = new Map(prospectData?.map((p) => [p.id, p.name]) || [])
-
-          newRecipients.push(
-            ...contacts.map((c: any) => ({
-              id: `prospect_contact_${c.id}`,
-              name: `${c.first_name} ${c.last_name}`,
-              email: c.email,
-              type: "prospect_contact" as const,
-              entityName: prospectMap.get(c.prospect_partner_id),
+              entityName: partnerMap.get(c.partner_id),
             })),
           )
         }
@@ -259,47 +227,53 @@ export default function PulseMessagesPage() {
 
       // Contactos Sueltos: contacts sin partner_id, sin prospect_partner_id y sin tech_company_id
       if (recipientType === "all" || recipientType === "standalone_contact") {
-        let query = supabase
+        const { data: allContacts, error: allContactsError } = await supabase
           .from("contacts")
-          .select("id, first_name, last_name, email")
+          .select("id, first_name, last_name, email, partner_id, prospect_partner_id, tech_company_id")
           .eq("is_active", true)
 
-        if (searchTerm) {
-          query = query.or(
-            `first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`,
-          )
-        }
-
-        const { data: allContacts, error: standaloneError } = await query
-
-        console.log("[v0] All contacts before filtering:", { count: allContacts?.length, error: standaloneError })
-
-        // Filtrar manualmente los contactos que no tengan partner_id, prospect_partner_id ni tech_company_id
-        const { data: contactsWithEntities } = await supabase
-          .from("contacts")
-          .select("id, partner_id, prospect_partner_id, tech_company_id")
-
-        const entityIds = new Set(
-          contactsWithEntities?.filter((c) => c.partner_id || c.prospect_partner_id || c.tech_company_id).map((c) => c.id),
-        )
-
-        const standaloneContacts =
-          allContacts?.filter((c) => !entityIds.has(c.id)) || []
-
-        console.log("[v0] Standalone contacts after filtering:", {
-          total: allContacts?.length,
-          filtered: standaloneContacts.length,
+        console.log("[v0] All contacts fetched:", {
+          count: allContacts?.length,
+          error: allContactsError,
         })
 
-        if (standaloneContacts && standaloneContacts.length > 0) {
-          newRecipients.push(
-            ...standaloneContacts.map((c: any) => ({
-              id: `standalone_contact_${c.id}`,
-              name: `${c.first_name} ${c.last_name}`,
-              email: c.email,
-              type: "standalone_contact" as const,
-            })),
+        if (allContacts) {
+          // Filtrar localmente los contactos que no tengan ninguna entidad asociada
+          const standaloneContacts = allContacts.filter(
+            (c) => !c.partner_id && !c.prospect_partner_id && !c.tech_company_id,
           )
+
+          console.log("[v0] Standalone contacts after filtering:", {
+            total: allContacts.length,
+            standalone: standaloneContacts.length,
+          })
+
+          if (searchTerm) {
+            // Filtrar por búsqueda si es necesario
+            const filtered = standaloneContacts.filter(
+              (c) =>
+                `${c.first_name} ${c.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                c.email?.toLowerCase().includes(searchTerm.toLowerCase()),
+            )
+
+            newRecipients.push(
+              ...filtered.map((c: any) => ({
+                id: `standalone_contact_${c.id}`,
+                name: `${c.first_name} ${c.last_name}`,
+                email: c.email,
+                type: "standalone_contact" as const,
+              })),
+            )
+          } else {
+            newRecipients.push(
+              ...standaloneContacts.map((c: any) => ({
+                id: `standalone_contact_${c.id}`,
+                name: `${c.first_name} ${c.last_name}`,
+                email: c.email,
+                type: "standalone_contact" as const,
+              })),
+            )
+          }
         }
       }
 
