@@ -4,9 +4,10 @@ import { useAuth } from "@/components/auth/auth-provider"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import PulseTemplateManager from "@/components/pulse/pulse-template-manager"
+import { PulseMessageSender } from "@/components/pulse/pulse-message-sender"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Loader2, Zap } from "lucide-react"
+import { Loader2, Zap, Mail } from "lucide-react"
 import { useTranslation } from "@/hooks/use-translations"
 
 export default function PulseTemplatesPage() {
@@ -15,6 +16,7 @@ export default function PulseTemplatesPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [authorized, setAuthorized] = useState(false)
+  const [showMessageSender, setShowMessageSender] = useState(false)
 
   // Validar acceso restringido para Admin o Marketing
   useEffect(() => {
@@ -83,12 +85,20 @@ export default function PulseTemplatesPage() {
   // Mostrar el gestor de templates si el usuario está autorizado
   return (
     <div className="container mx-auto py-6">
-      <div className="flex items-center space-x-2 mb-6">
-        <Zap className="h-6 w-6" />
-        <h1 className="text-2xl font-bold">{t("pulse.title", "Pulse Templates")}</h1>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center space-x-2">
+          <Zap className="h-6 w-6" />
+          <h1 className="text-2xl font-bold">{t("pulse.title", "Pulse Templates")}</h1>
+        </div>
+        <Button onClick={() => setShowMessageSender(true)} variant="default">
+          <Mail className="w-4 h-4 mr-2" />
+          Enviar Mensaje
+        </Button>
       </div>
 
       <PulseTemplateManager />
+
+      <PulseMessageSender open={showMessageSender} onOpenChange={setShowMessageSender} />
     </div>
   )
 }
