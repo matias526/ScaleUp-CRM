@@ -221,7 +221,7 @@ export default function PulseMessagesPage() {
       if (recipientType === "all" || recipientType === "prospect_contact") {
         let query = supabase
           .from("contacts")
-          .select("id, first_name, last_name, email, prospect_partner_id, prospect_partners(id, name)")
+          .select("id, first_name, last_name, email, prospect_partner_id")
           .eq("is_active", true)
           .not("prospect_partner_id", "is", null)
 
@@ -231,16 +231,27 @@ export default function PulseMessagesPage() {
           )
         }
 
-        const { data: contacts } = await query
+        const { data: contacts, error: prospectError } = await query
 
-        if (contacts) {
+        console.log("[v0] Prospect contacts query result:", { contacts, error: prospectError })
+
+        if (contacts && contacts.length > 0) {
+          // Obtener información de los prospect partners para cada contacto
+          const prospectIds = [...new Set(contacts.map((c) => c.prospect_partner_id))]
+          const { data: prospectData } = await supabase
+            .from("prospect_partners")
+            .select("id, name")
+            .in("id", prospectIds)
+
+          const prospectMap = new Map(prospectData?.map((p) => [p.id, p.name]) || [])
+
           newRecipients.push(
             ...contacts.map((c: any) => ({
               id: `prospect_contact_${c.id}`,
               name: `${c.first_name} ${c.last_name}`,
               email: c.email,
               type: "prospect_contact" as const,
-              entityName: c.prospect_partners?.[0]?.name || c.prospect_partners?.name,
+              entityName: prospectMap.get(c.prospect_partner_id),
             })),
           )
         }
@@ -252,9 +263,6 @@ export default function PulseMessagesPage() {
           .from("contacts")
           .select("id, first_name, last_name, email")
           .eq("is_active", true)
-          .is("partner_id", null)
-          .is("prospect_partner_id", null)
-          .is("tech_company_id", null)
 
         if (searchTerm) {
           query = query.or(
@@ -262,11 +270,30 @@ export default function PulseMessagesPage() {
           )
         }
 
-        const { data: contacts } = await query
+        const { data: allContacts, error: standaloneError } = await query
 
-        if (contacts) {
+        console.log("[v0] All contacts before filtering:", { count: allContacts?.length, error: standaloneError })
+
+        // Filtrar manualmente los contactos que no tengan partner_id, prospect_partner_id ni tech_company_id
+        const { data: contactsWithEntities } = await supabase
+          .from("contacts")
+          .select("id, partner_id, prospect_partner_id, tech_company_id")
+
+        const entityIds = new Set(
+          contactsWithEntities?.filter((c) => c.partner_id || c.prospect_partner_id || c.tech_company_id).map((c) => c.id),
+        )
+
+        const standaloneContacts =
+          allContacts?.filter((c) => !entityIds.has(c.id)) || []
+
+        console.log("[v0] Standalone contacts after filtering:", {
+          total: allContacts?.length,
+          filtered: standaloneContacts.length,
+        })
+
+        if (standaloneContacts && standaloneContacts.length > 0) {
           newRecipients.push(
-            ...contacts.map((c: any) => ({
+            ...standaloneContacts.map((c: any) => ({
               id: `standalone_contact_${c.id}`,
               name: `${c.first_name} ${c.last_name}`,
               email: c.email,
