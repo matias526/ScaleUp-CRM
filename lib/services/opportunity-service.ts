@@ -36,6 +36,9 @@ export async function getOpportunities(userInfo?: any): Promise<OpportunityWithR
         query = query.eq("partner_id", userInfo.partnerId)
       } else if (userInfo.roleCode && userInfo.roleCode.toLowerCase() === "bdd" && userInfo.id) {
         query = query.or(`assigned_to.eq.${userInfo.id},created_by.eq.${userInfo.id}`)
+      } else if (userInfo.roleCode && userInfo.roleCode.toLowerCase() === "marketing" && userInfo.id) {
+        // Para Marketing: solo oportunidades que están asignadas a ellos o que crearon
+        query = query.or(`assigned_to.eq.${userInfo.id},created_by.eq.${userInfo.id}`)
       }
     }
 
@@ -81,6 +84,9 @@ export async function getOpportunitiesClient(userInfo?: any): Promise<Opportunit
       else if (userInfo.partnerId) {
         query = query.eq("partner_id", userInfo.partnerId)
       } else if (userInfo.roleCode && userInfo.roleCode.toLowerCase() === "bdd" && userInfo.id) {
+        query = query.or(`assigned_to.eq.${userInfo.id},created_by.eq.${userInfo.id}`)
+      } else if (userInfo.roleCode && userInfo.roleCode.toLowerCase() === "marketing" && userInfo.id) {
+        // Para Marketing: solo oportunidades que están asignadas a ellos o que crearon
         query = query.or(`assigned_to.eq.${userInfo.id},created_by.eq.${userInfo.id}`)
       }
     }

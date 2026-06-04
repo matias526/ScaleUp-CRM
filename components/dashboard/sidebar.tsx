@@ -254,7 +254,6 @@ export function Sidebar() {
       href: "/dashboard/opportunities",
       icon: CircleDollarSign,
       labelKey: "sidebar.opportunities",
-      excludeMarketing: true,
     },
     {
       href: "/dashboard/purchase-orders",
