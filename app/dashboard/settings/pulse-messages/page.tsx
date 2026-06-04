@@ -18,7 +18,7 @@ interface Recipient {
   id: string
   name: string
   email: string
-  type: "scaleup_user" | "tech_company_user" | "partner" | "prospect_contact"
+  type: "scaleup_user" | "tech_company_user" | "partner" | "prospect_contact" | "standalone_contact"
   entityName?: string // Para mostrar Tech Company o Partner
   recipientSubType?: "partner_user" | "partner_contact" // Para diferenciar dentro de "partner"
 }
@@ -29,6 +29,7 @@ const RECIPIENT_TYPES = [
   { value: "tech_company_user", label: "Usuarios TechCompanies" },
   { value: "partner", label: "Partners" },
   { value: "prospect_contact", label: "Contactos Prospects" },
+  { value: "standalone_contact", label: "Contactos" },
 ]
 
 export default function PulseMessagesPage() {
@@ -220,7 +221,7 @@ export default function PulseMessagesPage() {
       if (recipientType === "all" || recipientType === "prospect_contact") {
         let query = supabase
           .from("contacts")
-          .select("id, first_name, last_name, email, prospect_partner_id, prospect_partners!inner(name)")
+          .select("id, first_name, last_name, email, prospect_partner_id, prospect_partners(id, name)")
           .eq("is_active", true)
           .not("prospect_partner_id", "is", null)
 
@@ -239,7 +240,37 @@ export default function PulseMessagesPage() {
               name: `${c.first_name} ${c.last_name}`,
               email: c.email,
               type: "prospect_contact" as const,
-              entityName: c.prospect_partners?.name,
+              entityName: c.prospect_partners?.[0]?.name || c.prospect_partners?.name,
+            })),
+          )
+        }
+      }
+
+      // Contactos Sueltos: contacts sin partner_id, sin prospect_partner_id y sin tech_company_id
+      if (recipientType === "all" || recipientType === "standalone_contact") {
+        let query = supabase
+          .from("contacts")
+          .select("id, first_name, last_name, email")
+          .eq("is_active", true)
+          .is("partner_id", null)
+          .is("prospect_partner_id", null)
+          .is("tech_company_id", null)
+
+        if (searchTerm) {
+          query = query.or(
+            `first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`,
+          )
+        }
+
+        const { data: contacts } = await query
+
+        if (contacts) {
+          newRecipients.push(
+            ...contacts.map((c: any) => ({
+              id: `standalone_contact_${c.id}`,
+              name: `${c.first_name} ${c.last_name}`,
+              email: c.email,
+              type: "standalone_contact" as const,
             })),
           )
         }
@@ -415,7 +446,9 @@ export default function PulseMessagesPage() {
                                 ? recipient.recipientSubType === "partner_user"
                                   ? "Partner User"
                                   : "Partner Contact"
-                                : "Prospect"}
+                                : recipient.type === "prospect_contact"
+                                  ? "Prospect"
+                                  : "Contact"}
                         </Badge>
                       </div>
                     ))}
