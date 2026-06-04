@@ -18,16 +18,16 @@ interface Recipient {
   id: string
   name: string
   email: string
-  type: "scaleup_user" | "tech_company_user" | "partner_user" | "partner_contact" | "prospect_contact"
+  type: "scaleup_user" | "tech_company_user" | "partner" | "prospect_contact"
   entityName?: string // Para mostrar Tech Company o Partner
+  recipientSubType?: "partner_user" | "partner_contact" // Para diferenciar dentro de "partner"
 }
 
 const RECIPIENT_TYPES = [
   { value: "all", label: "Todos" },
   { value: "scaleup_user", label: "Usuarios ScaleUp" },
   { value: "tech_company_user", label: "Usuarios TechCompanies" },
-  { value: "partner_user", label: "Usuarios Partners" },
-  { value: "partner_contact", label: "Contactos Partners" },
+  { value: "partner", label: "Partners" },
   { value: "prospect_contact", label: "Contactos Prospects" },
 ]
 
@@ -43,16 +43,19 @@ export default function PulseMessagesPage() {
   const [loadingRecipients, setLoadingRecipients] = useState(false)
   const [techCompanies, setTechCompanies] = useState<Array<{ id: string; name: string }>>([])
   const [selectedTechCompany, setSelectedTechCompany] = useState<string>("")
+  const [partners, setPartners] = useState<Array<{ id: string; name: string }>>([])
+  const [selectedPartner, setSelectedPartner] = useState<string>("")
 
-  // Cargar tech companies al montar el componente
+  // Cargar tech companies y partners al montar el componente
   useEffect(() => {
     loadTechCompanies()
+    loadPartners()
   }, [])
 
   // Cargar destinatarios según el tipo seleccionado
   useEffect(() => {
     loadRecipients()
-  }, [recipientType, searchTerm, selectedTechCompany])
+  }, [recipientType, searchTerm, selectedTechCompany, selectedPartner])
 
   const loadTechCompanies = async () => {
     try {
@@ -63,6 +66,18 @@ export default function PulseMessagesPage() {
       }
     } catch (error) {
       console.error("[v0] Error loading tech companies:", error)
+    }
+  }
+
+  const loadPartners = async () => {
+    try {
+      const { data } = await supabase.from("partners").select("id, name").eq("is_active", true)
+
+      if (data) {
+        setPartners(data)
+      }
+    } catch (error) {
+      console.error("[v0] Error loading partners:", error)
     }
   }
 
@@ -134,12 +149,16 @@ export default function PulseMessagesPage() {
       }
 
       // Usuarios Partners: users con partner_id
-      if (recipientType === "all" || recipientType === "partner_user") {
+      if (recipientType === "all" || recipientType === "partner") {
         let query = supabase
           .from("users")
           .select("id, first_name, last_name, email, partner_id, partners!inner(name)")
           .eq("is_active", true)
           .not("partner_id", "is", null)
+
+        if (selectedPartner && recipientType === "partner") {
+          query = query.eq("partner_id", selectedPartner)
+        }
 
         if (searchTerm) {
           query = query.or(
@@ -155,7 +174,8 @@ export default function PulseMessagesPage() {
               id: `partner_user_${u.id}`,
               name: `${u.first_name} ${u.last_name}`,
               email: u.email,
-              type: "partner_user" as const,
+              type: "partner" as const,
+              recipientSubType: "partner_user" as const,
               entityName: u.partners?.name,
             })),
           )
@@ -163,12 +183,16 @@ export default function PulseMessagesPage() {
       }
 
       // Contactos Partners: contacts con partner_id
-      if (recipientType === "all" || recipientType === "partner_contact") {
+      if (recipientType === "all" || recipientType === "partner") {
         let query = supabase
           .from("contacts")
           .select("id, first_name, last_name, email, partner_id, partners!inner(name)")
           .eq("is_active", true)
           .not("partner_id", "is", null)
+
+        if (selectedPartner && recipientType === "partner") {
+          query = query.eq("partner_id", selectedPartner)
+        }
 
         if (searchTerm) {
           query = query.or(
@@ -184,7 +208,8 @@ export default function PulseMessagesPage() {
               id: `partner_contact_${c.id}`,
               name: `${c.first_name} ${c.last_name}`,
               email: c.email,
-              type: "partner_contact" as const,
+              type: "partner" as const,
+              recipientSubType: "partner_contact" as const,
               entityName: c.partners?.name,
             })),
           )
@@ -328,6 +353,25 @@ export default function PulseMessagesPage() {
                 </div>
               )}
 
+              {/* Selector de Partner si está seleccionado */}
+              {recipientType === "partner" && (
+                <div className="flex-1 min-w-48">
+                  <label className="text-sm font-medium">Partner</label>
+                  <Select value={selectedPartner} onValueChange={setSelectedPartner}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona un Partner" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {partners.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
               <Input
                 placeholder="Buscar..."
                 value={searchTerm}
@@ -367,11 +411,11 @@ export default function PulseMessagesPage() {
                             ? "ScaleUp"
                             : recipient.type === "tech_company_user"
                               ? "Tech User"
-                              : recipient.type === "partner_user"
-                                ? "Partner User"
-                                : recipient.type === "partner_contact"
-                                  ? "Partner Contact"
-                                  : "Prospect"}
+                              : recipient.type === "partner"
+                                ? recipient.recipientSubType === "partner_user"
+                                  ? "Partner User"
+                                  : "Partner Contact"
+                                : "Prospect"}
                         </Badge>
                       </div>
                     ))}
