@@ -21,6 +21,7 @@ export default async function TasksPage() {
   let userRole = null
   let isAdmin = false
   let isBDD = false
+  let isMarketing = false
   let isPartnerUser = false
   let isTechUser = false
 
@@ -38,6 +39,7 @@ export default async function TasksPage() {
 
       isAdmin = roleCodeLower === "admin"
       isBDD = roleCodeLower === "bdd"
+      isMarketing = roleCodeLower === "marketing"
       isPartnerUser = roleCodeLower.includes("partner")
       isTechUser = roleCodeLower.includes("tech") && roleCodeLower.includes("user")
     }
@@ -69,8 +71,8 @@ export default async function TasksPage() {
         `)
         .is("parent_task_id", null) // Solo tareas principales
         .order("created_at", { ascending: false })
-    } else if (isBDD || isPartnerUser || isTechUser) {
-      // Para BDD, PartnerUser y TechUser: solo tareas que crearon o están asignadas a ellos
+    } else if (isBDD || isMarketing || isPartnerUser || isTechUser) {
+      // Para BDD, Marketing, PartnerUser y TechUser: solo tareas que crearon o están asignadas a ellos
       tasksQuery = supabase
         .from("tasks")
         .select(`
@@ -125,7 +127,7 @@ export default async function TasksPage() {
 
       <TasksTable
         initialTasks={tasks}
-        userRoleInfo={{ id: user?.id || null, role: userRole, isAdmin, isBDD, isPartnerUser, isTechUser }}
+        userRoleInfo={{ id: user?.id || null, role: userRole, isAdmin, isBDD, isMarketing, isPartnerUser, isTechUser }}
         techCompanies={techCompanies || []}
         partners={partners || []}
       />

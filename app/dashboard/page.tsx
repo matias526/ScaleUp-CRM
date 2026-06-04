@@ -1,6 +1,7 @@
 import { Suspense } from "react"
 import { NewAdminDashboard } from "@/components/dashboard/new-admin-dashboard"
 import { BddDashboard } from "@/components/dashboard/bdd-dashboard"
+import { MarketingDashboard } from "@/components/dashboard/marketing-dashboard"
 import { PartnerDashboard } from "@/components/dashboard/partner-dashboard"
 import { TechCompanyDashboard } from "@/components/dashboard/tech-company-dashboard"
 import { DashboardSkeleton } from "@/components/dashboard/dashboard-skeleton"
@@ -59,6 +60,9 @@ export default async function DashboardPage() {
   // Verificar si es un usuario BDD
   const isBddUser = roleCodeLower === "bdd"
 
+  // Verificar si es un usuario Marketing
+  const isMarketingUser = roleCodeLower === "marketing"
+
   // Verificar si es un usuario TechUser o TechLogistic
   const isTechUser = roleCodeLower === "techuser"
   const isTechLogistic = roleCodeLower === "techlogistic"
@@ -71,6 +75,8 @@ export default async function DashboardPage() {
           <TechCompanyDashboard />
         ) : isPartnerUser ? (
           <PartnerDashboard />
+        ) : isMarketingUser ? (
+          <MarketingDashboard />
         ) : isBddUser ? (
           <BddDashboard />
         ) : (
