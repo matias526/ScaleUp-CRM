@@ -19,8 +19,25 @@ interface Recipient {
   name: string
   email: string
   type: "scaleup_user" | "tech_company_user" | "partner" | "prospect_contact" | "standalone_contact"
-  entityName?: string // Para mostrar Tech Company o Partner
-  recipientSubType?: "partner_user" | "partner_contact" // Para diferenciar dentro de "partner"
+  entityName?: string
+  recipientSubType?: "partner_user" | "partner_contact"
+}
+
+interface RecipientField {
+  id: string
+  name: string
+  email: string
+  fieldType: "to" | "cc" | "bcc"
+  type: Recipient["type"]
+  subType?: Recipient["recipientSubType"]
+  entityName?: string
+}
+
+interface PulseTemplate {
+  id: string
+  name: string
+  subject: string
+  body: string
 }
 
 const RECIPIENT_TYPES = [
@@ -40,31 +57,39 @@ export default function PulseMessagesPage() {
   const [recipientType, setRecipientType] = useState<string>("all")
   const [searchTerm, setSearchTerm] = useState("")
   const [recipients, setRecipients] = useState<Recipient[]>([])
-  const [selectedRecipients, setSelectedRecipients] = useState<string[]>([])
+  const [selectedRecipients, setSelectedRecipients] = useState<RecipientField[]>([])
   const [loadingRecipients, setLoadingRecipients] = useState(false)
+  
+  // Entity filters
   const [techCompanies, setTechCompanies] = useState<Array<{ id: string; name: string }>>([])
   const [selectedTechCompany, setSelectedTechCompany] = useState<string>("")
   const [partners, setPartners] = useState<Array<{ id: string; name: string }>>([])
   const [selectedPartner, setSelectedPartner] = useState<string>("")
+  const [prospects, setProspects] = useState<Array<{ id: string; name: string }>>([])
+  const [selectedProspect, setSelectedProspect] = useState<string>("")
+  
+  // Templates
+  const [templates, setTemplates] = useState<PulseTemplate[]>([])
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("")
+  const [senderMode, setSenderMode] = useState<"personal" | "system">("system")
 
-  // Cargar tech companies y partners al montar el componente
+  // Load entities on mount
   useEffect(() => {
     loadTechCompanies()
     loadPartners()
+    loadProspects()
+    loadTemplates()
   }, [])
 
-  // Cargar destinatarios según el tipo seleccionado
+  // Load recipients when filter changes
   useEffect(() => {
     loadRecipients()
-  }, [recipientType, searchTerm, selectedTechCompany, selectedPartner])
+  }, [recipientType, searchTerm, selectedTechCompany, selectedPartner, selectedProspect])
 
   const loadTechCompanies = async () => {
     try {
       const { data } = await supabase.from("tech_companies").select("id, name").eq("is_active", true)
-
-      if (data) {
-        setTechCompanies(data)
-      }
+      if (data) setTechCompanies(data)
     } catch (error) {
       console.error("[v0] Error loading tech companies:", error)
     }
@@ -73,12 +98,30 @@ export default function PulseMessagesPage() {
   const loadPartners = async () => {
     try {
       const { data } = await supabase.from("partners").select("id, name").eq("is_active", true)
-
-      if (data) {
-        setPartners(data)
-      }
+      if (data) setPartners(data)
     } catch (error) {
       console.error("[v0] Error loading partners:", error)
+    }
+  }
+
+  const loadProspects = async () => {
+    try {
+      const { data } = await supabase.from("end_customers").select("id, name").eq("is_active", true)
+      if (data) setProspects(data)
+    } catch (error) {
+      console.error("[v0] Error loading prospects:", error)
+    }
+  }
+
+  const loadTemplates = async () => {
+    try {
+      const response = await fetch("/api/pulse/templates?includeTranslations=true")
+      const data = await response.json()
+      if (data.templates) {
+        setTemplates(data.templates)
+      }
+    } catch (error) {
+      console.error("[v0] Error loading templates:", error)
     }
   }
 
@@ -87,7 +130,7 @@ export default function PulseMessagesPage() {
       setLoadingRecipients(true)
       let newRecipients: Recipient[] = []
 
-      // Usuarios ScaleUp: users sin tech_company_id y sin partner_id
+      // ScaleUp Users
       if (recipientType === "all" || recipientType === "scaleup_user") {
         let query = supabase
           .from("users")
@@ -103,7 +146,6 @@ export default function PulseMessagesPage() {
         }
 
         const { data: users } = await query
-
         if (users) {
           newRecipients.push(
             ...users.map((u) => ({
@@ -116,11 +158,11 @@ export default function PulseMessagesPage() {
         }
       }
 
-      // Usuarios TechCompanies: users con tech_company_id
+      // TechCompany Users
       if (recipientType === "all" || recipientType === "tech_company_user") {
         let query = supabase
           .from("users")
-          .select("id, first_name, last_name, email, tech_company_id, tech_companies!inner(name)")
+          .select("id, first_name, last_name, email, tech_company_id, tech_companies(id, name)")
           .eq("is_active", true)
           .not("tech_company_id", "is", null)
 
@@ -135,7 +177,6 @@ export default function PulseMessagesPage() {
         }
 
         const { data: users } = await query
-
         if (users) {
           newRecipients.push(
             ...users.map((u: any) => ({
@@ -149,11 +190,11 @@ export default function PulseMessagesPage() {
         }
       }
 
-      // Usuarios Partners: users con partner_id
+      // Partner Users (from users table)
       if (recipientType === "all" || recipientType === "partner") {
         let query = supabase
           .from("users")
-          .select("id, first_name, last_name, email, partner_id, partners!inner(name)")
+          .select("id, first_name, last_name, email, partner_id, partners(id, name)")
           .eq("is_active", true)
           .not("partner_id", "is", null)
 
@@ -168,7 +209,6 @@ export default function PulseMessagesPage() {
         }
 
         const { data: users } = await query
-
         if (users) {
           newRecipients.push(
             ...users.map((u: any) => ({
@@ -183,7 +223,7 @@ export default function PulseMessagesPage() {
         }
       }
 
-      // Contactos Partners: contacts con partner_id
+      // Partner Contacts
       if (recipientType === "all" || recipientType === "partner") {
         let query = supabase
           .from("contacts")
@@ -200,13 +240,10 @@ export default function PulseMessagesPage() {
           )
         }
 
-        const { data: contacts, error: partnerContactError } = await query
-
+        const { data: contacts } = await query
         if (contacts && contacts.length > 0) {
-          // Obtener información de los partners para cada contacto
           const partnerIds = [...new Set(contacts.map((c) => c.partner_id))]
           const { data: partnerData } = await supabase.from("partners").select("id, name").in("id", partnerIds)
-
           const partnerMap = new Map(partnerData?.map((p) => [p.id, p.name]) || [])
 
           newRecipients.push(
@@ -222,44 +259,72 @@ export default function PulseMessagesPage() {
         }
       }
 
-      // Contactos Sueltos: contacts sin partner_id y sin tech_company_id y sin end_customer_id
+      // Prospect Contacts (from end_customers)
+      if (recipientType === "all" || recipientType === "prospect_contact") {
+        let query = supabase
+          .from("contacts")
+          .select("id, first_name, last_name, email, end_customer_id")
+          .not("end_customer_id", "is", null)
+
+        if (selectedProspect && recipientType === "prospect_contact") {
+          query = query.eq("end_customer_id", selectedProspect)
+        }
+
+        if (searchTerm) {
+          query = query.or(
+            `first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`,
+          )
+        }
+
+        const { data: contacts } = await query
+        if (contacts && contacts.length > 0) {
+          const prospectIds = [...new Set(contacts.map((c) => c.end_customer_id))]
+          const { data: prospectData } = await supabase
+            .from("end_customers")
+            .select("id, name")
+            .in("id", prospectIds)
+          const prospectMap = new Map(prospectData?.map((p) => [p.id, p.name]) || [])
+
+          newRecipients.push(
+            ...contacts.map((c: any) => ({
+              id: `prospect_contact_${c.id}`,
+              name: `${c.first_name} ${c.last_name}`,
+              email: c.email,
+              type: "prospect_contact" as const,
+              entityName: prospectMap.get(c.end_customer_id),
+            })),
+          )
+        }
+      }
+
+      // Standalone Contacts
       if (recipientType === "all" || recipientType === "standalone_contact") {
-        const { data: allContacts, error: allContactsError } = await supabase
+        const { data: allContacts } = await supabase
           .from("contacts")
           .select("id, first_name, last_name, email, partner_id, tech_company_id, end_customer_id")
 
         if (allContacts) {
-          // Filtrar localmente los contactos que no tengan ninguna entidad asociada
           const standaloneContacts = allContacts.filter(
             (c) => !c.partner_id && !c.tech_company_id && !c.end_customer_id,
           )
 
+          let filtered = standaloneContacts
           if (searchTerm) {
-            // Filtrar por búsqueda si es necesario
-            const filtered = standaloneContacts.filter(
+            filtered = standaloneContacts.filter(
               (c) =>
                 `${c.first_name} ${c.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 c.email?.toLowerCase().includes(searchTerm.toLowerCase()),
             )
-
-            newRecipients.push(
-              ...filtered.map((c: any) => ({
-                id: `standalone_contact_${c.id}`,
-                name: `${c.first_name} ${c.last_name}`,
-                email: c.email,
-                type: "standalone_contact" as const,
-              })),
-            )
-          } else {
-            newRecipients.push(
-              ...standaloneContacts.map((c: any) => ({
-                id: `standalone_contact_${c.id}`,
-                name: `${c.first_name} ${c.last_name}`,
-                email: c.email,
-                type: "standalone_contact" as const,
-              })),
-            )
           }
+
+          newRecipients.push(
+            ...filtered.map((c: any) => ({
+              id: `standalone_contact_${c.id}`,
+              name: `${c.first_name} ${c.last_name}`,
+              email: c.email,
+              type: "standalone_contact" as const,
+            })),
+          )
         }
       }
 
@@ -272,6 +337,23 @@ export default function PulseMessagesPage() {
     }
   }
 
+  const addRecipient = (recipient: Recipient, fieldType: "to" | "cc" | "bcc") => {
+    const newField: RecipientField = {
+      id: `${fieldType}_${recipient.id}`,
+      name: recipient.name,
+      email: recipient.email,
+      fieldType,
+      type: recipient.type,
+      subType: recipient.recipientSubType,
+      entityName: recipient.entityName,
+    }
+    setSelectedRecipients([...selectedRecipients, newField])
+  }
+
+  const removeRecipient = (fieldId: string) => {
+    setSelectedRecipients(selectedRecipients.filter((r) => r.id !== fieldId))
+  }
+
   const handleSendMessage = async () => {
     if (!subject.trim() || !message.trim() || selectedRecipients.length === 0) {
       toast({ title: "Error", description: "Por favor completa todos los campos y selecciona destinatarios" })
@@ -280,21 +362,25 @@ export default function PulseMessagesPage() {
 
     try {
       setLoading(true)
-      const recipientEmails = selectedRecipients
-        .map((id) => recipients.find((r) => `${r.type}_${r.id}` === id || r.id === id)?.email)
-        .filter(Boolean) as string[]
+      const toEmails = selectedRecipients.filter((r) => r.fieldType === "to").map((r) => r.email)
+      const ccEmails = selectedRecipients.filter((r) => r.fieldType === "cc").map((r) => r.email)
+      const bccEmails = selectedRecipients.filter((r) => r.fieldType === "bcc").map((r) => r.email)
 
       await sendPulseMessage({
-        to: recipientEmails,
+        to: toEmails,
+        cc: ccEmails,
+        bcc: bccEmails,
         subject,
         body: message,
         user_id: userInfo?.id || "",
+        sender_mode: senderMode,
       })
 
       toast({ title: "Éxito", description: "Mensaje enviado a todos los destinatarios" })
       setSubject("")
       setMessage("")
       setSelectedRecipients([])
+      setSelectedTemplate("")
     } catch (error) {
       console.error("[v0] Error sending message:", error)
       toast({ title: "Error", description: "No se pudo enviar el mensaje", variant: "destructive" })
@@ -303,22 +389,22 @@ export default function PulseMessagesPage() {
     }
   }
 
-  const toggleRecipient = (recipientId: string) => {
-    setSelectedRecipients((prev) =>
-      prev.includes(recipientId) ? prev.filter((id) => id !== recipientId) : [...prev, recipientId],
-    )
+  const applyTemplate = (templateId: string) => {
+    const template = templates.find((t) => t.id === templateId)
+    if (template) {
+      setSubject(template.subject)
+      setMessage(template.body)
+      setSelectedTemplate(templateId)
+    }
   }
 
-  const filteredRecipients = useMemo(
-    () =>
-      recipients.filter((r) => {
-        if (searchTerm && !r.name.toLowerCase().includes(searchTerm.toLowerCase())) {
-          return false
-        }
-        return true
-      }),
-    [recipients, searchTerm],
-  )
+  const recipientsByType = useMemo(() => {
+    return {
+      to: selectedRecipients.filter((r) => r.fieldType === "to"),
+      cc: selectedRecipients.filter((r) => r.fieldType === "cc"),
+      bcc: selectedRecipients.filter((r) => r.fieldType === "bcc"),
+    }
+  }, [selectedRecipients])
 
   return (
     <div className="container mx-auto py-6">
@@ -328,166 +414,228 @@ export default function PulseMessagesPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Panel de selección de destinatarios */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Seleccionar Destinatarios</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Filtro de tipo de destinatario */}
-            <div className="flex gap-2 items-end flex-wrap">
-              <div className="flex-1 min-w-48">
-                <label className="text-sm font-medium">Tipo de Destinatarios</label>
-                <Select value={recipientType} onValueChange={setRecipientType}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {RECIPIENT_TYPES.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Selector de TechCompany si está seleccionado */}
-              {recipientType === "tech_company_user" && (
+        {/* Recipient Selection Panel */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Filters */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Seleccionar Destinatarios</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2 items-end flex-wrap">
                 <div className="flex-1 min-w-48">
-                  <label className="text-sm font-medium">TechCompany</label>
-                  <Select value={selectedTechCompany} onValueChange={setSelectedTechCompany}>
+                  <label className="text-sm font-medium">Tipo de Destinatarios</label>
+                  <Select value={recipientType} onValueChange={setRecipientType}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecciona una TechCompany" />
+                      <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {techCompanies.map((tc) => (
-                        <SelectItem key={tc.id} value={tc.id}>
-                          {tc.name}
+                      {RECIPIENT_TYPES.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-              )}
 
-              {/* Selector de Partner si está seleccionado */}
-              {recipientType === "partner" && (
-                <div className="flex-1 min-w-48">
-                  <label className="text-sm font-medium">Partner</label>
-                  <Select value={selectedPartner} onValueChange={setSelectedPartner}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecciona un Partner" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {partners.map((p) => (
-                        <SelectItem key={p.id} value={p.id}>
-                          {p.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              <Input
-                placeholder="Buscar..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="flex-1 min-w-48"
-              />
-            </div>
-
-            {/* Lista de destinatarios seleccionables */}
-            <div className="border rounded-lg">
-              <ScrollArea className="h-96">
-                {loadingRecipients ? (
-                  <div className="text-center text-gray-500 p-4">Cargando destinatarios...</div>
-                ) : filteredRecipients.length === 0 ? (
-                  <div className="text-center text-gray-500 p-4">No hay destinatarios disponibles</div>
-                ) : (
-                  <div className="space-y-0">
-                    {filteredRecipients.map((recipient) => (
-                      <div
-                        key={recipient.id}
-                        className="flex items-center gap-2 p-3 hover:bg-gray-50 border-b last:border-b-0 cursor-pointer"
-                        onClick={() => toggleRecipient(recipient.id)}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedRecipients.includes(recipient.id)}
-                          onChange={() => toggleRecipient(recipient.id)}
-                          className="w-4 h-4"
-                        />
-                        <div className="flex-1">
-                          <div className="text-sm font-medium">{recipient.name}</div>
-                          <div className="text-xs text-gray-500">{recipient.email}</div>
-                          {recipient.entityName && <div className="text-xs text-gray-400">{recipient.entityName}</div>}
-                        </div>
-                        <Badge variant="outline" className="text-xs whitespace-nowrap">
-                          {recipient.type === "scaleup_user"
-                            ? "ScaleUp"
-                            : recipient.type === "tech_company_user"
-                              ? "Tech User"
-                              : recipient.type === "partner"
-                                ? recipient.recipientSubType === "partner_user"
-                                  ? "Partner User"
-                                  : "Partner Contact"
-                                : recipient.type === "prospect_contact"
-                                  ? "Prospect"
-                                  : "Contact"}
-                        </Badge>
-                      </div>
-                    ))}
+                {recipientType === "tech_company_user" && (
+                  <div className="flex-1 min-w-48">
+                    <label className="text-sm font-medium">TechCompany</label>
+                    <Select value={selectedTechCompany} onValueChange={setSelectedTechCompany}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona una TechCompany" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {techCompanies.map((tc) => (
+                          <SelectItem key={tc.id} value={tc.id}>
+                            {tc.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 )}
-              </ScrollArea>
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Panel de composición */}
-        <Card>
+                {recipientType === "partner" && (
+                  <div className="flex-1 min-w-48">
+                    <label className="text-sm font-medium">Partner</label>
+                    <Select value={selectedPartner} onValueChange={setSelectedPartner}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona un Partner" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {partners.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {recipientType === "prospect_contact" && (
+                  <div className="flex-1 min-w-48">
+                    <label className="text-sm font-medium">Prospect</label>
+                    <Select value={selectedProspect} onValueChange={setSelectedProspect}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona un Prospect" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {prospects.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                <Input
+                  placeholder="Buscar..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="flex-1 min-w-48"
+                />
+              </div>
+
+              {/* Recipients List */}
+              <div className="border rounded-lg">
+                <ScrollArea className="h-96">
+                  {loadingRecipients ? (
+                    <div className="text-center text-gray-500 p-4">Cargando destinatarios...</div>
+                  ) : recipients.length === 0 ? (
+                    <div className="text-center text-gray-500 p-4">No hay destinatarios disponibles</div>
+                  ) : (
+                    <div className="space-y-0">
+                      {recipients.map((recipient) => (
+                        <div key={recipient.id} className="p-3 hover:bg-gray-50 border-b last:border-b-0">
+                          <div className="flex gap-2">
+                            <Select defaultValue="to" onValueChange={(value: "to" | "cc" | "bcc") => addRecipient(recipient, value)}>
+                              <SelectTrigger className="w-24">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="to">Para</SelectItem>
+                                <SelectItem value="cc">CC</SelectItem>
+                                <SelectItem value="bcc">BCC</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <div className="flex-1">
+                              <div className="text-sm font-medium">{recipient.name}</div>
+                              <div className="text-xs text-gray-500">{recipient.email}</div>
+                              {recipient.entityName && <div className="text-xs text-gray-400">{recipient.entityName}</div>}
+                            </div>
+                            <Badge variant="outline" className="text-xs whitespace-nowrap">
+                              {recipient.type === "scaleup_user"
+                                ? "ScaleUp"
+                                : recipient.type === "tech_company_user"
+                                  ? "Tech User"
+                                  : recipient.type === "partner"
+                                    ? recipient.recipientSubType === "partner_user"
+                                      ? "Partner User"
+                                      : "Partner Contact"
+                                    : recipient.type === "prospect_contact"
+                                      ? "Prospect"
+                                      : "Contact"}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </ScrollArea>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Message Composition Panel */}
+        <Card className="h-fit sticky top-6">
           <CardHeader>
-            <CardTitle>Composición del Mensaje</CardTitle>
+            <CardTitle>Mensaje</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Mostrar destinatarios seleccionados */}
+            {/* Recipients Summary */}
             {selectedRecipients.length > 0 && (
-              <div>
-                <label className="text-sm font-medium">
-                  Destinatarios: <span className="text-primary">{selectedRecipients.length}</span>
-                </label>
-                <div className="flex flex-wrap gap-2 mt-2 max-h-24 overflow-y-auto">
-                  {selectedRecipients.map((id) => {
-                    const recipient = recipients.find((r) => r.id === id)
-                    return (
-                      <Badge key={id} variant="secondary" className="flex items-center gap-1">
-                        {recipient?.name}
-                        <X className="w-3 h-3 cursor-pointer" onClick={() => toggleRecipient(id)} />
-                      </Badge>
-                    )
-                  })}
-                </div>
+              <div className="space-y-2">
+                {recipientsByType.to.length > 0 && (
+                  <div>
+                    <label className="text-xs font-medium text-gray-600">Para ({recipientsByType.to.length})</label>
+                    <div className="flex flex-wrap gap-1">
+                      {recipientsByType.to.map((r) => (
+                        <Badge key={r.id} variant="default" className="text-xs flex items-center gap-1">
+                          {r.name}
+                          <X className="w-2 h-2 cursor-pointer" onClick={() => removeRecipient(r.id)} />
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {recipientsByType.cc.length > 0 && (
+                  <div>
+                    <label className="text-xs font-medium text-gray-600">CC ({recipientsByType.cc.length})</label>
+                    <div className="flex flex-wrap gap-1">
+                      {recipientsByType.cc.map((r) => (
+                        <Badge key={r.id} variant="secondary" className="text-xs flex items-center gap-1">
+                          {r.name}
+                          <X className="w-2 h-2 cursor-pointer" onClick={() => removeRecipient(r.id)} />
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {recipientsByType.bcc.length > 0 && (
+                  <div>
+                    <label className="text-xs font-medium text-gray-600">BCC ({recipientsByType.bcc.length})</label>
+                    <div className="flex flex-wrap gap-1">
+                      {recipientsByType.bcc.map((r) => (
+                        <Badge key={r.id} variant="outline" className="text-xs flex items-center gap-1">
+                          {r.name}
+                          <X className="w-2 h-2 cursor-pointer" onClick={() => removeRecipient(r.id)} />
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
-            {/* Asunto */}
+            {/* Template Selection */}
+            <div>
+              <label className="text-sm font-medium">Plantilla</label>
+              <Select value={selectedTemplate} onValueChange={applyTemplate}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona una plantilla" />
+                </SelectTrigger>
+                <SelectContent>
+                  {templates.map((template) => (
+                    <SelectItem key={template.id} value={template.id}>
+                      {template.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Subject */}
             <div>
               <label className="text-sm font-medium">Asunto</label>
               <Input
-                placeholder="Asunto del mensaje..."
+                placeholder="Asunto..."
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 disabled={loading}
               />
             </div>
 
-            {/* Mensaje */}
+            {/* Message */}
             <div>
               <label className="text-sm font-medium">Mensaje</label>
               <Textarea
-                placeholder="Escribe tu mensaje aquí..."
+                placeholder="Escribe tu mensaje..."
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 disabled={loading}
@@ -495,7 +643,27 @@ export default function PulseMessagesPage() {
               />
             </div>
 
-            {/* Botón de envío */}
+            {/* Sender Mode */}
+            <div className="flex gap-2">
+              <Button
+                variant={senderMode === "personal" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSenderMode("personal")}
+                className="flex-1"
+              >
+                Personal
+              </Button>
+              <Button
+                variant={senderMode === "system" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSenderMode("system")}
+                className="flex-1"
+              >
+                Sistema
+              </Button>
+            </div>
+
+            {/* Send Button */}
             <Button
               onClick={handleSendMessage}
               disabled={loading || selectedRecipients.length === 0 || !subject.trim() || !message.trim()}
