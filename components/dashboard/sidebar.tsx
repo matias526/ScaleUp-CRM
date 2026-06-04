@@ -141,6 +141,7 @@ type SidebarItemType = {
   adminOrBdd?: boolean // Nuevo flag para elementos visibles por Admin O BDD
   adminOrMarketing?: boolean // Nuevo flag para elementos visibles por Admin O Marketing
   adminOrBddOrMarketing?: boolean // Nuevo flag para elementos visibles por Admin O BDD O Marketing
+  excludeMarketing?: boolean // Ocultar para Marketing
   excludeTechUserAndLogistic?: boolean // Ocultar para TechUser y TechLogistic
   settingsSubItems?: { href: string; labelKey: string }[]
 }
@@ -253,11 +254,13 @@ export function Sidebar() {
       href: "/dashboard/opportunities",
       icon: CircleDollarSign,
       labelKey: "sidebar.opportunities",
+      excludeMarketing: true,
     },
     {
       href: "/dashboard/purchase-orders",
       icon: OrderIcon,
       labelKey: "sidebar.orders",
+      excludeMarketing: true,
     },
     {
       href: "/dashboard/tasks",
@@ -268,6 +271,7 @@ export function Sidebar() {
       href: "/dashboard/follow-up-meetings",
       icon: PresentationIcon,
       labelKey: "sidebar.follow_up_meetings",
+      excludeMarketing: true,
       excludeTechUserAndLogistic: true,
     },
     {
@@ -339,6 +343,10 @@ export function Sidebar() {
   // Filtrar los elementos del sidebar según el rol del usuario
   const filteredSidebarItems = sidebarItems.filter((item) => {
     const shouldShow = (() => {
+      // Si el elemento está marcado como excluido para Marketing y el usuario es Marketing
+      if (item.excludeMarketing && isMarketing) {
+        return false
+      }
       // Si el elemento debe excluirse para TechUser y TechLogistic
       if (item.excludeTechUserAndLogistic && (isTechUser || isTechLogistic)) {
         return false
@@ -373,6 +381,7 @@ export function Sidebar() {
       adminOrBdd: item.adminOrBdd,
       adminOnly: item.adminOnly,
       bddOnly: item.bddOnly,
+      excludeMarketing: item.excludeMarketing,
       excludeTechUserAndLogistic: item.excludeTechUserAndLogistic,
       shouldShow,
       isAdmin,
