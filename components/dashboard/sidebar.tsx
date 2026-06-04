@@ -311,6 +311,10 @@ export function Sidebar() {
           href: "/dashboard/settings/pulse-templates",
           labelKey: "sidebar.pulse_templates",
         },
+        {
+          href: "/dashboard/settings/pulse-messages",
+          labelKey: "sidebar.pulse_messages",
+        },
       ],
     },
     {
