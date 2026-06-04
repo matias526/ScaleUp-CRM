@@ -18,13 +18,15 @@ interface Recipient {
   id: string
   name: string
   email: string
-  type: "scaleup_user" | "tech_company_contact" | "partner_contact" | "prospect_contact"
+  type: "scaleup_user" | "tech_company_user" | "partner_user" | "partner_contact" | "prospect_contact"
+  entityName?: string // Para mostrar Tech Company o Partner
 }
 
 const RECIPIENT_TYPES = [
   { value: "all", label: "Todos" },
   { value: "scaleup_user", label: "Usuarios ScaleUp" },
-  { value: "tech_company_contact", label: "Contactos TechCompanies" },
+  { value: "tech_company_user", label: "Usuarios TechCompanies" },
+  { value: "partner_user", label: "Usuarios Partners" },
   { value: "partner_contact", label: "Contactos Partners" },
   { value: "prospect_contact", label: "Contactos Prospects" },
 ]
@@ -39,28 +41,52 @@ export default function PulseMessagesPage() {
   const [recipients, setRecipients] = useState<Recipient[]>([])
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([])
   const [loadingRecipients, setLoadingRecipients] = useState(false)
+  const [techCompanies, setTechCompanies] = useState<Array<{ id: string; name: string }>>([])
+  const [selectedTechCompany, setSelectedTechCompany] = useState<string>("")
+
+  // Cargar tech companies al montar el componente
+  useEffect(() => {
+    loadTechCompanies()
+  }, [])
 
   // Cargar destinatarios según el tipo seleccionado
   useEffect(() => {
     loadRecipients()
-  }, [recipientType, searchTerm])
+  }, [recipientType, searchTerm, selectedTechCompany])
+
+  const loadTechCompanies = async () => {
+    try {
+      const { data } = await supabase.from("tech_companies").select("id, name").eq("is_active", true)
+
+      if (data) {
+        setTechCompanies(data)
+      }
+    } catch (error) {
+      console.error("[v0] Error loading tech companies:", error)
+    }
+  }
 
   const loadRecipients = async () => {
     try {
       setLoadingRecipients(true)
       let newRecipients: Recipient[] = []
 
-      // Usuarios ScaleUp
+      // Usuarios ScaleUp: users sin tech_company_id y sin partner_id
       if (recipientType === "all" || recipientType === "scaleup_user") {
-        const { data: users } = await supabase
+        let query = supabase
           .from("users")
           .select("id, first_name, last_name, email")
           .eq("is_active", true)
-          .or(
-            searchTerm
-              ? `first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`
-              : "",
+          .is("tech_company_id", null)
+          .is("partner_id", null)
+
+        if (searchTerm) {
+          query = query.or(
+            `first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`,
           )
+        }
+
+        const { data: users } = await query
 
         if (users) {
           newRecipients.push(
@@ -74,76 +100,121 @@ export default function PulseMessagesPage() {
         }
       }
 
-      // Contactos de TechCompanies
-      if (recipientType === "all" || recipientType === "tech_company_contact") {
-        const { data: contacts } = await supabase
-          .from("contacts")
-          .select("id, first_name, last_name, email, tech_company_id")
-          .eq("tech_company_id", null)
+      // Usuarios TechCompanies: users con tech_company_id
+      if (recipientType === "all" || recipientType === "tech_company_user") {
+        let query = supabase
+          .from("users")
+          .select("id, first_name, last_name, email, tech_company_id, tech_companies!inner(name)")
           .eq("is_active", true)
-          .or(
-            searchTerm
-              ? `first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`
-              : "",
-          )
+          .not("tech_company_id", "is", null)
 
-        if (contacts) {
+        if (selectedTechCompany && recipientType === "tech_company_user") {
+          query = query.eq("tech_company_id", selectedTechCompany)
+        }
+
+        if (searchTerm) {
+          query = query.or(
+            `first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`,
+          )
+        }
+
+        const { data: users } = await query
+
+        if (users) {
           newRecipients.push(
-            ...contacts.map((c) => ({
-              id: `tech_contact_${c.id}`,
-              name: `${c.first_name} ${c.last_name}`,
-              email: c.email,
-              type: "tech_company_contact" as const,
+            ...users.map((u: any) => ({
+              id: `tech_company_${u.id}`,
+              name: `${u.first_name} ${u.last_name}`,
+              email: u.email,
+              type: "tech_company_user" as const,
+              entityName: u.tech_companies?.name,
             })),
           )
         }
       }
 
-      // Contactos de Partners
-      if (recipientType === "all" || recipientType === "partner_contact") {
-        const { data: contacts } = await supabase
-          .from("contacts")
-          .select("id, first_name, last_name, email, partner_id")
-          .not("partner_id", "is", null)
+      // Usuarios Partners: users con partner_id
+      if (recipientType === "all" || recipientType === "partner_user") {
+        let query = supabase
+          .from("users")
+          .select("id, first_name, last_name, email, partner_id, partners!inner(name)")
           .eq("is_active", true)
-          .or(
-            searchTerm
-              ? `first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`
-              : "",
+          .not("partner_id", "is", null)
+
+        if (searchTerm) {
+          query = query.or(
+            `first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`,
           )
+        }
+
+        const { data: users } = await query
+
+        if (users) {
+          newRecipients.push(
+            ...users.map((u: any) => ({
+              id: `partner_user_${u.id}`,
+              name: `${u.first_name} ${u.last_name}`,
+              email: u.email,
+              type: "partner_user" as const,
+              entityName: u.partners?.name,
+            })),
+          )
+        }
+      }
+
+      // Contactos Partners: contacts con partner_id
+      if (recipientType === "all" || recipientType === "partner_contact") {
+        let query = supabase
+          .from("contacts")
+          .select("id, first_name, last_name, email, partner_id, partners!inner(name)")
+          .eq("is_active", true)
+          .not("partner_id", "is", null)
+
+        if (searchTerm) {
+          query = query.or(
+            `first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`,
+          )
+        }
+
+        const { data: contacts } = await query
 
         if (contacts) {
           newRecipients.push(
-            ...contacts.map((c) => ({
+            ...contacts.map((c: any) => ({
               id: `partner_contact_${c.id}`,
               name: `${c.first_name} ${c.last_name}`,
               email: c.email,
               type: "partner_contact" as const,
+              entityName: c.partners?.name,
             })),
           )
         }
       }
 
-      // Contactos de Prospects
+      // Contactos Prospects: contacts con prospect_partner_id
       if (recipientType === "all" || recipientType === "prospect_contact") {
-        const { data: contacts } = await supabase
+        let query = supabase
           .from("contacts")
-          .select("id, first_name, last_name, email, prospect_partner_id")
-          .not("prospect_partner_id", "is", null)
+          .select("id, first_name, last_name, email, prospect_partner_id, prospect_partners!inner(name)")
           .eq("is_active", true)
-          .or(
-            searchTerm
-              ? `first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`
-              : "",
+          .not("prospect_partner_id", "is", null)
+
+        if (searchTerm) {
+          query = query.or(
+            `first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`,
           )
+        }
+
+        const { data: contacts } = await query
 
         if (contacts) {
           newRecipients.push(
-            ...contacts.map((c) => ({
+            ...contacts.map((c: any) => ({
               id: `prospect_contact_${c.id}`,
               name: `${c.first_name} ${c.last_name}`,
               email: c.email,
               type: "prospect_contact" as const,
+              entityName: c.prospect_partners?.name,
             })),
           )
         }
@@ -221,8 +292,8 @@ export default function PulseMessagesPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Filtro de tipo de destinatario */}
-            <div className="flex gap-2 items-end">
-              <div className="flex-1">
+            <div className="flex gap-2 items-end flex-wrap">
+              <div className="flex-1 min-w-48">
                 <label className="text-sm font-medium">Tipo de Destinatarios</label>
                 <Select value={recipientType} onValueChange={setRecipientType}>
                   <SelectTrigger>
@@ -237,11 +308,31 @@ export default function PulseMessagesPage() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Selector de TechCompany si está seleccionado */}
+              {recipientType === "tech_company_user" && (
+                <div className="flex-1 min-w-48">
+                  <label className="text-sm font-medium">TechCompany</label>
+                  <Select value={selectedTechCompany} onValueChange={setSelectedTechCompany}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona una TechCompany" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {techCompanies.map((tc) => (
+                        <SelectItem key={tc.id} value={tc.id}>
+                          {tc.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
               <Input
                 placeholder="Buscar..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="flex-1"
+                className="flex-1 min-w-48"
               />
             </div>
 
@@ -269,15 +360,18 @@ export default function PulseMessagesPage() {
                         <div className="flex-1">
                           <div className="text-sm font-medium">{recipient.name}</div>
                           <div className="text-xs text-gray-500">{recipient.email}</div>
+                          {recipient.entityName && <div className="text-xs text-gray-400">{recipient.entityName}</div>}
                         </div>
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline" className="text-xs whitespace-nowrap">
                           {recipient.type === "scaleup_user"
                             ? "ScaleUp"
-                            : recipient.type === "tech_company_contact"
-                              ? "TechCompany"
-                              : recipient.type === "partner_contact"
-                                ? "Partner"
-                                : "Prospect"}
+                            : recipient.type === "tech_company_user"
+                              ? "Tech User"
+                              : recipient.type === "partner_user"
+                                ? "Partner User"
+                                : recipient.type === "partner_contact"
+                                  ? "Partner Contact"
+                                  : "Prospect"}
                         </Badge>
                       </div>
                     ))}
