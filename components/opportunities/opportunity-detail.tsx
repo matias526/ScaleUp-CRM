@@ -2291,7 +2291,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                 <div className="flex gap-3">
                   <div>
                     <h3 className="font-semibold text-blue-900">{t("opportunities.prospect.name")}</h3>
-                    <p className="text-sm text-blue-700">{t("opportunities.prospect.step1Description")}</p>
+                    <p className="text-sm text-blue-900">{t("opportunities.prospect.step1Description")}</p>
                   </div>
                 </div>
               </div>
@@ -2397,11 +2397,21 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                       </select>
                     </div>
 
-                    <Button onClick={() => setShowCreateNew(false)} variant="outline" className="w-full">
-                      {t("opportunities.prospect.back")}
-                    </Button>
-                  </div>
+                  <Button onClick={() => setShowCreateNew(false)} variant="outline" className="w-full">
+                    {t("opportunities.prospect.back")}
+                  </Button>
                 </>
+              )}
+
+              {/* Navigation buttons for Step 1 */}
+              {!showCreateNew && (prospectSearchResults.length > 0 || prospectPartnerData.name) && (
+                <Button 
+                  onClick={() => setProspectStep(2)} 
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  disabled={!prospectPartnerData.name && prospectSearchResults.length === 0}
+                >
+                  {t("opportunities.prospect.next") || "Siguiente"}
+                </Button>
               )}
             </div>
           )}
@@ -2511,8 +2521,14 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
           )}
 
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setIsNewPartnerModalOpen(false)}>
-              {t("common.cancel")}
+            <Button variant="outline" onClick={() => {
+              if (prospectStep === 2) {
+                setProspectStep(1)
+              } else {
+                setIsNewPartnerModalOpen(false)
+              }
+            }}>
+              {prospectStep === 2 ? (t("opportunities.prospect.back") || "Atrás") : t("common.cancel")}
             </Button>
             <Button
               onClick={async () => {
