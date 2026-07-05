@@ -2553,7 +2553,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
 
                   // Si es un nuevo contacto, crear
                   if (!contactId && prospectContactData.first_name && prospectContactData.email) {
-                    console.log("[v0] Creating new contact with prospect_id:", prospectPartnerId)
+                    console.log("[v0] Creating new contact with end_customer_id:", prospectPartnerId)
                     const { data: newContact, error: contactError } = await supabase
                       .from("contacts")
                       .insert([
@@ -2562,7 +2562,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                           last_name: prospectContactData.last_name,
                           email: prospectContactData.email,
                           phone: prospectContactData.phone || null,
-                          prospect_id: prospectPartnerId,
+                          end_customer_id: prospectPartnerId,
                           department: "General",
                           preferred_language: prospectContactData.preferred_language,
                         },
@@ -2582,14 +2582,14 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                     }
                   }
 
-                  console.log("[v0] About to update opportunity with prospect_id:", prospectPartnerId, "and contact_id:", contactId)
+                  console.log("[v0] About to update opportunity with end_customer_id:", prospectPartnerId, "and contact_id:", contactId)
 
-                  // Update opportunity with prospect_id
+                  // Update opportunity with end_customer_id
                   if (prospectPartnerId && opportunity?.id) {
                     const { error: updateError } = await supabase
                       .from("opportunities")
                       .update({
-                        prospect_id: prospectPartnerId,
+                        end_customer_id: prospectPartnerId,
                         updated_at: new Date().toISOString(),
                       })
                       .eq("id", opportunity.id)
@@ -2599,7 +2599,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
                       throw updateError
                     }
 
-                    console.log("[v0] Opportunity updated with prospect_id successfully")
+                    console.log("[v0] Opportunity updated with end_customer_id successfully")
                   }
 
                   // Set contact as primary in opportunity_contacts
