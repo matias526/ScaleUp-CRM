@@ -482,7 +482,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
 
     // Load contacts for this prospect partner
     try {
-      const { data: contacts } = await supabase.from("contacts").select("*").eq("prospect_id", prospect.id)
+      const { data: contacts } = await supabase.from("contacts").select("*").eq("end_customer_id", prospect.id)
 
       if (contacts && contacts.length > 0) {
         setProspectPartnerContacts(contacts)
@@ -2093,7 +2093,6 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
             description: opportunity.description,
             end_customer_id: opportunity.end_customer_id,
             tech_company_id: opportunity.tech_company_id,
-            prospect_id: opportunity.prospect_id,
             partner_id: opportunity.partner_id,
           }}
           techCompanyData={opportunity.tech_companies}
@@ -2120,141 +2119,6 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
       )}
 
       {/* Modal para seleccionar prospect partner cuando is_new_partner = true */}
-      <Dialog open={isNewPartnerModalOpen} onOpenChange={setIsNewPartnerModalOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{t("opportunities.prospect.selectPartner")}</DialogTitle>
-            <DialogDescription>{t("opportunities.prospect.selectPartnerDescription")}</DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-6">
-            {/* Paso 1: Seleccionar prospect partner */}
-            <div className="space-y-3">
-              <Label className="text-sm font-medium">{t("opportunities.prospect.name")} *</Label>
-              <div className="max-h-64 overflow-y-auto border rounded-lg">
-                {existingProspectPartners.length > 0 ? (
-                  existingProspectPartners.map((prospect) => (
-                    <button
-                      key={prospect.id}
-                      onClick={() => {
-                        setSelectedProspectPartner(prospect)
-                          // Cargar contactos del prospect
-                          ; (async () => {
-                            try {
-                              const { data: contacts } = await supabase
-                                .from("contacts")
-                                .select("*")
-                                .eq("prospect_id", prospect.id)
-
-                              if (contacts && contacts.length > 0) {
-                                setProspectPartnerContacts(contacts)
-                                setSelectedContact(contacts[0])
-                              }
-                            } catch (err) {
-                              console.error("Error loading contacts:", err)
-                            }
-                          })()
-                      }}
-                      className={`w-full text-left px-4 py-3 border-b last:border-b-0 hover:bg-blue-50 transition-colors ${selectedProspectPartner?.id === prospect.id ? "bg-blue-100" : ""
-                        }`}
-                    >
-                      <div className="font-medium text-sm">{prospect.name}</div>
-                      <div className="text-xs text-gray-500">{prospect.website || t("opportunities.detail.noWebsite")}</div>
-                    </button>
-                  ))
-                ) : (
-                  <div className="px-4 py-6 text-center text-gray-500 text-sm">
-                    {t("opportunities.prospect.noProspectsFound")}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Paso 2: Seleccionar contacto si hay prospect seleccionado */}
-            {selectedProspectPartner && prospectPartnerContacts.length > 0 && (
-              <div className="space-y-3">
-                <Label className="text-sm font-medium">{t("opportunities.prospect.selectContact")} *</Label>
-                <div className="max-h-48 overflow-y-auto border rounded-lg">
-                  {prospectPartnerContacts.map((contact) => (
-                    <button
-                      key={contact.id}
-                      onClick={() => setSelectedContact(contact)}
-                      className={`w-full text-left px-4 py-3 border-b last:border-b-0 hover:bg-green-50 transition-colors ${selectedContact?.id === contact.id ? "bg-green-100" : ""
-                        }`}
-                    >
-                      <div className="font-medium text-sm">
-                        {contact.first_name} {contact.last_name}
-                      </div>
-                      <div className="text-xs text-gray-500">{contact.email}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => {
-              setIsNewPartnerModalOpen(false)
-              setSelectedProspectPartner(null)
-              setSelectedContact(null)
-              setProspectPartnerContacts([])
-            }}>
-              {t("common.cancel")}
-            </Button>
-            <Button
-              disabled={!selectedProspectPartner || !selectedContact}
-              onClick={async () => {
-                if (!selectedProspectPartner || !selectedContact) return
-
-                try {
-                  setIsSaving(true)
-                  // Guardar prospect_id en la oportunidad
-                  const { error } = await supabase
-                    .from("opportunities")
-                    .update({
-                      prospect_id: selectedProspectPartner.id,
-                      updated_at: new Date().toISOString(),
-                    })
-                    .eq("id", opportunity?.id)
-
-                  if (error) throw error
-
-                  // Actualizar estado local
-                  setOpportunity({
-                    ...opportunity,
-                    prospect_id: selectedProspectPartner.id,
-                    primary_contact_id: selectedContact.id,
-                  })
-
-                  toast({
-                    title: t("common.success"),
-                    description: t("opportunities.prospect.relationshipSaved"),
-                  })
-
-                  setIsNewPartnerModalOpen(false)
-                  setSelectedProspectPartner(null)
-                  setSelectedContact(null)
-                  setProspectPartnerContacts([])
-                } catch (err) {
-                  console.error("Error saving relationship:", err)
-                  toast({
-                    title: t("common.error"),
-                    description: t("common.errorOccurred"),
-                    variant: "destructive",
-                  })
-                } finally {
-                  setIsSaving(false)
-                }
-              }}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              {isSaving ? t("opportunities.prospect.saving") : t("opportunities.prospect.save")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {/* Dialog para agregar prospect partner a una oportunidad existente */}
       <Dialog open={isNewPartnerModalOpen} onOpenChange={(open) => {
         setIsNewPartnerModalOpen(open)
