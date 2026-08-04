@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useTranslations } from "@/hooks/use-translations"
 import { supabase } from "@/lib/supabase/client"
+import { UnverifiedContactsService } from "@/lib/services/unverified-contacts-service"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -87,14 +88,13 @@ export function UnverifiedContactsManager() {
   const loadContacts = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase.from("unverified_contacts").select("*").order("created_at", { ascending: false })
-
-      if (error) throw error
-      setContacts(data || [])
+      const data = await UnverifiedContactsService.getContacts()
+      setContacts(data)
     } catch (error) {
       console.error("[v0] Error loading unverified contacts:", error)
       toast({
         title: dict["unverified_contacts.error.loading"][language],
+        description: "La tabla unverified_contacts podría no estar creada. Por favor, ejecuta el script SQL.",
         variant: "destructive",
       })
     } finally {
