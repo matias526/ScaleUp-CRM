@@ -2,17 +2,16 @@ import { supabase } from "@/lib/supabase/client"
 
 export interface UnverifiedContact {
   id: string
-  first_name: string
-  last_name: string
-  email: string
+  first_name?: string
+  last_name?: string
+  email?: string
   phone?: string
-  company_name: string
+  company_name?: string
   position?: string
   industry_id?: string
   country_id?: string
   source: "BULK_IMPORT" | "WEB_FORM" | "EVENT"
   status: "NEW" | "CONTACTED" | "GRADUATED" | "DISCARDED"
-  notes?: string
   created_at: string
   updated_at: string
 }
@@ -27,7 +26,7 @@ export class UnverifiedContactsService {
     industry_id?: string
     search?: string
   }) {
-    let query = supabase.from("unverified_contacts").select("*").is("deleted_at", null).order("created_at", { ascending: false })
+    let query = supabase.from("unverified_contacts").select("*").order("created_at", { ascending: false })
 
     if (filters?.source) {
       query = query.eq("source", filters.source)
@@ -103,16 +102,10 @@ export class UnverifiedContactsService {
   }
 
   /**
-   * Soft delete an unverified contact
+   * Delete an unverified contact
    */
   static async deleteContact(id: string) {
-    const { error } = await supabase
-      .from("unverified_contacts")
-      .update({
-        deleted_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", id)
+    const { error } = await supabase.from("unverified_contacts").delete().eq("id", id)
 
     if (error) throw error
   }
@@ -152,34 +145,28 @@ export class UnverifiedContactsService {
    * Get statistics about unverified contacts
    */
   static async getStatistics() {
-    const { data: all } = await supabase
-      .from("unverified_contacts")
-      .select("id")
-      .is("deleted_at", null)
+    const { data: all } = await supabase.from("unverified_contacts").select("id", { count: "exact" })
 
-    const { data: newContacts } = await supabase
+    const { data: newContacts, count: newCount } = await supabase
       .from("unverified_contacts")
-      .select("id")
+      .select("id", { count: "exact" })
       .eq("status", "NEW")
-      .is("deleted_at", null)
 
-    const { data: contacted } = await supabase
+    const { data: contacted, count: contactedCount } = await supabase
       .from("unverified_contacts")
-      .select("id")
+      .select("id", { count: "exact" })
       .eq("status", "CONTACTED")
-      .is("deleted_at", null)
 
-    const { data: graduated } = await supabase
+    const { data: graduated, count: graduatedCount } = await supabase
       .from("unverified_contacts")
-      .select("id")
+      .select("id", { count: "exact" })
       .eq("status", "GRADUATED")
-      .is("deleted_at", null)
 
     return {
       total: all?.length || 0,
-      new: newContacts?.length || 0,
-      contacted: contacted?.length || 0,
-      graduated: graduated?.length || 0,
+      new: newCount || 0,
+      contacted: contactedCount || 0,
+      graduated: graduatedCount || 0,
     }
   }
 }
