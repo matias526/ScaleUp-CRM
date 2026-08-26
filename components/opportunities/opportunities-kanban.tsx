@@ -828,8 +828,15 @@ export const OpportunitiesKanban = ({
               )}
             </div>
 
-            {/* Mostrar texto "Por validar" solo para oportunidades pendientes */}
-            {validationStatus === "pending" && <span className={validationClass}>{validationText}</span>}
+            <div className="flex items-center gap-1.5">
+              {typeof opportunity.probability === "number" && (
+                <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-primary" title="Probabilidad de la oportunidad">
+                  {Math.round(opportunity.probability)}%
+                </span>
+              )}
+              {/* Mostrar texto "Por validar" solo para oportunidades pendientes */}
+              {validationStatus === "pending" && <span className={validationClass}>{validationText}</span>}
+            </div>
           </div>
 
           {/* Título y descripción */}
