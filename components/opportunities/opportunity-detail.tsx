@@ -75,6 +75,7 @@ import { es as esLocale, enUS, pt } from "date-fns/locale"
 import { EndCustomerInfoDialog } from "./end-customer-info-dialog"
 import { PulseMessageSenderOpportunity } from "@/components/pulse/pulse-message-sender-opportunity"
 import { OpportunityQuotes } from "./opportunity-quotes"
+import { OpportunityChecklist } from "./opportunity-checklist"
 
 
 
@@ -1465,6 +1466,8 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
           </div>
         </div>
       </div>
+
+      <OpportunityChecklist opportunityId={opportunity.id} canEdit={!isTechUser} />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">
