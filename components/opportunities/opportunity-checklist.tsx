@@ -114,7 +114,7 @@ export function OpportunityChecklist({ opportunityId, canEdit = true }: { opport
   const renderItem = (item: ChecklistItem, level = 0) => {
     const nested = children(item.id)
     const isRoot = level === 0
-    const isExpanded = isRoot ? expandedRoots.has(item.id) : true
+    const isExpanded = isRoot ? expandedRoot === item.id : true
     return <div key={item.id} className="border-b last:border-b-0">
       <div className="flex items-start gap-3 py-3" style={{ paddingLeft: `${level * 1.25}rem` }}>
         <Checkbox checked={item.is_completed} disabled={!canEdit || saving || item.is_completed} onClick={(event) => { if (!item.is_completed) { event.preventDefault(); selectItem(item) } }} aria-label={title(item)} />
