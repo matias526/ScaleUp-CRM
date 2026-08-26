@@ -53,20 +53,51 @@ export function OpportunityChecklist({ opportunityId, canEdit = true }: { opport
 
   const roots = useMemo(() => items.filter((item) => !item.parent_id), [items])
   const children = (id: string) => items.filter((item) => item.parent_id === id)
-  const completedWeight = items.filter((item) => item.is_completed).reduce((sum, item) => sum + Number(item.weight || 0), 0)
-  const totalWeight = items.reduce((sum, item) => sum + Number(item.weight || 0), 0) || 100
-  const progress = Math.min(100, Math.round((completedWeight / totalWeight) * 100))
+  const calculateProgress = useCallback((currentItems: ChecklistItem[]) => {
+    const childrenOf = (id: string) => currentItems.filter((item) => item.parent_id === id)
+    const calculateNode = (item: ChecklistItem): number => {
+      const nested = childrenOf(item.id)
+      if (!nested.length) return item.is_completed ? 100 : 0
+      const total = nested.reduce((sum, child) => sum + Number(child.weight || 0), 0) || 100
+      return nested.reduce((sum, child) => sum + (Number(child.weight || 0) / total) * calculateNode(child), 0)
+    }
+    const total = currentItems.filter((item) => !item.parent_id).reduce((sum, root) => sum + Number(root.weight || 0), 0) || 100
+    return Math.round(currentItems.filter((item) => !item.parent_id).reduce((sum, root) => sum + (Number(root.weight || 0) / total) * calculateNode(root), 0))
+  }, [])
+  const progress = calculateProgress(items)
 
   const persist = async (item: ChecklistItem, completed: boolean, nextComment = item.comment, nextDate = item.user_selected_date) => {
     setSaving(true)
     const { data: user } = await supabase.auth.getUser()
-    const patch = { is_completed: completed, comment: nextComment || null, user_selected_date: nextDate || null, completed_at: completed ? new Date().toISOString() : null, completed_by: completed ? user.user?.id || null : null }
+    if (completed && (!nextDate || !nextComment.trim())) {
+      toast({ title: "Faltan datos", description: "Para completar el ítem debes indicar fecha y comentario.", variant: "destructive" })
+      setSaving(false)
+      return
+    }
+    const now = new Date().toISOString()
+    const patch = { is_completed: completed, comment: completed ? nextComment.trim() : null, user_selected_date: completed ? nextDate : null, completed_at: completed ? now : null, completed_by: completed ? user.user?.id || null : null }
+    let next = items.map((current) => current.id === item.id ? { ...current, ...patch } : current) as ChecklistItem[]
+    const updatedParents = new Set<string>()
+    let changed = true
+    while (changed) {
+      changed = false
+      for (const parent of next.filter((current) => next.some((child) => child.parent_id === current.id))) {
+        const nested = next.filter((child) => child.parent_id === parent.id)
+        const shouldComplete = nested.length > 0 && nested.every((child) => child.is_completed)
+        if (parent.is_completed !== shouldComplete) {
+          next = next.map((current) => current.id === parent.id ? { ...current, is_completed: shouldComplete, completed_at: shouldComplete ? now : null, completed_by: shouldComplete ? user.user?.id || null : null } : current)
+          updatedParents.add(parent.id)
+          changed = true
+        }
+      }
+    }
+    const updates = [patch, ...Array.from(updatedParents).map((id) => { const parent = next.find((current) => current.id === id)!; return { id, is_completed: parent.is_completed, completed_at: parent.completed_at, completed_by: parent.completed_by, comment: parent.comment, user_selected_date: parent.user_selected_date } })]
     const { error } = await supabase.from("opportunity_checklist_items" as any).update(patch).eq("id", item.id).eq("opportunity_id", opportunityId)
+    if (!error) for (const parentPatch of updates.slice(1)) await supabase.from("opportunity_checklist_items" as any).update(parentPatch).eq("id", parentPatch.id).eq("opportunity_id", opportunityId)
     if (error) toast({ title: "No se pudo actualizar el ítem", description: error.message, variant: "destructive" })
     else {
-      const next = items.map((current) => current.id === item.id ? { ...current, ...patch } : current)
-      setItems(next as ChecklistItem[])
-      const nextProgress = Math.min(100, Math.round((next.filter((current) => current.is_completed).reduce((sum, current) => sum + Number(current.weight || 0), 0) / totalWeight) * 100))
+      setItems(next)
+      const nextProgress = calculateProgress(next)
       await supabase.from("opportunities").update({ probability: nextProgress }).eq("id", opportunityId)
       toast({ title: completed ? "Ítem completado" : "Ítem desmarcado" })
     }
@@ -98,12 +129,13 @@ export function OpportunityChecklist({ opportunityId, canEdit = true }: { opport
       <CardContent className="flex cursor-pointer items-center gap-4 px-4 py-3" onClick={() => setOpen(true)} role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") setOpen(true) }}>
         <ClipboardCheck className="size-4 shrink-0 text-muted-foreground" />
         <div className="min-w-0 flex-1">
-          <div className="mb-1 flex items-center justify-between gap-3 text-xs text-muted-foreground"><span>Avance de calificación</span><span className="font-medium text-foreground">{progress}%</span></div>
+          <div className="mb-1 flex items-center justify-between gap-3 text-xs text-muted-foreground"><span>Probabilidad</span><span className="font-medium text-foreground">{progress}%</span></div>
           <div className="h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progress}%` }} /></div>
         </div>
+        <div className="flex shrink-0 items-center gap-2">{roots.map((root) => <Badge key={root.id} variant={root.is_completed ? "default" : "outline"}>{title(root)} {root.is_completed ? "✓" : "·"}</Badge>)}</div>
         <span className="shrink-0 text-xs text-muted-foreground">{items.filter((item) => item.is_completed).length}/{items.length}</span>
       </CardContent>
     </Card>
-    <Sheet open={open} onOpenChange={setOpen}><SheetContent className="w-full overflow-y-auto sm:max-w-lg"><SheetHeader><SheetTitle>Checklist de calificación</SheetTitle><SheetDescription>Selecciona un ítem para ver sus detalles y registrar evidencia.</SheetDescription></SheetHeader><div className="flex flex-col gap-0 py-6">{roots.map((item) => renderItem(item))}</div>{selected && <div className="border-t pt-5"><SheetTitle className="text-base">{title(selected)}</SheetTitle><SheetDescription>{description(selected)}</SheetDescription><div className="flex flex-col gap-5 py-6"><div className="flex items-center gap-2"><Badge>{selected.is_completed ? "Completado" : "Pendiente"}</Badge><span className="text-sm text-muted-foreground">Peso: {selected.weight}%</span></div><div className="flex flex-col gap-2"><Label htmlFor="checklist-date"><CalendarDays className="mr-1 inline size-4" />Fecha seleccionada</Label><Input id="checklist-date" type="date" value={date} onChange={(event) => setDate(event.target.value)} disabled={!canEdit || saving} /></div><div className="flex flex-col gap-2"><Label htmlFor="checklist-comment"><MessageSquare className="mr-1 inline size-4" />Comentario / evidencia</Label><Textarea id="checklist-comment" value={comment} onChange={(event) => setComment(event.target.value)} placeholder="Agrega evidencia o comentarios..." disabled={!canEdit || saving} /></div><div className="flex gap-2"><Button className="flex-1" disabled={!canEdit || saving} onClick={() => void persist(selected, true, comment, date)}><Check data-icon="inline-start" />Completar</Button><Button variant="outline" disabled={!canEdit || saving || !selected.is_completed} onClick={() => void persist(selected, false, comment, date)}><RotateCcw data-icon="inline-start" />Desmarcar</Button></div></div></div>}</SheetContent></Sheet>
+    <Sheet open={open} onOpenChange={setOpen}><SheetContent className="w-full overflow-y-auto sm:max-w-lg"><SheetHeader><SheetTitle>Checklist de calificación</SheetTitle><SheetDescription>Selecciona un ítem para ver sus detalles y registrar evidencia.</SheetDescription></SheetHeader><div className="flex flex-col gap-0 py-6">{roots.map((item) => renderItem(item))}</div>{selected && <div className="border-t pt-5"><SheetTitle className="text-base">{title(selected)}</SheetTitle><SheetDescription>{description(selected)}</SheetDescription><div className="flex flex-col gap-5 py-6"><div className="flex items-center gap-2"><Badge>{selected.is_completed ? "Completado" : "Pendiente"}</Badge><span className="text-sm text-muted-foreground">Peso: {selected.weight}%</span></div><div className="flex flex-col gap-2"><Label htmlFor="checklist-date"><CalendarDays className="mr-1 inline size-4" />Fecha seleccionada</Label><Input id="checklist-date" type="date" value={date} onChange={(event) => setDate(event.target.value)} disabled={!canEdit || saving} /></div><div className="flex flex-col gap-2"><Label htmlFor="checklist-comment"><MessageSquare className="mr-1 inline size-4" />Comentario / evidencia</Label><Textarea id="checklist-comment" value={comment} onChange={(event) => setComment(event.target.value)} placeholder="Agrega evidencia o comentarios..." disabled={!canEdit || saving} /></div><div className="flex gap-2"><Button className="flex-1" disabled={!canEdit || saving || !date || !comment.trim()} onClick={() => void persist(selected, true, comment, date)}><Check data-icon="inline-start" />Completar</Button><Button variant="outline" disabled={!canEdit || saving || !selected.is_completed} onClick={() => void persist(selected, false, comment, date)}><RotateCcw data-icon="inline-start" />Desmarcar</Button></div></div></div>}</SheetContent></Sheet>
   </>
 }
