@@ -38,6 +38,7 @@ import { EditOpportunityDialog } from "@/components/follow-up-meetings/edit-oppo
 import type { OpportunityWithRelations } from "@/lib/services/opportunity-service"
 import { supabase } from "@/lib/supabase/client"
 import { OpportunityQuotes } from "./opportunity-quotes"
+import { OpportunityChecklist } from "./opportunity-checklist"
 
 interface PartnerOpportunityDetailProps {
   opportunity: OpportunityWithRelations
@@ -318,9 +319,13 @@ export function PartnerOpportunityDetail({ opportunity, onClose, onDataChange }:
               {opportunity.end_customer && ` - ${getEndCustomerName()}`}
             </CardTitle>
           </div>
-        </CardHeader>
+  </CardHeader>
 
-        <CardContent className="pb-2">
+  <div className="px-6 pb-2">
+    <OpportunityChecklist opportunityId={opportunity.id} canEdit={false} />
+  </div>
+  
+  <CardContent className="pb-2">
           {/* Layout: Detalles y notas en 2 columnas, tareas debajo */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Columna de detalles (2/3 del ancho) */}
