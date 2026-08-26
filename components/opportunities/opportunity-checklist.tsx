@@ -74,8 +74,9 @@ export function OpportunityChecklist({ opportunityId, canEdit = true }: { opport
       setSaving(false)
       return
     }
+    const normalizedComment = nextComment || ""
     const now = new Date().toISOString()
-    const patch = { is_completed: completed, comment: completed ? nextComment.trim() : null, user_selected_date: completed ? nextDate : null, completed_at: completed ? now : null, completed_by: completed ? user.user?.id || null : null }
+    const patch = { is_completed: completed, comment: completed ? normalizedComment.trim() : null, user_selected_date: completed ? nextDate : null, completed_at: completed ? now : null, completed_by: completed ? user.user?.id || null : null }
     let next = items.map((current) => current.id === item.id ? { ...current, ...patch } : current) as ChecklistItem[]
     const updatedParents = new Set<string>()
     let changed = true
@@ -91,9 +92,9 @@ export function OpportunityChecklist({ opportunityId, canEdit = true }: { opport
         }
       }
     }
-    const updates = [patch, ...Array.from(updatedParents).map((id) => { const parent = next.find((current) => current.id === id)!; return { id, is_completed: parent.is_completed, completed_at: parent.completed_at, completed_by: parent.completed_by, comment: parent.comment, user_selected_date: parent.user_selected_date } })]
+    const parentUpdates = Array.from(updatedParents).map((id) => { const parent = next.find((current) => current.id === id)!; return { id, patch: { is_completed: parent.is_completed, completed_at: parent.completed_at, completed_by: parent.completed_by } } })
     const { error } = await supabase.from("opportunity_checklist_items" as any).update(patch).eq("id", item.id).eq("opportunity_id", opportunityId)
-    if (!error) for (const parentPatch of updates.slice(1)) await supabase.from("opportunity_checklist_items" as any).update(parentPatch).eq("id", parentPatch.id).eq("opportunity_id", opportunityId)
+    if (!error) for (const parentUpdate of parentUpdates) await supabase.from("opportunity_checklist_items" as any).update(parentUpdate.patch).eq("id", parentUpdate.id).eq("opportunity_id", opportunityId)
     if (error) toast({ title: "No se pudo actualizar el ítem", description: error.message, variant: "destructive" })
     else {
       setItems(next)
