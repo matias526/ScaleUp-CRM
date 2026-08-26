@@ -34,6 +34,7 @@ import { addNoteToOpportunity, addTaskToOpportunity } from "@/lib/services/follo
 import { useAuth } from "@/components/auth/auth-provider"
 import { getCountryName, getDaysSince } from "@/lib/utils/country-utils"
 import { supabase } from "@/lib/supabase/client"
+import { OpportunityChecklist } from "@/components/opportunities/opportunity-checklist"
 
 type OpportunityCarouselProps = {
   opportunities: any[]
@@ -467,6 +468,10 @@ export function OpportunityCarousel({
                   </CardTitle>
                 </div>
               </CardHeader>
+
+              <div className="px-6 pb-2">
+                <OpportunityChecklist opportunityId={currentOpportunity.id} canEdit />
+              </div>
 
               <CardContent className="pb-2">
                 {/* Nuevo layout: Detalles y notas en 2 columnas, tareas debajo */}
