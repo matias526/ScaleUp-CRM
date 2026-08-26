@@ -40,7 +40,7 @@ export function ChecklistMasterManager() {
     setLoading(true)
     const { data, error } = await supabase.from("checklist_master_items" as any).select("*").eq("target_type", target).order("order_index", { ascending: true })
     if (error) toast.error(error.message)
-    setItems((data as Item[]) || [])
+    setItems((data as unknown as Item[]) || [])
     setLoading(false)
   }, [target])
   useEffect(() => { void load() }, [load])
