@@ -129,6 +129,51 @@ export async function getOpportunityStages(): Promise<Tables<"pipeline_stages">[
   }
 }
 
+type ChecklistMasterItem = {
+  id: string
+  parent_id: string | null
+  title: Record<string, string> | null
+  description: Record<string, string> | null
+  weight: number | null
+  order_index: number | null
+  is_active: boolean
+}
+
+/** Creates an immutable checklist snapshot for a newly created opportunity. */
+async function instantiateOpportunityChecklist(opportunityId: string, opportunityData: any) {
+  const targetType = opportunityData.prospect_id ? "prospect_partner" : opportunityData.partner_id ? "partner" : null
+  if (!targetType) return
+
+  const { data: masters, error: masterError } = await supabase
+    .from("checklist_master_items" as any)
+    .select("id, parent_id, title, description, weight, order_index, is_active")
+    .eq("target_type", targetType)
+    .eq("is_active", true)
+    .order("order_index", { ascending: true })
+
+  if (masterError) throw masterError
+
+  const activeMasters = (masters || []) as unknown as ChecklistMasterItem[]
+  if (!activeMasters.length) return
+
+  const idMap = new Map(activeMasters.map((item) => [item.id, crypto.randomUUID()]))
+  const rows = activeMasters.map((item) => {
+    return {
+      id: idMap.get(item.id),
+      opportunity_id: opportunityId,
+      parent_id: item.parent_id ? idMap.get(item.parent_id) || null : null,
+      title: item.title,
+      description: item.description,
+      weight: Number(item.weight || 0),
+      order_index: item.order_index ?? 0,
+      is_completed: false,
+    }
+  })
+
+  const { error: insertError } = await supabase.from("opportunity_checklist_items" as any).insert(rows)
+  if (insertError) throw insertError
+}
+
 // Modificar la función createOpportunity para manejar todos los campos correctamente
 export async function createOpportunity(
   opportunityData: any,
@@ -161,10 +206,8 @@ export async function createOpportunity(
       }
     }
 
-    // Eliminar el campo probability si existe (será calculado automáticamente)
-    if (opportunityData.hasOwnProperty("probability")) {
-      delete opportunityData.probability
-    }
+    // Toda oportunidad comienza con probabilidad cero.
+    opportunityData.probability = 0
 
     // Asegurar que is_new_partner sea un boolean
     if (opportunityData.hasOwnProperty("is_new_partner")) {
@@ -184,6 +227,10 @@ export async function createOpportunity(
     }
 
     console.log("🔧 Oportunidad creada con ID:", data?.id)
+
+    if (data?.id) {
+      await instantiateOpportunityChecklist(data.id, data)
+    }
 
     // Crear los valores técnicos si existen
     if (techValues.length > 0 && data) {
