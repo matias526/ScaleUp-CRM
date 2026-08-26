@@ -41,6 +41,7 @@ export function OpportunityChecklist({ opportunityId, canEdit = true }: { opport
   const [comment, setComment] = useState("")
   const [date, setDate] = useState("")
   const [saving, setSaving] = useState(false)
+  const [expandedRoots, setExpandedRoots] = useState<Set<string>>(new Set())
   const lang = language()
 
   const load = useCallback(async () => {
@@ -113,14 +114,16 @@ export function OpportunityChecklist({ opportunityId, canEdit = true }: { opport
 
   const renderItem = (item: ChecklistItem, level = 0) => {
     const nested = children(item.id)
+    const isRoot = level === 0
+    const isExpanded = isRoot ? expandedRoots.has(item.id) : true
     return <div key={item.id} className="border-b last:border-b-0">
       <div className="flex items-start gap-3 py-3" style={{ paddingLeft: `${level * 1.25}rem` }}>
         <Checkbox checked={item.is_completed} disabled={!canEdit || saving || item.is_completed} onClick={(event) => { if (!item.is_completed) { event.preventDefault(); selectItem(item) } }} aria-label={title(item)} />
-        <div className="min-w-0 flex-1 cursor-pointer" onClick={() => selectItem(item)}><p className={item.is_completed ? "font-medium line-through text-muted-foreground" : "font-medium"}>{title(item)}</p><p className="text-sm text-muted-foreground">{description(item)}</p></div>
+        <div className="min-w-0 flex-1 cursor-pointer" onClick={() => isRoot && nested.length ? setExpandedRoots((current) => { const next = new Set(current); next.has(item.id) ? next.delete(item.id) : next.add(item.id); return next }) : selectItem(item)}><p className={item.is_completed ? "font-medium line-through text-muted-foreground" : "font-medium"}>{title(item)}</p><p className="text-sm text-muted-foreground">{description(item)}</p></div>
         <Badge variant={item.is_completed ? "default" : "secondary"}>{item.is_completed ? "100%" : `${item.weight}%`}</Badge>{canEdit && !item.is_completed && <Button type="button" size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => selectItem(item)}>Completar</Button>}
         {nested.length > 0 && (item.is_completed ? <ChevronDown className="mt-1 size-4" /> : <ChevronRight className="mt-1 size-4" />)}
       </div>
-      {nested.length > 0 && <div>{nested.map((child) => renderItem(child, level + 1))}</div>}
+      {nested.length > 0 && isExpanded && <div className="bg-muted/20">{nested.map((child) => renderItem(child, level + 1))}</div>}
     </div>
   }
 
@@ -133,7 +136,7 @@ export function OpportunityChecklist({ opportunityId, canEdit = true }: { opport
         <ClipboardCheck className="size-4 shrink-0 text-muted-foreground" />
         <div className="min-w-0 flex-1">
           <div className="mb-1 flex items-center justify-between gap-3 text-xs text-muted-foreground"><span>Probabilidad</span><span className="font-medium text-foreground">{progress}%</span></div>
-          <div className="h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progress}%` }} /></div>
+          <div className="flex h-3 w-full overflow-hidden rounded-full bg-muted">{roots.map((root) => { const rootChildren = children(root.id); const rootProgress = rootChildren.length ? calculateProgress([root, ...rootChildren]) : root.is_completed ? 100 : 0; return <button key={root.id} type="button" title={`${title(root)} · ${rootProgress}%`} className={`h-full border-r border-background transition-colors ${root.is_completed ? "bg-emerald-500" : rootProgress > 0 ? "bg-amber-400" : "bg-muted-foreground/20"}`} style={{ width: `${root.weight}%` }} onClick={() => { if (rootChildren.length) setExpandedRoots((current) => { const next = new Set(current); next.has(root.id) ? next.delete(root.id) : next.add(root.id); return next }); else selectItem(root) }} /></button> })}</div><div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">{roots.map((root) => { const rootChildren = children(root.id); const rootProgress = rootChildren.length ? calculateProgress([root, ...rootChildren]) : root.is_completed ? 100 : 0; return <button key={root.id} type="button" className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground" onClick={() => { if (rootChildren.length) setExpandedRoots((current) => { const next = new Set(current); next.has(root.id) ? next.delete(root.id) : next.add(root.id) }); else selectItem(root) }}><span className={`size-2 rounded-full ${root.is_completed ? "bg-emerald-500" : rootProgress > 0 ? "bg-amber-400" : "bg-muted-foreground/30"}`} />{title(root)} <span>({root.weight}%)</span></button> })}</div>
         </div>
         <div className="flex shrink-0 items-center gap-2">{roots.map((root) => <Badge key={root.id} variant={root.is_completed ? "default" : "outline"}>{title(root)} {root.is_completed ? "✓" : "·"}</Badge>)}</div>
         <span className="shrink-0 text-xs text-muted-foreground">{items.filter((item) => item.is_completed).length}/{items.length}</span>
