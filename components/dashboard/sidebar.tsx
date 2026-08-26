@@ -47,6 +47,7 @@ const sidebarTranslations = {
     "sidebar.settings": "Settings",
     "sidebar.settings.general": "General",
     "sidebar.settings.custom_fields": "Custom Fields",
+    "sidebar.settings.opportunity_checklist": "Opportunity Checklist",
     "sidebar.settings.translations": "Translations",
     "sidebar.settings.supabase": "Supabase Setup",
     "sidebar.knowledge_base": "Knowledge Base",
@@ -76,6 +77,7 @@ const sidebarTranslations = {
     "sidebar.settings": "Configuración",
     "sidebar.settings.general": "General",
     "sidebar.settings.custom_fields": "Campos Personalizados",
+    "sidebar.settings.opportunity_checklist": "CheckList en Oportunidades",
     "sidebar.settings.translations": "Traducciones",
     "sidebar.settings.supabase": "Configuración Supabase",
     "sidebar.knowledge_base": "Base de Conocimiento",
@@ -105,6 +107,7 @@ const sidebarTranslations = {
     "sidebar.settings": "Configurações",
     "sidebar.settings.general": "Geral",
     "sidebar.settings.custom_fields": "Campos Personalizados",
+    "sidebar.settings.opportunity_checklist": "Checklist em Oportunidades",
     "sidebar.settings.translations": "Traduções",
     "sidebar.settings.supabase": "Configuração Supabase",
     "sidebar.knowledge_base": "Base de Conhecimento",
@@ -340,6 +343,10 @@ export function Sidebar() {
         {
           href: "/dashboard/settings/custom-fields",
           labelKey: "sidebar.settings.custom_fields",
+        },
+        {
+          href: "/dashboard/settings/opportunity-checklist",
+          labelKey: "sidebar.settings.opportunity_checklist",
         },
         {
           href: "/dashboard/settings/translations",
