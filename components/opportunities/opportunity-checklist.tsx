@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { CalendarDays, Check, ChevronDown, ChevronRight, ClipboardCheck, Loader2, MessageSquare, RotateCcw } from "lucide-react"
+import { CalendarDays, Check, ChevronDown, ChevronRight, ClipboardCheck, Loader2, MessageSquare } from "lucide-react"
 import { supabase } from "@/lib/supabase/client"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -39,7 +39,7 @@ export function OpportunityChecklist({ opportunityId, canEdit = true }: { opport
   const [comment, setComment] = useState("")
   const [date, setDate] = useState("")
   const [saving, setSaving] = useState(false)
-  const [expandedRoots, setExpandedRoots] = useState<Set<string>>(new Set())
+  const [expandedRoot, setExpandedRoot] = useState<string | null>(null)
   const lang = language()
 
   const load = useCallback(async () => {
@@ -107,7 +107,7 @@ export function OpportunityChecklist({ opportunityId, canEdit = true }: { opport
   }
 
   const selectItem = (item: ChecklistItem) => { setSelected(item); setComment(item.comment || ""); setDate(item.user_selected_date || "") }
-  const toggleRoot = (id: string) => setExpandedRoots((current) => { const next = new Set(current); if (next.has(id)) next.delete(id); else next.add(id); return next })
+  const toggleRoot = (id: string) => setExpandedRoot((current) => current === id ? null : id)
   const title = (item: ChecklistItem) => item.title?.[lang] || item.title?.es || item.title?.en || "Ítem"
   const description = (item: ChecklistItem) => item.description?.[lang] || item.description?.es || item.description?.en || ""
 
@@ -136,8 +136,9 @@ export function OpportunityChecklist({ opportunityId, canEdit = true }: { opport
           <div className="flex items-center gap-2 text-sm font-medium text-foreground"><ClipboardCheck className="size-4 text-muted-foreground" />Probabilidad</div>
           <span className="text-sm font-semibold tabular-nums text-foreground">{progress}%</span>
         </div>
-        <div className="flex h-14 w-full overflow-hidden rounded-xl border border-border bg-muted/30 shadow-sm">{roots.map((root) => { const rootChildren = children(root.id); const rootProgress = rootChildren.length ? calculateProgress([root, ...rootChildren]) : root.is_completed ? 100 : 0; const fillColor = rootProgress === 100 ? "bg-emerald-500" : rootProgress > 0 ? "bg-amber-400" : "bg-muted-foreground/15"; return <button key={root.id} type="button" title={`${title(root)} · ${rootProgress}%`} className="relative h-full min-w-0 overflow-hidden border-r border-background text-left transition-all hover:brightness-95 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary last:border-r-0" style={{ width: `${root.weight}%` }} onClick={() => { if (rootChildren.length) toggleRoot(root.id); else selectItem(root) }}><span className={`absolute inset-y-0 left-0 ${fillColor} transition-[width]`} style={{ width: `${rootProgress}%` }} /><span className="absolute inset-0 opacity-20" style={{ backgroundImage: rootProgress > 0 && rootProgress < 100 ? "repeating-linear-gradient(-45deg, transparent, transparent 6px, rgba(255,255,255,.55) 6px, rgba(255,255,255,.55) 8px)" : undefined }} /><span className="relative z-10 flex h-full flex-col justify-center truncate px-3 text-xs font-semibold leading-tight text-foreground sm:text-sm">{title(root)}<span className="mt-0.5 text-[10px] font-normal opacity-75">{rootProgress}% completado</span></span></button> })}</div>
-        <div className="mt-4 flex flex-col gap-0">{roots.filter((root) => expandedRoots.has(root.id)).map((root) => renderItem(root))}</div>
+        <div className="mb-2 flex gap-1">{roots.map((root) => <button key={root.id} type="button" className="truncate text-left text-xs font-medium text-zinc-600 hover:text-foreground" style={{ width: `${root.weight}%` }} onClick={() => toggleRoot(root.id)}>{title(root)}</button>)}</div>
+        <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-zinc-100">{roots.map((root) => { const rootChildren = children(root.id); const rootProgress = rootChildren.length ? calculateProgress([root, ...rootChildren]) : root.is_completed ? 100 : 0; return <button key={root.id} type="button" aria-label={`${title(root)}: ${rootProgress}%`} className="relative h-full border-r border-white/80 last:border-0" style={{ width: `${root.weight}%` }} onClick={() => toggleRoot(root.id)}><span className="absolute inset-y-0 left-0 rounded-full bg-primary transition-[width]" style={{ width: `${rootProgress}%` }} /></button> })}</div>
+        <div className="mt-4">{expandedRoot ? roots.filter((root) => root.id === expandedRoot).map((root) => renderItem(root)) : <p className="text-xs text-muted-foreground">Selecciona una etapa para ver sus actividades</p>}</div>
       </CardContent>
     </Card>
     <Dialog open={Boolean(selected)} onOpenChange={(value) => { if (!value) setSelected(null) }}><DialogContent><DialogHeader><DialogTitle>{selected ? title(selected) : "Completar ítem"}</DialogTitle><DialogDescription>{selected ? description(selected) : ""}</DialogDescription></DialogHeader>{selected && <div className="flex flex-col gap-4"><p className="rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">Para completar este ítem, indica la fecha y agrega un comentario o evidencia.</p><div className="flex flex-col gap-2"><Label htmlFor="checklist-date"><CalendarDays className="mr-1 inline size-4" />Fecha de cumplimiento *</Label><Input id="checklist-date" type="date" value={date} onChange={(event) => setDate(event.target.value)} disabled={!canEdit || saving} /></div><div className="flex flex-col gap-2"><Label htmlFor="checklist-comment"><MessageSquare className="mr-1 inline size-4" />Comentario / evidencia *</Label><Textarea id="checklist-comment" value={comment} onChange={(event) => setComment(event.target.value)} placeholder="Agrega evidencia o comentarios..." disabled={!canEdit || saving} /></div></div>}<DialogFooter><Button variant="outline" onClick={() => setSelected(null)}>Cancelar</Button><Button disabled={!canEdit || saving || !selected || !date || !comment.trim()} onClick={() => selected && void persist(selected, true, comment, date)}><Check data-icon="inline-start" />Completar</Button></DialogFooter></DialogContent></Dialog>
