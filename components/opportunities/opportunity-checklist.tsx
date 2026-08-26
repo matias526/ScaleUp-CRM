@@ -5,7 +5,7 @@ import { CalendarDays, Check, ChevronDown, ChevronRight, ClipboardCheck, Loader2
 import { supabase } from "@/lib/supabase/client"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -94,10 +94,16 @@ export function OpportunityChecklist({ opportunityId, canEdit = true }: { opport
   if (!items.length) return null
 
   return <>
-    <Card>
-      <CardHeader className="flex flex-row items-start justify-between gap-4"><div><CardTitle className="flex items-center gap-2"><ClipboardCheck className="size-5" />Checklist de calificación</CardTitle><CardDescription>Avance ponderado de la oportunidad</CardDescription></div><div className="text-right"><p className="text-2xl font-semibold">{progress}%</p><p className="text-xs text-muted-foreground">{items.filter((item) => item.is_completed).length}/{items.length} completados</p></div></CardHeader>
-      <CardContent><div className="mb-4 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} /></div><div>{roots.map((item) => renderItem(item))}</div></CardContent>
+    <Card className="mb-5 border-muted shadow-none">
+      <CardContent className="flex cursor-pointer items-center gap-4 px-4 py-3" onClick={() => setOpen(true)} role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") setOpen(true) }}>
+        <ClipboardCheck className="size-4 shrink-0 text-muted-foreground" />
+        <div className="min-w-0 flex-1">
+          <div className="mb-1 flex items-center justify-between gap-3 text-xs text-muted-foreground"><span>Avance de calificación</span><span className="font-medium text-foreground">{progress}%</span></div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progress}%` }} /></div>
+        </div>
+        <span className="shrink-0 text-xs text-muted-foreground">{items.filter((item) => item.is_completed).length}/{items.length}</span>
+      </CardContent>
     </Card>
-    <Sheet open={open} onOpenChange={setOpen}><SheetContent className="w-full overflow-y-auto sm:max-w-lg"><SheetHeader><SheetTitle>{selected ? title(selected) : "Detalle del ítem"}</SheetTitle><SheetDescription>{selected ? description(selected) : ""}</SheetDescription></SheetHeader>{selected && <div className="flex flex-col gap-5 py-6"><div className="flex items-center gap-2"><Badge>{selected.is_completed ? "Completado" : "Pendiente"}</Badge><span className="text-sm text-muted-foreground">Peso: {selected.weight}%</span></div><div className="flex flex-col gap-2"><Label htmlFor="checklist-date"><CalendarDays className="mr-1 inline size-4" />Fecha seleccionada</Label><Input id="checklist-date" type="date" value={date} onChange={(event) => setDate(event.target.value)} disabled={!canEdit || saving} /></div><div className="flex flex-col gap-2"><Label htmlFor="checklist-comment"><MessageSquare className="mr-1 inline size-4" />Comentario / evidencia</Label><Textarea id="checklist-comment" value={comment} onChange={(event) => setComment(event.target.value)} placeholder="Agrega evidencia o comentarios..." disabled={!canEdit || saving} /></div><div className="flex gap-2"><Button className="flex-1" disabled={!canEdit || saving} onClick={() => void persist(selected, true, comment, date)}><Check data-icon="inline-start" />Completar</Button><Button variant="outline" disabled={!canEdit || saving || !selected.is_completed} onClick={() => void persist(selected, false, comment, date)}><RotateCcw data-icon="inline-start" />Desmarcar</Button></div></div>}</SheetContent></Sheet>
+    <Sheet open={open} onOpenChange={setOpen}><SheetContent className="w-full overflow-y-auto sm:max-w-lg"><SheetHeader><SheetTitle>Checklist de calificación</SheetTitle><SheetDescription>Selecciona un ítem para ver sus detalles y registrar evidencia.</SheetDescription></SheetHeader><div className="flex flex-col gap-0 py-6">{roots.map((item) => renderItem(item))}</div>{selected && <div className="border-t pt-5"><SheetTitle className="text-base">{title(selected)}</SheetTitle><SheetDescription>{description(selected)}</SheetDescription><div className="flex flex-col gap-5 py-6"><div className="flex items-center gap-2"><Badge>{selected.is_completed ? "Completado" : "Pendiente"}</Badge><span className="text-sm text-muted-foreground">Peso: {selected.weight}%</span></div><div className="flex flex-col gap-2"><Label htmlFor="checklist-date"><CalendarDays className="mr-1 inline size-4" />Fecha seleccionada</Label><Input id="checklist-date" type="date" value={date} onChange={(event) => setDate(event.target.value)} disabled={!canEdit || saving} /></div><div className="flex flex-col gap-2"><Label htmlFor="checklist-comment"><MessageSquare className="mr-1 inline size-4" />Comentario / evidencia</Label><Textarea id="checklist-comment" value={comment} onChange={(event) => setComment(event.target.value)} placeholder="Agrega evidencia o comentarios..." disabled={!canEdit || saving} /></div><div className="flex gap-2"><Button className="flex-1" disabled={!canEdit || saving} onClick={() => void persist(selected, true, comment, date)}><Check data-icon="inline-start" />Completar</Button><Button variant="outline" disabled={!canEdit || saving || !selected.is_completed} onClick={() => void persist(selected, false, comment, date)}><RotateCcw data-icon="inline-start" />Desmarcar</Button></div></div></div>}</SheetContent></Sheet>
   </>
 }
