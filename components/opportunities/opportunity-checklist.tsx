@@ -130,14 +130,14 @@ export function OpportunityChecklist({ opportunityId, canEdit = true }: { opport
   if (!items.length) return null
 
   return <>
-    <Card className="mb-5 overflow-hidden border-border/70 shadow-none">
+    <Card className="mb-5 overflow-hidden border-primary/15 bg-gradient-to-br from-primary/[0.06] via-card to-muted/35 shadow-sm">
       <CardContent className="px-4 py-4 sm:px-5">
-        <div className="mb-2 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-sm font-medium text-foreground"><ClipboardCheck className="size-4 text-muted-foreground" />Probabilidad</div>
+        <div className="mb-3 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2 text-sm font-semibold text-foreground"><span className="flex size-7 items-center justify-center rounded-md bg-primary/10 text-primary"><ClipboardCheck className="size-4" /></span>Probabilidad</div>
           <span className="text-sm font-semibold tabular-nums text-foreground">{progress}%</span>
         </div>
-        <div className="mb-2 flex gap-1">{roots.map((root) => <button key={root.id} type="button" className="truncate text-left text-xs font-medium text-zinc-600 hover:text-foreground" style={{ width: `${root.weight}%` }} onClick={() => toggleRoot(root.id)}>{title(root)}</button>)}</div>
-        <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-zinc-100">{roots.map((root) => { const rootChildren = children(root.id); const rootProgress = rootChildren.length ? calculateProgress([root, ...rootChildren]) : root.is_completed ? 100 : 0; return <button key={root.id} type="button" aria-label={`${title(root)}: ${rootProgress}%`} className="relative h-full border-r border-white/80 last:border-0" style={{ width: `${root.weight}%` }} onClick={() => toggleRoot(root.id)}><span className="absolute inset-y-0 left-0 rounded-full bg-primary transition-[width]" style={{ width: `${rootProgress}%` }} /></button> })}</div>
+        <div className="mb-2 flex gap-1">{roots.map((root) => <button key={root.id} type="button" className="truncate text-left text-xs font-medium text-muted-foreground transition-colors hover:text-primary" style={{ width: `${root.weight}%` }} onClick={() => toggleRoot(root.id)}>{title(root)}</button>)}</div>
+        <div className="flex h-3 w-full overflow-hidden rounded-full border border-border/60 bg-muted/70 p-0.5 shadow-inner">{roots.map((root) => { const rootChildren = children(root.id); const rootProgress = rootChildren.length ? calculateProgress([root, ...rootChildren]) : root.is_completed ? 100 : 0; return <button key={root.id} type="button" aria-label={`${title(root)}: ${rootProgress}%`} className="relative h-full border-r border-background/90 last:border-0" style={{ width: `${root.weight}%` }} onClick={() => toggleRoot(root.id)}><span className="absolute inset-y-0 left-0 rounded-full bg-primary transition-[width]" style={{ width: `${rootProgress}%` }} /></button> })}</div>
         <div className="mt-4">{expandedRoot ? roots.filter((root) => root.id === expandedRoot).map((root) => renderItem(root)) : <p className="text-xs text-muted-foreground">Selecciona una etapa para ver sus actividades</p>}</div>
       </CardContent>
     </Card>
