@@ -115,7 +115,7 @@ export function OpportunityChecklist({ opportunityId, canEdit = true }: { opport
     const nested = children(item.id)
     return <div key={item.id} className="border-b last:border-b-0">
       <div className="flex items-start gap-3 py-3" style={{ paddingLeft: `${level * 1.25}rem` }}>
-        <Checkbox checked={item.is_completed} disabled={!canEdit || saving} onClick={(event) => { if (!item.is_completed) { event.preventDefault(); selectItem(item) } }} onCheckedChange={(checked) => { if (checked !== true && item.is_completed) void persist(item, false) }} aria-label={title(item)} />
+        <Checkbox checked={item.is_completed} disabled={!canEdit || saving || item.is_completed} onClick={(event) => { if (!item.is_completed) { event.preventDefault(); selectItem(item) } }} aria-label={title(item)} />
         <div className="min-w-0 flex-1 cursor-pointer" onClick={() => selectItem(item)}><p className={item.is_completed ? "font-medium line-through text-muted-foreground" : "font-medium"}>{title(item)}</p><p className="text-sm text-muted-foreground">{description(item)}</p></div>
         <Badge variant={item.is_completed ? "default" : "secondary"}>{item.is_completed ? "100%" : `${item.weight}%`}</Badge>{canEdit && !item.is_completed && <Button type="button" size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => selectItem(item)}>Completar</Button>}
         {nested.length > 0 && (item.is_completed ? <ChevronDown className="mt-1 size-4" /> : <ChevronRight className="mt-1 size-4" />)}
