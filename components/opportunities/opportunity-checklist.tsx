@@ -10,7 +10,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/use-toast"
 
@@ -36,7 +35,6 @@ const language = () => {
 export function OpportunityChecklist({ opportunityId, canEdit = true }: { opportunityId: string; canEdit?: boolean }) {
   const [items, setItems] = useState<ChecklistItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [open, setOpen] = useState(false)
   const [selected, setSelected] = useState<ChecklistItem | null>(null)
   const [comment, setComment] = useState("")
   const [date, setDate] = useState("")
@@ -108,7 +106,7 @@ export function OpportunityChecklist({ opportunityId, canEdit = true }: { opport
     setSaving(false)
   }
 
-  const selectItem = (item: ChecklistItem) => { setSelected(item); setComment(item.comment || ""); setDate(item.user_selected_date || ""); setOpen(true) }
+  const selectItem = (item: ChecklistItem) => { setSelected(item); setComment(item.comment || ""); setDate(item.user_selected_date || "") }
   const toggleRoot = (id: string) => setExpandedRoots((current) => { const next = new Set(current); if (next.has(id)) next.delete(id); else next.add(id); return next })
   const title = (item: ChecklistItem) => item.title?.[lang] || item.title?.es || item.title?.en || "Ítem"
   const description = (item: ChecklistItem) => item.description?.[lang] || item.description?.es || item.description?.en || ""
@@ -133,7 +131,8 @@ export function OpportunityChecklist({ opportunityId, canEdit = true }: { opport
 
   return <>
     <Card className="mb-5 border-muted shadow-none">
-      <CardContent className="flex cursor-pointer items-center gap-4 px-4 py-3" onClick={() => setOpen(true)} role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") setOpen(true) }}>
+      <CardContent className="px-4 py-3">
+        <div className="flex items-center gap-4">
         <ClipboardCheck className="size-4 shrink-0 text-muted-foreground" />
         <div className="min-w-0 flex-1">
           <div className="mb-1 flex items-center justify-between gap-3 text-xs text-muted-foreground"><span>Probabilidad</span><span className="font-medium text-foreground">{progress}%</span></div>
@@ -141,9 +140,10 @@ export function OpportunityChecklist({ opportunityId, canEdit = true }: { opport
         </div>
         <div className="flex shrink-0 items-center gap-2">{roots.map((root) => <Badge key={root.id} variant={root.is_completed ? "default" : "outline"}>{title(root)} {root.is_completed ? "✓" : "·"}</Badge>)}</div>
         <span className="shrink-0 text-xs text-muted-foreground">{items.filter((item) => item.is_completed).length}/{items.length}</span>
+        </div>
+        <div className="mt-3 flex flex-col gap-0">{roots.filter((root) => expandedRoots.has(root.id)).map((root) => renderItem(root))}</div>
       </CardContent>
     </Card>
-    <Sheet open={open} onOpenChange={setOpen}><SheetContent className="w-full overflow-y-auto sm:max-w-lg"><SheetHeader><SheetTitle>Checklist de calificación</SheetTitle><SheetDescription>Selecciona un ítem para ver sus detalles y registrar evidencia.</SheetDescription></SheetHeader><div className="flex flex-col gap-0 py-6">{roots.map((item) => renderItem(item))}</div></SheetContent></Sheet>
     <Dialog open={Boolean(selected)} onOpenChange={(value) => { if (!value) setSelected(null) }}><DialogContent><DialogHeader><DialogTitle>{selected ? title(selected) : "Completar ítem"}</DialogTitle><DialogDescription>{selected ? description(selected) : ""}</DialogDescription></DialogHeader>{selected && <div className="flex flex-col gap-4"><p className="rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">Para completar este ítem, indica la fecha y agrega un comentario o evidencia.</p><div className="flex flex-col gap-2"><Label htmlFor="checklist-date"><CalendarDays className="mr-1 inline size-4" />Fecha de cumplimiento *</Label><Input id="checklist-date" type="date" value={date} onChange={(event) => setDate(event.target.value)} disabled={!canEdit || saving} /></div><div className="flex flex-col gap-2"><Label htmlFor="checklist-comment"><MessageSquare className="mr-1 inline size-4" />Comentario / evidencia *</Label><Textarea id="checklist-comment" value={comment} onChange={(event) => setComment(event.target.value)} placeholder="Agrega evidencia o comentarios..." disabled={!canEdit || saving} /></div></div>}<DialogFooter><Button variant="outline" onClick={() => setSelected(null)}>Cancelar</Button><Button disabled={!canEdit || saving || !selected || !date || !comment.trim()} onClick={() => selected && void persist(selected, true, comment, date)}><Check data-icon="inline-start" />Completar</Button></DialogFooter></DialogContent></Dialog>
   </>
 }
