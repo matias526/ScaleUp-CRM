@@ -69,7 +69,7 @@ export function OpportunityChecklist({ opportunityId, canEdit = true }: { opport
   const persist = async (item: ChecklistItem, completed: boolean, nextComment = item.comment, nextDate = item.user_selected_date) => {
     setSaving(true)
     const { data: user } = await supabase.auth.getUser()
-    if (completed && (!nextDate || !nextComment.trim())) {
+    if (completed && (!nextDate || !(nextComment || "").trim())) {
       toast({ title: "Faltan datos", description: "Para completar el ítem debes indicar fecha y comentario.", variant: "destructive" })
       setSaving(false)
       return
