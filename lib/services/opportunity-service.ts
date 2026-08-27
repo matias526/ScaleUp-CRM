@@ -36,8 +36,8 @@ export async function getOpportunities(userInfo?: any): Promise<OpportunityWithR
         query = query.eq("partner_id", userInfo.partnerId)
       } else if (userInfo.roleCode && userInfo.roleCode.toLowerCase() === "bdd" && userInfo.id) {
         query = query.or(`assigned_to.eq.${userInfo.id},created_by.eq.${userInfo.id}`)
-      } else if (userInfo.roleCode && userInfo.roleCode.toLowerCase() === "marketing" && userInfo.id) {
-        // Para Marketing: solo oportunidades que están asignadas a ellos o que crearon
+      } else if (userInfo.roleCode && ["bdd", "marketing"].includes(userInfo.roleCode.toLowerCase()) && userInfo.id) {
+        // BDD y Marketing ven oportunidades asignadas a ellos o creadas por ellos
         query = query.or(`assigned_to.eq.${userInfo.id},created_by.eq.${userInfo.id}`)
       }
     }
@@ -85,8 +85,8 @@ export async function getOpportunitiesClient(userInfo?: any): Promise<Opportunit
         query = query.eq("partner_id", userInfo.partnerId)
       } else if (userInfo.roleCode && userInfo.roleCode.toLowerCase() === "bdd" && userInfo.id) {
         query = query.or(`assigned_to.eq.${userInfo.id},created_by.eq.${userInfo.id}`)
-      } else if (userInfo.roleCode && userInfo.roleCode.toLowerCase() === "marketing" && userInfo.id) {
-        // Para Marketing: solo oportunidades que están asignadas a ellos o que crearon
+      } else if (userInfo.roleCode && ["bdd", "marketing"].includes(userInfo.roleCode.toLowerCase()) && userInfo.id) {
+        // BDD y Marketing ven oportunidades asignadas a ellos o creadas por ellos
         query = query.or(`assigned_to.eq.${userInfo.id},created_by.eq.${userInfo.id}`)
       }
     }
@@ -193,7 +193,7 @@ export async function createOpportunity(
       const lowerCaseRole = userRole.toLowerCase()
 
       // Si es usuario ScaleUp (Admin o BDD), la oportunidad se valida automáticamente
-      if (lowerCaseRole === "admin" || lowerCaseRole === "scaleup" || lowerCaseRole === "bdd") {
+      if (lowerCaseRole === "admin" || lowerCaseRole === "scaleup" || lowerCaseRole === "bdd" || lowerCaseRole === "marketing") {
         opportunityData.validation_status = "validated"
         opportunityData.validation_date = new Date().toISOString()
         opportunityData.validated_by = opportunityData.created_by

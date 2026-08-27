@@ -2069,7 +2069,7 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
               </div>
             )}
             {/* Contacts Section - Only visible to Admin and BDD */}
-            {currentUser && ["Admin", "BDD"].includes(currentUser.role_code) && (
+            {currentUser && ["admin", "bdd", "marketing"].includes((currentUser.role_code || "").toLowerCase()) && (
               <OpportunityContactsSection
                 opportunityId={opportunity?.id}
                 onSendMessage={() => setShowPulseMessageSender(true)}
