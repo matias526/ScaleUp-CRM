@@ -41,6 +41,7 @@ export function OpportunityChecklist({ opportunityId, canEdit = true }: { opport
   const [saving, setSaving] = useState(false)
   const [expandedRoot, setExpandedRoot] = useState<string | null>(null)
   const lang = language()
+  const qualificationTitle = lang === "en" ? "Opportunity Qualification" : lang === "pt" ? "Qualificação da oportunidade" : "Cualificación de oportunidad"
 
   const load = useCallback(async () => {
     const { data, error } = await supabase.from("opportunity_checklist_items" as any).select("*").eq("opportunity_id", opportunityId).order("order_index", { ascending: true })
@@ -133,7 +134,7 @@ export function OpportunityChecklist({ opportunityId, canEdit = true }: { opport
     <Card className="mb-5 overflow-hidden border-primary/15 bg-gradient-to-br from-primary/[0.06] via-card to-muted/35 shadow-sm">
       <CardContent className="px-4 py-4 sm:px-5">
         <div className="mb-3 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-sm font-semibold text-foreground"><span className="flex size-7 items-center justify-center rounded-md bg-primary/10 text-primary"><ClipboardCheck className="size-4" /></span>Probabilidad</div>
+          <div className="flex items-center gap-2 text-sm font-semibold text-foreground"><span className="flex size-7 items-center justify-center rounded-md bg-primary/10 text-primary"><ClipboardCheck className="size-4" /></span>{qualificationTitle}</div>
           <span className="text-sm font-semibold tabular-nums text-foreground">{progress}%</span>
         </div>
         <div className="mb-2 flex gap-1">{roots.map((root) => <button key={root.id} type="button" className="truncate text-left text-xs font-medium text-muted-foreground transition-colors hover:text-primary" style={{ width: `${root.weight}%` }} onClick={() => toggleRoot(root.id)}>{title(root)}</button>)}</div>
