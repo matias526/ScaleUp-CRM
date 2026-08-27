@@ -17,6 +17,7 @@ import {
   Tag,
   X,
   MessageSquare,
+  CircleSlash,
   ClipboardList,
   Plus,
 } from "lucide-react"
@@ -47,7 +48,10 @@ interface PartnerOpportunityDetailProps {
 }
 
 export function PartnerOpportunityDetail({ opportunity, onClose, onDataChange }: PartnerOpportunityDetailProps) {
-  const { t } = useTranslations()
+  const { t, language } = useTranslations()
+  const [isMarkingLost, setIsMarkingLost] = useState(false)
+  const lostStageId = "c4d86f83-5dba-4db2-83e0-c96831e5c8b9"
+  const markAsLostLabel = language === "en" ? "Mark as lost" : language === "pt" ? "Passar para perdida" : "Pasar a perdida"
   const { toast } = useToast()
   const { userInfo } = useAuth()
   const [showAddNote, setShowAddNote] = useState(false)
@@ -146,6 +150,19 @@ export function PartnerOpportunityDetail({ opportunity, onClose, onDataChange }:
 
     loadPartnerResponsible()
   }, [opportunity, supabase])
+
+  const handleMarkAsLost = async () => {
+    if (isMarkingLost || opportunity.pipeline_stage_id === lostStageId) return
+    setIsMarkingLost(true)
+    const { error } = await supabase.from("opportunities").update({ pipeline_stage_id: lostStageId }).eq("id", opportunity.id)
+    setIsMarkingLost(false)
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" })
+      return
+    }
+    toast({ title: markAsLostLabel, description: language === "en" ? "Opportunity moved to Lost." : language === "pt" ? "A oportunidade foi movida para Perdida." : "La oportunidad fue pasada a Perdida." })
+    onDataChange?.()
+  }
 
   // Formatear fecha
   const formatDate = (dateString: string | null) => {
@@ -284,8 +301,8 @@ export function PartnerOpportunityDetail({ opportunity, onClose, onDataChange }:
               <span>Último cambio hace {daysSinceUpdate} días</span>
             </div>
 
-            {/* Badges de estado */}
-            <div className="flex space-x-2">
+            {/* Badges de estado y acciones */}
+            <div className="flex items-center gap-2">{opportunity.pipeline_stage_id !== lostStageId && <Button variant="outline" size="sm" onClick={handleMarkAsLost} disabled={isMarkingLost} className="border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"><CircleSlash className="mr-1.5 h-4 w-4" />{isMarkingLost ? "..." : markAsLostLabel}</Button>}
               {hasRecentChanges(opportunity) ? (
                 <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-200">
                   <TrendingUp className="h-3 w-3 mr-1" />
