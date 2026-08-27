@@ -140,7 +140,7 @@ type ChecklistMasterItem = {
 }
 
 /** Creates an immutable checklist snapshot for a newly created opportunity. */
-async function instantiateOpportunityChecklist(opportunityId: string, opportunityData: any) {
+export async function instantiateOpportunityChecklist(opportunityId: string, opportunityData: any) {
   const targetType = opportunityData.prospect_id ? "prospect_partner" : opportunityData.partner_id ? "partner" : null
   if (!targetType) return
 

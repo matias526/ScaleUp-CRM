@@ -41,7 +41,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { toast } from "@/components/ui/use-toast"
-import { getOpportunityStages } from "@/lib/services/opportunity-service"
+import { getOpportunityStages, instantiateOpportunityChecklist } from "@/lib/services/opportunity-service"
 import { ProspectPartnerService } from "@/lib/services/prospect-partner-service"
 import {
   createStageChangeNote,
@@ -408,10 +408,15 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
   const [isPartnerAssignDialogOpen, setIsPartnerAssignDialogOpen] = useState(false)
   const [selectedPartnerId, setSelectedPartnerId] = useState<string>("")
   const [showPulseMessageSender, setShowPulseMessageSender] = useState(false)
+  const [hasChecklist, setHasChecklist] = useState<boolean | null>(null)
+  const [isGeneratingChecklist, setIsGeneratingChecklist] = useState(false)
+  const isAdmin = userInfo?.isAdmin || userInfo?.roleCode?.toLowerCase() === "admin"
  const [editingField, setEditingField] = useState<string | null>(null)
   const [dateEditValue, setDateEditValue] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isNewPartnerModalOpen, setIsNewPartnerModalOpen] = useState(false)
+  const [hasChecklist, setHasChecklist] = useState<boolean | null>(null)
+  const [isGeneratingChecklist, setIsGeneratingChecklist] = useState(false)
   const [existingProspectPartners, setExistingProspectPartners] = useState<any[]>([])
   const [selectedProspectPartner, setSelectedProspectPartner] = useState<any>(null)
   const [prospectPartnerContacts, setProspectPartnerContacts] = useState<any[]>([])
@@ -630,6 +635,29 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
       setAvailablePartners([])
     } finally {
       setIsLoadingPartners(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!isAdmin || !opportunity?.id) return
+    const checkChecklist = async () => {
+      const { count, error } = await supabase.from("opportunity_checklist_items" as any).select("id", { count: "exact", head: true }).eq("opportunity_id", opportunity.id)
+      if (!error) setHasChecklist((count || 0) > 0)
+    }
+    void checkChecklist()
+  }, [isAdmin, opportunity?.id])
+
+  const handleGenerateChecklist = async () => {
+    if (!opportunity?.id || isGeneratingChecklist) return
+    setIsGeneratingChecklist(true)
+    try {
+      await instantiateOpportunityChecklist(opportunity.id, opportunity)
+      setHasChecklist(true)
+      toast({ title: "Checklist generado", description: "El checklist fue asignado a la oportunidad." })
+    } catch (error) {
+      toast({ title: "Error", description: error instanceof Error ? error.message : "No se pudo generar el checklist", variant: "destructive" })
+    } finally {
+      setIsGeneratingChecklist(false)
     }
   }
 
@@ -1467,7 +1495,8 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
         </div>
       </div>
 
-      <OpportunityChecklist opportunityId={opportunity.id} canEdit={!isTechUser} />
+      {isAdmin && hasChecklist === false && <div className="mb-4 flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-3"><span className="text-sm text-amber-900">Esta oportunidad no tiene un checklist asignado.</span><Button size="sm" onClick={handleGenerateChecklist} disabled={isGeneratingChecklist}><ClipboardCheck className="mr-2 h-4 w-4" />{isGeneratingChecklist ? "Generando..." : "Generar checklist"}</Button></div>}
+  <OpportunityChecklist opportunityId={opportunity.id} canEdit={!isTechUser} />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">
