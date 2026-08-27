@@ -18,6 +18,7 @@ import {
   Sparkles,
   UserCheck,
   Zap,
+  ChartNoAxesCombined,
 } from "lucide-react"
 import { OrderIcon } from "@/components/icons/order-icon"
 import { useTranslations } from "@/hooks/use-translations"
@@ -30,6 +31,7 @@ const sidebarTranslations = {
   en: {
     "sidebar.dashboard": "Dashboard",
     "sidebar.opportunities": "Opportunities",
+    "sidebar.forecasts": "Forecasts",
     "sidebar.orders": "Orders",
     "sidebar.partners": "Partners",
     "sidebar.prospect_partners": "Prospect Partners",
@@ -60,6 +62,7 @@ const sidebarTranslations = {
   es: {
     "sidebar.dashboard": "Dashboard",
     "sidebar.opportunities": "Oportunidades",
+    "sidebar.forecasts": "Forecasts",
     "sidebar.orders": "Órdenes",
     "sidebar.partners": "Socios",
     "sidebar.prospect_partners": "Socios Potenciales",
@@ -90,6 +93,7 @@ const sidebarTranslations = {
   pt: {
     "sidebar.dashboard": "Dashboard",
     "sidebar.opportunities": "Oportunidades",
+    "sidebar.forecasts": "Forecasts",
     "sidebar.orders": "Pedidos",
     "sidebar.partners": "Parceiros",
     "sidebar.prospect_partners": "Parceiros Potenciais",
@@ -263,6 +267,12 @@ export function Sidebar() {
       href: "/dashboard/opportunities",
       icon: CircleDollarSign,
       labelKey: "sidebar.opportunities",
+    },
+    {
+      href: "/dashboard/forecasts",
+      icon: ChartNoAxesCombined,
+      labelKey: "sidebar.forecasts",
+      adminOrBdd: true,
     },
     {
       href: "/dashboard/purchase-orders",
