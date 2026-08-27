@@ -607,8 +607,9 @@ export async function getUsersByPartner(partnerId: string): Promise<any[]> {
 
     const { data, error } = await supabase
       .from("users")
-      .select("id, email, first_name, last_name, partner_id, role_id")
+      .select("id, email, first_name, last_name, partner_id, role_id, is_active, roles:role_id(code)")
       .eq("partner_id", partnerId)
+      .eq("is_active", true)
       .order("first_name", { ascending: true })
 
     if (error) {
