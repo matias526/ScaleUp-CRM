@@ -23,6 +23,7 @@ import {
   MessageSquare,
   ClipboardList,
   X,
+  CircleSlash,
 } from "lucide-react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
@@ -61,8 +62,11 @@ export function OpportunityCarousel({
   showCloseButton = false,
   onClose,
 }: OpportunityCarouselProps) {
-  const { t } = useTranslations()
+  const { t, language } = useTranslations()
   const { toast } = useToast()
+  const [isMarkingLost, setIsMarkingLost] = useState(false)
+  const lostStageId = "c4d86f83-5dba-4db2-83e0-c96831e5c8b9"
+  const markAsLostLabel = language === "en" ? "Mark as lost" : language === "pt" ? "Passar para perdida" : "Pasar a perdida"
   const { userInfo } = useAuth()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [showAddNote, setShowAddNote] = useState(false)
@@ -75,6 +79,20 @@ export function OpportunityCarousel({
   const [partnerResponsible, setPartnerResponsible] = useState<any>(null)
   const [isLoadingPartnerResponsible, setIsLoadingPartnerResponsible] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  const handleMarkAsLost = async () => {
+    if (!currentOpportunity || isMarkingLost || currentOpportunity.pipeline_stage_id === lostStageId) return
+    setIsMarkingLost(true)
+    const { error } = await supabase.from("opportunities").update({ pipeline_stage_id: lostStageId }).eq("id", currentOpportunity.id)
+    setIsMarkingLost(false)
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" })
+      return
+    }
+    setCurrentOpportunity((current: any) => current ? { ...current, pipeline_stage_id: lostStageId } : current)
+    toast({ title: markAsLostLabel, description: language === "en" ? "Opportunity moved to Lost." : language === "pt" ? "A oportunidade foi movida para Perdida." : "La oportunidad fue pasada a Perdida." })
+    onDataChange?.()
+  }
 
   // Cargar el responsable del partner cuando cambia la oportunidad actual
   useEffect(() => {
@@ -426,8 +444,9 @@ export function OpportunityCarousel({
                   </div>
 
                   {/* Badges de estado */}
-                  <div className="flex space-x-2">
-                    {hasRecentChanges(currentOpportunity) ? (
+  <div className="flex flex-wrap items-center justify-end gap-2">
+  {currentOpportunity.pipeline_stage_id !== lostStageId && <Button variant="outline" size="sm" onClick={handleMarkAsLost} disabled={isMarkingLost} className="border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"><CircleSlash className="mr-1.5 h-4 w-4" />{isMarkingLost ? "..." : markAsLostLabel}</Button>}
+  {hasRecentChanges(currentOpportunity) ? (
                       <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-200">
                         <TrendingUp className="h-3 w-3 mr-1" />
                         Actualizada
