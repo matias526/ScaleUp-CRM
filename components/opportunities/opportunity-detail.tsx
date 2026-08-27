@@ -26,6 +26,7 @@ import {
   Edit,
   Save,
   Pencil,
+  ClipboardCheck,
 } from "lucide-react"
 import { useTranslations } from "@/hooks/use-translations"
 import { DICT_LANG_OPPORTUNITIES } from "@/lib/constants/dict-lang-opportunities"
@@ -415,8 +416,6 @@ export function OpportunityDetail({ opportunity: initialOpportunity }: Opportuni
   const [dateEditValue, setDateEditValue] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isNewPartnerModalOpen, setIsNewPartnerModalOpen] = useState(false)
-  const [hasChecklist, setHasChecklist] = useState<boolean | null>(null)
-  const [isGeneratingChecklist, setIsGeneratingChecklist] = useState(false)
   const [existingProspectPartners, setExistingProspectPartners] = useState<any[]>([])
   const [selectedProspectPartner, setSelectedProspectPartner] = useState<any>(null)
   const [prospectPartnerContacts, setProspectPartnerContacts] = useState<any[]>([])
