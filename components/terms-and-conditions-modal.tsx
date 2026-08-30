@@ -126,7 +126,7 @@ export function TermsAndConditionsModal({ isOpen, onOpenChange }: TermsAndCondit
     <div className="space-y-4 mt-4">
       <section>
         <h3 className="text-lg font-semibold">Terms and Conditions of Use</h3>
-        <p>Last updated: May 1, 2025</p>
+        <p>Last updated: August 30, 2026</p>
       </section>
 
       <section>
@@ -233,7 +233,7 @@ export function TermsAndConditionsModal({ isOpen, onOpenChange }: TermsAndCondit
     <div className="space-y-4 mt-4">
       <section>
         <h3 className="text-lg font-semibold">Termos e Condições de Uso</h3>
-        <p>Última atualização: 1 de maio de 2025</p>
+        <p>Última atualização: 30 de agosto de 2026</p>
       </section>
 
       <section>
@@ -338,7 +338,8 @@ export function TermsAndConditionsModal({ isOpen, onOpenChange }: TermsAndCondit
 
   // Seleccionar el contenido según el idioma
   const getTermsContent = () => {
-    switch (language) {
+    const locale = String(language || "es").toLowerCase().split("-")[0]
+    switch (locale) {
       case "en":
         return <EnglishTermsContent />
       case "pt":
@@ -353,7 +354,7 @@ export function TermsAndConditionsModal({ isOpen, onOpenChange }: TermsAndCondit
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-auto">
         <DialogHeader>
-          <DialogTitle>{t("terms.title", "Términos y Condiciones")}</DialogTitle>
+          <DialogTitle>{t("terms.title", "Términos y Condiciones")} <span className="text-sm font-normal text-muted-foreground">(v1.2)</span></DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 my-4">{getTermsContent()}</div>
