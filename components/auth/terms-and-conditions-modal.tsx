@@ -17,6 +17,7 @@ import { supabase } from "@/lib/supabase/client"
 import { TermsService } from "@/lib/services/terms-service"
 import { useToast } from "@/components/ui/use-toast"
 import { PortugueseTermsContent } from "./terms-and-conditions-portuguese"
+import { EnglishTermsContent } from "./terms-and-conditions-english"
 
 interface TermsAndConditionsModalProps {
   isOpen: boolean
@@ -118,7 +119,7 @@ export function TermsAndConditionsModal({ isOpen, onOpenChange, onAccept }: Term
 
         <div className="p-4 border rounded">
           <div className="h-[300px] overflow-auto p-2" ref={scrollAreaRef} onScroll={handleScroll}>
-            {language === "pt" && <PortugueseTermsContent />}{language !== "pt" && <><h3 className="text-lg font-semibold">Términos y Condiciones de Uso</h3>
+            {language === "pt" && <PortugueseTermsContent />}{language === "en" && <EnglishTermsContent />}{language !== "pt" && language !== "en" && <><h3 className="text-lg font-semibold">Términos y Condiciones de Uso</h3>
             <p>Última actualización: 30 de agosto de 2026</p>
 
             <div className="space-y-4 mt-4">
