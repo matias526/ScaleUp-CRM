@@ -118,7 +118,7 @@ export function TermsAndConditionsModal({ isOpen, onOpenChange, onAccept }: Term
         <div className="p-4 border rounded">
           <div className="h-[300px] overflow-auto p-2" ref={scrollAreaRef} onScroll={handleScroll}>
             <h3 className="text-lg font-semibold">Términos y Condiciones de Uso</h3>
-            <p>Última actualización: 10 de abril de 2024</p>
+            <p>Última actualización: 30 de agosto de 2026</p>
 
             <div className="space-y-4 mt-4">
               <section>
@@ -171,9 +171,10 @@ export function TermsAndConditionsModal({ isOpen, onOpenChange, onAccept }: Term
               <section>
                 <h4 className="font-medium">5. Privacidad de Datos</h4>
                 <p>
-                  Nuestra Política de Privacidad describe cómo manejamos la información que nos proporciona cuando
-                  utiliza nuestra Plataforma. Al utilizar la Plataforma, usted consiente nuestra recopilación y uso de
-                  datos personales como se describe en la Política de Privacidad.
+                  ScaleUp se compromete a proteger la privacidad de los usuarios de la Plataforma. Al utilizar nuestros servicios, usted acepta que recopilemos y procesemos ciertos datos personales necesarios para el funcionamiento del CRM, incluyendo datos de contacto, actividad dentro de la Plataforma y archivos cargados.
+                </p>
+                <p>
+                  La información será utilizada exclusivamente para fines operativos y comerciales relacionados con el uso de la Plataforma, y no será compartida con terceros sin su consentimiento, salvo obligación legal.
                 </p>
               </section>
 
@@ -187,7 +188,17 @@ export function TermsAndConditionsModal({ isOpen, onOpenChange, onAccept }: Term
               </section>
 
               <section>
-                <h4 className="font-medium">7. Terminación</h4>
+                <h4 className="font-medium">7. Uso de Imagen Comercial y Marcas Registradas</h4>
+                <p>
+                  Al registrarse y utilizar la Plataforma, Usted otorga a ScaleUp una licencia no exclusiva, gratuita y de ámbito mundial para utilizar el nombre comercial, logotipo e marca(s) de su empresa únicamente con fines de marketing, promoción y difusión en nuestras redes sociales, sitio web y otros canales de comunicación oficiales de ScaleUp.
+                </p>
+                <p>
+                  Si no desea que utilicemos su marca o logotipo en nuestro material promocional, puede notificarlo en cualquier momento enviando un correo electrónico a support@scaleup-global.com, y procederemos a retirar dicha información en un plazo razonable.
+                </p>
+              </section>
+
+              <section>
+                <h4 className="font-medium">8. Terminación</h4>
                 <p>
                   Podemos terminar o suspender su cuenta y acceso a la Plataforma inmediatamente, sin previo aviso o
                   responsabilidad, por cualquier motivo, incluyendo, sin limitación, si usted incumple estos Términos.
@@ -195,7 +206,7 @@ export function TermsAndConditionsModal({ isOpen, onOpenChange, onAccept }: Term
               </section>
 
               <section>
-                <h4 className="font-medium">8. Limitación de Responsabilidad</h4>
+                <h4 className="font-medium">9. Limitación de Responsabilidad</h4>
                 <p>
                   En ningún caso ScaleUp, ni sus directores, empleados, socios, agentes, proveedores o afiliados, serán
                   responsables por cualquier daño indirecto, incidental, especial, consecuente o punitivo, incluyendo,
@@ -205,7 +216,7 @@ export function TermsAndConditionsModal({ isOpen, onOpenChange, onAccept }: Term
               </section>
 
               <section>
-                <h4 className="font-medium">9. Cambios en los Términos</h4>
+                <h4 className="font-medium">10. Cambios en los Términos</h4>
                 <p>
                   Nos reservamos el derecho de modificar o reemplazar estos Términos en cualquier momento. Si una
                   revisión es material, proporcionaremos al menos 30 días de aviso antes de que los nuevos términos
@@ -214,8 +225,8 @@ export function TermsAndConditionsModal({ isOpen, onOpenChange, onAccept }: Term
               </section>
 
               <section>
-                <h4 className="font-medium">10. Contáctenos</h4>
-                <p>Si tiene alguna pregunta sobre estos Términos, por favor contáctenos en support@scaleup.com.</p>
+                <h4 className="font-medium">11. Contáctenos</h4>
+                <p>Si tiene alguna pregunta sobre estos Términos, por favor contáctenos en support@scaleup-global.com.</p>
               </section>
             </div>
           </div>

@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 
 // Versión actual de los términos y condiciones
-export const CURRENT_TERMS_VERSION = "1.0"
+export const CURRENT_TERMS_VERSION = "1.2"
 
 export class TermsService {
   private supabase: SupabaseClient
