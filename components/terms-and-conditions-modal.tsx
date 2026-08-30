@@ -2,6 +2,8 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { useTranslations } from "@/hooks/use-translations"
+import { PortugueseTermsContent } from "@/components/auth/terms-and-conditions-portuguese"
+import { EnglishTermsContent } from "@/components/auth/terms-and-conditions-english"
 
 interface TermsAndConditionsModalProps {
   isOpen: boolean
@@ -16,7 +18,7 @@ export function TermsAndConditionsModal({ isOpen, onOpenChange }: TermsAndCondit
     <div className="space-y-4 mt-4">
       <section>
         <h3 className="text-lg font-semibold">Términos y Condiciones de Uso</h3>
-        <p>Última actualización: 1 de mayo de 2025</p>
+        <p>Última actualización: 30 de agosto de 2026</p>
       </section>
 
       <section>
@@ -338,9 +340,9 @@ export function TermsAndConditionsModal({ isOpen, onOpenChange }: TermsAndCondit
   const getTermsContent = () => {
     switch (language) {
       case "en":
-        return termsContentEn
+        return <EnglishTermsContent />
       case "pt":
-        return termsContentPt
+        return <PortugueseTermsContent />
       case "es":
       default:
         return termsContentEs
