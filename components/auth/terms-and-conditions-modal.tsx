@@ -232,6 +232,7 @@ export function TermsAndConditionsModal({ isOpen, onOpenChange, onAccept }: Term
               </div>
             </>}
           </div>
+        </div>
 
         <div className="flex items-center space-x-2 mt-4">
           <Checkbox
