@@ -230,7 +230,7 @@ export function TermsAndConditionsModal({ isOpen, onOpenChange, onAccept }: Term
                 <p>Si tiene alguna pregunta sobre estos Términos, por favor contáctenos en support@scaleup-global.com.</p>
               </section>
               </div>
-            </div></>}
+            </>}
           </div>
 
         <div className="flex items-center space-x-2 mt-4">
