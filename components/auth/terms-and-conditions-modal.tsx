@@ -118,7 +118,7 @@ export function TermsAndConditionsModal({ isOpen, onOpenChange, onAccept }: Term
 
         <div className="p-4 border rounded">
           <div className="h-[300px] overflow-auto p-2" ref={scrollAreaRef} onScroll={handleScroll}>
-            {language === "pt" ? <PortugueseTermsContent /> : <><h3 className="text-lg font-semibold">Términos y Condiciones de Uso</h3>
+            {language === "pt" && <PortugueseTermsContent />}{language !== "pt" && <><h3 className="text-lg font-semibold">Términos y Condiciones de Uso</h3>
             <p>Última actualización: 30 de agosto de 2026</p>
 
             <div className="space-y-4 mt-4">
