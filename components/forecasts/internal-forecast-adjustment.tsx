@@ -25,8 +25,8 @@ export function InternalForecastAdjustment({ open, onOpenChange, partnerId, tech
     if (!partnerId || !techCompanyId || !userId) { toast.error("Seleccioná Partner y TechCompany antes de guardar"); return }
     setSaving(true)
     const fieldByQuarter = { Q1: "scaleup_q1_revenue", Q2: "scaleup_q2_revenue", Q3: "scaleup_q3_revenue", Q4: "scaleup_q4_revenue" } as const
-    const payload = { scaleup_internal_target_revenue: total, display_target_type: displayTarget, internal_target_updated_by: userId, updated_at: new Date().toISOString(), ...Object.fromEntries(Object.entries(fieldByQuarter).map(([quarter, field]) => [field, Number(values[quarter as Quarter]) || 0])) }
-    const { error } = await (supabase.from("partner_tech_projections" as any) as any).update(payload).eq("partner_id", partnerId).eq("tech_company_id", techCompanyId).eq("period_year", Number(year))
+    const payload = quarters.map((quarter, index) => ({ partner_id: partnerId, tech_company_id: techCompanyId, period_year: Number(year), period_quarter: index + 1, scaleup_internal_target_revenue: total, display_target_type: displayTarget, internal_target_updated_by: userId, updated_at: new Date().toISOString(), [fieldByQuarter[quarter]]: Number(values[quarter]) || 0 }))
+    const { error } = await (supabase.from("partner_tech_projections" as any) as any).upsert(payload, { onConflict: "partner_id,tech_company_id,period_year,period_quarter" })
     setSaving(false)
     if (error) { toast.error(error.message); return }
     toast.success("Ajuste interno guardado correctamente")
