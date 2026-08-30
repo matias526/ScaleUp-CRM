@@ -19,6 +19,7 @@ import {
   UserCheck,
   Zap,
   ChartNoAxesCombined,
+  ShieldCheck,
 } from "lucide-react"
 import { OrderIcon } from "@/components/icons/order-icon"
 import { useTranslations } from "@/hooks/use-translations"
@@ -32,6 +33,7 @@ const sidebarTranslations = {
     "sidebar.dashboard": "Dashboard",
     "sidebar.opportunities": "Opportunities",
     "sidebar.forecasts": "Forecasts",
+    "sidebar.status_techcompany": "TechCompany Status",
     "sidebar.orders": "Orders",
     "sidebar.partners": "Partners",
     "sidebar.prospect_partners": "Prospect Partners",
@@ -63,6 +65,7 @@ const sidebarTranslations = {
     "sidebar.dashboard": "Dashboard",
     "sidebar.opportunities": "Oportunidades",
     "sidebar.forecasts": "Forecasts",
+    "sidebar.status_techcompany": "Status TechCompany",
     "sidebar.orders": "Órdenes",
     "sidebar.partners": "Socios",
     "sidebar.prospect_partners": "Socios Potenciales",
@@ -94,6 +97,7 @@ const sidebarTranslations = {
     "sidebar.dashboard": "Dashboard",
     "sidebar.opportunities": "Oportunidades",
     "sidebar.forecasts": "Forecasts",
+    "sidebar.status_techcompany": "Status TechCompany",
     "sidebar.orders": "Pedidos",
     "sidebar.partners": "Parceiros",
     "sidebar.prospect_partners": "Parceiros Potenciais",
@@ -275,6 +279,12 @@ export function Sidebar() {
       icon: ChartNoAxesCombined,
       labelKey: "sidebar.forecasts",
       adminOrBddOrPartnerUser: true,
+    },
+    {
+      href: "/dashboard/status-techcompany",
+      icon: ShieldCheck,
+      labelKey: "sidebar.status_techcompany",
+      adminOrBdd: true,
     },
     {
       href: "/dashboard/purchase-orders",
