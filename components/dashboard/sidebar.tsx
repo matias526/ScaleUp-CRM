@@ -152,6 +152,7 @@ type SidebarItemType = {
   adminOnly?: boolean
   bddOnly?: boolean
   adminOrBdd?: boolean // Nuevo flag para elementos visibles por Admin O BDD
+  adminOrBddOrPartnerUser?: boolean
   adminOrMarketing?: boolean // Nuevo flag para elementos visibles por Admin O Marketing
   adminOrBddOrMarketing?: boolean // Nuevo flag para elementos visibles por Admin O BDD O Marketing
   excludeMarketing?: boolean // Ocultar para Marketing
@@ -165,6 +166,7 @@ export function Sidebar() {
   const { userInfo } = useAuth()
   const isAdmin = userInfo?.isAdmin || false
   const isBDD = userInfo?.roleCode?.toLowerCase() === "bdd" || false
+  const isPartnerUser = ["partneruser", "partner_user"].includes(String(userInfo?.roleCode || "").replace(/[ _-]/g, "").toLowerCase())
   const isMarketing = userInfo?.roleCode?.toLowerCase() === "marketing" || false
   const isTechUser = userInfo?.roleCode?.toLowerCase() === "techuser" || false
   const isTechLogistic = userInfo?.roleCode?.toLowerCase() === "techlogistic" || false
@@ -272,7 +274,7 @@ export function Sidebar() {
       href: "/dashboard/forecasts",
       icon: ChartNoAxesCombined,
       labelKey: "sidebar.forecasts",
-      adminOrBdd: true,
+      adminOrBddOrPartnerUser: true,
     },
     {
       href: "/dashboard/purchase-orders",
@@ -384,6 +386,9 @@ export function Sidebar() {
       // Si el elemento es para Admin O BDD O Marketing, mostrar si el usuario es cualquiera de los tres
       if (item.adminOrBddOrMarketing) {
         return isAdmin || isBDD || isMarketing
+      }
+      if (item.adminOrBddOrPartnerUser) {
+        return isAdmin || isBDD || isPartnerUser
       }
       // Si el elemento es para admin O Marketing, mostrar si el usuario es cualquiera de los dos
       if (item.adminOrMarketing) {
