@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { useTranslations } from "@/hooks/use-translations"
 import { PortugueseTermsContent } from "@/components/auth/terms-and-conditions-portuguese"
 import { EnglishTermsContent } from "@/components/auth/terms-and-conditions-english"
+import { SpanishTermsContent } from "@/components/auth/terms-and-conditions-spanish"
 
 interface TermsAndConditionsModalProps {
   isOpen: boolean
@@ -346,7 +347,7 @@ export function TermsAndConditionsModal({ isOpen, onOpenChange }: TermsAndCondit
         return <PortugueseTermsContent />
       case "es":
       default:
-        return termsContentEs
+        return <SpanishTermsContent />
     }
   }
 
