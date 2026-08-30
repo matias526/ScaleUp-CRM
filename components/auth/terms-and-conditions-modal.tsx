@@ -16,6 +16,7 @@ import { useTranslations } from "@/hooks/use-translations"
 import { supabase } from "@/lib/supabase/client"
 import { TermsService } from "@/lib/services/terms-service"
 import { useToast } from "@/components/ui/use-toast"
+import { PortugueseTermsContent } from "./terms-and-conditions-portuguese"
 
 interface TermsAndConditionsModalProps {
   isOpen: boolean
@@ -24,7 +25,7 @@ interface TermsAndConditionsModalProps {
 }
 
 export function TermsAndConditionsModal({ isOpen, onOpenChange, onAccept }: TermsAndConditionsModalProps) {
-  const { t } = useTranslations()
+  const { t, language } = useTranslations()
   const [isLoading, setIsLoading] = useState(false)
   const [hasAccepted, setHasAccepted] = useState(false)
   const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false)
@@ -117,7 +118,7 @@ export function TermsAndConditionsModal({ isOpen, onOpenChange, onAccept }: Term
 
         <div className="p-4 border rounded">
           <div className="h-[300px] overflow-auto p-2" ref={scrollAreaRef} onScroll={handleScroll}>
-            <h3 className="text-lg font-semibold">Términos y Condiciones de Uso</h3>
+            {language === "pt" ? <PortugueseTermsContent /> : <><h3 className="text-lg font-semibold">Términos y Condiciones de Uso</h3>
             <p>Última actualización: 30 de agosto de 2026</p>
 
             <div className="space-y-4 mt-4">
@@ -228,9 +229,9 @@ export function TermsAndConditionsModal({ isOpen, onOpenChange, onAccept }: Term
                 <h4 className="font-medium">11. Contáctenos</h4>
                 <p>Si tiene alguna pregunta sobre estos Términos, por favor contáctenos en support@scaleup-global.com.</p>
               </section>
-            </div>
+              </div>
+            </div></>}
           </div>
-        </div>
 
         <div className="flex items-center space-x-2 mt-4">
           <Checkbox
