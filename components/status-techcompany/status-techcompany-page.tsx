@@ -17,12 +17,6 @@ import { Progress } from "@/components/ui/progress"
 type StatusPartner = { id: string; name: string; status: string; target: number; won: number; pipeline: number; events: number; health: number; color: string; quarters: Record<number, { target: number; won: number; pipeline: number }>; hotOpportunities: { title: string; customerName: string; amount: number; probability: number; closeDate: string | null }[] }
 const supabase = createClient()
 const techCompanies = []
-// Temporary UI-only mock data: impact log has no confirmed Supabase table in the provided schema.
-const impacts = [
-  { title: "Falla en API demo piloto", description: "Bloqueó la validación técnica del Partner Norte.", amount: 18000, severity: "Alta", scope: "Partner Norte" },
-  { title: "Cambio en lista de precios", description: "Requiere actualizar materiales comerciales.", amount: 7500, severity: "Media", scope: "General / Vendor" },
-  { title: "Falta de sponsor ejecutivo", description: "La alianza necesita una nueva instancia de alineación.", amount: 12000, severity: "Alta", scope: "Partner Centro" },
-]
 const money = (value: number) => value >= 1000 ? `$${(value / 1000).toFixed(value % 1000 === 0 ? 0 : 1)}K` : `$${value.toLocaleString("en-US")}`
 
 export function StatusTechCompanyPage() {
@@ -74,7 +68,8 @@ export function StatusTechCompanyPage() {
   const [impactError, setImpactError] = useState("")
   const saveImpact = async () => {
     setImpactError("")
-    const visibleTitleInput = Array.from(document.querySelectorAll<HTMLInputElement>('input:not([type]), input[type="text"]')).find((input) => input.offsetParent !== null)
+    const visibleTextInputs = Array.from(document.querySelectorAll<HTMLInputElement>('input:not([type]), input[type="text"]')).filter((input) => input.offsetParent !== null)
+    const visibleTitleInput = visibleTextInputs[1] ?? visibleTextInputs[0]
     const visibleDescriptionInput = Array.from(document.querySelectorAll<HTMLTextAreaElement>("textarea")).find((textarea) => textarea.offsetParent !== null)
     const visibleAmountInput = Array.from(document.querySelectorAll<HTMLInputElement>('input[type="number"]')).find((input) => input.offsetParent !== null)
     const title = (visibleTitleInput?.value || impactTitle).trim()
