@@ -26,28 +26,32 @@ const money = (value: number) => value >= 1000 ? `$${(value / 1000).toFixed(valu
 
 export function StatusTechCompanyPage() {
   const { data, isLoading, error } = useQuery({ queryKey: ["status-techcompany"], queryFn: async () => {
-    const [{ data: techCompaniesData, error: techError }, { data: partnerData, error: partnerError }, { data: projectionData, error: projectionError }, { data: opportunityData, error: opportunityError }] = await Promise.all([
+    const [{ data: techCompaniesData, error: techError }, { data: partnerData, error: partnerError }, { data: partnerTechCompanyData, error: partnerTechCompanyError }, { data: projectionData, error: projectionError }, { data: opportunityData, error: opportunityError }] = await Promise.all([
       supabase.from("tech_companies").select("id, name").eq("is_active", true).order("name"),
       supabase.from("partners").select("id, name").eq("is_active", true).order("name"),
+      supabase.from("partner_tech_companies").select("partner_id, tech_company_id"),
       supabase.from("partner_tech_projections" as any).select("partner_id, tech_company_id, period_year, period_quarter, scaleup_internal_target_revenue"),
       supabase.from("opportunities").select("id, title, estimated_value, estimated_close_date, probability, partner_id, tech_company_id, pipeline_stage:pipeline_stages(code, probability)").not("partner_id", "is", null),
     ])
-    const queryError = techError || partnerError || projectionError || opportunityError
+    const queryError = techError || partnerError || partnerTechCompanyError || projectionError || opportunityError
     if (queryError) throw queryError
-    return { techCompanies: techCompaniesData ?? [], partners: partnerData ?? [], projections: projectionData ?? [], opportunities: opportunityData ?? [] }
+    return { techCompanies: techCompaniesData ?? [], partners: partnerData ?? [], partnerTechCompanies: partnerTechCompanyData ?? [], projections: projectionData ?? [], opportunities: opportunityData ?? [] }
   } })
   const realTechCompanies = data?.techCompanies ?? []
   const [techCompany, setTechCompany] = useState("")
   const effectiveTechCompany = techCompany || realTechCompanies[0]?.id || ""
   const [year, setYear] = useState("2026")
   const [quarter, setQuarter] = useState("all")
-  const realPartners = useMemo<StatusPartner[]>(() => (data?.partners ?? []).map((partner: any, index: number) => {
+  const realPartners = useMemo<StatusPartner[]>(() => {
+    const activePartnerIds = new Set((data?.partnerTechCompanies ?? []).filter((link: any) => link.tech_company_id === effectiveTechCompany).map((link: any) => link.partner_id))
+    return (data?.partners ?? []).filter((partner: any) => activePartnerIds.has(partner.id)).map((partner: any, index: number) => {
     const projections = (data?.projections ?? []).filter((row: any) => row.partner_id === partner.id && row.tech_company_id === effectiveTechCompany && Number(row.period_year) === Number(year))
     const opportunities = (data?.opportunities ?? []).filter((opportunity: any) => opportunity.partner_id === partner.id && opportunity.tech_company_id === effectiveTechCompany && opportunity.estimated_close_date && new Date(opportunity.estimated_close_date).getFullYear() === Number(year))
     const quarters = [1, 2, 3, 4].reduce((result, quarter) => { const quarterProjection: any = projections.find((row: any) => Number(row.period_quarter) === quarter); const quarterOpportunities = opportunities.filter((opportunity: any) => Math.floor((new Date(opportunity.estimated_close_date).getMonth()) / 3) + 1 === quarter); const won = quarterOpportunities.filter((opportunity: any) => String(opportunity.pipeline_stage?.code).toLowerCase() === "won").reduce((sum: number, opportunity: any) => sum + Number(opportunity.estimated_value ?? 0), 0); const pipeline = quarterOpportunities.filter((opportunity: any) => !["won", "lost", "freeze"].includes(String(opportunity.pipeline_stage?.code).toLowerCase())).reduce((sum: number, opportunity: any) => sum + Number(opportunity.estimated_value ?? 0) * Number(opportunity.probability ?? opportunity.pipeline_stage?.probability ?? 0) / 100, 0); result[quarter] = { target: Number(quarterProjection?.scaleup_internal_target_revenue ?? 0), won, pipeline }; return result }, {} as Record<number, { target: number; won: number; pipeline: number }>)
     const target = Object.values(quarters).reduce((sum, quarter) => sum + quarter.target, 0); const won = Object.values(quarters).reduce((sum, quarter) => sum + quarter.won, 0); const pipeline = Object.values(quarters).reduce((sum, quarter) => sum + quarter.pipeline, 0)
     return { id: partner.id, name: partner.name, status: won + pipeline >= target ? "En ritmo" : "Requiere foco", target, won, pipeline, events: 0, health: target ? Math.min(100, Math.round((won + pipeline) / target * 100)) : 0, color: ["bg-emerald-500", "bg-amber-500", "bg-rose-500"][index % 3], quarters, hotOpportunities: opportunities.filter((opportunity: any) => Number(opportunity.probability ?? opportunity.pipeline_stage?.probability ?? 0) > 70 && !["won", "lost", "freeze"].includes(String(opportunity.pipeline_stage?.code).toLowerCase())).map((opportunity: any) => ({ title: opportunity.title, amount: Number(opportunity.estimated_value ?? 0), probability: Number(opportunity.probability ?? opportunity.pipeline_stage?.probability ?? 0), closeDate: opportunity.estimated_close_date })) }
-  }), [data, techCompany, year])
+  })
+  }, [data, effectiveTechCompany, year])
   const partners = realPartners
   const [selectedPartner, setSelectedPartner] = useState("")
   const [selectedPartners, setSelectedPartners] = useState<string[]>([])
