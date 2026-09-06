@@ -17,6 +17,7 @@ import { Progress } from "@/components/ui/progress"
 type StatusPartner = { id: string; name: string; status: string; target: number; won: number; pipeline: number; events: number; health: number; color: string; quarters: Record<number, { target: number; won: number; pipeline: number }>; hotOpportunities: { title: string; amount: number; probability: number; closeDate: string | null }[] }
 const supabase = createClient()
 const techCompanies = []
+// Temporary UI-only mock data: impact log has no confirmed Supabase table in the provided schema.
 const impacts = [
   { title: "Falla en API demo piloto", description: "Bloqueó la validación técnica del Partner Norte.", amount: 18000, severity: "Alta", scope: "Partner Norte" },
   { title: "Cambio en lista de precios", description: "Requiere actualizar materiales comerciales.", amount: 7500, severity: "Media", scope: "General / Vendor" },
@@ -34,7 +35,24 @@ export function StatusTechCompanyPage() {
       supabase.from("opportunities").select("id, title, estimated_value, estimated_close_date, probability, partner_id, tech_company_id, pipeline_stage:pipeline_stages(code, probability)").not("partner_id", "is", null),
     ])
     const queryError = techError || partnerError || partnerTechCompanyError || projectionError || opportunityError
-    if (queryError) throw queryError
+    console.log("[v0][StatusTechCompany] query counts", {
+      techCompanies: techCompaniesData?.length ?? 0,
+      partners: partnerData?.length ?? 0,
+      partnerTechCompanies: partnerTechCompanyData?.length ?? 0,
+      projections: projectionData?.length ?? 0,
+      opportunities: opportunityData?.length ?? 0,
+    })
+    console.log("[v0][StatusTechCompany] query samples", {
+      techCompany: techCompaniesData?.[0] ?? null,
+      partner: partnerData?.[0] ?? null,
+      partnerTechCompany: partnerTechCompanyData?.[0] ?? null,
+      projection: projectionData?.[0] ?? null,
+      opportunity: opportunityData?.[0] ?? null,
+    })
+    if (queryError) {
+      console.log("[v0][StatusTechCompany] query error", queryError)
+      throw queryError
+    }
     return { techCompanies: techCompaniesData ?? [], partners: partnerData ?? [], partnerTechCompanies: partnerTechCompanyData ?? [], projections: projectionData ?? [], opportunities: opportunityData ?? [] }
   } })
   const realTechCompanies = data?.techCompanies ?? []
@@ -46,9 +64,19 @@ export function StatusTechCompanyPage() {
     const activePartnerIds = new Set((data?.partnerTechCompanies ?? []).filter((link: any) => String(link.tech_company_id) === String(effectiveTechCompany)).map((link: any) => String(link.partner_id)))
     return (data?.partners ?? []).filter((partner: any) => activePartnerIds.has(String(partner.id))).map((partner: any, index: number) => {
     const projections = (data?.projections ?? []).filter((row: any) => String(row.partner_id) === String(partner.id) && String(row.tech_company_id) === String(effectiveTechCompany) && Number(row.period_year) === Number(year))
-    const opportunities = (data?.opportunities ?? []).filter((opportunity: any) => opportunity.partner_id === partner.id && opportunity.tech_company_id === effectiveTechCompany && opportunity.estimated_close_date && new Date(opportunity.estimated_close_date).getFullYear() === Number(year))
+    const opportunities = (data?.opportunities ?? []).filter((opportunity: any) => String(opportunity.partner_id) === String(partner.id) && String(opportunity.tech_company_id) === String(effectiveTechCompany) && opportunity.estimated_close_date && new Date(opportunity.estimated_close_date).getFullYear() === Number(year))
+    console.log("[v0][StatusTechCompany] partner calculation", {
+      partner: { id: partner.id, name: partner.name },
+      techCompany: effectiveTechCompany,
+      year,
+      projectionRows: projections.length,
+      projectionRowsSample: projections.slice(0, 4),
+      opportunities: opportunities.length,
+      opportunitiesSample: opportunities.slice(0, 4),
+    })
     const quarters = [1, 2, 3, 4].reduce((result, quarter) => { const quarterProjectionRows = projections.filter((row: any) => Number(row.period_quarter) === quarter); const quarterTarget = quarterProjectionRows.reduce((sum: number, row: any) => sum + Number(row.scaleup_internal_target_revenue ?? 0), 0); const quarterOpportunities = opportunities.filter((opportunity: any) => Math.floor((new Date(opportunity.estimated_close_date).getMonth()) / 3) + 1 === quarter); const won = quarterOpportunities.filter((opportunity: any) => String(opportunity.pipeline_stage?.code).toLowerCase() === "won").reduce((sum: number, opportunity: any) => sum + Number(opportunity.estimated_value ?? 0), 0); const pipeline = quarterOpportunities.filter((opportunity: any) => !["won", "lost", "freeze"].includes(String(opportunity.pipeline_stage?.code).toLowerCase())).reduce((sum: number, opportunity: any) => sum + Number(opportunity.estimated_value ?? 0) * Number(opportunity.probability ?? opportunity.pipeline_stage?.probability ?? 0) / 100, 0); result[quarter] = { target: quarterTarget, won, pipeline }; return result }, {} as Record<number, { target: number; won: number; pipeline: number }>)
     const target = Object.values(quarters).reduce((sum, quarter) => sum + quarter.target, 0); const won = Object.values(quarters).reduce((sum, quarter) => sum + quarter.won, 0); const pipeline = Object.values(quarters).reduce((sum, quarter) => sum + quarter.pipeline, 0)
+    console.log("[v0][StatusTechCompany] partner totals", { partner: partner.name, quarters, target, won, pipeline })
     return { id: partner.id, name: partner.name, status: won + pipeline >= target ? "En ritmo" : "Requiere foco", target, won, pipeline, events: 0, health: target ? Math.min(100, Math.round((won + pipeline) / target * 100)) : 0, color: ["bg-emerald-500", "bg-amber-500", "bg-rose-500"][index % 3], quarters, hotOpportunities: opportunities.filter((opportunity: any) => Number(opportunity.probability ?? opportunity.pipeline_stage?.probability ?? 0) > 70 && !["won", "lost", "freeze"].includes(String(opportunity.pipeline_stage?.code).toLowerCase())).map((opportunity: any) => ({ title: opportunity.title, amount: Number(opportunity.estimated_value ?? 0), probability: Number(opportunity.probability ?? opportunity.pipeline_stage?.probability ?? 0), closeDate: opportunity.estimated_close_date })) }
   })
   }, [data, effectiveTechCompany, year])
