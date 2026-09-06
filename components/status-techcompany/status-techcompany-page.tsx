@@ -62,8 +62,8 @@ export function StatusTechCompanyPage() {
   const [impactPartnerId, setImpactPartnerId] = useState("")
   const [impactTitle, setImpactTitle] = useState("")
   const [impactDescription, setImpactDescription] = useState("")
-  const [impactCategory, setImpactCategory] = useState("General")
-  const [impactSeverity, setImpactSeverity] = useState("Media")
+  const [impactCategory, setImpactCategory] = useState("other")
+  const [impactSeverity, setImpactSeverity] = useState("medium")
   const [impactAmount, setImpactAmount] = useState("")
   const [impactError, setImpactError] = useState("")
   const saveImpact = async () => {
@@ -78,7 +78,7 @@ export function StatusTechCompanyPage() {
     if (!impactPartnerId) return setImpactError("Seleccioná un Partner.")
     if (!title) return setImpactError("Ingresá un título.")
     if (!impactProjectionIds.length) return setImpactError("No existe una proyección para el Partner, TechCompany, año y trimestre seleccionados.")
-    const { error: insertError } = await supabase.from("partner_tech_risk_factors" as any).insert(impactProjectionIds.map((projectionId: string) => ({ projection_id: projectionId, category: impactCategory, severity: impactSeverity, title, description: description.trim() || null, estimated_impact_amount: Number(amount) || 0 })))
+    const { error: insertError } = await supabase.from("partner_tech_risk_factors" as any).insert(impactProjectionIds.map((projectionId: string) => ({ projection_id: projectionId, category: ["tech_failure", "trust_issue", "pricing_change", "support_delay", "market_condition", "other"].includes(impactCategory) ? impactCategory : "other", severity: ["low", "medium", "high", "critical"].includes(impactSeverity) ? impactSeverity : "medium", title, description: description.trim() || null, estimated_impact_amount: Number(amount) || 0 })))
     if (insertError) { console.log("[v0][StatusTechCompany] impact insert error", insertError); setImpactError(insertError.message || "No se pudo guardar el factor."); return }
     setSaved(true)
     setOpen(false)
