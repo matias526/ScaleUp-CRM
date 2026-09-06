@@ -33,7 +33,7 @@ export function StatusTechCompanyPage() {
       supabase.from("partner_tech_companies").select("partner_id, tech_company_id"),
       supabase.from("partner_tech_projections" as any).select("partner_id, tech_company_id, period_year, period_quarter, scaleup_internal_target_revenue"),
       supabase.from("opportunities").select("id, title, estimated_value, estimated_close_date, probability, partner_id, tech_company_id, end_customer:end_customers(name), pipeline_stage:pipeline_stages(code, probability)").not("partner_id", "is", null),
-      supabase.from("partner_tech_risk_factors").select("id, projection_id, category, severity, title, description, estimated_impact_amount, logged_at"),
+      supabase.from("partner_tech_risk_factors" as any).select("id, projection_id, category, severity, title, description, estimated_impact_amount, logged_at"),
     ])
     const queryError = techError || partnerError || partnerTechCompanyError || projectionError || opportunityError || riskFactorError
     if (queryError) {
@@ -70,7 +70,7 @@ export function StatusTechCompanyPage() {
   const effectiveSelectedPartners = selectedPartners.length ? selectedPartners : partners.map((partner) => partner.name)
   const activePartner = partners.find((partner) => partner.name === effectiveSelectedPartner) ?? { id: "", name: "Sin Partner seleccionado", status: "Sin datos", target: 0, won: 0, pipeline: 0, events: 0, health: 0, color: "bg-muted", quarters: {}, hotOpportunities: [] }
   const visiblePartners = partners.filter((partner) => effectiveSelectedPartners.includes(partner.name))
-  const visibleImpacts = (data?.riskFactors ?? []).filter((item: any) => item.title)
+  const visibleImpacts = (data?.riskFactors ?? []).map((item: any) => ({ title: item.title, description: item.description ?? "", amount: Number(item.estimated_impact_amount ?? 0), severity: item.severity, scope: "General / Vendor" }))
   const totals = useMemo(() => visiblePartners.reduce((sum, item) => ({ target: sum.target + item.target, won: sum.won + item.won, pipeline: sum.pipeline + (onlyHighProbability ? item.pipeline * 0.5 : item.pipeline) }), { target: 0, won: 0, pipeline: 0 }), [visiblePartners, onlyHighProbability])
   const quarterTotals = useMemo(() => [1, 2, 3, 4].map((quarter) => visiblePartners.reduce((sum, partner) => { const values = partner.quarters[quarter] ?? { target: 0, won: 0, pipeline: 0 }; return { target: sum.target + values.target, won: sum.won + values.won, pipeline: sum.pipeline + (onlyHighProbability ? values.pipeline * 0.5 : values.pipeline) } }, { target: 0, won: 0, pipeline: 0 })), [visiblePartners, onlyHighProbability])
   const projection = totals.won + totals.pipeline + simulation
