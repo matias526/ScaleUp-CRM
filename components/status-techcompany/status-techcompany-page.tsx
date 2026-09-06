@@ -74,8 +74,8 @@ export function StatusTechCompanyPage() {
   const [impactError, setImpactError] = useState("")
   const saveImpact = async () => {
     setImpactError("")
-    const titleInput = document.querySelector<HTMLInputElement>('input[type="text"]')
-    const descriptionInput = document.querySelector<HTMLTextAreaElement>("textarea")
+    const titleInput = Array.from(document.querySelectorAll<HTMLInputElement>('input[type="text"]')).at(-1)
+    const descriptionInput = document.querySelector<HTMLTextAreaElement>('textarea[placeholder*="impacto"], textarea')
     const amountInput = document.querySelector<HTMLInputElement>('input[type="number"]')
     const title = (impactTitle || titleInput?.value || "").trim()
     const description = impactDescription || descriptionInput?.value || ""
