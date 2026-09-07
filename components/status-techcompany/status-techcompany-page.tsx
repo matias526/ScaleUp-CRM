@@ -38,21 +38,22 @@ function PartnerDetailPreview({ partner, impacts }: { partner: StatusPartner; im
 export function StatusTechCompanyPage() {
   const queryClient = useQueryClient()
   const { data, isLoading, error } = useQuery({ queryKey: ["status-techcompany"], queryFn: async () => {
-    const [{ data: techCompaniesData, error: techError }, { data: partnerData, error: partnerError }, { data: partnerTechCompanyData, error: partnerTechCompanyError }, { data: projectionData, error: projectionError }, { data: opportunityData, error: opportunityError }, { data: riskFactorData, error: riskFactorError }, { data: prospectPartnerData, error: prospectPartnerError }] = await Promise.all([
+    const [{ data: techCompaniesData, error: techError }, { data: partnerData, error: partnerError }, { data: partnerTechCompanyData, error: partnerTechCompanyError }, { data: projectionData, error: projectionError }, { data: partnerOpportunityData, error: partnerOpportunityError }, { data: prospectOpportunityData, error: prospectOpportunityError }, { data: riskFactorData, error: riskFactorError }, { data: prospectPartnerData, error: prospectPartnerError }] = await Promise.all([
       supabase.from("tech_companies").select("id, name").eq("is_active", true).order("name"),
       supabase.from("partners").select("id, name, logo_url, main_country_id, countries:main_country_id(name)").eq("is_active", true).order("name"),
       supabase.from("partner_tech_companies").select("partner_id, tech_company_id"),
       supabase.from("partner_tech_projections" as any).select("id, partner_id, tech_company_id, period_year, period_quarter, scaleup_internal_target_revenue"),
       supabase.from("opportunities").select("id, title, estimated_value, estimated_close_date, probability, created_at, updated_at, validation_status, partner_id, tech_company_id, end_customer:end_customers(name), pipeline_stage:pipeline_stages(code, probability)").not("partner_id", "is", null),
+      supabase.from("opportunities").select("id, title, estimated_value, estimated_close_date, probability, created_at, updated_at, validation_status, prospect_id, tech_company_id, pipeline_stage:pipeline_stages(code, probability)").not("prospect_id", "is", null),
       supabase.from("partner_tech_risk_factors" as any).select("id, projection_id, category, severity, title, description, estimated_impact_amount, logged_at"),
       supabase.from("prospect_partners").select("id, name, main_country_id, countries:main_country_id(name)").eq("is_active", true),
     ])
-    const queryError = techError || partnerError || partnerTechCompanyError || projectionError || opportunityError || riskFactorError || prospectPartnerError
+    const queryError = techError || partnerError || partnerTechCompanyError || projectionError || partnerOpportunityError || prospectOpportunityError || riskFactorError || prospectPartnerError
     if (queryError) {
       console.log("[v0][StatusTechCompany] query error", queryError)
       throw queryError
     }
-    return { techCompanies: techCompaniesData ?? [], partners: partnerData ?? [], partnerTechCompanies: partnerTechCompanyData ?? [], projections: projectionData ?? [], opportunities: opportunityData ?? [], riskFactors: riskFactorData ?? [], prospectPartners: prospectPartnerData ?? [] }
+    return { techCompanies: techCompaniesData ?? [], partners: partnerData ?? [], partnerTechCompanies: partnerTechCompanyData ?? [], projections: projectionData ?? [], opportunities: partnerOpportunityData ?? [], prospectOpportunities: prospectOpportunityData ?? [], riskFactors: riskFactorData ?? [], prospectPartners: prospectPartnerData ?? [] }
   } })
   const realTechCompanies = data?.techCompanies ?? []
   const [techCompany, setTechCompany] = useState("")
@@ -72,7 +73,7 @@ export function StatusTechCompanyPage() {
   })
   }, [data, effectiveTechCompany, year])
   const partners = realPartners
-  const potentialProspects = useMemo<PotentialPartner[]>(() => { const prospects = data?.prospectPartners ?? []; return (data?.opportunities ?? []).filter((opportunity: any) => opportunity.is_new_partner && opportunity.prospect_id && String(opportunity.tech_company_id) === String(effectiveTechCompany)).map((opportunity: any) => { const prospect = prospects.find((item: any) => String(item.id) === String(opportunity.prospect_id)); return prospect ? { id: String(prospect.id), name: prospect.name, country: prospect.countries?.name ?? "País no especificado", probability: Number(opportunity.probability ?? opportunity.pipeline_stage?.probability ?? 0), closeDate: opportunity.estimated_close_date ?? null } : null }).filter(Boolean).sort((a: any, b: any) => b.probability - a.probability) as PotentialPartner[] }, [data, effectiveTechCompany])
+  const potentialProspects = useMemo<PotentialPartner[]>(() => { const prospects = data?.prospectPartners ?? []; return (data?.prospectOpportunities ?? []).filter((opportunity: any) => opportunity.prospect_id && String(opportunity.tech_company_id) === String(effectiveTechCompany)).map((opportunity: any) => { const prospect = prospects.find((item: any) => String(item.id) === String(opportunity.prospect_id)); return prospect ? { id: String(prospect.id), name: prospect.name, country: prospect.countries?.name ?? "País no especificado", probability: Number(opportunity.probability ?? opportunity.pipeline_stage?.probability ?? 0), closeDate: opportunity.estimated_close_date ?? null } : null }).filter(Boolean).sort((a: any, b: any) => b.probability - a.probability) as PotentialPartner[] }, [data, effectiveTechCompany])
   const potentialCountryCounts = useMemo<CountryCount[]>(() => { const counts = new Map<string, CountryCount>(); for (const partner of realPartners) { if (!partner.countryName) continue; const current = counts.get(partner.countryName) ?? { country: partner.countryName, active: 0, potential: 0 }; current.active += 1; counts.set(partner.countryName, current) } for (const prospect of potentialProspects) { const current = counts.get(prospect.country) ?? { country: prospect.country, active: 0, potential: 0 }; current.potential += 1; counts.set(prospect.country, current) } return Array.from(counts.values()) }, [realPartners, potentialProspects])
   const [selectedPartner, setSelectedPartner] = useState("")
   const [isPartnerFocused, setIsPartnerFocused] = useState(false)
