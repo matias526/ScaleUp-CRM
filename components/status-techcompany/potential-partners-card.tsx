@@ -13,8 +13,11 @@ const POTENTIAL_PARTNERS_TRANSLATIONS = {
   "potential.title": { es: "Partners potenciales", en: "Potential partners", pt: "Partners potenciais" },
   "potential.subtitle": { es: "Cobertura actual y oportunidades de expansión en Latinoamérica.", en: "Current coverage and expansion opportunities in Latin America.", pt: "Cobertura atual e oportunidades de expansão na América Latina." },
   "potential.byCountry": { es: "Partners por país", en: "Partners by country", pt: "Partners por país" },
-  "potential.showBelow50": { es: "Mostrar oportunidades con menos del 50%", en: "Show opportunities below 50%", pt: "Mostrar oportunidades abaixo de 50%" },
+  "potential.showBelow50": { es: "Mostrar menores de 50%", en: "Show opportunities below 50%", pt: "Mostrar oportunidades abaixo de 50%" },
   "potential.none": { es: "No hay partners potenciales para mostrar.", en: "No potential partners to show.", pt: "Nenhum partner potencial para mostrar." },
+  "potential.pipeline": { es: "Pipeline de partners potenciales", en: "Potential partner pipeline", pt: "Pipeline de partners potenciais" },
+  "potential.ordered": { es: "Ordenados por probabilidad de avance.", en: "Sorted by probability of advancement.", pt: "Ordenados por probabilidade de avanço." },
+  "potential.showBelow": { es: "Mostrar menores de 50%", en: "Show below 50%", pt: "Mostrar abaixo de 50%" },
 } as const
 
 const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json"
