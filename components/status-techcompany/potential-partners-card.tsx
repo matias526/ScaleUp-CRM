@@ -10,7 +10,7 @@ import { ComposableMap, Geographies, Geography, Marker } from "react-simple-maps
 
 const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json"
 const normalizeCountry = (country: string) => country.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase()
-const countryCoordinates: Record<string, [number, number]> = { Argentina: [-64, -34], Bolivia: [-64, -17], Brasil: [-51, -10], Brazil: [-51, -10], Chile: [-71, -33], Colombia: [-74, 4], Ecuador: [-78, -1], Paraguay: [-58, -23], Peru: [-75, -10], Uruguay: [-56, -33], Venezuela: [-66, 7], Mexico: [-102, 23], México: [-102, 23], Panamá: [-80, 9], Panama: [-80, 9], "Costa Rica": [-84, 10], Guatemala: [-90, 15] }
+const countryCoordinates: Record<string, [number, number]> = { Argentina: [-64, -34], Bolivia: [-64, -17], Brasil: [-51, -10], Brazil: [-51, -10], Chile: [-71, -33], Colombia: [-74, 4], Ecuador: [-78, -1], Paraguay: [-58, -23], Peru: [-75, -10], Uruguay: [-56, -33], Venezuela: [-66, 7], Mexico: [-102, 23], México: [-102, 23], Panamá: [-80, 9], Panama: [-80, 9], "Costa Rica": [-84, 10], Guatemala: [-90, 15], Belize: [-88.5, 17.2], "El Salvador": [-89.2, 13.8], Honduras: [-86.2, 14.8], Nicaragua: [-85.2, 12.9], Cuba: [-79.5, 21.5], "República Dominicana": [-70.2, 18.8], "Republica Dominicana": [-70.2, 18.8] }
 
 type PotentialPartner = { id: string; name: string; country: string; probability: number; closeDate: string | null }
 type CountryCount = { country: string; active: number; potential: number; activeNames: string[]; potentialNames: string[] }
