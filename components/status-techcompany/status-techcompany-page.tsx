@@ -198,7 +198,7 @@ export function StatusTechCompanyPage() {
   const projectedPercent = totals.target > 0 ? Math.round((projection / totals.target) * 100) : 0
   const togglePartner = (partner: string) => setSelectedPartners((current) => current.includes(partner) ? current.filter((item) => item !== partner) : [...current, partner])
   const topPartners = useMemo(() => [...visiblePartners].sort((a, b) => (b.target + b.won) - (a.target + a.won)).slice(0, 5), [visiblePartners])
-  const remaining = Math.max(0, totals.target - totals.won - totals.pipeline)
+  const remaining = Math.max(0, totals.target - totals.won)
   const pieData = [{ name: t("status.won"), value: totals.won, color: "#10b981" }, { name: t("status.pipeline"), value: totals.pipeline, color: "#3b82f6" }, { name: t("status.remaining"), value: remaining, color: "#e2e8f0" }].filter((item) => item.value > 0)
   const wonRemainingData = [{ name: t("status.won"), value: totals.won, color: "#10b981" }, { name: t("status.remaining"), value: remaining, color: "#e2e8f0" }].filter((item) => item.value > 0)
   const overTarget = totals.won + totals.pipeline > totals.target
