@@ -202,7 +202,7 @@ export function StatusTechCompanyPage() {
   const remaining = Math.max(0, totals.target - totals.won - totals.pipeline)
   const pieTotal = Math.max(1, totals.target)
   const pieData = [{ name: t("status.won"), value: totals.won, percent: totals.won / pieTotal, color: "#10b981" }, { name: t("status.pipeline"), value: totals.pipeline, percent: totals.pipeline / pieTotal, color: "#3b82f6" }, { name: t("status.remaining"), value: remaining, percent: remaining / pieTotal, color: "#e2e8f0" }].filter((item) => item.value > 0)
-  const wonRemainingData = [{ name: t("status.won"), value: totals.won, color: "#10b981" }, { name: t("status.remaining"), value: remaining, color: "#e2e8f0" }].filter((item) => item.value > 0)
+  const wonRemainingData = [{ name: t("status.won"), value: totals.won, color: "#10b981" }, { name: t("status.remaining"), value: Math.max(0, totals.target - totals.won), color: "#e2e8f0" }].filter((item) => item.value > 0)
   const overTarget = totals.won + totals.pipeline > totals.target
 
   if (isLoading) return <main className="p-8"><Card><CardContent className="p-8 text-center text-muted-foreground">{t("status.loading")}</CardContent></Card></main>
