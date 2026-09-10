@@ -3,7 +3,8 @@ import { Resend } from "resend"
 
 export async function POST(request: NextRequest) {
   const body = await request.json()
-  const recipients: string[] = Array.isArray(body.recipients) ? [...new Set(body.recipients.filter((value: unknown): value is string => typeof value === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)))] : []
+  const validRecipients = Array.isArray(body.recipients) ? body.recipients.filter((value: unknown): value is string => typeof value === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) : []
+  const recipients: string[] = Array.from(new Set<string>(validRecipients))
   if (!recipients.length || recipients.length > 100) return NextResponse.json({ error: "Select between 1 and 100 valid recipients" }, { status: 400 })
   if (!process.env.RESEND_API_KEY) return NextResponse.json({ error: "RESEND_API_KEY is not configured" }, { status: 503 })
 
