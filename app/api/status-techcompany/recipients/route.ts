@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
   ])
 
   const roleIds = (roles.data ?? []).map((role) => role.id)
+  const adminRoleIds = (roles.data ?? []).filter((role: any) => String(role.code).toLowerCase() === "admin").map((role) => role.id)
   const partnerIds = (companyPartners.data ?? []).map((item: any) => item.partner_id).filter(Boolean)
   const managerIds = (companyPartners.data ?? []).map((item: any) => item.scaleup_manager_id).filter(Boolean)
   const [{ data: roleUsers }, { data: partnerUsers }] = roleIds.length
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest) {
         partnerIds.length ? supabase.from("users").select("id,email,first_name,last_name,role_id,partner_id").in("partner_id", partnerIds).in("role_id", roleIds).eq("is_active", true) : Promise.resolve({ data: [] as any[] }),
       ])
     : [{ data: [] as any[] }, { data: [] as any[] }]
-  const scaleUpUsers = (roleUsers ?? []).filter((user: any) => user.role_id && (managerIds.includes(user.id) || partnerUsers?.some((partnerUser: any) => partnerUser.id === user.id)))
+  const scaleUpUsers = (roleUsers ?? []).filter((user: any) => user.role_id && (adminRoleIds.includes(user.role_id) || managerIds.includes(user.id) || partnerUsers?.some((partnerUser: any) => partnerUser.id === user.id)))
 
   const recipients = [
     ...(companyContacts.data ?? []).map((item: any) => ({ ...item, group: "TechCompany contacts" })),
