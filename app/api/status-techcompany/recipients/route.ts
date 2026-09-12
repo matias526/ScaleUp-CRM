@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
   const recipients = [
     ...(companyContacts.data ?? []).map((item: any) => ({ ...item, group: "TechCompany contacts" })),
     ...(companyUsers.data ?? []).map((item: any) => ({ ...item, group: "TechCompany users" })),
-    ...(scaleUpUsers.data ?? []).map((item: any) => ({ ...item, group: "ScaleUp Admin / BDD" })),
+    ...scaleUpUsers.map((item: any) => ({ ...item, group: "ScaleUp Admin / BDD" })),
   ].filter((item: any) => item.email).reduce((items: any[], item: any) => {
     if (!items.some((existing) => existing.email.toLowerCase() === item.email.toLowerCase())) items.push(item)
     return items
