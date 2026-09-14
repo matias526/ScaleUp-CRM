@@ -118,7 +118,7 @@ export function SendStatusModal({ open, onOpenChange, techCompanyName, techCompa
   const downloadPdf = async () => {
     const report = reportRef.current
     if (!report) return
-    const canvas = await html2canvas(report, { backgroundColor: "#ffffff", scale: 2, useCORS: true, logging: false })
+    const canvas = await html2canvas(report, { backgroundColor: "#ffffff", scale: Math.min(4, Math.max(3, window.devicePixelRatio * 2)), useCORS: true, logging: false, imageTimeout: 15000 })
     const pdf = new jsPDF({ unit: "pt", format: "a4" })
     const pageWidth = pdf.internal.pageSize.getWidth()
     const pageHeight = pdf.internal.pageSize.getHeight()
@@ -128,7 +128,7 @@ export function SendStatusModal({ open, onOpenChange, techCompanyName, techCompa
     let remainingHeight = imageHeight
     let offset = 0
     while (remainingHeight > 0) {
-      pdf.addImage(canvas.toDataURL("image/png"), "PNG", margin, margin - offset, imageWidth, imageHeight, undefined, "FAST")
+      pdf.addImage(canvas.toDataURL("image/png"), "PNG", margin, margin - offset, imageWidth, imageHeight, undefined, "SLOW")
       remainingHeight -= pageHeight - margin * 2
       offset += pageHeight - margin * 2
       if (remainingHeight > 0) pdf.addPage()
