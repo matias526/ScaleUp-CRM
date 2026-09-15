@@ -174,7 +174,7 @@ export async function getOpportunitiesForMeeting(techCompanyId: string, partnerI
 
     if (opportunityIds.length > 0) {
       const { data: checklistData, error: checklistError } = await supabase
-        .from("opportunity_checklist_items")
+        .from("opportunity_checklist_items" as any)
         .select("opportunity_id,title,completed_at")
         .in("opportunity_id", opportunityIds)
         .not("completed_at", "is", null)
