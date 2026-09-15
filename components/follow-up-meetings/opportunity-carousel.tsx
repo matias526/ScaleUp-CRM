@@ -41,6 +41,8 @@ import MeetingDashboard from "./meeting-dashboard"
 type OpportunityCarouselProps = {
   opportunities: any[]
   projections?: any[]
+  partnerName?: string
+  benchmarkPartners?: any[]
   onReview?: (opportunityId: string) => void
   reviewedOpportunities?: string[]
   partnerLogo?: string | null
@@ -55,6 +57,8 @@ type OpportunityCarouselProps = {
 export function OpportunityCarousel({
   opportunities,
   projections = [],
+  partnerName = "",
+  benchmarkPartners = [],
   onReview = () => {},
   reviewedOpportunities = [],
   partnerLogo = null,
@@ -152,7 +156,7 @@ export function OpportunityCarousel({
   if (currentIndex === -1) {
     return (
       <div className="relative px-10">
-        <MeetingDashboard opportunities={opportunities} projections={projections} isLoading={false} blank />
+        <MeetingDashboard opportunities={opportunities} projections={projections} partnerName={partnerName} benchmarkPartners={benchmarkPartners} isLoading={false} blank />
         <div className="mx-auto mt-4 flex w-full items-center justify-between md:w-3/5">
           <Button variant="outline" size="sm" disabled>
             <ChevronLeft className="mr-1 h-4 w-4" /> Previous

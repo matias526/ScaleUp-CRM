@@ -53,6 +53,7 @@ export default function FollowUpMeetingsPage() {
   const [availablePartners, setAvailablePartners] = useState<any[]>([])
   const [opportunities, setOpportunities] = useState<any[]>([])
   const [projections, setProjections] = useState<any[]>([])
+  const [benchmarkPartners, setBenchmarkPartners] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [meetingStarted, setMeetingStarted] = useState(false)
   const [reviewedOpportunities, setReviewedOpportunities] = useState<string[]>([])
@@ -241,6 +242,8 @@ export default function FollowUpMeetingsPage() {
         ])
         console.log("Opportunities loaded:", opportunitiesData.length)
         setProjections(projectionData)
+        const benchmarkData = await getPartnersForTechCompany(selectedTechCompany)
+        setBenchmarkPartners(benchmarkData)
         console.log("First opportunity partner_responsible:", opportunitiesData[0]?.partner_responsible)
         setOpportunities(opportunitiesData)
 
@@ -735,6 +738,8 @@ export default function FollowUpMeetingsPage() {
             <div className="space-y-4">
               <OpportunityCarousel
                 projections={projections}
+                partnerName={getPartnerName()}
+                benchmarkPartners={benchmarkPartners}
                 opportunities={opportunities}
                 onReview={markAsReviewed}
                 reviewedOpportunities={reviewedOpportunities}
