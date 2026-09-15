@@ -132,9 +132,6 @@ export async function getOpportunitiesForMeeting(techCompanyId: string, partnerI
   try {
     console.log("Fetching opportunities for tech company:", techCompanyId, "and partner:", partnerId)
 
-    // Definir las etapas de pipeline permitidas
-    const allowedStages = ["Lead", "Engagement", "Initial Communication", "Quotation"]
-
     // AQUÍ ESTÁ EL QUERY PRINCIPAL - ESTE ES EL PROBLEMA
     const { data, error } = await supabase
       .from("opportunities")
@@ -171,161 +168,37 @@ export async function getOpportunitiesForMeeting(techCompanyId: string, partnerI
     console.log("First opportunity partner_responsible_id:", data?.[0]?.partner_responsible_id)
     console.log("First opportunity partner_responsible:", data?.[0]?.partner_responsible)
 
-    // Filtrar oportunidades por las etapas de pipeline permitidas
-    const filteredData =
-      data?.filter((opp) => opp.pipeline_stage && allowedStages.includes(opp.pipeline_stage.code)) || []
+    const opportunities = data || []
+    const opportunityIds = opportunities.map((opportunity) => opportunity.id).filter(Boolean)
+    let checklistItems: any[] = []
 
-    console.log("Total opportunities:", data?.length || 0)
-    console.log("Filtered opportunities by pipeline stage:", filteredData.length)
-
-    // Si tenemos oportunidades, obtenemos las notas y tareas para cada una
-    if (filteredData && filteredData.length > 0) {
-      // Obtener IDs de oportunidades
-      const opportunityIds = filteredData.map((opp) => opp.id)
-
-      // Obtener notas para estas oportunidades - FILTRAR notas privadas
-      const { data: notesData, error: notesError } = await supabase
-        .from("notes")
-        .select(`
-          *,
-          user:users(id, first_name, last_name, email)
-        `)
+    if (opportunityIds.length > 0) {
+      const { data: checklistData, error: checklistError } = await supabase
+        .from("opportunity_checklist_items")
+        .select("opportunity_id,title,completed_at")
         .in("opportunity_id", opportunityIds)
-        .eq("is_private", false) // Solo notas no privadas
-        .order("created_at", { ascending: false })
+        .not("completed_at", "is", null)
 
-      if (notesError) {
-        console.error("Error al obtener notas:", notesError)
-      } else if (notesData) {
-        // Agrupar notas por opportunity_id
-        const notesByOpportunity: Record<string, any[]> = {}
-        notesData.forEach((note) => {
-          if (!notesByOpportunity[note.opportunity_id]) {
-            notesByOpportunity[note.opportunity_id] = []
-          }
-          notesByOpportunity[note.opportunity_id].push(note)
-        })
-
-        // Añadir notas a las oportunidades
-        filteredData.forEach((opp) => {
-          opp.notes = notesByOpportunity[opp.id] || []
-        })
-      }
-
-      // Obtener tareas para estas oportunidades
-      const { data: tasksData, error: tasksError } = await supabase
-        .from("tasks")
-        .select(`
-          *,
-          assigned_to_user:users!assigned_to(id, first_name, last_name, email),
-          assigned_by_user:users!assigned_by(id, first_name, last_name, email)
-        `)
-        .in("opportunity_id", opportunityIds)
-        .order("due_date", { ascending: true })
-
-      if (tasksError) {
-        console.error("Error al obtener tareas:", tasksError)
-      } else if (tasksData) {
-        // Agrupar tareas por opportunity_id
-        const tasksByOpportunity: Record<string, any[]> = {}
-        tasksData.forEach((task) => {
-          if (!tasksByOpportunity[task.opportunity_id]) {
-            tasksByOpportunity[task.opportunity_id] = []
-          }
-          tasksByOpportunity[task.opportunity_id].push(task)
-        })
-
-        // Añadir tareas a las oportunidades
-        filteredData.forEach((opp) => {
-          opp.tasks = tasksByOpportunity[opp.id] || []
-        })
-      }
-
-      // Obtener campos técnicos para estas oportunidades
-      try {
-        // Primero obtenemos todos los campos técnicos disponibles
-        const { data: allTechFields, error: allTechFieldsError } = await supabase
-          .from("opportunity_tech_fields")
-          .select("*")
-          .order("display_order", { ascending: true })
-
-        if (allTechFieldsError) {
-          console.error("Error al obtener todos los campos técnicos:", allTechFieldsError)
-        } else {
-          console.log("Campos técnicos obtenidos:", allTechFields?.length || 0)
-          console.log("Muestra de campos técnicos:", allTechFields?.[0])
-
-          // Crear un mapa de ID a campo técnico para acceso rápido
-          const techFieldsMap = new Map()
-          allTechFields?.forEach((field) => {
-            techFieldsMap.set(field.id, field)
-          })
-
-          // Ahora obtenemos los valores de los campos técnicos para estas oportunidades
-          const { data: techFieldsData, error: techFieldsError } = await supabase
-            .from("opportunity_tech_values")
-            .select("*")
-            .in("opportunity_id", opportunityIds)
-
-          if (techFieldsError) {
-            console.error("Error al obtener valores de campos técnicos:", techFieldsError)
-          } else if (techFieldsData) {
-            console.log("Valores de campos técnicos cargados:", techFieldsData?.length || 0)
-            console.log("Muestra de valores de campos técnicos:", techFieldsData?.[0])
-
-            // Enriquecer los valores con la información del campo técnico
-            const enrichedTechFieldsData = techFieldsData.map((value) => {
-              const fieldInfo = techFieldsMap.get(value.opportunity_tech_field_id)
-
-              // Registrar para depuración
-              console.log(
-                `Campo ${value.opportunity_tech_field_id} (${fieldInfo?.field_type || "desconocido"}): valor cargado = ${
-                  value.value_text ||
-                  value.value_numeric ||
-                  (value.value_boolean !== null ? (value.value_boolean ? "Sí" : "No") : "") ||
-                  value.value_date ||
-                  value.value_json ||
-                  "null"
-                }`,
-              )
-
-              return {
-                ...value,
-                field_info: fieldInfo,
-              }
-            })
-
-            // Agrupar campos técnicos por opportunity_id
-            const techFieldsByOpportunity: Record<string, any[]> = {}
-            enrichedTechFieldsData.forEach((field) => {
-              if (!techFieldsByOpportunity[field.opportunity_id]) {
-                techFieldsByOpportunity[field.opportunity_id] = []
-              }
-              techFieldsByOpportunity[field.opportunity_id].push(field)
-            })
-
-            // Añadir campos técnicos a las oportunidades
-            filteredData.forEach((opp) => {
-              opp.tech_fields = techFieldsByOpportunity[opp.id] || []
-            })
-          }
-        }
-      } catch (techFieldsError) {
-        console.error("Error inesperado al obtener campos técnicos:", techFieldsError)
+      if (checklistError) {
+        console.error("Error al obtener checklist de oportunidades:", checklistError)
+      } else {
+        checklistItems = checklistData || []
       }
     }
 
-    console.log("Final opportunities data with partner_responsible:")
-    filteredData.forEach((opp, index) => {
-      console.log(`Opportunity ${index + 1}:`)
-      console.log(`  ID: ${opp.id}`)
-      console.log(`  Title: ${opp.title}`)
-      console.log(`  partner_responsible_id: ${opp.partner_responsible_id}`)
-      console.log(`  partner_responsible:`, opp.partner_responsible)
+    const quoteTitles = new Set(["quote", "cotización", "cotizacao", "cotação"])
+    const quoteCompletionByOpportunity = new Map<string, string>()
+    checklistItems.forEach((item) => {
+      const title = typeof item.title === "string" ? item.title : item.title?.en || item.title?.es || item.title?.pt
+      if (quoteTitles.has(String(title).trim().toLowerCase()) && item.completed_at) {
+        quoteCompletionByOpportunity.set(item.opportunity_id, item.completed_at)
+      }
     })
 
-    console.log("Fetched opportunities with related data:", filteredData.length)
-    return filteredData
+    return opportunities.map((opportunity) => ({
+      ...opportunity,
+      quote_completed_at: quoteCompletionByOpportunity.get(opportunity.id) || null,
+    }))
   } catch (error) {
     console.error("Error inesperado al obtener oportunidades para reunión:", error)
     return []
