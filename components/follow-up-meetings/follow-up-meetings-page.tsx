@@ -5,7 +5,6 @@ import { useTranslations } from "@/hooks/use-translations"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import MeetingDashboard from "./meeting-dashboard"
 import OpportunityCarousel from "./opportunity-carousel"
 import EmailRecipientsSelector from "./email-recipients-selector"
 import { useAuth } from "@/components/auth/auth-provider"
@@ -723,17 +722,11 @@ export default function FollowUpMeetingsPage() {
             </CardContent>
           </Card>
 
-          {/* Dashboard */}
-          {selectedTechCompany && selectedPartner && (
-            <MeetingDashboard opportunities={opportunities} isLoading={isLoading} />
-          )}
         </TabsContent>
 
         <TabsContent value="meeting" className="space-y-4 mt-4">
           {selectedTechCompany && selectedPartner && opportunities.length > 0 ? (
             <div className="space-y-4">
-              <MeetingDashboard opportunities={opportunities} isLoading={isLoading} blank />
-
               <OpportunityCarousel
                 opportunities={opportunities}
                 onReview={markAsReviewed}

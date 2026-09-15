@@ -36,6 +36,7 @@ import { useAuth } from "@/components/auth/auth-provider"
 import { getCountryName, getDaysSince } from "@/lib/utils/country-utils"
 import { supabase } from "@/lib/supabase/client"
 import { OpportunityChecklist } from "@/components/opportunities/opportunity-checklist"
+import MeetingDashboard from "./meeting-dashboard"
 
 type OpportunityCarouselProps = {
   opportunities: any[]
@@ -68,7 +69,7 @@ export function OpportunityCarousel({
   const lostStageId = "c4d86f83-5dba-4db2-83e0-c96831e5c8b9"
   const markAsLostLabel = language === "en" ? "Mark as lost" : language === "pt" ? "Passar para perdida" : "Pasar a perdida"
   const { userInfo } = useAuth()
-  const [currentIndex, setCurrentIndex] = useState(0)
+  const [currentIndex, setCurrentIndex] = useState(-1)
   const [showAddNote, setShowAddNote] = useState(false)
   const [showAddTask, setShowAddTask] = useState(false)
   const [showEditOpportunity, setShowEditOpportunity] = useState(false)
@@ -132,7 +133,7 @@ export function OpportunityCarousel({
 
   // Actualizar la oportunidad actual cuando cambia el índice
   useEffect(() => {
-    if (opportunities && opportunities.length > 0 && currentIndex < opportunities.length) {
+    if (opportunities && opportunities.length > 0 && currentIndex >= 0 && currentIndex < opportunities.length) {
       setCurrentOpportunity(opportunities[currentIndex])
     }
   }, [opportunities, currentIndex])
@@ -143,6 +144,23 @@ export function OpportunityCarousel({
       <Card className="p-6 text-center">
         <p className="text-gray-500">{t("follow_up_meeting.no_opportunities", "No hay oportunidades disponibles")}</p>
       </Card>
+    )
+  }
+
+  if (currentIndex === -1) {
+    return (
+      <div className="relative px-10">
+        <MeetingDashboard opportunities={opportunities} isLoading={false} blank />
+        <div className="mt-4 flex items-center justify-between">
+          <Button variant="outline" size="sm" disabled>
+            <ChevronLeft className="mr-1 h-4 w-4" /> Previous
+          </Button>
+          <span className="text-sm text-gray-500">Dashboard · 1 de {opportunities.length + 1}</span>
+          <Button variant="outline" size="sm" onClick={() => setCurrentIndex(0)}>
+            Next <ChevronRight className="ml-1 h-4 w-4" />
+          </Button>
+        </div>
+      </div>
     )
   }
 
@@ -167,7 +185,7 @@ export function OpportunityCarousel({
   }
 
   const goToPrevious = () => {
-    if (currentIndex > 0) {
+    if (currentIndex >= 0) {
       setCurrentIndex(currentIndex - 1)
     }
   }
@@ -401,7 +419,7 @@ export function OpportunityCarousel({
         </h2>
         <div className="flex items-center space-x-2">
           <div className="text-sm text-gray-500">
-            {currentIndex + 1} de {opportunities.length}
+            {currentIndex + 2} de {opportunities.length + 1}
           </div>
           {showCloseButton && (
             <Button variant="ghost" size="sm" onClick={handleClose} className="ml-2">
@@ -783,7 +801,7 @@ export function OpportunityCarousel({
                 variant="ghost"
                 size="icon"
                 onClick={goToPrevious}
-                disabled={currentIndex === 0}
+                disabled={currentIndex === -1}
                 className="h-8 w-8 rounded-full bg-white shadow-md"
               >
                 <ChevronLeft className="h-4 w-4" />
