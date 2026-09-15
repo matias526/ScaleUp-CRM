@@ -732,6 +732,8 @@ export default function FollowUpMeetingsPage() {
         <TabsContent value="meeting" className="space-y-4 mt-4">
           {selectedTechCompany && selectedPartner && opportunities.length > 0 ? (
             <div className="space-y-4">
+              <MeetingDashboard opportunities={opportunities} isLoading={isLoading} blank />
+
               <OpportunityCarousel
                 opportunities={opportunities}
                 onReview={markAsReviewed}

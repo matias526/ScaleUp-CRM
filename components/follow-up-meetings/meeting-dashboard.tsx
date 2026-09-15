@@ -9,10 +9,25 @@ import { Progress } from "@/components/ui/progress"
 type MeetingDashboardProps = {
   opportunities: any[]
   isLoading: boolean
+  blank?: boolean
 }
 
-export function MeetingDashboard({ opportunities, isLoading }: MeetingDashboardProps) {
+export function MeetingDashboard({ opportunities, isLoading, blank = false }: MeetingDashboardProps) {
   const { t } = useTranslations()
+
+  if (blank) {
+    return (
+      <Card className="border border-gray-200 shadow-sm overflow-hidden">
+        <CardHeader className="pb-2 bg-gradient-to-r from-gray-50 to-gray-100">
+          <CardTitle className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+            <BarChart3 className="h-5 w-5 text-indigo-500" />
+            {t("follow_up_meeting.dashboard.title", "Dashboard")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="min-h-48" />
+      </Card>
+    )
+  }
 
   // Contar oportunidades con cambios recientes (última semana)
   const countRecentChanges = () => {
