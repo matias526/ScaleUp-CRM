@@ -45,15 +45,17 @@ export function MeetingDashboard({ opportunities, projections = [], isLoading, b
     const closedStates = new Set(["closed", "closed_won", "closed_lost", "lost", "won", "freeze", "frozen"])
     const isWon = (opportunity: any) => Boolean(opportunity.purchase_order_id)
     const isOpen = (opportunity: any) => !isWon(opportunity) && !closedStates.has(stage(opportunity))
-    const openOpportunities = opportunities.filter(isOpen)
-    const won = opportunities.filter(isWon).reduce((sum, opportunity) => sum + amount(opportunity), 0)
+    const opportunityAmount = (opportunity: any) => Number(opportunity.estimated_value ?? opportunity.amount ?? opportunity.value ?? opportunity.deal_value ?? 0)
+    const opportunityCloseDate = (opportunity: any) => opportunity.estimated_close_date ?? opportunity.close_date ?? opportunity.closeDate
+    const currentYear = new Date().getFullYear()
+    const closesInYear = (opportunity: any) => { const closeDate = opportunityCloseDate(opportunity); if (!closeDate) return false; const date = new Date(String(closeDate)); return !Number.isNaN(date.getTime()) && date.getFullYear() === currentYear }
+    const openOpportunities = opportunities.filter((opportunity) => isOpen(opportunity) && closesInYear(opportunity))
+    const won = opportunities.filter((opportunity) => isWon(opportunity) && closesInYear(opportunity)).reduce((sum, opportunity) => sum + amount(opportunity), 0)
     const quarterTarget = (quarter: number) => Number(projections.find((projection) => Number(projection.period_quarter) === quarter)?.target_revenue_amount ?? 0)
     const target = [1, 2, 3, 4].reduce((sum, quarter) => sum + quarterTarget(quarter), 0)
     const weighted = openOpportunities.reduce((sum, opportunity) => sum + amount(opportunity) * (Number(opportunity.probability ?? opportunity.win_probability ?? opportunity.pipeline_stage?.probability ?? 0) / 100), 0)
     const gap = Math.max(0, target - won - weighted)
     const now = new Date()
-    const opportunityAmount = (opportunity: any) => Number(opportunity.estimated_value ?? opportunity.amount ?? opportunity.value ?? opportunity.deal_value ?? 0)
-    const opportunityCloseDate = (opportunity: any) => opportunity.estimated_close_date ?? opportunity.close_date ?? opportunity.closeDate
     const dueWithin = (days: number) => openOpportunities.filter((opportunity) => { const closeDate = opportunityCloseDate(opportunity); if (!closeDate) return false; const diff = (new Date(closeDate).getTime() - now.getTime()) / 86400000; return diff >= 0 && diff <= days })
     const closing30 = dueWithin(30)
     const closing90 = dueWithin(90)
@@ -64,8 +66,8 @@ export function MeetingDashboard({ opportunities, projections = [], isLoading, b
       { label: "51–75%", min: 51, max: 75, tone: "bg-blue-500" },
       { label: "76–100%", min: 76, max: 100, tone: "bg-emerald-500" },
     ].map((bucket) => { const bucketOpportunities = openOpportunities.filter((opportunity) => { const probability = Number(opportunity.probability ?? opportunity.win_probability ?? 0); return probability >= bucket.min && probability <= bucket.max }); return { ...bucket, count: bucketOpportunities.length, amount: bucketOpportunities.reduce((sum, opportunity) => sum + opportunityAmount(opportunity), 0) } })
-    const quarterWon = (quarter: number) => opportunities.filter((opportunity) => { const date = opportunityCloseDate(opportunity); return date && Math.floor(new Date(date).getMonth() / 3) + 1 === quarter && isWon(opportunity) }).reduce((sum, opportunity) => sum + amount(opportunity), 0)
-    const quarterWeighted = (quarter: number) => opportunities.filter((opportunity) => { const date = opportunityCloseDate(opportunity); return date && Math.floor(new Date(date).getMonth() / 3) + 1 === quarter && isOpen(opportunity) }).reduce((sum, opportunity) => sum + amount(opportunity) * (Number(opportunity.probability ?? opportunity.pipeline_stage?.probability ?? 0) / 100), 0)
+    const quarterWon = (quarter: number) => opportunities.filter((opportunity) => { const date = opportunityCloseDate(opportunity); return date && new Date(date).getFullYear() === currentYear && Math.floor(new Date(date).getMonth() / 3) + 1 === quarter && isWon(opportunity) }).reduce((sum, opportunity) => sum + amount(opportunity), 0)
+    const quarterWeighted = (quarter: number) => opportunities.filter((opportunity) => { const date = opportunityCloseDate(opportunity); return date && new Date(date).getFullYear() === currentYear && Math.floor(new Date(date).getMonth() / 3) + 1 === quarter && isOpen(opportunity) }).reduce((sum, opportunity) => sum + amount(opportunity) * (Number(opportunity.probability ?? opportunity.pipeline_stage?.probability ?? 0) / 100), 0)
     const inQuarter = (dateValue: unknown, quarter: number) => { if (!dateValue) return false; const date = new Date(String(dateValue)); return !Number.isNaN(date.getTime()) && date.getFullYear() === new Date().getFullYear() && Math.floor(date.getMonth() / 3) + 1 === quarter }
     const quarterMetrics = (quarter: number) => {
       const declaredDeals = opportunities.filter((opportunity) => inQuarter(opportunity.created_at, quarter))
