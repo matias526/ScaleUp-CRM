@@ -34,6 +34,15 @@ export async function getTechCompaniesForPartner(partnerId: string) {
   }
 }
 
+export async function getPartnerTechProjections(partnerId: string, techCompanyId: string, year = new Date().getFullYear()) {
+  const { data, error } = await supabase.from("partner_tech_projections" as any).select("period_quarter,target_revenue_amount,target_opportunities_declared,target_opportunities_proposal,target_opportunities_won").eq("partner_id", partnerId).eq("tech_company_id", techCompanyId).eq("period_year", year).order("period_quarter")
+  if (error) {
+    console.error("Error al obtener proyecciones del partner:", error)
+    return []
+  }
+  return data || []
+}
+
 // Nueva función para obtener oportunidades para un partner específico
 export async function getOpportunitiesForPartner(partnerId: string) {
   try {

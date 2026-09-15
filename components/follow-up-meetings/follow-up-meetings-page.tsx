@@ -10,6 +10,7 @@ import EmailRecipientsSelector from "./email-recipients-selector"
 import { useAuth } from "@/components/auth/auth-provider"
 import {
   getOpportunitiesForMeeting,
+  getPartnerTechProjections,
   getTechCompanies,
   getPartners,
   getPartnersForTechCompany,
@@ -51,6 +52,7 @@ export default function FollowUpMeetingsPage() {
   const [partners, setPartners] = useState<any[]>([])
   const [availablePartners, setAvailablePartners] = useState<any[]>([])
   const [opportunities, setOpportunities] = useState<any[]>([])
+  const [projections, setProjections] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [meetingStarted, setMeetingStarted] = useState(false)
   const [reviewedOpportunities, setReviewedOpportunities] = useState<string[]>([])
@@ -233,8 +235,12 @@ export default function FollowUpMeetingsPage() {
         setIsLoading(true)
         console.log("Loading opportunities for tech company:", selectedTechCompany, "and partner:", selectedPartner)
 
-        const opportunitiesData = await getOpportunitiesForMeeting(selectedTechCompany, selectedPartner)
+        const [opportunitiesData, projectionData] = await Promise.all([
+          getOpportunitiesForMeeting(selectedTechCompany, selectedPartner),
+          getPartnerTechProjections(selectedPartner, selectedTechCompany),
+        ])
         console.log("Opportunities loaded:", opportunitiesData.length)
+        setProjections(projectionData)
         console.log("First opportunity partner_responsible:", opportunitiesData[0]?.partner_responsible)
         setOpportunities(opportunitiesData)
 
@@ -728,6 +734,7 @@ export default function FollowUpMeetingsPage() {
           {selectedTechCompany && selectedPartner && opportunities.length > 0 ? (
             <div className="space-y-4">
               <OpportunityCarousel
+                projections={projections}
                 opportunities={opportunities}
                 onReview={markAsReviewed}
                 reviewedOpportunities={reviewedOpportunities}
