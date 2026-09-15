@@ -17,9 +17,9 @@ export function MeetingDashboard({ opportunities, isLoading, blank = false }: Me
 
   if (blank) {
     return (
-      <Card className="border border-gray-200 shadow-sm overflow-hidden">
+      <Card className="mx-auto min-h-[560px] w-full overflow-hidden border-2 border-primary/20 shadow-sm md:w-3/5">
         <CardHeader className="pb-2 bg-gradient-to-r from-gray-50 to-gray-100">
-          <CardTitle className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+          <CardTitle className="text-2xl font-bold flex items-center gap-2 text-gray-800">
             <BarChart3 className="h-5 w-5 text-indigo-500" />
             {t("follow_up_meeting.dashboard.title", "Dashboard")}
           </CardTitle>

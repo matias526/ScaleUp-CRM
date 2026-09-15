@@ -151,7 +151,7 @@ export function OpportunityCarousel({
     return (
       <div className="relative px-10">
         <MeetingDashboard opportunities={opportunities} isLoading={false} blank />
-        <div className="mt-4 flex items-center justify-between">
+        <div className="mx-auto mt-4 flex w-full items-center justify-between md:w-3/5">
           <Button variant="outline" size="sm" disabled>
             <ChevronLeft className="mr-1 h-4 w-4" /> Previous
           </Button>
