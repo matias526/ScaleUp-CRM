@@ -53,13 +53,13 @@ export const OpportunitiesTable = ({
     const uniquePartners = Array.from(
       new Set(
         opportunities
-          .filter((opp) => opp.partner)
+          .filter((opp) => opp.partner && (!filterTechCompany || filterTechCompany === "all" || opp.tech_company_id === filterTechCompany))
           .map((opp) => JSON.stringify({ id: opp.partner_id, name: opp.partner?.name })),
       ),
     ).map((partner) => JSON.parse(partner))
 
     return uniquePartners.sort((a, b) => a.name.localeCompare(b.name))
-  }, [opportunities])
+  }, [opportunities, filterTechCompany])
 
   // Aplicar filtros
   const filteredOpportunities = useMemo(() => {

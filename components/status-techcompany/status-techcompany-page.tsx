@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { createClient } from "@/lib/supabase/client"
+import { useAuth } from "@/components/auth/auth-provider"
 import { AlertTriangle, BarChart3, Building2, CalendarDays, CheckCircle2, ChevronDown, Coins, Plus, ReceiptText, ShieldAlert, SlidersHorizontal, Target, TrendingUp, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -104,6 +105,9 @@ function PartnerDetailPreview({ partner, impacts, t }: { partner: StatusPartner;
 
 export function StatusTechCompanyPage() {
   const { t } = useTranslations(STATUS_TECH_TRANSLATIONS)
+  const { userInfo } = useAuth()
+  const isAdmin = userInfo?.isAdmin || userInfo?.roleCode?.toLowerCase() === "admin"
+  const isBdd = userInfo?.roleCode?.toLowerCase() === "bdd"
   const queryClient = useQueryClient()
   const { data, isLoading, error } = useQuery({ queryKey: ["status-techcompany"], queryFn: async () => {
     const [{ data: techCompaniesData, error: techError }, { data: partnerData, error: partnerError }, { data: partnerTechCompanyData, error: partnerTechCompanyError }, { data: projectionData, error: projectionError }, { data: partnerOpportunityData, error: partnerOpportunityError }, { data: unassignedWonData, error: unassignedWonError }, { data: pipelineStageData, error: pipelineStageError }, { data: prospectOpportunityData, error: prospectOpportunityError }, { data: riskFactorData, error: riskFactorError }, { data: prospectPartnerData, error: prospectPartnerError }] = await Promise.all([
@@ -111,7 +115,7 @@ export function StatusTechCompanyPage() {
       supabase.from("partners").select("id, name, logo_url, main_country_id, countries:main_country_id(name)").eq("is_active", true).order("name"),
       supabase.from("partner_tech_companies").select("partner_id, tech_company_id"),
       supabase.from("partner_tech_projections" as any).select("id, partner_id, tech_company_id, period_year, period_quarter, scaleup_internal_target_revenue"),
-      supabase.from("opportunities").select("id, title, estimated_value, estimated_close_date, probability, created_at, updated_at, validation_status, partner_id, tech_company_id, end_customer:end_customers(name), pipeline_stage:pipeline_stages(code, probability)").not("partner_id", "is", null),
+      supabase.from("opportunities").select("id, title, estimated_value, estimated_close_date, probability, created_at, updated_at, validation_status, partner_id, tech_company_id, end_customer:end_customers(name), pipeline_stage:pipeline_stages(code, probability)"),
       supabase.from("opportunities").select("id, estimated_value, estimated_close_date, partner_id, tech_company_id, pipeline_stage_id").is("partner_id", null),
       supabase.from("pipeline_stages").select("id, code"),
       supabase.from("opportunities").select("id, title, estimated_value, estimated_close_date, probability, created_at, updated_at, validation_status, prospect_id, tech_company_id, pipeline_stage:pipeline_stages(code, probability)").not("prospect_id", "is", null),
@@ -125,7 +129,12 @@ export function StatusTechCompanyPage() {
     }
     return { techCompanies: techCompaniesData ?? [], partners: partnerData ?? [], partnerTechCompanies: partnerTechCompanyData ?? [], projections: projectionData ?? [], opportunities: partnerOpportunityData ?? [], unassignedWonOpportunities: unassignedWonData ?? [], pipelineStages: pipelineStageData ?? [], prospectOpportunities: prospectOpportunityData ?? [], riskFactors: riskFactorData ?? [], prospectPartners: prospectPartnerData ?? [] }
   } })
-  const realTechCompanies = data?.techCompanies ?? []
+  const realTechCompanies = useMemo(() => {
+    const allCompanies = data?.techCompanies ?? []
+    if (isAdmin || !isBdd) return allCompanies
+    const opportunityCompanyIds = new Set((data?.opportunities ?? []).map((opportunity: any) => String(opportunity.tech_company_id)).filter(Boolean))
+    return allCompanies.filter((company: any) => opportunityCompanyIds.has(String(company.id)))
+  }, [data?.techCompanies, data?.opportunities, isAdmin, isBdd])
   const [techCompany, setTechCompany] = useState("")
   const effectiveTechCompany = techCompany || realTechCompanies[0]?.id || ""
   const [year, setYear] = useState("2026")

@@ -70,6 +70,12 @@ export function OpportunitiesPage() {
   const { toast } = useToast()
   const router = useRouter()
 
+  useEffect(() => {
+    if (!filterTechCompany || filterTechCompany === "all") return
+    const hasSelectedPartner = opportunities.some((opportunity: any) => opportunity.tech_company_id === filterTechCompany && opportunity.partner_id === filterPartner)
+    if (filterPartner && filterPartner !== "all" && filterPartner !== "no-partner" && !hasSelectedPartner) setFilterPartner(null)
+  }, [filterTechCompany, filterPartner, opportunities])
+
   const searchParams = useSearchParams()
   const selectedOpportunityId = searchParams.get("selected")
 
