@@ -66,7 +66,7 @@ export function MeetingDashboard({ opportunities, projections = [], isLoading, b
     const amount = (opportunity: any) => Number(opportunity.estimated_value ?? 0)
     const stage = (opportunity: any) => normalizeStatus(opportunity.pipeline_stage?.code ?? opportunity.validation_status)
     const closedStates = new Set(["closed", "closed_won", "closed_lost", "lost", "won", "freeze", "frozen"])
-    const isWon = (opportunity: any) => Boolean(String(opportunity.purchase_order_id ?? "").trim())
+    const isWon = (opportunity: any) => stage(opportunity) === "won"
     const isOpen = (opportunity: any) => !isWon(opportunity) && !closedStates.has(stage(opportunity))
     const opportunityAmount = (opportunity: any) => Number(opportunity.estimated_value ?? opportunity.amount ?? opportunity.value ?? opportunity.deal_value ?? 0)
     const opportunityCloseDate = (opportunity: any) => opportunity.estimated_close_date ?? opportunity.close_date ?? opportunity.closeDate
