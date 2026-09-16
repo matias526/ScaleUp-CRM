@@ -158,12 +158,12 @@ export function OpportunityCarousel({
       <div className="relative px-10">
         <MeetingDashboard opportunities={opportunities} projections={projections} partnerName={partnerName} benchmarkPartners={benchmarkPartners} isLoading={false} blank />
         <div className="mx-auto mt-4 flex w-full items-center justify-between md:w-3/5">
-          <Button variant="outline" size="sm" disabled>
-            <ChevronLeft className="mr-1 h-4 w-4" /> Previous
+          <Button variant="ghost" size="icon" disabled aria-label={t("common.previous", "Anterior")} className="h-9 w-9 rounded-full bg-white shadow-md">
+            <ChevronLeft className="h-4 w-4" />
           </Button>
           <span className="text-sm text-gray-500">Dashboard · 1 de {opportunities.length + 1}</span>
-          <Button variant="outline" size="sm" onClick={() => setCurrentIndex(0)}>
-            Next <ChevronRight className="ml-1 h-4 w-4" />
+          <Button variant="ghost" size="icon" onClick={() => setCurrentIndex(0)} aria-label={t("common.next", "Siguiente")} className="h-9 w-9 rounded-full bg-white shadow-md">
+            <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
       </div>
