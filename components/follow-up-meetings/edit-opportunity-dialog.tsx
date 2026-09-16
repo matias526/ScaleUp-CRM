@@ -42,6 +42,7 @@ export function EditOpportunityDialog({
   const [date, setDate] = useState<Date | undefined>(
     opportunity.estimated_close_date ? new Date(opportunity.estimated_close_date) : undefined,
   )
+  const [estimatedValue, setEstimatedValue] = useState(String(opportunity.estimated_value ?? ""))
   const [partnerResponsible, setPartnerResponsible] = useState(opportunity.partner_responsible || "")
   const [description, setDescription] = useState(opportunity.description || "")
   const [isNewPartner, setIsNewPartner] = useState(opportunity.is_new_partner || false)
@@ -79,6 +80,7 @@ export function EditOpportunityDialog({
       const updateData: any = {
         id: opportunity.id,
         estimated_close_date: date ? date.toISOString() : null,
+        estimated_value: estimatedValue === "" ? null : Number(estimatedValue),
         partner_responsible: partnerResponsible,
         description: description,
       }
@@ -142,6 +144,11 @@ export function EditOpportunityDialog({
               rows={3}
               placeholder="Descripción de la oportunidad"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="estimated_value">Valor estimado</Label>
+            <Input id="estimated_value" type="number" min="0" step="0.01" value={estimatedValue} onChange={(e) => setEstimatedValue(e.target.value)} placeholder="0" />
           </div>
 
           <div className="space-y-2">

@@ -190,22 +190,40 @@ export function OpportunityCarousel({
     return new Date(opportunity.updated_at) > lastWeek
   }
 
-  const goToPrevious = () => {
-    if (currentIndex >= 0) {
-      setCurrentIndex(currentIndex - 1)
+  const getOpportunityValidationIssues = (opportunity: any) => {
+    const issues: string[] = []
+    if (opportunity?.estimated_value === null || opportunity?.estimated_value === undefined || Number(opportunity.estimated_value) <= 0) issues.push("el valor estimado está incompleto")
+    if (!opportunity?.estimated_close_date) issues.push("la fecha estimada de cierre está incompleta")
+    else if (new Date(opportunity.estimated_close_date) < new Date(new Date().toDateString())) issues.push("la fecha estimada de cierre es anterior a hoy")
+    return issues
+  }
+
+  const confirmNavigation = (targetIndex: number, onContinue?: () => void) => {
+    const issues = getOpportunityValidationIssues(currentOpportunity)
+    if (issues.length === 0) {
+      onContinue?.()
+      return
     }
+    const message = `Detectamos que ${issues.join(" y ")}. ¿Querés completar la oportunidad antes de continuar?`
+    if (window.confirm(`${message}\n\nAceptar: completar ahora\nCancelar: avanzar igual`)) {
+      setShowEditOpportunity(true)
+    } else {
+      setCurrentIndex(targetIndex)
+      onContinue?.()
+    }
+  }
+
+  const goToPrevious = () => {
+    if (currentIndex >= 0) confirmNavigation(currentIndex - 1)
   }
 
   const goToNext = () => {
-    if (currentIndex < opportunities.length - 1) {
-      setCurrentIndex(currentIndex + 1)
-    }
+    if (currentIndex < opportunities.length - 1) confirmNavigation(currentIndex + 1)
   }
 
   const handleReview = () => {
-    if (currentOpportunity && onReview) {
-      onReview(currentOpportunity.id)
-    }
+    if (!currentOpportunity || !onReview) return
+    confirmNavigation(Math.min(currentIndex + 1, opportunities.length - 1), () => onReview(currentOpportunity.id))
   }
 
   const handleClose = () => {
