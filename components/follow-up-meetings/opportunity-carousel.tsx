@@ -561,6 +561,24 @@ export function OpportunityCarousel({
 
                     {/* Grid de información detallada */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Valor estimado */}
+                      <div className="space-y-2">
+                        <div className="flex items-center">
+                          <DollarSign className="h-4 w-4 mr-2 text-gray-500" />
+                          <span className="text-sm font-medium">Valor estimado:</span>
+                        </div>
+                        <div className="text-sm pl-6 flex items-center justify-between group">
+                          <span>{currentOpportunity.estimated_value != null ? new Intl.NumberFormat("es-AR", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(Number(currentOpportunity.estimated_value)) : "Sin valor estimado"}</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => setShowEditOpportunity(true)}
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
                       {/* Cliente final */}
                       <div className="space-y-2">
                         <div className="flex items-center">
