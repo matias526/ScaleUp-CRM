@@ -201,6 +201,7 @@ export function OpportunityCarousel({
   const confirmNavigation = (targetIndex: number, onContinue?: () => void) => {
     const issues = getOpportunityValidationIssues(currentOpportunity)
     if (issues.length === 0) {
+      setCurrentIndex(targetIndex)
       onContinue?.()
       return
     }
@@ -214,7 +215,7 @@ export function OpportunityCarousel({
   }
 
   const goToPrevious = () => {
-    if (currentIndex >= 0) confirmNavigation(currentIndex - 1)
+    if (currentIndex > 0) confirmNavigation(currentIndex - 1)
   }
 
   const goToNext = () => {
