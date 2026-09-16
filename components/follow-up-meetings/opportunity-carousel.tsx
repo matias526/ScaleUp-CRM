@@ -5,6 +5,7 @@ import { useTranslations } from "@/hooks/use-translations"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import {
   ChevronLeft,
   ChevronRight,
@@ -79,6 +80,7 @@ export function OpportunityCarousel({
   const [showAddNote, setShowAddNote] = useState(false)
   const [showAddTask, setShowAddTask] = useState(false)
   const [showEditOpportunity, setShowEditOpportunity] = useState(false)
+  const [validationPrompt, setValidationPrompt] = useState<{ issues: string[]; targetIndex: number; onContinue?: () => void } | null>(null)
   const [currentOpportunity, setCurrentOpportunity] = useState<any>(null)
   const [users, setUsers] = useState<any[]>([])
   const [partnerUsers, setPartnerUsers] = useState<any[]>([])
@@ -205,13 +207,7 @@ export function OpportunityCarousel({
       onContinue?.()
       return
     }
-    const message = `Detectamos que ${issues.join(" y ")}. ¿Querés completar la oportunidad antes de continuar?`
-    if (window.confirm(`${message}\n\nAceptar: completar ahora\nCancelar: avanzar igual`)) {
-      setShowEditOpportunity(true)
-    } else {
-      setCurrentIndex(targetIndex)
-      onContinue?.()
-    }
+    setValidationPrompt({ issues, targetIndex, onContinue })
   }
 
   const goToPrevious = () => {
@@ -863,8 +859,29 @@ export function OpportunityCarousel({
         </div>
       )}
 
-      {/* Diálogos */}
-      {showAddNote && currentOpportunity && (
+  {/* Diálogo de validación antes de avanzar */}
+  <AlertDialog open={Boolean(validationPrompt)} onOpenChange={(open) => !open && setValidationPrompt(null)}>
+    <AlertDialogContent className="max-w-md border-amber-200 bg-white shadow-2xl">
+      <AlertDialogHeader>
+        <div className="mb-2 flex h-11 w-11 items-center justify-center rounded-full bg-amber-100 text-amber-700"><AlertCircle className="h-6 w-6" /></div>
+        <AlertDialogTitle className="text-lg">Faltan datos en esta oportunidad</AlertDialogTitle>
+        <AlertDialogDescription asChild>
+          <div className="space-y-3 text-sm leading-6 text-slate-600">
+            <p>Antes de continuar, revisá estos datos:</p>
+            <ul className="list-disc space-y-1 pl-5">{validationPrompt?.issues.map((issue) => <li key={issue}>{issue}</li>)}</ul>
+          </div>
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+      <AlertDialogFooter className="gap-2 sm:gap-2">
+        <AlertDialogCancel className="mt-0">Cancelar</AlertDialogCancel>
+        <Button variant="outline" onClick={() => { setValidationPrompt(null); setShowEditOpportunity(true) }}>Completar</Button>
+        <AlertDialogAction onClick={() => { if (!validationPrompt) return; setCurrentIndex(validationPrompt.targetIndex); validationPrompt.onContinue?.(); setValidationPrompt(null) }} className="bg-slate-900 text-white hover:bg-slate-800">Avanzar sin completar</AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
+
+  {/* Diálogos */}
+  {showAddNote && currentOpportunity && (
         <AddNoteDialog
           open={showAddNote}
           onClose={() => setShowAddNote(false)}
