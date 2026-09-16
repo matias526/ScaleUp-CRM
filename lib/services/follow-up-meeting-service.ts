@@ -127,6 +127,29 @@ export async function getPartnersForTechCompany(techCompanyId: string, userId?: 
   }
 }
 
+export async function getBenchmarkPartnerMetrics(techCompanyId: string, year = new Date().getFullYear()) {
+  const [{ data: opportunities, error: opportunitiesError }, { data: partners, error: partnersError }, { data: projections, error: projectionsError }] = await Promise.all([
+    supabase.from("opportunities").select("partner_id,estimated_value,created_at,updated_at,pipeline_stage:pipeline_stages(code)").eq("tech_company_id", techCompanyId),
+    supabase.from("partner_tech_companies").select("partner_id,partners(name)").eq("tech_company_id", techCompanyId),
+    supabase.from("partner_tech_projections" as any).select("partner_id,target_revenue_amount,period_year").eq("tech_company_id", techCompanyId).eq("period_year", year),
+  ])
+  if (opportunitiesError || partnersError || projectionsError) {
+    console.error("Error al obtener métricas del benchmark:", opportunitiesError || partnersError || projectionsError)
+    return []
+  }
+  const isYear = (value: unknown) => { const date = value ? new Date(String(value)) : null; return Boolean(date && !Number.isNaN(date.getTime()) && date.getFullYear() === year) }
+  const rows = (partners || []).map((relation: any) => {
+    const partnerId = relation.partner_id
+    const partnerOpportunities = (opportunities || []).filter((opportunity: any) => opportunity.partner_id === partnerId)
+    const won = partnerOpportunities.filter((opportunity: any) => String(opportunity.pipeline_stage?.code || "").trim().toLowerCase() === "won" && isYear(opportunity.updated_at))
+    const created = partnerOpportunities.filter((opportunity: any) => isYear(opportunity.created_at))
+    const target = (projections || []).filter((projection: any) => projection.partner_id === partnerId).reduce((sum: number, projection: any) => sum + Number(projection.target_revenue_amount || 0), 0)
+    const speedValues = won.filter((opportunity: any) => isYear(opportunity.created_at)).map((opportunity: any) => (new Date(opportunity.updated_at).getTime() - new Date(opportunity.created_at).getTime()) / 86400000)
+    return { name: relation.partners?.name || partnerId, closed_amount: won.reduce((sum: number, opportunity: any) => sum + Number(opportunity.estimated_value || 0), 0), target_attainment: target ? won.reduce((sum: number, opportunity: any) => sum + Number(opportunity.estimated_value || 0), 0) / target * 100 : 0, deal_count: created.length, close_speed: speedValues.length ? speedValues.reduce((sum: number, value: number) => sum + value, 0) / speedValues.length : 0 }
+  })
+  return rows
+}
+
 // Obtener oportunidades para la reunión de seguimiento con todos los datos relacionados
 export async function getOpportunitiesForMeeting(techCompanyId: string, partnerId: string) {
   try {

@@ -11,6 +11,7 @@ import { useAuth } from "@/components/auth/auth-provider"
 import {
   getOpportunitiesForMeeting,
   getPartnerTechProjections,
+  getBenchmarkPartnerMetrics,
   getTechCompanies,
   getPartners,
   getPartnersForTechCompany,
@@ -242,7 +243,7 @@ export default function FollowUpMeetingsPage() {
         ])
         console.log("Opportunities loaded:", opportunitiesData.length)
         setProjections(projectionData)
-        const benchmarkData = await getPartnersForTechCompany(selectedTechCompany)
+        const benchmarkData = await getBenchmarkPartnerMetrics(selectedTechCompany)
         setBenchmarkPartners(benchmarkData)
         console.log("First opportunity partner_responsible:", opportunitiesData[0]?.partner_responsible)
         setOpportunities(opportunitiesData)
