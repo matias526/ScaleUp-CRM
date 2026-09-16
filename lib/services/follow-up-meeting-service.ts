@@ -194,6 +194,19 @@ export async function getOpportunitiesForMeeting(techCompanyId: string, partnerI
     const opportunities = data || []
     const opportunityIds = opportunities.map((opportunity) => opportunity.id).filter(Boolean)
     let checklistItems: any[] = []
+    let notes: any[] = []
+    let tasks: any[] = []
+
+    if (opportunityIds.length > 0) {
+      const [{ data: notesData, error: notesError }, { data: tasksData, error: tasksError }] = await Promise.all([
+        supabase.from("notes").select("*, user:users(id, first_name, last_name, email)").in("opportunity_id", opportunityIds).order("created_at", { ascending: false }),
+        supabase.from("tasks").select("*, assigned_to_user:users!assigned_to(id, first_name, last_name, email), assigned_by_user:users!assigned_by(id, first_name, last_name, email)").in("opportunity_id", opportunityIds).order("created_at", { ascending: false }),
+      ])
+      if (notesError) console.error("Error al obtener notas de oportunidades:", notesError)
+      if (tasksError) console.error("Error al obtener tareas de oportunidades:", tasksError)
+      notes = notesData || []
+      tasks = tasksData || []
+    }
 
     if (opportunityIds.length > 0) {
       const { data: checklistData, error: checklistError } = await supabase
@@ -220,6 +233,8 @@ export async function getOpportunitiesForMeeting(techCompanyId: string, partnerI
 
     return opportunities.map((opportunity) => ({
       ...opportunity,
+      notes: notes.filter((note) => note.opportunity_id === opportunity.id),
+      tasks: tasks.filter((task) => task.opportunity_id === opportunity.id),
       quote_completed_at: quoteCompletionByOpportunity.get(opportunity.id) || null,
     }))
   } catch (error) {
