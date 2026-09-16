@@ -49,7 +49,7 @@ export function EditOpportunityDialog({
   const [users, setUsers] = useState<any[]>(partnerUsers)
   const [loading, setLoading] = useState(false)
 
-  const isScaleUpUser = user?.roleCode?.toLowerCase() !== "partneruser"
+  const isScaleUpUser = (user as any)?.roleCode?.toLowerCase() !== "partneruser"
 
   useEffect(() => {
     const loadUsers = async () => {
