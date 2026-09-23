@@ -192,7 +192,13 @@ export async function getOpportunitiesForMeeting(techCompanyId: string, partnerI
     console.log("First opportunity partner_responsible_id:", data?.[0]?.partner_responsible_id)
     console.log("First opportunity partner_responsible:", data?.[0]?.partner_responsible)
 
-    const opportunities = data || []
+    const normalizeStageCode = (value: unknown) => String(value ?? "").trim().toLowerCase().replace(/[_-]+/g, " ")
+    const excludedStages = new Set(["won", "lost", "freeze", "frozen"])
+    const opportunities = (data || []).filter((opportunity: any) => {
+      const stage = opportunity.pipeline_stage
+      const stageValues = [stage?.code, stage?.name, stage?.label].map(normalizeStageCode)
+      return !stageValues.some((value) => excludedStages.has(value))
+    })
     const opportunityIds = opportunities.map((opportunity) => opportunity.id).filter(Boolean)
     let checklistItems: any[] = []
     let notes: any[] = []
