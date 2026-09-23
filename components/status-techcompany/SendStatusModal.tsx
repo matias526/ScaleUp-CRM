@@ -87,6 +87,7 @@ type SendStatusModalProps = {
   techCompanyId: string
   year: string
   partners: StatusPartner[]
+  unassignedWon: number
   inProcessPartners: PotentialPartner[]
   onCancel?: () => void
 }
@@ -94,7 +95,7 @@ type SendStatusModalProps = {
 const money = (value: number) => value >= 1000 ? `$${(value / 1000).toFixed(value % 1000 === 0 ? 0 : 1)}K` : `$${value.toLocaleString("en-US")}`
 const date = (value: string | null, locale: string) => { if (!value) return "—"; const datePart = String(value).match(/^\d{4}-\d{2}-\d{2}/)?.[0]; if (!datePart) return "—"; const [yearPart, monthPart, dayPart] = datePart.split("-").map(Number); return new Date(yearPart, monthPart - 1, dayPart, 12, 0, 0, 0).toLocaleDateString(locale === "en" ? "en-US" : locale === "pt" ? "pt-BR" : "es-AR") }
 
-export function SendStatusModal({ open, onOpenChange, techCompanyName, techCompanyId, year, partners, inProcessPartners, onCancel }: SendStatusModalProps) {
+export function SendStatusModal({ open, onOpenChange, techCompanyName, techCompanyId, year, partners, unassignedWon, inProcessPartners, onCancel }: SendStatusModalProps) {
   const { t } = useTranslations(STATUS_MODAL_TRANSLATIONS)
   const [recipients, setRecipients] = useState<{ email: string; first_name?: string; last_name?: string; preferred_language?: string | null; group?: string }[]>([])
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([])
@@ -107,7 +108,7 @@ export function SendStatusModal({ open, onOpenChange, techCompanyName, techCompa
   const reportRef = useRef<HTMLElement>(null)
   useEffect(() => { if (!open || !techCompanyId) return; setRecipientLoading(true); fetch(`/api/status-techcompany/recipients?techCompanyId=${encodeURIComponent(techCompanyId)}`).then((response) => response.json()).then((payload) => { const next = payload.recipients ?? []; setRecipients(next); setSelectedRecipients(next.map((item: { email: string }) => item.email)) }).finally(() => setRecipientLoading(false)) }, [open, techCompanyId])
   const { toast } = useToast()
-  const totals = useMemo(() => partners.reduce((acc, partner) => ({ target: acc.target + partner.target, won: acc.won + partner.won, pipeline: acc.pipeline + partner.pipeline }), { target: 0, won: 0, pipeline: 0 }), [partners])
+  const totals = useMemo(() => partners.reduce((acc, partner) => ({ target: acc.target + partner.target, won: acc.won + partner.won, pipeline: acc.pipeline + partner.pipeline }), { target: 0, won: unassignedWon, pipeline: 0 }), [partners, unassignedWon])
   const expected = totals.won + totals.pipeline
   const coverage = totals.target ? Math.round((totals.won / totals.target) * 100) : 0
   const expectedPercent = totals.target ? Math.round((expected / totals.target) * 100) : 0
