@@ -62,7 +62,8 @@ export async function getOpportunitiesForPartner(partnerId: string) {
         pipeline_stage:pipeline_stages(*)
       `)
       .eq("partner_id", partnerId)
-      .order("updated_at", { ascending: false })
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
 
     if (error) {
       console.error("Error al obtener oportunidades para partner:", error)
@@ -169,7 +170,8 @@ export async function getOpportunitiesForMeeting(techCompanyId: string, partnerI
       `)
       .eq("tech_company_id", techCompanyId)
       .eq("partner_id", partnerId)
-      .order("updated_at", { ascending: false })
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
 
     console.log(
       "Query executed with select:",
@@ -193,11 +195,11 @@ export async function getOpportunitiesForMeeting(techCompanyId: string, partnerI
     console.log("First opportunity partner_responsible:", data?.[0]?.partner_responsible)
 
     const normalizeStageCode = (value: unknown) => String(value ?? "").trim().toLowerCase().replace(/[_-]+/g, " ")
-    const excludedStages = new Set(["won", "lost", "freeze", "frozen"])
+    const allowedStages = new Set(["lead", "engagement", "initial communication", "quotation"])
     const opportunities = (data || []).filter((opportunity: any) => {
       const stage = opportunity.pipeline_stage
       const stageValues = [stage?.code, stage?.name, stage?.label].map(normalizeStageCode)
-      return !stageValues.some((value) => excludedStages.has(value))
+      return stageValues.some((value) => allowedStages.has(value))
     })
     const opportunityIds = opportunities.map((opportunity) => opportunity.id).filter(Boolean)
     let checklistItems: any[] = []
