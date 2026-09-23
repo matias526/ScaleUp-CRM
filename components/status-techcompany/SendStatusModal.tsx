@@ -92,7 +92,7 @@ type SendStatusModalProps = {
 }
 
 const money = (value: number) => value >= 1000 ? `$${(value / 1000).toFixed(value % 1000 === 0 ? 0 : 1)}K` : `$${value.toLocaleString("en-US")}`
-const date = (value: string | null, locale: string) => value ? new Date(value).toLocaleDateString(locale === "en" ? "en-US" : locale === "pt" ? "pt-BR" : "es-AR") : "—"
+const date = (value: string | null, locale: string) => { if (!value) return "—"; const datePart = String(value).match(/^\d{4}-\d{2}-\d{2}/)?.[0]; if (!datePart) return "—"; const [yearPart, monthPart, dayPart] = datePart.split("-").map(Number); return new Date(yearPart, monthPart - 1, dayPart, 12, 0, 0, 0).toLocaleDateString(locale === "en" ? "en-US" : locale === "pt" ? "pt-BR" : "es-AR") }
 
 export function SendStatusModal({ open, onOpenChange, techCompanyName, techCompanyId, year, partners, inProcessPartners, onCancel }: SendStatusModalProps) {
   const { t } = useTranslations(STATUS_MODAL_TRANSLATIONS)
