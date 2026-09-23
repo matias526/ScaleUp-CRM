@@ -49,7 +49,8 @@ export async function getOpportunitiesForPartner(partnerId: string) {
     console.log("Fetching opportunities for partner:", partnerId)
 
     // Definir las etapas de pipeline permitidas
-    const allowedStages = ["Lead", "Engagement", "Initial Communication", "Quotation"]
+    const allowedStages = new Set(["lead", "engagement", "initial communication", "quotation"])
+  const normalizeStageCode = (value: unknown) => String(value ?? "").trim().toLowerCase().replace(/[_-]+/g, " ")
 
     const { data, error } = await supabase
       .from("opportunities")
@@ -70,7 +71,7 @@ export async function getOpportunitiesForPartner(partnerId: string) {
 
     // Filtrar oportunidades por las etapas de pipeline permitidas
     const filteredData =
-      data?.filter((opp) => opp.pipeline_stage && allowedStages.includes(opp.pipeline_stage.code)) || []
+      data?.filter((opp) => opp.pipeline_stage && allowedStages.has(normalizeStageCode(opp.pipeline_stage.code))) || []
 
     console.log("Fetched opportunities for partner:", data?.length || 0)
     console.log("Filtered opportunities by pipeline stage:", filteredData.length)
@@ -352,6 +353,7 @@ export async function addTaskToOpportunity(taskData: {
 export async function updateOpportunity(opportunityData: {
   id: string
   estimated_close_date: string | null
+  estimated_value?: number | null
   partner_responsible: string
   description?: string
 }) {
@@ -364,6 +366,10 @@ export async function updateOpportunity(opportunityData: {
     // Añadir fecha de cierre estimada si está presente
     if (opportunityData.estimated_close_date !== undefined) {
       updateData.estimated_close_date = opportunityData.estimated_close_date
+    }
+
+    if (opportunityData.estimated_value !== undefined) {
+      updateData.estimated_value = opportunityData.estimated_value
     }
 
     // Validar y añadir partner_responsible_id solo si es un UUID válido y no está vacío
