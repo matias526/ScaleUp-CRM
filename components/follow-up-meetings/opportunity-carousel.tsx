@@ -57,7 +57,7 @@ type OpportunityCarouselProps = {
 }
 
 export function OpportunityCarousel({
-  opportunities,
+  opportunities: allOpportunities,
   projections = [],
   partnerName = "",
   benchmarkPartners = [],
@@ -78,6 +78,11 @@ export function OpportunityCarousel({
   const markAsLostLabel = language === "en" ? "Mark as lost" : language === "pt" ? "Passar para perdida" : "Pasar a perdida"
   const { userInfo } = useAuth()
   const [currentIndex, setCurrentIndex] = useState(-1)
+  const opportunities = allOpportunities.filter((opportunity: any) => {
+    const stage = String(opportunity.pipeline_stage?.code ?? opportunity.pipeline_stage?.name ?? opportunity.pipeline_stage?.label ?? "").trim().toLowerCase().replace(/[_-]+/g, " ")
+    return !["won", "lost", "freeze", "frozen"].includes(stage)
+  })
+
   const [showAddNote, setShowAddNote] = useState(false)
   const [showAddTask, setShowAddTask] = useState(false)
   const [showEditOpportunity, setShowEditOpportunity] = useState(false)
@@ -159,7 +164,7 @@ export function OpportunityCarousel({
   if (currentIndex === -1) {
     return (
       <div className="relative px-10">
-        <MeetingDashboard opportunities={opportunities} projections={projections} partnerName={partnerName} benchmarkPartners={benchmarkPartners} isLoading={false} blank />
+        <MeetingDashboard opportunities={allOpportunities} projections={projections} partnerName={partnerName} benchmarkPartners={benchmarkPartners} isLoading={false} blank />
         <div className="mx-auto mt-4 flex w-full items-center justify-between md:w-3/5">
           <Button variant="ghost" size="icon" disabled aria-label={t("common.previous", "Anterior")} className="h-9 w-9 rounded-full bg-white shadow-md">
             <ChevronLeft className="h-4 w-4" />
